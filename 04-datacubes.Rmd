@@ -57,13 +57,12 @@ There are two types of collections available in cloud providers. Some collection
 
 ### Data providers and collections supported by SITS
 
-As of version 0.15.0, `sits` supports the following cloud providers:
+As of version 0.15.0, `sits` supports access to the following image collections:
 
-1. AWS (Amazon Web Services)
-2. BDC (Brazil Data Cube)
-3. DEAFRICA (Digital Earth Africa)
-4. Planetary Computer (Microsoft)
-5. Landsat (USGS)
+1. AWS: Sentinel-2/2A level 2A collections, including "SENTINEL-S2-L2A-COGS" (open data) and "SENTINEL-S2-L2A" (non open data). 
+2. Brazil Data Cube (BDC): Open data collections of Sentinel-2, Landsat-8 and CBERS-4 images.
+3. Digital Earth Africa (DEAFRICA): Open data collection of Sentinel-2/2A and Landsat-8 for Africa.
+4. USGS: Landsat-4/5/7/8 collections, which are not open data. 
 
 The package also supports services that allow access to individual time series:
 
@@ -83,6 +82,8 @@ sits_list_collections(source = "DEAFRICA")
 
 
 ## Accessing Data Cubes and Image Collections in SITS
+
+<a href="https://www.kaggle.com/esensing/creating-data-cubes-in-sits" target="_blank"><img src="https://img.shields.io/badge/example-available-green"/></a>
 
 To obtain information on cloud image collection, `sits` uses information provided by implementations of the STAC (SpatioTemporal Asset Catalogue) protocol. [STAC] (https://stacspec.org/) is a specification of geospatial information which has been adopted by many large image collection providers (e.g., AWS, Microsoft, USGS). A 'spatiotemporal asset' is any file that represents information about the earth captured in a certain space and time. To access STAC endpoints, `sits` uses the [rstac](http://github.com/brazil-data-cube/rstac) R package.
 
@@ -123,6 +124,12 @@ The `sits_cube()` function has other parameters that are specific to certain typ
 ### Accessing data cubes in Amazon Web Services 
 
 In AWS, there are two types of collections: open-data and requester-pays data. Open data collections can be accessed worldwide without cost. Requester-pays collections require payment associated to an AWS account. Users with access to AWS EC2 virtual machines may select requester-pays collection for efficiency reasons, specially if their machines are in the same geographical region as the collection. Version 0.15.0 of `sits` supports collections "SENTINEL-S2-L2A" (requester-pays) and "SENTINEL-S2-L2A-COGS" (open-data). Both collections support all Sentinel-2/2A bands.  The bands in 10m resolution are "B02", "B03", "B04", and "B08". The  20m bands are "B05", "B06", "B07", B8A", "B8A", "B11", and "B12". Bands "B01" and "B09" are available at 60m resolution. 
+
+To find out which AWS collections are supported by `sits`, use `sits_list_collections()`. 
+```{r}
+# list the AWS collections supported by sits
+sits_list_collections(source = "AWS")
+```
 
 The example below shows how to access one tile of the "SENTINEL-S2-L2A-COGS" collection. Such access does not require AWS credentials, since the collection is open data.
 
@@ -184,7 +191,6 @@ defines an image collection, a spatiotemporal extent, bands, and optionally a bo
 cbers_tile <- sits_cube(
     source = "BDC",
     collection = "CB4_64_16D_STK-1",
-    name = "cbers_022024",
     bands = c("NDVI", "EVI"),
     tiles = "022024",
     start_date = "2018-09-01",
@@ -194,9 +200,27 @@ cbers_tile <- sits_cube(
 
 ### Accessing Digital Earth Africa 
 
-Digital Earth Africa is The Digital Earth Africa (DE Africa) Map is a website for map-based access to spatial information. ... DE Africa is leveraging international Earth Observation (EO) data and science to produce new information and services that benefit African countries.
+Digital Earth Africa is a cloud service that provides Earth Observation data . DE Africa is leveraging international Earth Observation (EO) data and science to produce new information and services that benefit African countries.
 
-Our platform and services enable African governments, industry and decision makers to track changes across the continent in unprecedented detail. This provides valuable insights for better decision making across many areas, including flooding, drought, soil and coastal erosion, agriculture, forest cover, land use and land cover change, water availability and quality, and changes to human settlements. 
+To find out which DEAFRICA collections are supported by `sits`, use `sits_list_collections()`. 
+```{r}
+# list the AWS collections supported by sits
+sits_list_collections(source = "DEAFRICA")
+```
+To create a cube based on DEAFRICA collections, users should specify the image collection and the desired bands. There is a difference from the specification of data cubes using DEAFRICA data and those from AWS and BDC. Digital Earth Africa does not fully implement the concept of tiles. Thus, users need to specify their region of interest using the `roi` parameter. The `roi` parameter allows a selection of an area of interest, either using a named vector ("lon_min", "lat_min", "lon_max", "lat_max") with values in WGS 84, an `sf` object from the `sf` package, or a GeoJSON geometry (RFC 7946). This parameter does not crop a region, but only selects the images that intersect with it.
+
+```{r}
+dea_cube <- sits_cube(source = "DEAFRICA",
+                  collection = "s2_l2a",
+                  bands = c("B01", "B04", "B05"),
+                  roi = c(lon_min = 17.379,
+                          lat_min = 1.1573,
+                          lon_max = 17.410,
+                          lat_max = 1.1910),
+                  start_date = "2019-01-01",
+                  end_date = "2019-10-28"
+)
+```
 
 ### Defining a data cube using files
 
@@ -239,25 +263,22 @@ plot(cbers_cube, band = "NDVI", time = 1)
 
 ## Regularizing data cubes 
 
-Analysis-ready data (ARD) collections available in AWS and DE Africa do not have consistent timelines. In general, images in neighboring tiles have different timelines. This is a problem when classifying large areas. In this case, users may want to produce data cubes with regular time intervals.  For example, a user may want to define the best Sentinel-2 pixel in a one-month period. This can be done in *sits* by the function `sits_regularize()`, which uses the package *gdalcubes* [@Appel2019]. For details in gdalcubes, please see [https://github.com/appelmar/gdalcubes](https://github.com/appelmar/gdalcubes).
+Analysis-ready data (ARD) collections available in AWS, USGS and DE Africa do not have consistent timelines. In general, images in neighboring tiles have different timelines. This is a problem when classifying large areas. In this case, users may want to produce data cubes with regular time intervals.  For example, a user may want to define the best Sentinel-2 pixel in a one-month period. This can be done in *sits* by the function `sits_regularize()`, which uses the package *gdalcubes* [@Appel2019]. For details in gdalcubes, please see [https://github.com/appelmar/gdalcubes](https://github.com/appelmar/gdalcubes).
 
 ```{r, eval = FALSE, echo = TRUE}
 # creating a data cube in AWS
 s2_cube <- sits_cube(source = "AWS",
-                     name = "T20LKP_2018_2019",
-                     collection = "sentinel-s2-l2a",
+                     collection = "sentinel-s2-l2a-cogs",
                      tiles = c("20LKP", "20LLP"),
                      start_date = as.Date("2018-07-01"),
                      end_date = as.Date("2018-08-31"),
-                     bands = c("B11", "CLOUD"),
-                     s2_resolution = 60
+                     bands = c("B08", "B11", "CLOUD"),
 )
 # list the timeline of the AWS S2 cube (there are 12 images)
 sits_timeline(s2_cube)
 # regularize the cube to one month intervals
 reg_cube <- sits_regularize(
           cube       = s2_cube,
-          name       = "T20LKP_20LKP_2OLLP_15D",
           output_dir = tempdir(),
           res = 60,
           period     = "P15D",

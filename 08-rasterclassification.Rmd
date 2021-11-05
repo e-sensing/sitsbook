@@ -13,9 +13,16 @@ This chapter shows the use of the SITS package for classification of satellite i
 
 ## Data cube classification
 
-To classify a data cube, use the function `sits_classify()`.  This function works in the same way for all types of data cubes, regardless of origin. When working with big EO data, the target environment for `sits` is a multicore virtual machine located close to the data repository. To achieve efficiency, `sits` implements parallel processing using the cores of the virtual machine. Users are not burdened with the need to learn how to do multiprocessing and, thus, their learning curve is shortened.
+<a href="https://www.kaggle.com/esensing/raster-classification-in-sits" target="_blank"><img src="https://img.shields.io/badge/example-available-green"/></a>
 
-The authors implemented a new fault tolerant multitasking procedure for big EO data classification. Image classification in `sits` is done by a cluster of independent workers linked to a virtual machine. To avoid communication overhead, all large payloads are read and stored independently; direct interaction between the main process and the workers is kept at a minimum. The customised approach is depicted in the figure below.
+To classify a data cube, use the function `sits_classify()`.  This function works in the same way for all types of data cubes, regardless of origin. When working with big EO data, the target environment for `sits` is a multicore virtual machine located close to the data repository. 
+
+
+
+
+## Parallel processing for performance improvement
+
+To achieve efficiency, `sits` implements a fault tolerant multitasking procedure for big EO data classification. Users are not burdened with the need to learn how to do multiprocessing. Thus, their learning curve is shortened. Image classification in `sits` is done by a cluster of independent workers linked to a virtual machine. To avoid communication overhead, all large payloads are read and stored independently; direct interaction between the main process and the workers is kept at a minimum. The customised approach is depicted in the figure below.
 
 1. Based on the size of the cube, the~number of cores, and~the available memory, divide the cube into chunks.
 2. The cube is divided into chunks along its spatial dimensions. Each chunk contains all temporal intervals.
@@ -32,7 +39,9 @@ This approach has many advantages. It works in any virtual machine that supports
 
 The classification algorithm allows users to choose how many processes will run the task in parallel, and also the size of each data chunk to be consumed at each iteration. This strategy enables `sits` to work on average desktop computers without depleting all computational resources. The code bellow illustrates how to classify a large brick image that accompany the package. 
 
-To reduce processing time, it is necessary to adjust `sits_classify()` according to the capabilities of the host environment. There is a trade-off between computing time, memory use, and I/O operations. The best trade-off has to be determined by the user, considering issues such disk read speed, number of cores in the server, and CPU performance.  The `memsize` parameter controls the size of the main memory (in GBytes) to be used for classification. A practical approach is to set `memsize` to about 50% of the total memory available in the virtual machine. Users choose the number of cores to be used for parallel processing by setting the parameter `multicores`. For small imagens, we suggest using a small number of cores (up to 4). In the case of big data, our experience is to use about 50% of the cores. 
+To reduce processing time, it is necessary to adjust `sits_classify()` according to the capabilities of the host environment. There is a trade-off between computing time, memory use, and I/O operations. The best trade-off has to be determined by the user, considering issues such disk read speed, number of cores in the server, and CPU performance.  The `memsize` parameter controls the size of the main memory (in GBytes) to be used for classification. A practical approach is to set `memsize` to about 75% to 80% of the total memory available in the virtual machine. Users choose the number of cores to be used for parallel processing by setting the parameter `multicores`. We suggest that the `multicores` parameter is set to 1/4 of `memsize`.
+
+
 
 
 ## Processing time estimates 

@@ -126,6 +126,9 @@ In practice, $\boldsymbol\Sigma_{i,t}$ is a user-controlled covariance matrix pa
 
 ## Use of Bayesian smoothing in SITS
 
+<a href="https://www.kaggle.com/esensing/raster-classification-in-sits" target="_blank"><img src="https://img.shields.io/badge/example-available-green"/></a>
+
+
 Doing post-processing using Bayesian smoothing in SITS is straightforward. The result of the `sits_classify` function applied to a data cube is set of probability images, one per class. The next step is to apply the `sits_smooth` function. By default, this function selects the most likely class for each pixel considering only the probabilities of each class for each pixel. To allow for Bayesian smoothing, it suffices to include the `type = bayesian` parameter (which is also the default). If desired, the `smoothness` parameter (associated to the hyperparameter $\sigma^2_k$ described above) can control the degree of smoothness. If so desired, the `smoothness` parameter can also be expressed as a matrix
 
 ```{r, echo = FALSE, include=FALSE}
@@ -147,16 +150,14 @@ rfor_model <- sits_train(samples_2bands, ml_method = sits_rfor(verbose = 0))
 data_dir <- system.file("extdata/sinop", package = "sitsdata")
 
 # create a raster metadata file based on the information about the files
-raster_cube <- sits_cube(source = "LOCAL",
-                       origin     = "BDC",
+raster_cube <- sits_cube(source   = "BDC",
                        collection = "MOD13Q1-6",
-                       name = "Sinop",
-                       data_dir = data_dir,
+                       data_dir   = data_dir,
                        parse_info = c("X1", "X2", "tile", "band", "date")
 )
 # classify the raster image and generate a probability file
 raster_probs <- sits_classify(raster_cube, ml_model = rfor_model, 
-                              memsize = 1, multicores = 1, 
+                              memsize = 12, multicores = 3, 
                               output_dir = tempdir())
 
 plot(raster_probs)
@@ -168,7 +169,10 @@ The plots show the class probabilities, which can then be smoothed by a bayesian
 # smooth the result with a bayesian filter
 raster_probs_bayes <- sits_smooth(raster_probs, 
                                   type = "bayes",
-                                  output_dir = tempdir())
+                                  output_dir = tempdir(),
+                                  memsize = 12, 
+                                  multicores = 3,
+                                  )
 # plot the result
 plot(raster_probs_bayes)
 ```
