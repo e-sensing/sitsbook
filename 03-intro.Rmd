@@ -12,7 +12,7 @@ This chapter present an overview of `sits` by showing an application example. Fo
 
 ---
 
-<a href="https://www.kaggle.com/esensing/introduction-to-sits" target="_blank"><img src="https://img.shields.io/badge/example-available-green"/></a>
+<a href="https://www.kaggle.com/esensing/introduction-to-sits" target="_blank"><img src="https://kaggle.com/static/images/open-in-kaggle.svg"/></a>
 
 
 Earth observation (EO) satellites provide a common and consistent set of information about the planet's land and oceans. Recently, most space agencies have adopted open data policies, making unprecedented amounts of satellite data available for research and operational use. This data deluge has brought about a significant challenge: *How to design and build technologies that allow the Earth observation community to analyze big data sets?* 
@@ -27,11 +27,11 @@ knitr::include_graphics("images/sits_general_view.png")
 
 ## Creating a Data Cube 
 
-In what follows, we introduce `sits` by showing a simple example fo land use and land cover classification. The first step is creating a data cube. The data cube is a set of analysis-ready MODIS MOD13Q1 images (collection 6) for the Sinop region of the State of Mato Grosso, Brazil, in the bands "NDVI" and "EVI", covering a one-year period from 2013-09-14. (We use the convention "year-month-day" for dates). Each band has 23 instances, each covering a 16-day period, which is the standard for the MOD13Q1 product[@Didan2015].  The data is available in the R package `sitsdata`, which contains data for the examples in this book. The code below shows how to create data cubes from local files. The data has been obtained from the Brazil Data Cube (BDC) repository and downloaded to be included in the `sitsdata` package. To work directly with data cubes in repositories such as AWS, MS/AZURE and the Brazil Data Cube, please see [Chapter  2](https://e-sensing.github.io/sitsbook/earth-observation-data-cubes.html).
+In what follows, we introduce `sits` by showing a simple example fo land use and land cover classification. The first step is creating a data cube. The data cube is a set of analysis-ready MODIS MOD13Q1 images (collection 6) for the Sinop region of the State of Mato Grosso, Brazil, in the bands "NDVI" and "EVI", covering a one-year period from 2013-09-14. (We use the convention "year-month-day" for dates). Each band has 23 instances, each covering a 16-day period, which is the standard for the MOD13Q1 product[@Didan2015].  The data is available in the R package `sitsdata`, which contains data for the examples in this book. The code below shows how to create data cubes from local files. The data has been obtained from the Brazil Data Cube (BDC) repository and downloaded to be included in the `sitsdata` package. To work directly with data cubes in repositories such as AWS, MS/Planetary Computer and the Brazil Data Cube, please see [Chapter  2](https://e-sensing.github.io/sitsbook/earth-observation-data-cubes.html).
 
 When building data cubes from images stored in a local machine, users need to provide information about the original source from with the data was downloaded. The reason to included such information is because there are no standards for the metadata used to process an image. Unfortunately, information such as band names, maximum/minimum values, and cloud pixels are set by the provider. When `sits` accesses local data, it needs to know where the data comes from. Hence the need to include `data_dir` parameter when defining a local cube.
 
-```{r, fig.align="center", fig.cap="Color composite image for 2013-09-14"}
+```{r, out.width = "100%", fig.cap="Color composite image for 2013-09-14"}
 data_dir <- system.file("extdata/sinop", package = "sitsdata")
 
 # create a raster metadata file based on the information about the files
@@ -68,52 +68,56 @@ plot(samples_forest_ndvi)
 
 ## Training a machine learning model
 
-After obtaining the time series, the next step is to select a suitable subset to use as training samples for a machine learning model. In this case, the time series data has four attributes ("EVI", "NDVI", "NIR", "MIR") and the data cube is composed only with data from the "NDVI" and "EVI" indexes.  We extract the "NDVI" and "EVI" indexes from the time series data set and use the resulting data for training a model. To build the classification model, we have chosen `sits_TempCNN()` from the methods available. This method implements a 1D convolution neural network [@Pelletier2019]. After training the model, we plot the result to how well it has converged to match the input data. For more details on the machine learning methods please see [Chapter 5](https://e-sensing.github.io/sitsbook/machine-learning-for-data-cubes-using-the-sits-package.html). 
+After obtaining the time series, the next step is to select a suitable subset to use as training samples for a machine learning model. In this case, the time series data has four attributes ("EVI", "NDVI", "NIR", "MIR") and the data cube is composed only with data from the "NDVI" and "EVI" indexes.  We extract the "NDVI" and "EVI" indexes from the time series data set and use the resulting data for training a model. To build the classification model, we have chosen `sits_rfor` from the methods available. This method implements a Random Forest model. For more details on the machine learning methods please see [Chapter 5](https://e-sensing.github.io/sitsbook/machine-learning-for-data-cubes-using-the-sits-package.html). 
 
-```{r, fig.cap="Validation of TempCNN model"}
+```{r}
 # select the bands "ndvi", "evi"
 samples_2bands <- sits_select(samples_matogrosso_mod13q1, bands = c("NDVI", "EVI"))
 
 #select a tempCNN model
-tcnn_model <- sits_train(data = samples_2bands, 
-                        ml_method = sits_TempCNN())
-plot(tcnn_model)
+rfor_model <- sits_train(data = samples_2bands, 
+                        ml_method = sits_rfor())
 ```
 ## Data cube classification
 
 The next step is to classify the data cube. This is achieved by using the `sits_classify()` function. The classification produces a set of probability maps, one for each class. For each map, the value of a pixel is proportional to the the probability that it belongs to the class. To visualize the result, we plot the probability maps. In the example below, we show the maps of two classes ("Forest" and "Pasture"). Details of the classification process are available in [Chapter 6](https://e-sensing.github.io/sitsbook/classification-of-images-in-data-cubes-using-satellite-image-time-series.html). 
 
-```{r, fig.cap = "Probability map for classes of each pixel"}
+```{r, out.width = "100%", fig.cap = "Probability map for classes of each pixel"}
 
 # classify the raster image
 sinop_probs <- sits_classify(data = sinop_cube, 
-                             ml_model = tcnn_model,
+                             ml_model = rfor_model,
                              multicores = 2,
-                             memsize = 8)
+                             memsize = 8,
+                             output_dir = "./tempdir")
 
 plot(sinop_probs, labels = c("Forest", "Pasture"))
 ```
+
+In the example above, as well as others in this book, we have chosen to write output files to the local directory "./tempdir". Users are welcome to chose any other directory. 
 
 ## Spatial smoothing
 
 When working with big EO data sets, there is a considerable degree of data variability in each class. As a result, some pixels will be misclassified. These errors are more likely to occur in transition areas between classes or when dealing with mixed pixels. To offset these problems, `sits` includes a post-processing smoothing method based on Bayesian probability. The `sits_smooth()` function uses information from a pixel's neighborhood to reduce uncertainty about its label, which is illustrated below. After smoothing, we plot the probability maps for classes "Forest" and "Pasture" to compare with the previous plot. For more discussion on post-processing and smoothing methods, please see [Chapter 7](https://e-sensing.github.io/sitsbook/post-classification-smoothing-using-bayesian-techniques-in-sits.html).
 
-```{r, fig.cap = "Smoothed probability maps"}
+```{r, out.width = "100%", fig.cap = "Smoothed probability maps"}
 # perform spatial smoothing
 sinop_smooth <- sits_smooth(sinop_probs,
                             multicores = 2,
-                            memsize = 8)
+                            memsize = 8,
+                            output_dir = "./tempdir")
 plot(sinop_smooth, labels = c("Forest", "Pasture"))
 ```
 ## Labelling a probability data cube
 
 After removing outliers using local smoothing, one can obtain the labeled classification map using the function `sits_label_classification()`. This function assigns each pixel to the class with highest probability. 
 
-```{r, fig.cap = "Labeled classification map", fig.align="center", fig.height=3, fig.width=6}
+```{r, fig.cap = "Labeled classification map", fig.align="center", out.width = "100%"}
 
 # label the probability file 
 # (by default selecting the class with higher probability)
-sinop_label <- sits_label_classification(sinop_smooth)
+sinop_label <- sits_label_classification(sinop_smooth, 
+                                         output_dir = "./tempdir")
 plot(sinop_label, title = "Sinop-label")
 ```
 
