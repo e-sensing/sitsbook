@@ -219,7 +219,7 @@ The [Brazil Data Cube](http://brazildatacube.org/) (BDC) is being built by Brazi
 knitr::include_graphics("images/bdc_grid.png")
 ```
 
-The regular ARD image collections available in the BDC are: "LC8_30_16D_STK-1" (Landsat OLI, 30m resolution, 16-day intervals),  "S2-SEN2COR_10_16D_STK-1" (Sentinel-2 MSI images with all bands interpolated to 10 meter resolution, 16-day intervals), "CB4_64_16D_STK-1" (CBERS 4/4A AWFI, 64m resolution, 16 days intervals), "CB4_20_1M_STK-1" (CBERS 4/4A MUX, 20m resoluton, one month intervals) and "MOD13Q1-6" (MODIS MOD13SQ1 product, collection 6, 250m resolution, 16-day intervals). For more details, use `sits_list_collections()`.
+The regular ARD image collections available in the BDC are: "LC8_30_16D_STK-1" (Landsat OLI, 30m resolution, 16-day intervals),  "S2-SEN2COR_10_16D_STK-1" (Sentinel-2 MSI images with all bands interpolated to 10 meter resolution, 16-day intervals), "CB4_64_16D_STK-1" (CBERS 4/4A AWFI, 64m resolution, 16 days intervals), "CB4_20_1M_STK-1" (CBERS 4/4A MUX, 20m resoluton, one month intervals) and "MOD13Q1-6" (MODIS MOD13SQ1 product, collection 6, 250m resolution, 16-day intervals). For more details, use `sits_list_collections(source = "BDC")`.
 
 To access the Brazil Data Cube, users need to provide their credentials using environmental variables, as shown below. Obtaining a BDC access key is free. Users only need to register at the [BDC site](https://brazildatacube.dpi.inpe.br/portal/explore) to obtain it. 
 ```{r,eval = FALSE}
@@ -299,7 +299,7 @@ plot(point_satveg)
 It is also possible to define data cubes using files that have been download from image collections and are available in a local  computer. These files are not associated to a STAC endpoint that describes them. For this reason, they need to be be organized and named according to a pre-established convention to allow SITS to create a data cube from them. All files associated to a data cube should be in the same directory and have the same spatial resolution and projection. Each file should contain a single image band for a single date. Each file name needs to include date and band. Information on the tile reference system should be provided. Users need to provide information about the original source from with the data was downloaded, to allow `sits` to retrieve information about image attribues such as band names, missing values, etc. When working with local cubes, the following parameters should be provided to the `sits_cube()` function:
 
 - `source` - name of the original data provider (possible values are "BDC" (Brazil Data Cube), "AWS" (Amazon Web Services), USGS (USGS Landsat), "MS-PC" (Microsoft Planetary Computer) or "DEAFRICA" (Digital Earth Africa)). 
-- `collection` - name of the collection from where the data was extracted. Please use function `sits_list_collections()` to see which collections are supported. 
+- `collection` - name of the collection from where the data was extracted. 
 - `data_dir` - directory where the image data is located.
 - `band` - optional parameter to describe the band to be retrived (see below).
 - `parse_info` - information to parse the file names and extract the information on the tile, date and band associated with each individual file. It is assumed that file names contain image descriptors separated by a delimiter (usually "_"). For example, `CBERS-4_AWFI_022024_B13_2018-02-02.tif` and `SENTINEL-2_MSI_L20KP_20m_B08_2021_03_29.jp2` are valid file names for sits. The `parse_info` parameter is a list of strings indicating at which position the names of `tile`, `date` and `band` are to be found. In the two file names above, the parsing info is respectively `c("X1", "X2", "tile", band", "date")` and `c("X1", "X2", "tile", "X3", "band", "date")`;
@@ -312,16 +312,16 @@ library(sits)
 # Create a cube based on a stack of CBERS data
 data_dir <- system.file("extdata/CBERS", package = "sitsdata")
 # list the first three files 
-list.files(data_dir)[1:3]
+list.files(data_dir)[1:2]
 ```
-
+In this example, to retrieve information on tile, date, and band, one need to set the `parse_info` parameter to `c("X1", "X2", "X3", "X4", "tile", "date", "X5", "band")`. In this case, the first four parts of the file name are discarded, the fifth ("022024") represents the tile, the sixth ("2018-08-29") is the image acquisition date, and the seventh ("EVI" or "NDVI") stands for the image band. The following code creates a local cube
 
 ```{r}
 # files are named using the convention 
 # "CB4_64_16D_STK_022024_2018-08-29_2018-09-13_EVI.tif"
 cbers_cube <- sits_cube(
       source = "BDC",
-      collection = "MOD13Q1-6",
+      collection = "CB4_64_16D_STK-1",
       data_dir = data_dir,
       delim = "_",
       parse_info = c("X1", "X2", "X3", "X4", "tile", "date", "X5", "band")
@@ -335,14 +335,14 @@ sits_bands(cbers_cube)
 ```
 
 ```{r}
-# plot the band B16 in the first time instance
-plot(cbers_cube, band = "NDVI", time = 1)
+# plot the band NDVI in the first time instance
+plot(cbers_cube, band = "NDVI", date = "2018-08-29")
 ```
 
 
 ## Regularizing data cubes 
 
-Analysis-ready data (ARD) collections available in AWS, MSPC, USGS and DE Africa are not regular in space and time. Bands may have different resolutions, images may not cover the entire time, and time intervals are not regular. For this reason, subsets of these collection need to be converted to regular data cubes before further processing and data analysis. This is done in *sits* by the function `sits_regularize()`, which uses the the package *gdalcubes* [@Appel2019]. For details in gdalcubes, please see [https://github.com/appelmar/gdalcubes](https://github.com/appelmar/gdalcubes).
+Analysis-ready data (ARD) collections available in AWS, MSPC, USGS and DE Africa are not regular in space and time. Bands may have different resolutions, images may not cover the entire time, and time intervals are not regular. For this reason, subsets of these collection need to be converted to regular data cubes before further processing and data analysis. This is done in *sits* by the function `sits_regularize()`, which relies on the package *gdalcubes* [@Appel2019]. For details in gdalcubes, please see [https://github.com/appelmar/gdalcubes](https://github.com/appelmar/gdalcubes).
 
 In the following example, the user has created an irregular data cube from the Sentinel-2 collection available in Microsoft's Planetary Computer (MSPC) for tiles "20LKP and "20LLP" in the state of Rondonia, Brazil. As described earlier in this chapter, because of the way ARD image collections are built, some of the images have invalid pixels, as shown below.  We first build an irregular data cube using `sits_cube()`.
 
@@ -357,6 +357,8 @@ s2_cube <- sits_cube(
     bands = c("B11", "CLOUD")
 )
 ```
+Because of different acquisition orbits of the Sentinel-2 and Sentinel-2A satellites, the two tiles also have different timelines.
+
 
 After building the cube, we can plot the first image, which only covers part of the tile.
 
@@ -367,14 +369,15 @@ s2_cube %>%
     plot(band = "B11", time = 1)
 ```
 
-Because of different acquisition orbits of the Sentinel-2 and Sentinel-2A satellites, the two tiles also have different timelines. Tile "20LKP" has 12 instances.
-
 ```{r}
 # select tile "20LKP" of the irregular cube and show its timeline
 s2_cube %>% 
     dplyr::filter(tile == "20LKP") %>% 
     sits_timeline()
 ```
+
+Because of different acquisition orbits of the Sentinel-2 and Sentinel-2A satellites, the two tiles also have different timelines. Tile "20LKP" has 12 instances.
+
 
 Tile "20LLP" has 24 instances.
 ```{r}
