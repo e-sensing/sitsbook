@@ -12,6 +12,7 @@ knitr::opts_chunk$set(
     fig.asp = 0.618,  # 1 / phi
     fig.show = "hold"
 )
+# create a temporary working directory for each chapter
 
 # load essentials packages
 library(tibble)
