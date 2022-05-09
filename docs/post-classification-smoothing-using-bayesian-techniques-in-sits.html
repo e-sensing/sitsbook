@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+<head>
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>Chapter 7 Post classification smoothing using Bayesian techniques in SITS | sits: Data Analysis and Machine Learning on Earth Observation Data Cubes with Satellite Image Time Series</title>
+  <meta name="description" content="This book describes the sits package." />
+  <meta name="generator" content="bookdown 0.21 and GitBook 2.6.7" />
+
+  <meta property="og:title" content="Chapter 7 Post classification smoothing using Bayesian techniques in SITS | sits: Data Analysis and Machine Learning on Earth Observation Data Cubes with Satellite Image Time Series" />
+  <meta property="og:type" content="book" />
+  
+  <meta property="og:image" content="images/cover.png" />
+  <meta property="og:description" content="This book describes the sits package." />
+  
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="Chapter 7 Post classification smoothing using Bayesian techniques in SITS | sits: Data Analysis and Machine Learning on Earth Observation Data Cubes with Satellite Image Time Series" />
+  
+  <meta name="twitter:description" content="This book describes the sits package." />
+  <meta name="twitter:image" content="images/cover.png" />
+
+<meta name="author" content="Rolf Simoes" />
+<meta name="author" content="Gilberto Camara" />
+<meta name="author" content="Felipe Souza" />
+<meta name="author" content="Lorena Santos" />
+<meta name="author" content="Pedro R. Andrade" />
+<meta name="author" content="Alexandre Carvalho" />
+<meta name="author" content="Karine Ferreira" />
+<meta name="author" content="Gilberto Queiroz" />
+
+
+<meta name="date" content="2021-04-08" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  
+  
+<link rel="prev" href="classification-of-images-in-data-cubes-using-satellite-image-time-series.html"/>
+<link rel="next" href="validation-and-accuracy-measurements-in-sits.html"/>
+<script src="libs/header-attrs-2.7/header-attrs.js"></script>
+<script src="libs/jquery-2.2.3/jquery.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+
+
+
+<style type="text/css">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+<link rel="stylesheet" href="css/style.css" type="text/css" />
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li><a href="./">SITS Book</a></li>
+
+<li class="divider"></li>
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i>Preface</a>
+<ul>
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html#who-this-book-is-for"><i class="fa fa-check"></i>Who this book is for</a></li>
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html#how-to-use-this-book"><i class="fa fa-check"></i>How to use this book</a></li>
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html#publications-using-sits"><i class="fa fa-check"></i>Publications using sits</a></li>
+</ul></li>
+<li class="chapter" data-level="" data-path="setup.html"><a href="setup.html"><i class="fa fa-check"></i>Setup</a>
+<ul>
+<li class="chapter" data-level="" data-path="setup.html"><a href="setup.html#docker-images"><i class="fa fa-check"></i>Docker images</a></li>
+</ul></li>
+<li class="chapter" data-level="" data-path="acknowledgements.html"><a href="acknowledgements.html"><i class="fa fa-check"></i>Acknowledgements</a></li>
+<li class="part"><span><b>I Overview</b></span></li>
+<li class="chapter" data-level="1" data-path="introduction.html"><a href="introduction.html"><i class="fa fa-check"></i><b>1</b> Introduction</a>
+<ul>
+<li class="chapter" data-level="1.1" data-path="introduction.html"><a href="introduction.html#workflow-and-api"><i class="fa fa-check"></i><b>1.1</b> Workflow and API</a></li>
+<li class="chapter" data-level="1.2" data-path="introduction.html"><a href="introduction.html#handling-data-cubes-in-sits"><i class="fa fa-check"></i><b>1.2</b> Handling Data Cubes in sits</a></li>
+<li class="chapter" data-level="1.3" data-path="introduction.html"><a href="introduction.html#handling-satellite-image-time-series-in-sits"><i class="fa fa-check"></i><b>1.3</b> Handling satellite image time series in <strong>sits</strong></a>
+<ul>
+<li class="chapter" data-level="1.3.1" data-path="introduction.html"><a href="introduction.html#data-structure"><i class="fa fa-check"></i><b>1.3.1</b> Data structure</a></li>
+<li class="chapter" data-level="1.3.2" data-path="introduction.html"><a href="introduction.html#obtaining-time-series-data"><i class="fa fa-check"></i><b>1.3.2</b> Obtaining time series data</a></li>
+</ul></li>
+<li class="chapter" data-level="1.4" data-path="introduction.html"><a href="introduction.html#sample-quality-control-using-clustering"><i class="fa fa-check"></i><b>1.4</b> Sample quality control using clustering</a></li>
+<li class="chapter" data-level="1.5" data-path="introduction.html"><a href="introduction.html#classification-using-machine-learning"><i class="fa fa-check"></i><b>1.5</b> Classification using machine learning</a></li>
+<li class="chapter" data-level="1.6" data-path="introduction.html"><a href="introduction.html#cube-classification"><i class="fa fa-check"></i><b>1.6</b> Cube classification</a></li>
+<li class="chapter" data-level="1.7" data-path="introduction.html"><a href="introduction.html#smoothing-and-labelling-of-raster-data-after-classification"><i class="fa fa-check"></i><b>1.7</b> Smoothing and Labelling of raster data after classification</a></li>
+<li class="chapter" data-level="1.8" data-path="introduction.html"><a href="introduction.html#validation-techniques"><i class="fa fa-check"></i><b>1.8</b> Validation techniques</a></li>
+<li class="chapter" data-level="1.9" data-path="introduction.html"><a href="introduction.html#final-remarks"><i class="fa fa-check"></i><b>1.9</b> Final remarks</a></li>
+</ul></li>
+<li class="chapter" data-level="2" data-path="earth-observation-data-cubes.html"><a href="earth-observation-data-cubes.html"><i class="fa fa-check"></i><b>2</b> Earth observation data cubes</a>
+<ul>
+<li class="chapter" data-level="2.1" data-path="earth-observation-data-cubes.html"><a href="earth-observation-data-cubes.html#image-data-cubes-as-the-basis-for-big-earth-observation-data-analysis"><i class="fa fa-check"></i><b>2.1</b> Image data cubes as the basis for big Earth observation data analysis</a></li>
+<li class="chapter" data-level="2.2" data-path="earth-observation-data-cubes.html"><a href="earth-observation-data-cubes.html#using-stac-to-access-image-collection"><i class="fa fa-check"></i><b>2.2</b> Using STAC to Access Image Collection</a></li>
+<li class="chapter" data-level="2.3" data-path="earth-observation-data-cubes.html"><a href="earth-observation-data-cubes.html#accessing-data-cubes-in-amazon-web-services"><i class="fa fa-check"></i><b>2.3</b> Accessing data cubes in Amazon Web Services</a></li>
+<li class="chapter" data-level="2.4" data-path="earth-observation-data-cubes.html"><a href="earth-observation-data-cubes.html#accessing-the-brazil-data-cube"><i class="fa fa-check"></i><b>2.4</b> Accessing the Brazil Data Cube</a></li>
+<li class="chapter" data-level="2.5" data-path="earth-observation-data-cubes.html"><a href="earth-observation-data-cubes.html#defining-a-data-cube-using-files"><i class="fa fa-check"></i><b>2.5</b> Defining a data cube using files</a></li>
+<li class="chapter" data-level="2.6" data-path="earth-observation-data-cubes.html"><a href="earth-observation-data-cubes.html#regularizing-data-cubes"><i class="fa fa-check"></i><b>2.6</b> Regularizing data cubes</a></li>
+</ul></li>
+<li class="chapter" data-level="3" data-path="working-with-time-series.html"><a href="working-with-time-series.html"><i class="fa fa-check"></i><b>3</b> Working with time series</a>
+<ul>
+<li class="chapter" data-level="3.1" data-path="working-with-time-series.html"><a href="working-with-time-series.html#data-structures-for-satellite-time-series"><i class="fa fa-check"></i><b>3.1</b> Data structures for satellite time series</a></li>
+<li class="chapter" data-level="3.2" data-path="working-with-time-series.html"><a href="working-with-time-series.html#utilities-for-handling-time-series"><i class="fa fa-check"></i><b>3.2</b> Utilities for handling time series</a></li>
+<li class="chapter" data-level="3.3" data-path="working-with-time-series.html"><a href="working-with-time-series.html#time-series-visualisation"><i class="fa fa-check"></i><b>3.3</b> Time series visualisation</a></li>
+<li class="chapter" data-level="3.4" data-path="working-with-time-series.html"><a href="working-with-time-series.html#obtaining-time-series-data-from-data-cubes"><i class="fa fa-check"></i><b>3.4</b> Obtaining time series data from data cubes</a></li>
+<li class="chapter" data-level="3.5" data-path="working-with-time-series.html"><a href="working-with-time-series.html#filtering-techniques-for-time-series"><i class="fa fa-check"></i><b>3.5</b> Filtering techniques for time series</a>
+<ul>
+<li class="chapter" data-level="3.5.1" data-path="working-with-time-series.html"><a href="working-with-time-series.html#savitzkygolay-filter"><i class="fa fa-check"></i><b>3.5.1</b> Savitzky–Golay filter</a></li>
+<li class="chapter" data-level="3.5.2" data-path="working-with-time-series.html"><a href="working-with-time-series.html#whittaker-filter"><i class="fa fa-check"></i><b>3.5.2</b> Whittaker filter</a></li>
+</ul></li>
+</ul></li>
+<li class="part"><span><b>II Clustering</b></span></li>
+<li class="chapter" data-level="4" data-path="time-series-clustering-to-improve-the-quality-of-training-samples.html"><a href="time-series-clustering-to-improve-the-quality-of-training-samples.html"><i class="fa fa-check"></i><b>4</b> Time Series Clustering to Improve the Quality of Training Samples</a>
+<ul>
+<li class="chapter" data-level="4.1" data-path="time-series-clustering-to-improve-the-quality-of-training-samples.html"><a href="time-series-clustering-to-improve-the-quality-of-training-samples.html#clustering-for-sample-quality-control"><i class="fa fa-check"></i><b>4.1</b> Clustering for sample quality control</a></li>
+<li class="chapter" data-level="4.2" data-path="time-series-clustering-to-improve-the-quality-of-training-samples.html"><a href="time-series-clustering-to-improve-the-quality-of-training-samples.html#hierachical-clustering-for-sample-quality-control"><i class="fa fa-check"></i><b>4.2</b> Hierachical clustering for Sample Quality Control</a>
+<ul>
+<li class="chapter" data-level="4.2.1" data-path="time-series-clustering-to-improve-the-quality-of-training-samples.html"><a href="time-series-clustering-to-improve-the-quality-of-training-samples.html#creating-a-dendogram"><i class="fa fa-check"></i><b>4.2.1</b> Creating a dendogram</a></li>
+<li class="chapter" data-level="4.2.2" data-path="time-series-clustering-to-improve-the-quality-of-training-samples.html"><a href="time-series-clustering-to-improve-the-quality-of-training-samples.html#using-a-dendrogram-to-evaluate-sample-quality"><i class="fa fa-check"></i><b>4.2.2</b> Using a dendrogram to evaluate sample quality</a></li>
+</ul></li>
+<li class="chapter" data-level="4.3" data-path="time-series-clustering-to-improve-the-quality-of-training-samples.html"><a href="time-series-clustering-to-improve-the-quality-of-training-samples.html#using-self-organizing-maps-for-sample-quality"><i class="fa fa-check"></i><b>4.3</b> Using Self-organizing Maps for Sample Quality</a>
+<ul>
+<li class="chapter" data-level="4.3.1" data-path="time-series-clustering-to-improve-the-quality-of-training-samples.html"><a href="time-series-clustering-to-improve-the-quality-of-training-samples.html#introduction-to-self-organizing-maps"><i class="fa fa-check"></i><b>4.3.1</b> Introduction to Self-organizing Maps</a></li>
+<li class="chapter" data-level="4.3.2" data-path="time-series-clustering-to-improve-the-quality-of-training-samples.html"><a href="time-series-clustering-to-improve-the-quality-of-training-samples.html#using-som-for-removing-class-noise"><i class="fa fa-check"></i><b>4.3.2</b> Using SOM for removing class noise</a></li>
+<li class="chapter" data-level="4.3.3" data-path="time-series-clustering-to-improve-the-quality-of-training-samples.html"><a href="time-series-clustering-to-improve-the-quality-of-training-samples.html#comparing-global-accuracy-of-original-and-clean-samples"><i class="fa fa-check"></i><b>4.3.3</b> Comparing Global Accuracy of Original and Clean Samples</a></li>
+</ul></li>
+<li class="chapter" data-level="4.4" data-path="time-series-clustering-to-improve-the-quality-of-training-samples.html"><a href="time-series-clustering-to-improve-the-quality-of-training-samples.html#conclusion"><i class="fa fa-check"></i><b>4.4</b> Conclusion</a></li>
+</ul></li>
+<li class="part"><span><b>III Classification</b></span></li>
+<li class="chapter" data-level="5" data-path="machine-learning-for-data-cubes-using-the-sits-package.html"><a href="machine-learning-for-data-cubes-using-the-sits-package.html"><i class="fa fa-check"></i><b>5</b> Machine Learning for Data Cubes using the SITS package</a>
+<ul>
+<li class="chapter" data-level="5.1" data-path="machine-learning-for-data-cubes-using-the-sits-package.html"><a href="machine-learning-for-data-cubes-using-the-sits-package.html#machine-learning-classification"><i class="fa fa-check"></i><b>5.1</b> Machine learning classification</a></li>
+<li class="chapter" data-level="5.2" data-path="machine-learning-for-data-cubes-using-the-sits-package.html"><a href="machine-learning-for-data-cubes-using-the-sits-package.html#visualizing-samples"><i class="fa fa-check"></i><b>5.2</b> Visualizing Samples</a></li>
+<li class="chapter" data-level="5.3" data-path="machine-learning-for-data-cubes-using-the-sits-package.html"><a href="machine-learning-for-data-cubes-using-the-sits-package.html#common-interface-to-machine-learning-and-deeplearning-models"><i class="fa fa-check"></i><b>5.3</b> Common interface to machine learning and deeplearning models</a></li>
+<li class="chapter" data-level="5.4" data-path="machine-learning-for-data-cubes-using-the-sits-package.html"><a href="machine-learning-for-data-cubes-using-the-sits-package.html#random-forests"><i class="fa fa-check"></i><b>5.4</b> Random forests</a></li>
+<li class="chapter" data-level="5.5" data-path="machine-learning-for-data-cubes-using-the-sits-package.html"><a href="machine-learning-for-data-cubes-using-the-sits-package.html#support-vector-machines"><i class="fa fa-check"></i><b>5.5</b> Support Vector Machines</a></li>
+<li class="chapter" data-level="5.6" data-path="machine-learning-for-data-cubes-using-the-sits-package.html"><a href="machine-learning-for-data-cubes-using-the-sits-package.html#extreme-gradient-boosting"><i class="fa fa-check"></i><b>5.6</b> Extreme Gradient Boosting</a></li>
+<li class="chapter" data-level="5.7" data-path="machine-learning-for-data-cubes-using-the-sits-package.html"><a href="machine-learning-for-data-cubes-using-the-sits-package.html#deep-learning-using-multi-layer-perceptrons"><i class="fa fa-check"></i><b>5.7</b> Deep learning using multi-layer perceptrons</a></li>
+<li class="chapter" data-level="5.8" data-path="machine-learning-for-data-cubes-using-the-sits-package.html"><a href="machine-learning-for-data-cubes-using-the-sits-package.html#combined-1d-cnn-and-multi-layer-perceptron-networks"><i class="fa fa-check"></i><b>5.8</b> Combined 1D CNN and multi-layer perceptron networks</a></li>
+<li class="chapter" data-level="5.9" data-path="machine-learning-for-data-cubes-using-the-sits-package.html"><a href="machine-learning-for-data-cubes-using-the-sits-package.html#lstm-convolutional-networks-for-time-series-classification"><i class="fa fa-check"></i><b>5.9</b> LSTM Convolutional Networks for Time Series Classification</a></li>
+</ul></li>
+<li class="chapter" data-level="6" data-path="classification-of-images-in-data-cubes-using-satellite-image-time-series.html"><a href="classification-of-images-in-data-cubes-using-satellite-image-time-series.html"><i class="fa fa-check"></i><b>6</b> Classification of Images in Data Cubes using Satellite Image Time Series</a>
+<ul>
+<li class="chapter" data-level="6.1" data-path="classification-of-images-in-data-cubes-using-satellite-image-time-series.html"><a href="classification-of-images-in-data-cubes-using-satellite-image-time-series.html#image-data-cubes-as-the-basis-for-big-earth-observation-data-analysis-1"><i class="fa fa-check"></i><b>6.1</b> Image data cubes as the basis for big Earth observation data analysis</a></li>
+<li class="chapter" data-level="6.2" data-path="classification-of-images-in-data-cubes-using-satellite-image-time-series.html"><a href="classification-of-images-in-data-cubes-using-satellite-image-time-series.html#defining-a-data-cube-using-files-organised-as-raster-bricks"><i class="fa fa-check"></i><b>6.2</b> Defining a data cube using files organised as raster bricks</a></li>
+<li class="chapter" data-level="6.3" data-path="classification-of-images-in-data-cubes-using-satellite-image-time-series.html"><a href="classification-of-images-in-data-cubes-using-satellite-image-time-series.html#classification-using-machine-learning-1"><i class="fa fa-check"></i><b>6.3</b> Classification using machine learning</a></li>
+<li class="chapter" data-level="6.4" data-path="classification-of-images-in-data-cubes-using-satellite-image-time-series.html"><a href="classification-of-images-in-data-cubes-using-satellite-image-time-series.html#cube-classification-1"><i class="fa fa-check"></i><b>6.4</b> Cube classification</a>
+<ul>
+<li class="chapter" data-level="6.4.1" data-path="classification-of-images-in-data-cubes-using-satellite-image-time-series.html"><a href="classification-of-images-in-data-cubes-using-satellite-image-time-series.html#steps-for-cube-classification"><i class="fa fa-check"></i><b>6.4.1</b> Steps for cube classification</a></li>
+<li class="chapter" data-level="6.4.2" data-path="classification-of-images-in-data-cubes-using-satellite-image-time-series.html"><a href="classification-of-images-in-data-cubes-using-satellite-image-time-series.html#adjustments-for-improved-performance"><i class="fa fa-check"></i><b>6.4.2</b> Adjustments for improved performance</a></li>
+</ul></li>
+<li class="chapter" data-level="6.5" data-path="classification-of-images-in-data-cubes-using-satellite-image-time-series.html"><a href="classification-of-images-in-data-cubes-using-satellite-image-time-series.html#final-remarks-1"><i class="fa fa-check"></i><b>6.5</b> Final remarks</a></li>
+</ul></li>
+<li class="part"><span><b>IV Post classification</b></span></li>
+<li class="chapter" data-level="7" data-path="post-classification-smoothing-using-bayesian-techniques-in-sits.html"><a href="post-classification-smoothing-using-bayesian-techniques-in-sits.html"><i class="fa fa-check"></i><b>7</b> Post classification smoothing using Bayesian techniques in SITS</a>
+<ul>
+<li class="chapter" data-level="7.1" data-path="post-classification-smoothing-using-bayesian-techniques-in-sits.html"><a href="post-classification-smoothing-using-bayesian-techniques-in-sits.html#introduction-1"><i class="fa fa-check"></i><b>7.1</b> Introduction</a></li>
+<li class="chapter" data-level="7.2" data-path="post-classification-smoothing-using-bayesian-techniques-in-sits.html"><a href="post-classification-smoothing-using-bayesian-techniques-in-sits.html#overview-of-bayesian-estimattion"><i class="fa fa-check"></i><b>7.2</b> Overview of Bayesian estimattion</a>
+<ul>
+<li class="chapter" data-level="7.2.1" data-path="post-classification-smoothing-using-bayesian-techniques-in-sits.html"><a href="post-classification-smoothing-using-bayesian-techniques-in-sits.html#smmothing-using-bayes-rule"><i class="fa fa-check"></i><b>7.2.1</b> Smmothing using Bayes’ rule</a></li>
+</ul></li>
+<li class="chapter" data-level="7.3" data-path="post-classification-smoothing-using-bayesian-techniques-in-sits.html"><a href="post-classification-smoothing-using-bayesian-techniques-in-sits.html#use-of-bayesian-smoothing-in-sits"><i class="fa fa-check"></i><b>7.3</b> Use of Bayesian smoothing in SITS</a></li>
+</ul></li>
+<li class="chapter" data-level="8" data-path="validation-and-accuracy-measurements-in-sits.html"><a href="validation-and-accuracy-measurements-in-sits.html"><i class="fa fa-check"></i><b>8</b> Validation and accuracy measurements in SITS</a>
+<ul>
+<li class="chapter" data-level="8.1" data-path="validation-and-accuracy-measurements-in-sits.html"><a href="validation-and-accuracy-measurements-in-sits.html#validation-techniques-1"><i class="fa fa-check"></i><b>8.1</b> Validation techniques</a></li>
+<li class="chapter" data-level="8.2" data-path="validation-and-accuracy-measurements-in-sits.html"><a href="validation-and-accuracy-measurements-in-sits.html#comparing-different-validation-methods"><i class="fa fa-check"></i><b>8.2</b> Comparing different validation methods</a></li>
+</ul></li>
+<li class="chapter" data-level="" data-path="references.html"><a href="references.html"><i class="fa fa-check"></i>References</a></li>
+<li class="divider"></li>
+<li><a href="https://github.com/rstudio/bookdown" target="blank">Published with bookdown</a></li>
+
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./"><strong>sits</strong>: Data Analysis and Machine Learning on Earth Observation Data Cubes with Satellite Image Time Series</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="post-classification-smoothing-using-bayesian-techniques-in-sits" class="section level1" number="7">
+<h1><span class="header-section-number">Chapter 7</span> Post classification smoothing using Bayesian techniques in SITS</h1>
+<hr />
+<p>This chapter describes a Bayesian smoothing method to reclassify the pixels,
+based on the machine learning probabilities. We consider that the output of the
+machine learning algorithm provides, for each pixel, the information on the probability
+of such pixel belonging to each of the target classes. Usually, we label a pixel
+as being of a given class if the associated class probability is higher than the
+probability of it belonging to any of the other classes. The observation of the
+class probabilities of each pixel is taken as our initial belief on what the actual
+class of the pixel is. We then use Bayes’ rule to consider how much the class probabilities
+of the neighbouring pixels affect our original belief.</p>
+<hr />
+<div id="introduction-1" class="section level2" number="7.1">
+<h2><span class="header-section-number">7.1</span> Introduction</h2>
+<p>Image classification post-processing has been defined as “a refinement of the labelling in a classified image in order to enhance its classification accuracy” <span class="citation">(Huang et al. 2014)</span>. In remote sensing image analysis, these procedures are used to combine pixel-based classification methods with a spatial post-processing method to remove outliers and misclassified pixels. For pixel-based classifiers, post-processing methods enable the inclusion of spatial information in the final results.</p>
+<p>Post-processing is a desirable step in any classification process. Most statistical classifiers use training samples derived from “pure” pixels, that have been selected by users as representative of the desired output classes. However, images contain many mixed pixels irrespective of the resolution. Also, there is a considerable degree of data variability in each class. These effects lead to outliers whose chance of misclassification is significant. To offset these problems, most post-processing methods use the “smoothness assumption” <span class="citation">(Schindler 2012)</span>: nearby pixels tend to have the same label. To put this assumption in practice, smoothing methods use the neighbourhood information to remove outliers and enhance consistency in the resulting product.</p>
+<p>Smoothing methods are an important complement to machine learning algorithms for image classification. Since these methods are mostly pixel-based, it is useful to complement them with post-processing smoothing to include spatial information in the result. A traditional choice for smoothing classified images is the majority filter, where the class of the central pixel is replaced by the most frequent class of the neighbourhood. This technique is rather simplistic; more sophisticated methods use class probabilities. For each pixel, machine learning and other statistical algorithms provide the probabilities of that pixel belonging to each of the classes. As a first step in obtaining a result, each pixel is assigned to the class whose probability is higher. After this step, smoothing methods use class probabilities to detect and correct outliers or misclassified pixels.</p>
+<p>In this vignette, we introduce a Bayesian smoothing method, which provides the means to incorporate prior knowledge in data analysis. Bayesian inference can be thought of as way of coherently updating our uncertainty in the light of new evidence. It allows the inclusion of expert knowledge on the derivation of probabilities. As stated by <span class="citation">(<strong>Spiegelhalter2009?</strong>)</span>: “In the Bayesian paradigm, degrees of belief in states of nature are specified. Bayesian statistical methods start with existing ‘prior’ beliefs, and update these using data to give ‘posterior’ beliefs, which may be used as the basis for inferential decisions.” Bayesian inference has now been established as a major method for assessing probability.</p>
+</div>
+<div id="overview-of-bayesian-estimattion" class="section level2" number="7.2">
+<h2><span class="header-section-number">7.2</span> Overview of Bayesian estimattion</h2>
+<p>Most applications of machine learning methods for image classification use only the categorical result of the classifier which is the most probable class. The proposed method uses all class probabilities to compute our confidence in the result. In a Bayesian context, probability is taken as a subjective belief. The observation of the class probabilities of each pixel is taken as our initial belief on what the actual class of the pixel is. We then use Bayes’ rule to consider how much the class probabilities of the neighbouring pixels affect our original belief. In the case of continuous probability distributions, Bayesian inference is expressed by the rule:</p>
+<p><span class="math display">\[
+\pi(\theta|x) \propto \pi(x|\theta)\pi(\theta)
+\]</span></p>
+<p>Bayesian inference involves the estimation of an unknown parameter <span class="math inline">\(\theta\)</span>, which is the random variable that describe what we are trying to measure. In the case of smoothing of image classification, <span class="math inline">\(\theta\)</span> is the class probability for a given pixel. We model our initial belief about this value by a probability distribution, <span class="math inline">\(\pi(\theta)\)</span>, called the  distribution. It represents what we know about <span class="math inline">\(\theta\)</span>  observing the data. The distribution <span class="math inline">\(\pi(x|\theta)\)</span>, called the , is estimated based on the observed data. It represents the added information provided by our observations. The  distribution <span class="math inline">\(\pi(\theta|x)\)</span> is our improved belief of <span class="math inline">\(\theta\)</span>  seeing the data. Bayes’s rule states that the  probability is proportional to the product of the  and the  probability.</p>
+<div id="smmothing-using-bayes-rule" class="section level3" number="7.2.1">
+<h3><span class="header-section-number">7.2.1</span> Smmothing using Bayes’ rule</h3>
+<p>Given the general principles of Bayesian inference, smoothing of classified images requires estimating the  and the  probability of each pixel belonging to each class. In order to express our problem in a more tractable form, we perform data transformations.
+More formally, consider a set of <span class="math inline">\(K\)</span> classes that are candidates for labelling each pixel. Let <span class="math inline">\(p_{i,k}\)</span> be the probability of pixel <span class="math inline">\(i\)</span> belonging to class <span class="math inline">\(k\)</span>, <span class="math inline">\(k = 1, \dots, K\)</span>. We have
+<span class="math display">\[
+\sum_{k=1}^K p_{i,k} = 1, p_{i,k} &gt; 0
+\]</span>
+We label a pixel <span class="math inline">\(p_i\)</span> as being of class <span class="math inline">\(k\)</span> if
+<span class="math display">\[
+    p_{i,k} &gt; p_{i,m}, \forall m = 1, \dots, K, m \neq k
+\]</span></p>
+<p>For each pixel <span class="math inline">\(i\)</span>, we take the odds of the classification for class <span class="math inline">\(k\)</span>, expressed as
+<span class="math display">\[
+    O_{i,k} = p_{i,k} / (1-p_{i,k})
+\]</span>
+where <span class="math inline">\(p_{i,k}\)</span> is the probability of class <span class="math inline">\(k\)</span>. We have more confidence in pixels with higher odds since their class assignment is stronger. There are situations, such as border pixels or mixed ones, where the odds of different classes are similar in magnitude. We take them as cases of low confidence in the classification result. To assess and correct these cases, Bayesian smoothing methods borrow strength from the neighbours and reduced the variance of the estimated class for each pixel.</p>
+<p>We further make the transformation
+<span class="math display">\[
+    x_{i,k} = \log [O_{i,k}]
+\]</span>
+which measures the  (log of the odds) associated to classifying the pixel <span class="math inline">\(i\)</span> as being of class <span class="math inline">\(k\)</span>. The support of <span class="math inline">\(x_{i,k}\)</span> is <span class="math inline">\(\mathbb{R}\)</span>. Let <span class="math inline">\(V_{i}\)</span> be a spatial neighbourhood for pixel <span class="math inline">\(i\)</span>. We use Bayes’ rule to update the value <span class="math inline">\(x_{i,k}\)</span> based on the neighbourhood, assuming independence between the classes. In this way, the update is performed for each class <span class="math inline">\(k\)</span> at a time.</p>
+<p>For each pixel, the random variable that describes the class probability is denoted by <span class="math inline">\(\theta_{i,k}\)</span>. Therefore, we can express Bayes’ rule for each combination of pixel and class as</p>
+<p><span class="math display">\[
+\pi(\theta_{i,k}|x_{i,k}) \propto \pi(x_{i,k}|\theta_{i,k})\pi(\theta_{i,k}).   
+\]</span></p>
+<p>We assume the prior distribution <span class="math inline">\(\pi(\theta_{i,k})\)</span> and the likelihood <span class="math inline">\(\pi(x_{i,k}|\theta_{i,k})\)</span> are modelled by Gaussian distributions. In this case, the posterior will also be a Gaussian distribution. To estimate the prior distribution for a pixel, we consider that all pixels in the spatial neighbourhood <span class="math inline">\(V_{i}\)</span> of pixel <span class="math inline">\(i\)</span> follow the same Gaussian distribution with parameters <span class="math inline">\(m_{i,k}\)</span> and <span class="math inline">\(s^2_{i,k}\)</span>. Thus, the prior is expressed as
+<span class="math display">\[
+\theta_{i,k} \sim N(m_{i,k}, s^2_{i,k}).    
+\]</span></p>
+<p>In the above equation, the parameter <span class="math inline">\(m_{i,k}\)</span> is the local mean of the probability distribution of values for class <span class="math inline">\(k\)</span> and <span class="math inline">\(s^2_{i,k}\)</span> is the local variance for class <span class="math inline">\(k\)</span>. We estimate the local mean and variance by considering the neighbouring pixels in space. Let <span class="math inline">\(\#(V_{i})\)</span> be the number of elements in the spatial neighbourhood <span class="math inline">\(V _{i}\)</span>. The local mean is calculated by:</p>
+<p><span class="math display">\[
+    m_{i,k} = \frac{\displaystyle\sum_{j \in V_{i}} x_{j,k}}{\#(V_{i})}
+\]</span></p>
+<p>and the local variance by
+<span class="math display">\[
+s^2_{i,k} = \frac{\displaystyle\sum_{j \in V_{i}} [x_{j,k} - m_{i,k}]^2}{\#(V_{i})-1}.  
+\]</span></p>
+<p>We also consider that the likelihood follows a normal distribution. We take the likelihood as being the distribution of <span class="math inline">\(x_{i,k}\)</span>, conditioned by the local variable <span class="math inline">\(\theta_{i,k}\)</span>. This conditional distribution is also taken as normal with parameters <span class="math inline">\(\theta_{i,k}\)</span> and <span class="math inline">\(\sigma^2_{k}\)</span>, expressed as
+<span class="math display">\[
+x_{i,k} | \theta_{i,k} \sim N(\theta_{i,k}, \sigma^2_{k})
+\]</span></p>
+<p>In the likelihood equation above, <span class="math inline">\(\sigma^2_{k}\)</span> is a hyper-parameter that controls the level of smoothness.The Bayesian smoothing estimates the value of <span class="math inline">\(\theta _{i,k}\)</span> conditioned by the data <span class="math inline">\(x_{i,k}\)</span>. This is the updated value of the logit of class probability for class <span class="math inline">\(k\)</span> of pixel <span class="math inline">\(i\)</span>. Since both the prior and the likelihood are assumed as Gaussian distribution, based on Bayesian statistics the value of conditional mean for a normal distribution is given by:
+<span class="math display">\[
+{E}[\theta_{i,k} | x_{i,k}] =
+\frac{m_{i,t} \times \sigma^2_{k} + 
+x_{i,k} \times s^2_{i,k}}{ \sigma^2_{k} +s^2_{i,k}} 
+\]</span></p>
+<p>which can also be expressed as
+<span class="math display">\[
+    {E}[\theta_{i,k} | x_{i,k}] =
+\Biggl [ \frac{s^2_{i,k}}{\sigma^2_{k} +s^2_{i,k}} \Biggr ] \times
+x_{i,k} +
+\Biggl [ \frac{\sigma^2_{k}}{\sigma^2_{k} +s^2_{i,k}} \Biggr ] \times m_{i,k}
+\]</span></p>
+<p>The updated value for the class probability of the pixel is a weighted average between the original logit value <span class="math inline">\(x_{i,k}\)</span> and the mean of the class logits <span class="math inline">\(m_{i,k}\)</span> for the neighboring pixels. When the local class variance of the neighbors <span class="math inline">\(s^2_{i,k}\)</span> is high relative to the smoothing factor <span class="math inline">\(\sigma^2_k\)</span>, our confidence on the influence of the neighbors is low, and the smoothing algorithm gives more weight to the original pixel value <span class="math inline">\(x_{i,k}\)</span>. When the local class variance <span class="math inline">\(s^2_{i,k}\)</span> decreases relative to the smoothness factor <span class="math inline">\(\sigma^2_k\)</span>, then our confidence on the influence of the neighborhood increases. The smoothing procedure will be most relevant in situations where the original classification odds ratio is low, showing a low level of separability between classes. In these cases, the updated values of the classes will be influenced by the local class variances.</p>
+<p>The hyperparameter <span class="math inline">\(\sigma^2_k\)</span> sets the level of smoothness. If <span class="math inline">\(\sigma^2_k\)</span> is zero, the smoothed value <span class="math inline">\({E}[\mu_{i,,k} | l_{i,k}]\)</span> is equal to the pixel value <span class="math inline">\(l_{i,k}\)</span>. Higher values of <span class="math inline">\(\sigma^2_k\)</span> will cause the assignment of the local mean to the pixel updated probability. In practice, <span class="math inline">\(\sigma^2_k\)</span> is a user-controlled parameter that will be set by users based on their knowledge of the region to be classified. In our case, after some classification tests, we decided to set the parameters <span class="math inline">\(V\)</span> as the Moore neighborhood where each pixel is connected to all those pixels with Chebyshev distance of <span class="math inline">\(1\)</span>, and <span class="math inline">\(\sigma^2_k=20\)</span> for all <span class="math inline">\(k\)</span>. This level of smoothness showed the best performance in the technical validation.</p>
+</div>
+</div>
+<div id="use-of-bayesian-smoothing-in-sits" class="section level2" number="7.3">
+<h2><span class="header-section-number">7.3</span> Use of Bayesian smoothing in SITS</h2>
+<p>Doing post-processing using Bayesian smoothing in SITS is straightforward. The result of the <code>sits_classify</code> function applied to a data cube is set of more probability images, one per requested clasification interval. The next step is to apply the <code>sits_label_classification</code> function. By default, this function selects the most likely class for each pixel considering only the probabilities of each class for each pixel. To allow for Bayesian smooting, it suffices to include the <code>smoothing = bayesian</code> parameter. If desired, the <code>variance</code> parameter (associated to the hyperparameter <span class="math inline">\(\sigma^2_k\)</span> described above) can control the degree of smoothness.</p>
+<div class="sourceCode" id="cb73"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb73-1"><a href="post-classification-smoothing-using-bayesian-techniques-in-sits.html#cb73-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Retrieve the data for the Mato Grosso state</span></span>
+<span id="cb73-2"><a href="post-classification-smoothing-using-bayesian-techniques-in-sits.html#cb73-2" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(<span class="st">&quot;samples_matogrosso_mod13q1&quot;</span>)</span>
+<span id="cb73-3"><a href="post-classification-smoothing-using-bayesian-techniques-in-sits.html#cb73-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb73-4"><a href="post-classification-smoothing-using-bayesian-techniques-in-sits.html#cb73-4" aria-hidden="true" tabindex="-1"></a><span class="co"># select the bands &quot;ndvi&quot;, &quot;evi&quot;</span></span>
+<span id="cb73-5"><a href="post-classification-smoothing-using-bayesian-techniques-in-sits.html#cb73-5" aria-hidden="true" tabindex="-1"></a>samples_2bands <span class="ot">&lt;-</span> <span class="fu">sits_select</span>(samples_matogrosso_mod13q1, <span class="at">bands =</span> <span class="fu">c</span>(<span class="st">&quot;NDVI&quot;</span>, <span class="st">&quot;EVI&quot;</span>))</span>
+<span id="cb73-6"><a href="post-classification-smoothing-using-bayesian-techniques-in-sits.html#cb73-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb73-7"><a href="post-classification-smoothing-using-bayesian-techniques-in-sits.html#cb73-7" aria-hidden="true" tabindex="-1"></a><span class="co">#select a rfor model</span></span>
+<span id="cb73-8"><a href="post-classification-smoothing-using-bayesian-techniques-in-sits.html#cb73-8" aria-hidden="true" tabindex="-1"></a>xgb_model <span class="ot">&lt;-</span> <span class="fu">sits_train</span>(samples_2bands, <span class="at">ml_method =</span> <span class="fu">sits_xgboost</span>())</span></code></pre></div>
+<pre class="sourceCode"><code>#&gt; [1]  train-mlogloss:2.009944+0.000892    test-mlogloss:2.022906+0.001491 
+#&gt; Multiple eval metrics are present. Will use test_mlogloss for early stopping.
+#&gt; Will train until test_mlogloss hasn&#39;t improved in 20 rounds.
+#&gt; 
+#&gt; [11] train-mlogloss:0.620737+0.002764    test-mlogloss:0.755199+0.005152 
+#&gt; [21] train-mlogloss:0.207436+0.001456    test-mlogloss:0.364395+0.009251 
+#&gt; [31] train-mlogloss:0.094411+0.000752    test-mlogloss:0.251361+0.008440 
+#&gt; [41] train-mlogloss:0.059334+0.000473    test-mlogloss:0.211024+0.009399 
+#&gt; [51] train-mlogloss:0.048914+0.000651    test-mlogloss:0.197786+0.009918 
+#&gt; [61] train-mlogloss:0.045721+0.000552    test-mlogloss:0.194586+0.010300 
+#&gt; [71] train-mlogloss:0.044009+0.000838    test-mlogloss:0.192748+0.010751 
+#&gt; [81] train-mlogloss:0.043003+0.000582    test-mlogloss:0.191353+0.011066 
+#&gt; [91] train-mlogloss:0.042301+0.000387    test-mlogloss:0.190409+0.011007 
+#&gt; [100]    train-mlogloss:0.042005+0.000349    test-mlogloss:0.189918+0.011470</code></pre>
+<div class="sourceCode" id="cb75"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb75-1"><a href="post-classification-smoothing-using-bayesian-techniques-in-sits.html#cb75-1" aria-hidden="true" tabindex="-1"></a>data_dir <span class="ot">&lt;-</span> <span class="fu">system.file</span>(<span class="st">&quot;extdata/sinop&quot;</span>, <span class="at">package =</span> <span class="st">&quot;sitsdata&quot;</span>)</span>
+<span id="cb75-2"><a href="post-classification-smoothing-using-bayesian-techniques-in-sits.html#cb75-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb75-3"><a href="post-classification-smoothing-using-bayesian-techniques-in-sits.html#cb75-3" aria-hidden="true" tabindex="-1"></a><span class="co"># create a raster metadata file based on the information about the files</span></span>
+<span id="cb75-4"><a href="post-classification-smoothing-using-bayesian-techniques-in-sits.html#cb75-4" aria-hidden="true" tabindex="-1"></a>raster_cube <span class="ot">&lt;-</span> <span class="fu">sits_cube</span>(<span class="at">source =</span> <span class="st">&quot;LOCAL&quot;</span>,</span>
+<span id="cb75-5"><a href="post-classification-smoothing-using-bayesian-techniques-in-sits.html#cb75-5" aria-hidden="true" tabindex="-1"></a>                   <span class="at">satellite =</span> <span class="st">&quot;TERRA&quot;</span>,</span>
+<span id="cb75-6"><a href="post-classification-smoothing-using-bayesian-techniques-in-sits.html#cb75-6" aria-hidden="true" tabindex="-1"></a>                   <span class="at">sensor  =</span> <span class="st">&quot;MODIS&quot;</span>,</span>
+<span id="cb75-7"><a href="post-classification-smoothing-using-bayesian-techniques-in-sits.html#cb75-7" aria-hidden="true" tabindex="-1"></a>                   <span class="at">name =</span> <span class="st">&quot;Sinop&quot;</span>,</span>
+<span id="cb75-8"><a href="post-classification-smoothing-using-bayesian-techniques-in-sits.html#cb75-8" aria-hidden="true" tabindex="-1"></a>                   <span class="at">data_dir =</span> data_dir,</span>
+<span id="cb75-9"><a href="post-classification-smoothing-using-bayesian-techniques-in-sits.html#cb75-9" aria-hidden="true" tabindex="-1"></a>                   <span class="at">parse_info =</span> <span class="fu">c</span>(<span class="st">&quot;X1&quot;</span>, <span class="st">&quot;X2&quot;</span>, <span class="st">&quot;band&quot;</span>, <span class="st">&quot;date&quot;</span>),</span>
+<span id="cb75-10"><a href="post-classification-smoothing-using-bayesian-techniques-in-sits.html#cb75-10" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb75-11"><a href="post-classification-smoothing-using-bayesian-techniques-in-sits.html#cb75-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb75-12"><a href="post-classification-smoothing-using-bayesian-techniques-in-sits.html#cb75-12" aria-hidden="true" tabindex="-1"></a><span class="co"># classify the raster image and generate a probability file</span></span>
+<span id="cb75-13"><a href="post-classification-smoothing-using-bayesian-techniques-in-sits.html#cb75-13" aria-hidden="true" tabindex="-1"></a>raster_probs <span class="ot">&lt;-</span> <span class="fu">sits_classify</span>(raster_cube, <span class="at">ml_model =</span> xgb_model, </span>
+<span id="cb75-14"><a href="post-classification-smoothing-using-bayesian-techniques-in-sits.html#cb75-14" aria-hidden="true" tabindex="-1"></a>                              <span class="at">memsize =</span> <span class="dv">4</span>, <span class="at">multicores =</span> <span class="dv">2</span>, </span>
+<span id="cb75-15"><a href="post-classification-smoothing-using-bayesian-techniques-in-sits.html#cb75-15" aria-hidden="true" tabindex="-1"></a>                              <span class="at">output_dir =</span> <span class="fu">tempdir</span>())</span>
+<span id="cb75-16"><a href="post-classification-smoothing-using-bayesian-techniques-in-sits.html#cb75-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb75-17"><a href="post-classification-smoothing-using-bayesian-techniques-in-sits.html#cb75-17" aria-hidden="true" tabindex="-1"></a><span class="co"># smooth the result with a bayesian filter</span></span>
+<span id="cb75-18"><a href="post-classification-smoothing-using-bayesian-techniques-in-sits.html#cb75-18" aria-hidden="true" tabindex="-1"></a>raster_probs_bayes <span class="ot">&lt;-</span> <span class="fu">sits_smooth</span>(raster_probs, <span class="at">output_dir =</span> <span class="fu">tempdir</span>())</span>
+<span id="cb75-19"><a href="post-classification-smoothing-using-bayesian-techniques-in-sits.html#cb75-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb75-20"><a href="post-classification-smoothing-using-bayesian-techniques-in-sits.html#cb75-20" aria-hidden="true" tabindex="-1"></a><span class="co"># label the smoothed probability images</span></span>
+<span id="cb75-21"><a href="post-classification-smoothing-using-bayesian-techniques-in-sits.html#cb75-21" aria-hidden="true" tabindex="-1"></a>raster_class <span class="ot">&lt;-</span> <span class="fu">sits_label_classification</span>(raster_probs_bayes, <span class="at">output_dir =</span> <span class="fu">tempdir</span>())</span></code></pre></div>
+The result is shown below.
+<div class="figure" style="text-align: center"><span id="fig:unnamed-chunk-65"></span>
+<img src="sitsbook_files/figure-html/unnamed-chunk-65-1.png" alt="Classified image post-processed with Bayesian smoothing. The image coordinates ({\it meters}) shown at vertical and horizontal axis are in MODIS sinusoidal projection." width="90%" />
+<p class="caption">
+Figure 7.1: Classified image post-processed with Bayesian smoothing. The image coordinates ({}) shown at vertical and horizontal axis are in MODIS sinusoidal projection.
+</p>
+</div>
+
+</div>
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+<a href="classification-of-images-in-data-cubes-using-satellite-image-time-series.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="validation-and-accuracy-measurements-in-sits.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+    </div>
+  </div>
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/lunr.js"></script>
+<script src="libs/gitbook-2.6.7/js/clipboard.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-clipboard.js"></script>
+<script>
+gitbook.require(["gitbook"], function(gitbook) {
+gitbook.start({
+"sharing": {
+"github": false,
+"facebook": true,
+"twitter": true,
+"linkedin": false,
+"weibo": false,
+"instapaper": false,
+"vk": false,
+"all": ["facebook", "twitter", "linkedin", "weibo", "instapaper"]
+},
+"fontsettings": {
+"theme": "white",
+"family": "sans",
+"size": 2
+},
+"edit": {
+"link": null,
+"text": null
+},
+"history": {
+"link": null,
+"text": null
+},
+"view": {
+"link": null,
+"text": null
+},
+"download": ["sitsbook.pdf"],
+"toc": {
+"collapse": "subsection"
+}
+});
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+</body>
+
+</html>

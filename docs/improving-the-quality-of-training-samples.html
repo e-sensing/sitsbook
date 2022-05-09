@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+<head>
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>Chapter 4 Improving the Quality of Training Samples | sits: Data Analysis and Machine Learning on Earth Observation Data Cubes with Satellite Image Time Series</title>
+  <meta name="description" content="This book presents sits, an open-source R package for satellite image time series analysis. The package supports the application of machine learning techniques for classification image time series obtained from data cubes." />
+  <meta name="generator" content="bookdown 0.26 and GitBook 2.6.7" />
+
+  <meta property="og:title" content="Chapter 4 Improving the Quality of Training Samples | sits: Data Analysis and Machine Learning on Earth Observation Data Cubes with Satellite Image Time Series" />
+  <meta property="og:type" content="book" />
+  <meta property="og:image" content="/images/cover.png" />
+  <meta property="og:description" content="This book presents sits, an open-source R package for satellite image time series analysis. The package supports the application of machine learning techniques for classification image time series obtained from data cubes." />
+  
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="Chapter 4 Improving the Quality of Training Samples | sits: Data Analysis and Machine Learning on Earth Observation Data Cubes with Satellite Image Time Series" />
+  
+  <meta name="twitter:description" content="This book presents sits, an open-source R package for satellite image time series analysis. The package supports the application of machine learning techniques for classification image time series obtained from data cubes." />
+  <meta name="twitter:image" content="/images/cover.png" />
+
+<meta name="author" content="Rolf Simoes" />
+<meta name="author" content="Gilberto Camara" />
+<meta name="author" content="Felipe Souza" />
+<meta name="author" content="Alber Sanchez" />
+<meta name="author" content="Lorena Santos" />
+<meta name="author" content="Pedro R. Andrade" />
+<meta name="author" content="Charlotte Peletier" />
+<meta name="author" content="Alexandre Carvalho" />
+<meta name="author" content="Karine Ferreira" />
+<meta name="author" content="Gilberto Queiroz" />
+<meta name="author" content="Victor Maus" />
+
+
+<meta name="date" content="2022-05-09" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  
+  
+<link rel="prev" href="working-with-time-series.html"/>
+<link rel="next" href="machine-learning-for-data-cubes-using-the-sits-package.html"/>
+<script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fuse.js@6.4.6/dist/fuse.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+<link href="libs/anchor-sections-1.1.0/anchor-sections.css" rel="stylesheet" />
+<link href="libs/anchor-sections-1.1.0/anchor-sections-hash.css" rel="stylesheet" />
+<script src="libs/anchor-sections-1.1.0/anchor-sections.js"></script>
+
+
+<style type="text/css">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+<style type="text/css">
+/* Used with Pandoc 2.11+ new --citeproc when CSL is used */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}
+</style>
+
+<link rel="stylesheet" href="css/style.css" type="text/css" />
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li><a href="./">SITS Book</a></li>
+
+<li class="divider"></li>
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i>Preface</a>
+<ul>
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html#who-this-book-is-for"><i class="fa fa-check"></i>Who this book is for</a></li>
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html#how-to-use-this-book"><i class="fa fa-check"></i>How to use this book</a></li>
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html#main-reference-for-sits"><i class="fa fa-check"></i>Main reference for sits</a></li>
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html#publications-using-sits"><i class="fa fa-check"></i>Publications using sits</a></li>
+<li class="chapter" data-level="" data-path="index.html"><a href="index.html#reproducible-papers-used-in-building-sits-functions"><i class="fa fa-check"></i>Reproducible papers used in building sits functions</a></li>
+</ul></li>
+<li class="chapter" data-level="" data-path="setup.html"><a href="setup.html"><i class="fa fa-check"></i>Setup</a></li>
+<li class="chapter" data-level="" data-path="acknowledgements.html"><a href="acknowledgements.html"><i class="fa fa-check"></i>Acknowledgements</a></li>
+<li class="chapter" data-level="1" data-path="introduction-to-sits.html"><a href="introduction-to-sits.html"><i class="fa fa-check"></i><b>1</b> Introduction to SITS</a>
+<ul>
+<li class="chapter" data-level="" data-path="introduction-to-sits.html"><a href="introduction-to-sits.html#creating-a-data-cube"><i class="fa fa-check"></i>Creating a Data Cube</a></li>
+<li class="chapter" data-level="" data-path="introduction-to-sits.html"><a href="introduction-to-sits.html#the-time-series-table"><i class="fa fa-check"></i>The time series table</a></li>
+<li class="chapter" data-level="" data-path="introduction-to-sits.html"><a href="introduction-to-sits.html#training-a-machine-learning-model"><i class="fa fa-check"></i>Training a machine learning model</a></li>
+<li class="chapter" data-level="" data-path="introduction-to-sits.html"><a href="introduction-to-sits.html#data-cube-classification"><i class="fa fa-check"></i>Data cube classification</a></li>
+<li class="chapter" data-level="" data-path="introduction-to-sits.html"><a href="introduction-to-sits.html#spatial-smoothing"><i class="fa fa-check"></i>Spatial smoothing</a></li>
+<li class="chapter" data-level="" data-path="introduction-to-sits.html"><a href="introduction-to-sits.html#labelling-a-probability-data-cube"><i class="fa fa-check"></i>Labelling a probability data cube</a></li>
+<li class="chapter" data-level="" data-path="introduction-to-sits.html"><a href="introduction-to-sits.html#how-the-sits-api-works"><i class="fa fa-check"></i>How the sits API works</a></li>
+<li class="chapter" data-level="" data-path="introduction-to-sits.html"><a href="introduction-to-sits.html#final-remarks"><i class="fa fa-check"></i>Final remarks</a></li>
+</ul></li>
+<li class="chapter" data-level="2" data-path="earth-observation-data-cubes.html"><a href="earth-observation-data-cubes.html"><i class="fa fa-check"></i><b>2</b> Earth observation data cubes</a>
+<ul>
+<li class="chapter" data-level="" data-path="earth-observation-data-cubes.html"><a href="earth-observation-data-cubes.html#analysis-ready-data-image-collections"><i class="fa fa-check"></i>Analysis-ready data image collections</a></li>
+<li class="chapter" data-level="" data-path="earth-observation-data-cubes.html"><a href="earth-observation-data-cubes.html#regular-image-data-cubes"><i class="fa fa-check"></i>Regular image data cubes</a></li>
+<li class="chapter" data-level="" data-path="earth-observation-data-cubes.html"><a href="earth-observation-data-cubes.html#creating-data-cubes"><i class="fa fa-check"></i>Creating data cubes</a></li>
+<li class="chapter" data-level="" data-path="earth-observation-data-cubes.html"><a href="earth-observation-data-cubes.html#assessing-amazon-web-services"><i class="fa fa-check"></i>Assessing Amazon Web Services</a></li>
+<li class="chapter" data-level="" data-path="earth-observation-data-cubes.html"><a href="earth-observation-data-cubes.html#assessing-microsofts-planetary-computing"><i class="fa fa-check"></i>Assessing Microsoft’s Planetary Computing</a></li>
+<li class="chapter" data-level="" data-path="earth-observation-data-cubes.html"><a href="earth-observation-data-cubes.html#assessing-digital-earth-africa"><i class="fa fa-check"></i>Assessing Digital Earth Africa</a></li>
+<li class="chapter" data-level="" data-path="earth-observation-data-cubes.html"><a href="earth-observation-data-cubes.html#assessing-the-brazil-data-cube"><i class="fa fa-check"></i>Assessing the Brazil Data Cube</a></li>
+<li class="chapter" data-level="" data-path="earth-observation-data-cubes.html"><a href="earth-observation-data-cubes.html#defining-a-data-cube-using-files"><i class="fa fa-check"></i>Defining a data cube using files</a></li>
+<li class="chapter" data-level="" data-path="earth-observation-data-cubes.html"><a href="earth-observation-data-cubes.html#regularizing-data-cubes"><i class="fa fa-check"></i>Regularizing data cubes</a></li>
+</ul></li>
+<li class="chapter" data-level="3" data-path="working-with-time-series.html"><a href="working-with-time-series.html"><i class="fa fa-check"></i><b>3</b> Working with time series</a>
+<ul>
+<li class="chapter" data-level="3.1" data-path="working-with-time-series.html"><a href="working-with-time-series.html#data-structures-for-satellite-time-series"><i class="fa fa-check"></i><b>3.1</b> Data structures for satellite time series</a></li>
+<li class="chapter" data-level="3.2" data-path="working-with-time-series.html"><a href="working-with-time-series.html#utilities-for-handling-time-series"><i class="fa fa-check"></i><b>3.2</b> Utilities for handling time series</a></li>
+<li class="chapter" data-level="3.3" data-path="working-with-time-series.html"><a href="working-with-time-series.html#time-series-visualisation"><i class="fa fa-check"></i><b>3.3</b> Time series visualisation</a></li>
+<li class="chapter" data-level="3.4" data-path="working-with-time-series.html"><a href="working-with-time-series.html#obtaining-time-series-data-from-data-cubes"><i class="fa fa-check"></i><b>3.4</b> Obtaining time series data from data cubes</a></li>
+<li class="chapter" data-level="3.5" data-path="working-with-time-series.html"><a href="working-with-time-series.html#filtering-techniques-for-time-series"><i class="fa fa-check"></i><b>3.5</b> Filtering techniques for time series</a>
+<ul>
+<li class="chapter" data-level="3.5.1" data-path="working-with-time-series.html"><a href="working-with-time-series.html#savitzkygolay-filter"><i class="fa fa-check"></i><b>3.5.1</b> Savitzky–Golay filter</a></li>
+<li class="chapter" data-level="3.5.2" data-path="working-with-time-series.html"><a href="working-with-time-series.html#whittaker-filter"><i class="fa fa-check"></i><b>3.5.2</b> Whittaker filter</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="4" data-path="improving-the-quality-of-training-samples.html"><a href="improving-the-quality-of-training-samples.html"><i class="fa fa-check"></i><b>4</b> Improving the Quality of Training Samples</a>
+<ul>
+<li class="chapter" data-level="4.1" data-path="improving-the-quality-of-training-samples.html"><a href="improving-the-quality-of-training-samples.html#clustering-for-sample-quality-control-overview"><i class="fa fa-check"></i><b>4.1</b> Clustering for sample quality control: overview</a></li>
+<li class="chapter" data-level="4.2" data-path="improving-the-quality-of-training-samples.html"><a href="improving-the-quality-of-training-samples.html#hierachical-clustering-for-sample-quality-control"><i class="fa fa-check"></i><b>4.2</b> Hierachical clustering for sample quality control</a></li>
+<li class="chapter" data-level="4.3" data-path="improving-the-quality-of-training-samples.html"><a href="improving-the-quality-of-training-samples.html#using-self-organizing-maps-for-sample-quality-control"><i class="fa fa-check"></i><b>4.3</b> Using self-organizing maps for sample quality control</a>
+<ul>
+<li class="chapter" data-level="4.3.1" data-path="improving-the-quality-of-training-samples.html"><a href="improving-the-quality-of-training-samples.html#som-based-quality-assessment-part-1-creating-the-som-map"><i class="fa fa-check"></i><b>4.3.1</b> SOM-based quality assessment part 1: creating the SOM map</a></li>
+<li class="chapter" data-level="4.3.2" data-path="improving-the-quality-of-training-samples.html"><a href="improving-the-quality-of-training-samples.html#som-based-quality-assessment-part-2-assessing-confusion-between-labels"><i class="fa fa-check"></i><b>4.3.2</b> SOM-based quality assessment part 2: assessing confusion between labels</a></li>
+<li class="chapter" data-level="4.3.3" data-path="improving-the-quality-of-training-samples.html"><a href="improving-the-quality-of-training-samples.html#som-based-quality-assessment-part-3-using-probabilities-to-detect-noisy-samples"><i class="fa fa-check"></i><b>4.3.3</b> SOM-based quality assessment part 3: using probabilities to detect noisy samples</a></li>
+<li class="chapter" data-level="4.3.4" data-path="improving-the-quality-of-training-samples.html"><a href="improving-the-quality-of-training-samples.html#comparing-original-and-clean-samples"><i class="fa fa-check"></i><b>4.3.4</b> Comparing Original and Clean Samples</a></li>
+</ul></li>
+<li class="chapter" data-level="4.4" data-path="improving-the-quality-of-training-samples.html"><a href="improving-the-quality-of-training-samples.html#conclusion"><i class="fa fa-check"></i><b>4.4</b> Conclusion</a></li>
+</ul></li>
+<li class="chapter" data-level="5" data-path="machine-learning-for-data-cubes-using-the-sits-package.html"><a href="machine-learning-for-data-cubes-using-the-sits-package.html"><i class="fa fa-check"></i><b>5</b> Machine Learning for Data Cubes using the SITS package</a>
+<ul>
+<li class="chapter" data-level="5.1" data-path="machine-learning-for-data-cubes-using-the-sits-package.html"><a href="machine-learning-for-data-cubes-using-the-sits-package.html#machine-learning-classification"><i class="fa fa-check"></i><b>5.1</b> Machine learning classification</a></li>
+<li class="chapter" data-level="5.2" data-path="machine-learning-for-data-cubes-using-the-sits-package.html"><a href="machine-learning-for-data-cubes-using-the-sits-package.html#visualizing-sample-patterns"><i class="fa fa-check"></i><b>5.2</b> Visualizing Sample Patterns</a></li>
+<li class="chapter" data-level="5.3" data-path="machine-learning-for-data-cubes-using-the-sits-package.html"><a href="machine-learning-for-data-cubes-using-the-sits-package.html#common-interface-to-machine-learning-and-deeplearning-models"><i class="fa fa-check"></i><b>5.3</b> Common interface to machine learning and deeplearning models</a></li>
+<li class="chapter" data-level="5.4" data-path="machine-learning-for-data-cubes-using-the-sits-package.html"><a href="machine-learning-for-data-cubes-using-the-sits-package.html#random-forests"><i class="fa fa-check"></i><b>5.4</b> Random forests</a></li>
+<li class="chapter" data-level="5.5" data-path="machine-learning-for-data-cubes-using-the-sits-package.html"><a href="machine-learning-for-data-cubes-using-the-sits-package.html#support-vector-machines"><i class="fa fa-check"></i><b>5.5</b> Support Vector Machines</a></li>
+<li class="chapter" data-level="5.6" data-path="machine-learning-for-data-cubes-using-the-sits-package.html"><a href="machine-learning-for-data-cubes-using-the-sits-package.html#extreme-gradient-boosting"><i class="fa fa-check"></i><b>5.6</b> Extreme Gradient Boosting</a></li>
+<li class="chapter" data-level="5.7" data-path="machine-learning-for-data-cubes-using-the-sits-package.html"><a href="machine-learning-for-data-cubes-using-the-sits-package.html#deep-learning-using-multi-layer-perceptrons"><i class="fa fa-check"></i><b>5.7</b> Deep learning using multi-layer perceptrons</a></li>
+<li class="chapter" data-level="5.8" data-path="machine-learning-for-data-cubes-using-the-sits-package.html"><a href="machine-learning-for-data-cubes-using-the-sits-package.html#temporal-convolutional-neural-network-tempcnn"><i class="fa fa-check"></i><b>5.8</b> Temporal Convolutional Neural Network (TempCNN)</a></li>
+<li class="chapter" data-level="5.9" data-path="machine-learning-for-data-cubes-using-the-sits-package.html"><a href="machine-learning-for-data-cubes-using-the-sits-package.html#residual-1d-cnn-networks-resnet"><i class="fa fa-check"></i><b>5.9</b> Residual 1D CNN Networks (ResNet)</a></li>
+<li class="chapter" data-level="5.10" data-path="machine-learning-for-data-cubes-using-the-sits-package.html"><a href="machine-learning-for-data-cubes-using-the-sits-package.html#considerations-on-model-choice"><i class="fa fa-check"></i><b>5.10</b> Considerations on model choice</a></li>
+</ul></li>
+<li class="chapter" data-level="6" data-path="classification-of-images-in-data-cubes-using-satellite-image-time-series.html"><a href="classification-of-images-in-data-cubes-using-satellite-image-time-series.html"><i class="fa fa-check"></i><b>6</b> Classification of Images in Data Cubes using Satellite Image Time Series</a>
+<ul>
+<li class="chapter" data-level="6.1" data-path="classification-of-images-in-data-cubes-using-satellite-image-time-series.html"><a href="classification-of-images-in-data-cubes-using-satellite-image-time-series.html#data-cube-classification-1"><i class="fa fa-check"></i><b>6.1</b> Data cube classification</a></li>
+<li class="chapter" data-level="6.2" data-path="classification-of-images-in-data-cubes-using-satellite-image-time-series.html"><a href="classification-of-images-in-data-cubes-using-satellite-image-time-series.html#processing-time-estimates"><i class="fa fa-check"></i><b>6.2</b> Processing time estimates</a></li>
+<li class="chapter" data-level="6.3" data-path="classification-of-images-in-data-cubes-using-satellite-image-time-series.html"><a href="classification-of-images-in-data-cubes-using-satellite-image-time-series.html#post-classification-smoothing"><i class="fa fa-check"></i><b>6.3</b> Post-classification smoothing</a></li>
+<li class="chapter" data-level="6.4" data-path="classification-of-images-in-data-cubes-using-satellite-image-time-series.html"><a href="classification-of-images-in-data-cubes-using-satellite-image-time-series.html#bayesian-smoothing"><i class="fa fa-check"></i><b>6.4</b> Bayesian smoothing</a>
+<ul>
+<li class="chapter" data-level="6.4.1" data-path="classification-of-images-in-data-cubes-using-satellite-image-time-series.html"><a href="classification-of-images-in-data-cubes-using-satellite-image-time-series.html#derivation-of-bayesian-parameters-for-spatiotemporal-smoothing"><i class="fa fa-check"></i><b>6.4.1</b> Derivation of bayesian parameters for spatiotemporal smoothing</a></li>
+</ul></li>
+<li class="chapter" data-level="6.5" data-path="classification-of-images-in-data-cubes-using-satellite-image-time-series.html"><a href="classification-of-images-in-data-cubes-using-satellite-image-time-series.html#use-of-bayesian-smoothing-in-sits"><i class="fa fa-check"></i><b>6.5</b> Use of Bayesian smoothing in SITS</a></li>
+<li class="chapter" data-level="6.6" data-path="classification-of-images-in-data-cubes-using-satellite-image-time-series.html"><a href="classification-of-images-in-data-cubes-using-satellite-image-time-series.html#bilateral-smoothing"><i class="fa fa-check"></i><b>6.6</b> Bilateral smoothing</a></li>
+</ul></li>
+<li class="chapter" data-level="7" data-path="validation-and-accuracy-measurements-in-sits.html"><a href="validation-and-accuracy-measurements-in-sits.html"><i class="fa fa-check"></i><b>7</b> Validation and accuracy measurements in SITS</a>
+<ul>
+<li class="chapter" data-level="7.1" data-path="validation-and-accuracy-measurements-in-sits.html"><a href="validation-and-accuracy-measurements-in-sits.html#validation-techniques"><i class="fa fa-check"></i><b>7.1</b> Validation techniques</a></li>
+<li class="chapter" data-level="7.2" data-path="validation-and-accuracy-measurements-in-sits.html"><a href="validation-and-accuracy-measurements-in-sits.html#comparing-different-machine-learning-methods-using-k-fold-validation"><i class="fa fa-check"></i><b>7.2</b> Comparing different machine learning methods using k-fold validation</a></li>
+<li class="chapter" data-level="7.3" data-path="validation-and-accuracy-measurements-in-sits.html"><a href="validation-and-accuracy-measurements-in-sits.html#accuracy-assessment"><i class="fa fa-check"></i><b>7.3</b> Accuracy assessment</a>
+<ul>
+<li class="chapter" data-level="7.3.1" data-path="validation-and-accuracy-measurements-in-sits.html"><a href="validation-and-accuracy-measurements-in-sits.html#time-series"><i class="fa fa-check"></i><b>7.3.1</b> Time series</a></li>
+<li class="chapter" data-level="7.3.2" data-path="validation-and-accuracy-measurements-in-sits.html"><a href="validation-and-accuracy-measurements-in-sits.html#classified-images"><i class="fa fa-check"></i><b>7.3.2</b> Classified images</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="8" data-path="case-studies.html"><a href="case-studies.html"><i class="fa fa-check"></i><b>8</b> Case studies</a></li>
+<li class="chapter" data-level="9" data-path="design-and-extensibility-considerations.html"><a href="design-and-extensibility-considerations.html"><i class="fa fa-check"></i><b>9</b> Design and extensibility considerations</a>
+<ul>
+<li class="chapter" data-level="9.1" data-path="design-and-extensibility-considerations.html"><a href="design-and-extensibility-considerations.html#design-decisions"><i class="fa fa-check"></i><b>9.1</b> Design decisions</a></li>
+</ul></li>
+<li class="chapter" data-level="" data-path="references.html"><a href="references.html"><i class="fa fa-check"></i>References</a></li>
+<li class="divider"></li>
+<li><a href="https://github.com/rstudio/bookdown" target="blank">Published with bookdown</a></li>
+
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./"><strong>sits</strong>: Data Analysis and Machine Learning on Earth Observation Data Cubes with Satellite Image Time Series</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="improving-the-quality-of-training-samples" class="section level1 hasAnchor" number="4">
+<h1><span class="header-section-number">Chapter 4</span> Improving the Quality of Training Samples<a href="improving-the-quality-of-training-samples.html#improving-the-quality-of-training-samples" class="anchor-section" aria-label="Anchor link to header"></a></h1>
+<hr />
+<p>One of the key challenges when using samples to train machine learning classification models is assessing their quality. Noisy and imperfect training samples can have a negative effect on classification performance. Therefore, it is useful to apply pre-processing methods to improve the quality of the samples and to remove those that might have been wrongly labeled or that have low discriminatory power. <code>sits</code> provides two clustering methods to improve sample quality: agglomerative hierarchical clustering (AHC) and self-organizing maps (SOM).</p>
+<hr />
+<div id="clustering-for-sample-quality-control-overview" class="section level2 hasAnchor" number="4.1">
+<h2><span class="header-section-number">4.1</span> Clustering for sample quality control: overview<a href="improving-the-quality-of-training-samples.html#clustering-for-sample-quality-control-overview" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>Experience with machine learning methods has established that the limiting factor in obtaining good results is the number and quality of training samples. Large and accurate data sets are better, no matter the algorithm used <span class="citation">[11]</span>; noisy training samples can have a negative effect on classification performance <span class="citation">[12]</span>.</p>
+<p>When assessing the quality of training samples, it is useful to distinguish between samples that have been wrongly labelled and differences that result from natural variability of class signatures. When training data is collected over a large geographic region, natural variability of vegetation phenology can result in different patterns being assigned to the same label. Phenological patterns can vary spatially across a region and are strongly correlated with climate variations. A related issue is the limitation of crisp boundaries to describe the natural world. Class definition use idealized descriptions (e.g., “a savanna woodland has tree cover of 50% to 90% ranging from 8 to 15 meters in height”). In practice, the boundaries between classes are fuzzy and sometimes overlap, making it hard to distinguish between them. Therefore, it is useful to apply pre-processing methods to improve the quality of the samples and to remove those that might have been wrongly labeled or that have low discriminatory power. Representative samples lead to good classification maps. The package provides support for two clustering methods to test sample quality: (a) Agglomerative Hierarchical Clustering (AHC); (b) Self-organizing Maps (SOM).</p>
+<p>The two methods have different computational complexities. As discussed below, AHC results are somewhat easier to interpret than those of SOM. However, AHC has a computational complexity of <span class="math inline">\(\mathcal{O}(n^2)\)</span> given the number of time series <span class="math inline">\(n\)</span>, whereas SOM complexity is linear with respect to n. Therefore, for large data sets, AHC requires an substantial amount of memory and running time; in these cases, SOM is recommended.</p>
+</div>
+<div id="hierachical-clustering-for-sample-quality-control" class="section level2 hasAnchor" number="4.2">
+<h2><span class="header-section-number">4.2</span> Hierachical clustering for sample quality control<a href="improving-the-quality-of-training-samples.html#hierachical-clustering-for-sample-quality-control" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>Agglomerative hierarchical clustering (AHC) computes the dissimilarity between any two elements from a data set. Depending on the distance functions and linkage criteria, the algorithm decides which two clusters are merged at each iteration. This approach is useful for exploring data samples due to its visualization power and ease of use <span class="citation">[13]</span>. In <code>sits</code>, AHC is implemented using <code>sits_cluster_dendro()</code>.</p>
+<div class="sourceCode" id="cb87"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb87-1"><a href="improving-the-quality-of-training-samples.html#cb87-1" aria-hidden="true" tabindex="-1"></a><span class="co"># take a set of patterns for 2 classes</span></span>
+<span id="cb87-2"><a href="improving-the-quality-of-training-samples.html#cb87-2" aria-hidden="true" tabindex="-1"></a><span class="co"># create a dendrogram, plot, and get the optimal cluster based on ARI index</span></span>
+<span id="cb87-3"><a href="improving-the-quality-of-training-samples.html#cb87-3" aria-hidden="true" tabindex="-1"></a>clusters <span class="ot">&lt;-</span> <span class="fu">sits_cluster_dendro</span>(<span class="at">samples =</span> cerrado_2classes, </span>
+<span id="cb87-4"><a href="improving-the-quality-of-training-samples.html#cb87-4" aria-hidden="true" tabindex="-1"></a>                                <span class="at">bands =</span> <span class="fu">c</span>(<span class="st">&quot;NDVI&quot;</span>, <span class="st">&quot;EVI&quot;</span>),</span>
+<span id="cb87-5"><a href="improving-the-quality-of-training-samples.html#cb87-5" aria-hidden="true" tabindex="-1"></a>                                <span class="at">dist_method =</span> <span class="st">&quot;dtw_basic&quot;</span>,</span>
+<span id="cb87-6"><a href="improving-the-quality-of-training-samples.html#cb87-6" aria-hidden="true" tabindex="-1"></a>                                <span class="at">linkage =</span>  <span class="st">&quot;ward.D2&quot;</span></span>
+<span id="cb87-7"><a href="improving-the-quality-of-training-samples.html#cb87-7" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
+<p><img src="sitsbook_files/figure-html/dendrogram-1.png" width="70%" style="display: block; margin: auto;" /></p>
+<p>The <code>sits_cluster_dendro()</code> function has one mandatory parameter (<code>samples</code>), where users should provide the name of the R object containing the data samples to be evaluated. Optional parameters include <code>bands</code>, <code>dist_method</code> and <code>linkage</code>. The <code>dist_method</code> parameter specifies how to calculate the distance between two time series. We recommend a metric that uses dynamic time warping (DTW)<span class="citation">[14]</span>, as DTW is reliable method for measuring differences between satellite image time series <span class="citation">[15]</span>. The options available in <code>sits</code> are based on those provided by package <code>dtwclust</code>, which include “dtw_basic”, “dtw_lb”, and “dtw2”. Please check <code>?dtwclust::tsclust</code> for more information on DTW distances.</p>
+<p>The <code>linkage</code> parameter defines the metric used for computing the distance between clusters. The recommended linkage criteria are: “complete” or “ward.D2”. Complete-linkage prioritizes the within-cluster dissimilarities, producing clusters with shorter distance samples. Complete-linkage clustering can be sensitive to outliers, which can increase the resulting intracluster data variance. As an alternative, Ward proposes criteria to minimize the data variance by means of either <em>sum-of-squares</em> or <em>sum-of-squares-error</em> <span class="citation">[16]</span>. Ward’s intuition is that clusters of multivariate observations, such as time series, should be approximately elliptical in shape <span class="citation">[17]</span>.</p>
+<p>After creating a dendrogram, an important question emerges: <em>where to cut the dendrogram?</em> The answer depends on what are the purposes of the cluster analysis, which needs to balance two objectives: get clusters as large as possible, and get clusters as homogeneous as possible with respect to their known classes. The <code>sits_cluster_dendro()</code> function computes the <em>adjusted rand index</em> (ARI) for a series of the different number of generated clusters. This function returns the height where the cut of the dendrogram maximizes the index. For more detaily, please see <span class="citation">[18]</span>.</p>
+<p>In the example above after calculating the dendrogram, the ARI index indicates that six (6) clusters are the best possible arrangement. However, these clusters may still contain a mixed composition of samples of different classes.</p>
+<p>The result of the <code>sits_cluster</code> operation is a <code>sits_tibble</code> with one additional column, called “cluster”. The function <code>sits_cluster_frequency()</code> provides information on the composition of each cluster,</p>
+<div class="sourceCode" id="cb88"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb88-1"><a href="improving-the-quality-of-training-samples.html#cb88-1" aria-hidden="true" tabindex="-1"></a>clusters</span></code></pre></div>
+<pre class="sourceCode"><code>#&gt; # A tibble: 746 × 8
+#&gt;    longitude latitude start_date end_date   label   cube    time_series cluster
+#&gt;        &lt;dbl&gt;    &lt;dbl&gt; &lt;date&gt;     &lt;date&gt;     &lt;chr&gt;   &lt;chr&gt;   &lt;list&gt;        &lt;int&gt;
+#&gt;  1     -54.2    -14.0 2000-09-13 2001-08-29 Cerrado MOD13Q1 &lt;tibble&gt;          1
+#&gt;  2     -54.2    -14.0 2001-09-14 2002-08-29 Cerrado MOD13Q1 &lt;tibble&gt;          2
+#&gt;  3     -54.2    -14.0 2002-09-14 2003-08-29 Cerrado MOD13Q1 &lt;tibble&gt;          1
+#&gt;  4     -54.2    -14.0 2003-09-14 2004-08-28 Cerrado MOD13Q1 &lt;tibble&gt;          3
+#&gt;  5     -54.2    -14.0 2004-09-13 2005-08-29 Cerrado MOD13Q1 &lt;tibble&gt;          2
+#&gt;  6     -54.2    -14.0 2005-09-14 2006-08-29 Cerrado MOD13Q1 &lt;tibble&gt;          1
+#&gt;  7     -54.2    -14.0 2006-09-14 2007-08-29 Cerrado MOD13Q1 &lt;tibble&gt;          2
+#&gt;  8     -54.2    -14.0 2007-09-14 2008-08-28 Cerrado MOD13Q1 &lt;tibble&gt;          1
+#&gt;  9     -54.2    -14.0 2008-09-13 2009-08-29 Cerrado MOD13Q1 &lt;tibble&gt;          1
+#&gt; 10     -54.2    -14.0 2009-09-14 2010-08-29 Cerrado MOD13Q1 &lt;tibble&gt;          1
+#&gt; # … with 736 more rows</code></pre>
+<div class="sourceCode" id="cb90"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb90-1"><a href="improving-the-quality-of-training-samples.html#cb90-1" aria-hidden="true" tabindex="-1"></a><span class="co"># show clusters samples frequency</span></span>
+<span id="cb90-2"><a href="improving-the-quality-of-training-samples.html#cb90-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sits_cluster_frequency</span>(clusters)</span></code></pre></div>
+<pre class="sourceCode"><code>#&gt;          
+#&gt;             1   2   3   4   5   6 Total
+#&gt;   Cerrado 203  13  23  80   1  80   400
+#&gt;   Pasture   2 176  28   0 140   0   346
+#&gt;   Total   205 189  51  80 141  80   746</code></pre>
+<p>The result shows that the clusters have a predominance of either “Cerrado” or “Pasture” classes with the exception of cluster <span class="math inline">\(3\)</span>. The contingency table plotted by <code>sits_cluster_frequency()</code> shows how the samples are distributed across the clusters and helps identify two kinds of problems. The first is relative to small amounts of samples in clusters dominated by another class (<em>e.g.</em> clusters <span class="math inline">\(1\)</span>, <span class="math inline">\(2\)</span>, <span class="math inline">\(4\)</span>, <span class="math inline">\(5\)</span>, and <span class="math inline">\(6\)</span>), while the second is relative to those samples in non-dominated clusters (<em>e.g.</em> cluster <span class="math inline">\(3\)</span>). These confusions can be an indication of samples with poor quality, and inadequacy of selected parameters for cluster analysis, or even a natural confusion due to the inherent variability of the land classes.</p>
+<p>It is possible to remove clusters with mixed classes using the <code>dplyr</code> package. In the example above, removing cluster <span class="math inline">\(3\)</span> can be done using the <code>dplyr::filter()</code> function.</p>
+<div class="sourceCode" id="cb92"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb92-1"><a href="improving-the-quality-of-training-samples.html#cb92-1" aria-hidden="true" tabindex="-1"></a><span class="co"># remove cluster 3 from the samples</span></span>
+<span id="cb92-2"><a href="improving-the-quality-of-training-samples.html#cb92-2" aria-hidden="true" tabindex="-1"></a>clusters_new <span class="ot">&lt;-</span> dplyr<span class="sc">::</span><span class="fu">filter</span>(clusters, cluster <span class="sc">!=</span> <span class="dv">3</span>)</span>
+<span id="cb92-3"><a href="improving-the-quality-of-training-samples.html#cb92-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb92-4"><a href="improving-the-quality-of-training-samples.html#cb92-4" aria-hidden="true" tabindex="-1"></a><span class="co"># show new clusters samples frequency</span></span>
+<span id="cb92-5"><a href="improving-the-quality-of-training-samples.html#cb92-5" aria-hidden="true" tabindex="-1"></a>sits<span class="sc">::</span><span class="fu">sits_cluster_frequency</span>(clusters_new)</span></code></pre></div>
+<pre class="sourceCode"><code>#&gt;          
+#&gt;             1   2   4   5   6 Total
+#&gt;   Cerrado 203  13  80   1  80   377
+#&gt;   Pasture   2 176   0 140   0   318
+#&gt;   Total   205 189  80 141  80   695</code></pre>
+<p>The resulting clusters still contained mixed labels, possibly resulting from outliers. In this case, users may want to remove the outliers and leave only the most frequent class. To do this, one can use <code>sits_cluster_clean()</code>, which removes all minority samples, as shown below.</p>
+<div class="sourceCode" id="cb94"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb94-1"><a href="improving-the-quality-of-training-samples.html#cb94-1" aria-hidden="true" tabindex="-1"></a><span class="co"># clear clusters, leaving only the majority class in each cluster</span></span>
+<span id="cb94-2"><a href="improving-the-quality-of-training-samples.html#cb94-2" aria-hidden="true" tabindex="-1"></a>clean <span class="ot">&lt;-</span> <span class="fu">sits_cluster_clean</span>(clusters_new)</span>
+<span id="cb94-3"><a href="improving-the-quality-of-training-samples.html#cb94-3" aria-hidden="true" tabindex="-1"></a><span class="co"># show clusters samples frequency</span></span>
+<span id="cb94-4"><a href="improving-the-quality-of-training-samples.html#cb94-4" aria-hidden="true" tabindex="-1"></a><span class="fu">sits_cluster_frequency</span>(clean)</span></code></pre></div>
+<pre class="sourceCode"><code>#&gt;          
+#&gt;             1   2   4   5   6 Total
+#&gt;   Cerrado 203   0  80   0  80   363
+#&gt;   Pasture   0 176   0 140   0   316
+#&gt;   Total   203 176  80 140  80   679</code></pre>
+<p>After cleaning the samples using dendrograms, users are expected to have a better set of samples which will provide more accurate estimates of land classification.</p>
+</div>
+<div id="using-self-organizing-maps-for-sample-quality-control" class="section level2 hasAnchor" number="4.3">
+<h2><span class="header-section-number">4.3</span> Using self-organizing maps for sample quality control<a href="improving-the-quality-of-training-samples.html#using-self-organizing-maps-for-sample-quality-control" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p><a href="https://www.kaggle.com/esensing/using-som-for-sample-quality-control-in-sits" target="_blank">img src=“<a href="https://kaggle.com/static/images/open-in-kaggle.svg%22/" class="uri">https://kaggle.com/static/images/open-in-kaggle.svg"/</a>&gt;</a></p>
+<p>As an alternative for hierarchical clustering for quality control of training samples, SITS provides a clustering technique based on self-organizing maps (SOM). SOM is a dimensionality reduction technique <span class="citation">[19]</span>, where high-dimensional data is mapped into a two dimensional map, keeping the topological relations between data patterns. As the shown in the Figure below, the SOM 2D Map is composed by units called . Each neuron has a weight vector, with the same dimension as the training samples. At the start, neurons are assigned a small random value and then trained by competitive learning. The algorithm computes the distances of each member of the training set to all neurons and finds the neuron closest to the input, called the best matching unit (BMU).</p>
+<div class="figure" style="text-align: center"><span style="display:block;" id="fig:unnamed-chunk-58"></span>
+<img src="images/som_structure.png" alt="SOM 2D map creation (source: Santos et al.(2021)" width="90%" height="90%" />
+<p class="caption">
+Figure 4.1: SOM 2D map creation (source: Santos et al.(2021)
+</p>
+</div>
+<p>The input data for quality assessment is a set of training samples. Training samples associated to satellite image time series are high-dimensional data sets. A time series of 25 instances of 4 spectral bands has 100 dimensions. When projecting a high-dimensional data set of training samples into a 2D SOM map, the units of the map (called <em>neurons</em>) compete for each sample. Each time series will be mapped to one of the neurons. Since the number of neurons is smaller than the number of classes, each neuron will be associated to many time series. The resulting 2D map will be a set of clusters. Given that SOM preserves the topological structure of neighborhoods in multiple dimensions, clusters that contain training samples of a given class will usually be neighbors in 2D space. Therefore, the neighbours of each neuron of a SOM map provide information on intraclass and interclass variability which is used to detect noisy samples. The methodology of using SOM for sample quality assessment (see Figure below) is discussed in detail in the reference paper <span class="citation">[20]</span>.</p>
+<div class="figure" style="text-align: center"><span style="display:block;" id="fig:unnamed-chunk-59"></span>
+<img src="images/methodology_bayes_som.png" alt="Using SOM for class noise reduction (source: Santos et al.(2021)" width="90%" height="90%" />
+<p class="caption">
+Figure 4.2: Using SOM for class noise reduction (source: Santos et al.(2021)
+</p>
+</div>
+<p>As an example, we take a time series dataset from the Cerrado region of Brazil, the second largest biome in South America with an area of more than 2 million km2. The training samples were collected by ground surveys and high-resolution image interpretation by experts from the Brazilian National Institute for Space Research (INPE) team and partners. This set ranges from 2000 to 2017 and includes 50,160 land use and cover samples divided into 12 classes(“Dense_Woodland”, “Dunes”, “Fallow_Cotton”, “Millet_Cotton”, “Pasture”, “Rocky_Savanna”, “Savanna”, “Savanna_Parkland”, “Silviculture”, “Soy_Corn”, “Soy_Cotton”, “Soy_Fallow”). Each time series covers 12 months (23 data points) from MOD13Q1 product, and has 4 bands (“EVI”, “NDVI”, “MIR”, and “NIR”).</p>
+<div class="sourceCode" id="cb96"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb96-1"><a href="improving-the-quality-of-training-samples.html#cb96-1" aria-hidden="true" tabindex="-1"></a><span class="co"># load library sitsdata</span></span>
+<span id="cb96-2"><a href="improving-the-quality-of-training-samples.html#cb96-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(sitsdata)</span>
+<span id="cb96-3"><a href="improving-the-quality-of-training-samples.html#cb96-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tibble)</span>
+<span id="cb96-4"><a href="improving-the-quality-of-training-samples.html#cb96-4" aria-hidden="true" tabindex="-1"></a><span class="co"># take only the NDVI and EVI bands</span></span>
+<span id="cb96-5"><a href="improving-the-quality-of-training-samples.html#cb96-5" aria-hidden="true" tabindex="-1"></a>samples_cerrado_mod13q1_2bands <span class="ot">&lt;-</span> <span class="fu">sits_select</span>(samples_cerrado_mod13q1, <span class="at">bands =</span> <span class="fu">c</span>(<span class="st">&quot;NDVI&quot;</span>, <span class="st">&quot;EVI&quot;</span>))</span>
+<span id="cb96-6"><a href="improving-the-quality-of-training-samples.html#cb96-6" aria-hidden="true" tabindex="-1"></a><span class="co"># show the summary of the samples</span></span>
+<span id="cb96-7"><a href="improving-the-quality-of-training-samples.html#cb96-7" aria-hidden="true" tabindex="-1"></a><span class="fu">sits_labels_summary</span>(samples_cerrado_mod13q1_2bands)</span></code></pre></div>
+<pre class="sourceCode"><code>#&gt; # A tibble: 12 × 3
+#&gt;    label            count    prop
+#&gt;    &lt;chr&gt;            &lt;int&gt;   &lt;dbl&gt;
+#&gt;  1 Dense_Woodland    9966 0.199  
+#&gt;  2 Dunes              550 0.0110 
+#&gt;  3 Fallow_Cotton      630 0.0126 
+#&gt;  4 Millet_Cotton      316 0.00630
+#&gt;  5 Pasture           7206 0.144  
+#&gt;  6 Rocky_Savanna     8005 0.160  
+#&gt;  7 Savanna           9172 0.183  
+#&gt;  8 Savanna_Parkland  2699 0.0538 
+#&gt;  9 Silviculture       423 0.00843
+#&gt; 10 Soy_Corn          4971 0.0991 
+#&gt; 11 Soy_Cotton        4124 0.0822 
+#&gt; 12 Soy_Fallow        2098 0.0418</code></pre>
+<div id="som-based-quality-assessment-part-1-creating-the-som-map" class="section level3 hasAnchor" number="4.3.1">
+<h3><span class="header-section-number">4.3.1</span> SOM-based quality assessment part 1: creating the SOM map<a href="improving-the-quality-of-training-samples.html#som-based-quality-assessment-part-1-creating-the-som-map" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>To run the SOM-based quality assessment, the first step is to run <code>sits_som_map()</code> which uses the “kohonen” R package <span class="citation">[21]</span> to compute a SOM grid. Each sample is assigned to a neuron, and neurons are placed in the grid based on similarity. This function has six main parameters. In <code>data</code>, the user should provide the name of the R object containing the samples. The size of the SOM map grid is controlled by <code>grid_xdim</code> and <code>grid_ydim</code>. The starting learning rate is set using <code>alpha</code>; this learning rate decreases during the interactions. The distance metric is controlled by <code>distance</code>; options available currently are “sumofsquares” and “euclidean”. The number of iterations is set by <code>rlen</code>. For more details on the implementation, please also consult <code>?kohonen::supersom</code>.</p>
+<div class="sourceCode" id="cb98"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb98-1"><a href="improving-the-quality-of-training-samples.html#cb98-1" aria-hidden="true" tabindex="-1"></a><span class="co"># clustering time series using SOM</span></span>
+<span id="cb98-2"><a href="improving-the-quality-of-training-samples.html#cb98-2" aria-hidden="true" tabindex="-1"></a>som_cluster <span class="ot">&lt;-</span></span>
+<span id="cb98-3"><a href="improving-the-quality-of-training-samples.html#cb98-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">sits_som_map</span>(</span>
+<span id="cb98-4"><a href="improving-the-quality-of-training-samples.html#cb98-4" aria-hidden="true" tabindex="-1"></a>        <span class="at">data =</span> samples_cerrado_mod13q1_2bands,</span>
+<span id="cb98-5"><a href="improving-the-quality-of-training-samples.html#cb98-5" aria-hidden="true" tabindex="-1"></a>        <span class="at">grid_xdim =</span> <span class="dv">15</span>,</span>
+<span id="cb98-6"><a href="improving-the-quality-of-training-samples.html#cb98-6" aria-hidden="true" tabindex="-1"></a>        <span class="at">grid_ydim =</span> <span class="dv">15</span>,</span>
+<span id="cb98-7"><a href="improving-the-quality-of-training-samples.html#cb98-7" aria-hidden="true" tabindex="-1"></a>        <span class="at">alpha =</span> <span class="fl">1.0</span>,</span>
+<span id="cb98-8"><a href="improving-the-quality-of-training-samples.html#cb98-8" aria-hidden="true" tabindex="-1"></a>        <span class="at">distance =</span> <span class="st">&quot;euclidean&quot;</span>,</span>
+<span id="cb98-9"><a href="improving-the-quality-of-training-samples.html#cb98-9" aria-hidden="true" tabindex="-1"></a>        <span class="at">rlen =</span> <span class="dv">20</span></span>
+<span id="cb98-10"><a href="improving-the-quality-of-training-samples.html#cb98-10" aria-hidden="true" tabindex="-1"></a>    )</span></code></pre></div>
+<p>The output of the <code>sits_som_map()</code> is a list with 3 elements:</p>
+<ul>
+<li>the original set of time series with two additional columns for each time series: <code>id_sample</code> (the original id of each sample) and <code>id_neuron</code> (the id of the neuron to which it belongs).</li>
+<li>a tibble with information on the neurons. For each neuron, it gives the prior and posterior probabilities of all labels which occur in the samples assigned to it.</li>
+<li>the SOM grid</li>
+</ul>
+<div class="sourceCode" id="cb99"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb99-1"><a href="improving-the-quality-of-training-samples.html#cb99-1" aria-hidden="true" tabindex="-1"></a>som_cluster</span></code></pre></div>
+<pre class="sourceCode"><code>#&gt; $data
+#&gt; # A tibble: 50,160 × 9
+#&gt;    latitude longitude start_date end_date   label   cube   time_series id_sample
+#&gt;       &lt;dbl&gt;     &lt;dbl&gt; &lt;date&gt;     &lt;date&gt;     &lt;chr&gt;   &lt;chr&gt;  &lt;list&gt;          &lt;int&gt;
+#&gt;  1    -16.2     -54.5 2018-09-01 2019-09-01 Pasture MOD13… &lt;tibble&gt;            1
+#&gt;  2    -16.2     -54.5 2018-09-01 2019-09-01 Pasture MOD13… &lt;tibble&gt;            2
+#&gt;  3    -16.2     -54.5 2018-09-01 2019-09-01 Pasture MOD13… &lt;tibble&gt;            3
+#&gt;  4    -16.2     -54.5 2018-09-01 2019-09-01 Pasture MOD13… &lt;tibble&gt;            4
+#&gt;  5    -16.2     -54.5 2018-09-01 2019-09-01 Pasture MOD13… &lt;tibble&gt;            5
+#&gt;  6    -16.2     -54.5 2018-09-01 2019-09-01 Pasture MOD13… &lt;tibble&gt;            6
+#&gt;  7    -16.2     -54.4 2018-09-01 2019-09-01 Pasture MOD13… &lt;tibble&gt;            7
+#&gt;  8    -16.2     -54.5 2018-09-01 2019-09-01 Pasture MOD13… &lt;tibble&gt;            8
+#&gt;  9    -16.1     -54.7 2018-09-01 2019-09-01 Pasture MOD13… &lt;tibble&gt;            9
+#&gt; 10    -16.2     -54.7 2018-09-01 2019-09-01 Pasture MOD13… &lt;tibble&gt;           10
+#&gt; # … with 50,150 more rows, and 1 more variable: id_neuron &lt;dbl&gt;
+#&gt; 
+#&gt; $labelled_neurons
+#&gt; # A tibble: 746 × 5
+#&gt;    id_neuron label_samples  count prior_prob post_prob
+#&gt;        &lt;dbl&gt; &lt;chr&gt;          &lt;int&gt;      &lt;dbl&gt;     &lt;dbl&gt;
+#&gt;  1         1 Dense_Woodland   447    0.982     0.905  
+#&gt;  2         1 Pasture            1    0.00220   0.0426 
+#&gt;  3         1 Rocky_Savanna      1    0.00220   0.0462 
+#&gt;  4         1 Savanna            5    0.0110    0.00170
+#&gt;  5         1 Silviculture       1    0.00220   0.0223 
+#&gt;  6         2 Dense_Woodland   203    0.953     0.846  
+#&gt;  7         2 Pasture            8    0.0376    0.0746 
+#&gt;  8         2 Savanna            2    0.00939   0.00170
+#&gt;  9         3 Dense_Woodland   139    0.586     0.842  
+#&gt; 10         3 Pasture           95    0.401     0.0493 
+#&gt; # … with 736 more rows
+#&gt; 
+#&gt; $som_properties
+#&gt; SOM of size 15x15 with a rectangular topology.
+#&gt; Training data included.
+#&gt; 
+#&gt; attr(,&quot;class&quot;)
+#&gt; [1] &quot;som_map&quot; &quot;list&quot;</code></pre>
+<p>To plot the SOM grid, use <code>plot()</code>. The neurons are labelled using the majority voting.</p>
+<div class="sourceCode" id="cb101"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb101-1"><a href="improving-the-quality-of-training-samples.html#cb101-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(som_cluster)</span></code></pre></div>
+<pre><code>#&gt; Warning in par(opar): argument 1 does not name a graphical parameter</code></pre>
+<p><img src="sitsbook_files/figure-html/unnamed-chunk-63-1.png" width="70%" style="display: block; margin: auto;" /></p>
+<p>The SOM grid has 225 neurons, as defined by the product of the parameters <code>grid_xdim</code> and <code>grid_ydim</code> in the <code>sits_som_map()</code>. Looking at the SOM grid, one can see that most of the neurons of a class are located close to each other, as expected. However, some “Pasture” neurons far from the main cluster. This mixture is a consequence of the continuous nature of natural vegetation cover in the Brazilian Cerrado. The transition between areas of open savanna and pasture is not always well defined; moreover, it is dependent on factors such as climate and latitude. The SOM grid provides a general view of the capacity of the samples to distinguish the chosen labels.</p>
+</div>
+<div id="som-based-quality-assessment-part-2-assessing-confusion-between-labels" class="section level3 hasAnchor" number="4.3.2">
+<h3><span class="header-section-number">4.3.2</span> SOM-based quality assessment part 2: assessing confusion between labels<a href="improving-the-quality-of-training-samples.html#som-based-quality-assessment-part-2-assessing-confusion-between-labels" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>The second step in SOM-based quality assessment is understanding the confusion between labels. The function <code>sits_som_evaluate_cluster()</code> groups neurons by their majority label and produces a tibble. For each label, the tibble show the percentage of samples with a different label that have been mapped to a neuron whose majority is that label.</p>
+<div class="sourceCode" id="cb103"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb103-1"><a href="improving-the-quality-of-training-samples.html#cb103-1" aria-hidden="true" tabindex="-1"></a><span class="co"># produce a tibble with a summary of the mixed labels</span></span>
+<span id="cb103-2"><a href="improving-the-quality-of-training-samples.html#cb103-2" aria-hidden="true" tabindex="-1"></a>som_eval <span class="ot">&lt;-</span> <span class="fu">sits_som_evaluate_cluster</span>(som_cluster)</span></code></pre></div>
+<pre><code>#&gt; Joining, by = &quot;id_neuron&quot;</code></pre>
+<div class="sourceCode" id="cb105"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb105-1"><a href="improving-the-quality-of-training-samples.html#cb105-1" aria-hidden="true" tabindex="-1"></a><span class="co"># show the result</span></span>
+<span id="cb105-2"><a href="improving-the-quality-of-training-samples.html#cb105-2" aria-hidden="true" tabindex="-1"></a>som_eval </span></code></pre></div>
+<pre class="sourceCode"><code>#&gt; # A tibble: 79 × 4
+#&gt;    id_cluster cluster        class          mixture_percentage
+#&gt;         &lt;int&gt; &lt;chr&gt;          &lt;chr&gt;                       &lt;dbl&gt;
+#&gt;  1          1 Dense_Woodland Dense_Woodland           81.0    
+#&gt;  2          1 Dense_Woodland Millet_Cotton             0.00871
+#&gt;  3          1 Dense_Woodland Pasture                   6.14   
+#&gt;  4          1 Dense_Woodland Rocky_Savanna             7.16   
+#&gt;  5          1 Dense_Woodland Savanna                   4.03   
+#&gt;  6          1 Dense_Woodland Silviculture              1.63   
+#&gt;  7          1 Dense_Woodland Soy_Corn                  0.0261 
+#&gt;  8          1 Dense_Woodland Soy_Cotton                0.0261 
+#&gt;  9          1 Dense_Woodland Soy_Fallow                0.00871
+#&gt; 10          2 Dunes          Dunes                   100      
+#&gt; # … with 69 more rows</code></pre>
+<p>As seen above, almost all labels are associated to clusters where there are some samples with a different label. Such confusion between labels arises because visual labeling of samples is subjective and can be biased. In many cases, interpreters use high-resolution data to identify samples. However, the actual images to be classified are captured by satellites with lower resolution. In our case study, a MOD13Q1 image has pixels with 250 x 250 meter resolution. Therefore, the correspondence between labelled locations in high-resolution images and mid to low-resolution images is not direct. Therefore, the SOM-based analysis is useful to select only homogeneous pixels.</p>
+<p>The confusion by class can be visualised in a bar plot using <code>plot()</code>, as shown below. The bar plot shows some confusion between the classes associated to the natural vegetation typical of the Brazilian Cerrado (“Savanna”, “Savanna_Parkland”, “Rocky_Savanna”). This mixture is due to the large variability of the natural vegetation of the Cerrado biome, which makes it difficult to draw sharp boundaries between each label. Some confusion is also visible between the agricultural classes (“Soy_Corn”, “Soy_Cotton” and “Soy_Fallow”).</p>
+<div class="sourceCode" id="cb107"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb107-1"><a href="improving-the-quality-of-training-samples.html#cb107-1" aria-hidden="true" tabindex="-1"></a><span class="co"># plot the confusion between clusters</span></span>
+<span id="cb107-2"><a href="improving-the-quality-of-training-samples.html#cb107-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(som_eval)</span></code></pre></div>
+<p><img src="sitsbook_files/figure-html/unnamed-chunk-65-1.png" width="70%" style="display: block; margin: auto;" /></p>
+</div>
+<div id="som-based-quality-assessment-part-3-using-probabilities-to-detect-noisy-samples" class="section level3 hasAnchor" number="4.3.3">
+<h3><span class="header-section-number">4.3.3</span> SOM-based quality assessment part 3: using probabilities to detect noisy samples<a href="improving-the-quality-of-training-samples.html#som-based-quality-assessment-part-3-using-probabilities-to-detect-noisy-samples" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>The third step in the quality assessment uses the discrete probability distribution associated to each neuron. The probability information is included in the <code>labelled_neurons</code> tibble which is produced by <code>sits_som_map()</code> (see above). More homogeneous neurons (those with a single class of high probability) are assumed to be composed of good quality samples. Heterogeneous neurons (those with two or more classes with significant probability) are likely to contain noisy samples. The algorithm computes two values for each sample:</p>
+<ul>
+<li>prior probability: the probability that the label assigned to the sample is correct, considering only the samples contained in each same neuron. For example, if a neuron has 20 samples, of which 15 are labeled as “Pasture” and 5 as “Forest”, all samples labeled “Forest” are assigned a prior probability of 25%. This is an indication that the “Forest” samples in this neuron are not of good quality.</li>
+<li>posterior probability: the probability that the label assigned to the sample is correct, considering the neighboring neurons. Take the case of the above-mentioned neuron whose samples labeled “Pasture” have a prior probability of 75%. What happens if all the neighboring samples have “Forest” as a majority label? Are the samples labeled “Pasture” in this neuron noisy? To answer this question, we use information from the neighbors. Using Bayesian inference, we estimate if these samples are noisy based on the samples of the neighboring neurons <span class="citation">[22]</span>.</li>
+</ul>
+<p>To identify noisy samples, we take the result of the <code>sits_som_map()</code> function as the first argument to the function <code>sits_som_clean_samples()</code>. This function finds out which samples are noisy, those that are clean, and some that need to be further examined by the user. It requires <code>prior_threshold</code> and <code>posterior_threshold</code> parameters according to the following rules:</p>
+<ul>
+<li>If the prior probability of a sample is less than <code>prior_threshold</code>, the sample is assumed to be noisy and tagged as “remove”;</li>
+<li>If the prior probability is greater or equal to <code>prior_threshold</code> and the posterior probability is greater or equal to <code>posterior_threshold</code>, the sample is assumed not to be noisy and thus is tagged as “clean”;</li>
+<li>If the prior probability is greater or equal to <code>prior_threshold</code> and the posterior probability is less than <code>posterior_threshold</code>, we have a situation the sample is part of the majority level of those assigned to its neuron, but its label is not consistent with most of its neighbors. This is an anomalous condition and is tagged as “analyze”. Users are encouraged to inspect such samples to find out whether they are in fact noisy or not.</li>
+</ul>
+<p>The default value for both <code>prior_threshold</code> and <code>posterior_threshold</code> is 60%. The <code>sits_som_clean_samples()</code> has an additional parameter (<code>keep</code>) which indicates which samples should be kept in the set based on their prior and posterior probabilities of being noisy and the assigned label. The default value for <code>keep</code> is <code>c("clean", "analyze")</code>. As a result of the cleaning, about 900 samples have been considered to be noisy and thus removed.</p>
+<div class="sourceCode" id="cb108"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb108-1"><a href="improving-the-quality-of-training-samples.html#cb108-1" aria-hidden="true" tabindex="-1"></a>new_samples <span class="ot">&lt;-</span> <span class="fu">sits_som_clean_samples</span>(som_cluster, </span>
+<span id="cb108-2"><a href="improving-the-quality-of-training-samples.html#cb108-2" aria-hidden="true" tabindex="-1"></a>                                      <span class="at">prior_threshold =</span> <span class="fl">0.6</span>,</span>
+<span id="cb108-3"><a href="improving-the-quality-of-training-samples.html#cb108-3" aria-hidden="true" tabindex="-1"></a>                                      <span class="at">posterior_threshold =</span> <span class="fl">0.6</span>,</span>
+<span id="cb108-4"><a href="improving-the-quality-of-training-samples.html#cb108-4" aria-hidden="true" tabindex="-1"></a>                                      <span class="at">keep =</span> <span class="fu">c</span>(<span class="st">&quot;clean&quot;</span>, <span class="st">&quot;analyze&quot;</span>))</span>
+<span id="cb108-5"><a href="improving-the-quality-of-training-samples.html#cb108-5" aria-hidden="true" tabindex="-1"></a><span class="co"># find out how many samples are evaluated as &quot;clean&quot; or &quot;analyze&quot;</span></span>
+<span id="cb108-6"><a href="improving-the-quality-of-training-samples.html#cb108-6" aria-hidden="true" tabindex="-1"></a>new_samples <span class="sc">%&gt;%</span> </span>
+<span id="cb108-7"><a href="improving-the-quality-of-training-samples.html#cb108-7" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">group_by</span>(eval) <span class="sc">%&gt;%</span> </span>
+<span id="cb108-8"><a href="improving-the-quality-of-training-samples.html#cb108-8" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">summarise</span>(<span class="at">count =</span> dplyr<span class="sc">::</span><span class="fu">n</span>(), <span class="at">.groups =</span> <span class="st">&quot;drop&quot;</span>)</span></code></pre></div>
+<pre class="sourceCode"><code>#&gt; # A tibble: 2 × 2
+#&gt;   eval    count
+#&gt;   &lt;chr&gt;   &lt;int&gt;
+#&gt; 1 analyze  5971
+#&gt; 2 clean   33691</code></pre>
+</div>
+<div id="comparing-original-and-clean-samples" class="section level3 hasAnchor" number="4.3.4">
+<h3><span class="header-section-number">4.3.4</span> Comparing Original and Clean Samples<a href="improving-the-quality-of-training-samples.html#comparing-original-and-clean-samples" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>To compare the original and clean samples, we run a 4-fold validation on the original and on the cleaned sample set, using the function <code>sits_kfold_validate()</code> and a random forest model. As the results show, the SOM procedure is useful, since the validation improves from 95% to 99%. It should be noted that a k-fold validation procedure measures how well the machine learning model fits the samples and is not a measure of accuracy of the classification. For more details on accuracy measures, please see <a href="https://e-sensing.github.io/sitsbook/validation-and-accuracy-measurements-in-sits.html">Chr 8</a>.</p>
+<div class="sourceCode" id="cb110"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb110-1"><a href="improving-the-quality-of-training-samples.html#cb110-1" aria-hidden="true" tabindex="-1"></a><span class="co"># run a k-fold validation</span></span>
+<span id="cb110-2"><a href="improving-the-quality-of-training-samples.html#cb110-2" aria-hidden="true" tabindex="-1"></a>assess_orig <span class="ot">&lt;-</span> <span class="fu">sits_kfold_validate</span>(samples_cerrado_mod13q1_2bands, </span>
+<span id="cb110-3"><a href="improving-the-quality-of-training-samples.html#cb110-3" aria-hidden="true" tabindex="-1"></a>                                   <span class="at">ml_method =</span> <span class="fu">sits_rfor</span>(<span class="at">num_trees =</span> <span class="dv">200</span>))</span>
+<span id="cb110-4"><a href="improving-the-quality-of-training-samples.html#cb110-4" aria-hidden="true" tabindex="-1"></a><span class="co"># print summary </span></span>
+<span id="cb110-5"><a href="improving-the-quality-of-training-samples.html#cb110-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sits_accuracy_summary</span>(assess_orig)</span></code></pre></div>
+<pre class="sourceCode"><code>#&gt; 
+#&gt; Overall Statistics
+#&gt;                             
+#&gt;  Accuracy : 0.9468          
+#&gt;    95% CI : (0.9447, 0.9487)
+#&gt;                             
+#&gt;     Kappa : 0.9379</code></pre>
+<div class="sourceCode" id="cb112"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb112-1"><a href="improving-the-quality-of-training-samples.html#cb112-1" aria-hidden="true" tabindex="-1"></a>assess_new <span class="ot">&lt;-</span> <span class="fu">sits_kfold_validate</span>(new_samples, </span>
+<span id="cb112-2"><a href="improving-the-quality-of-training-samples.html#cb112-2" aria-hidden="true" tabindex="-1"></a>                                   <span class="at">ml_method =</span> <span class="fu">sits_rfor</span>(<span class="at">num_trees =</span> <span class="dv">200</span>))</span>
+<span id="cb112-3"><a href="improving-the-quality-of-training-samples.html#cb112-3" aria-hidden="true" tabindex="-1"></a><span class="co"># print summary </span></span>
+<span id="cb112-4"><a href="improving-the-quality-of-training-samples.html#cb112-4" aria-hidden="true" tabindex="-1"></a><span class="fu">sits_accuracy_summary</span>(assess_new)</span></code></pre></div>
+<pre class="sourceCode"><code>#&gt; 
+#&gt; Overall Statistics
+#&gt;                           
+#&gt;  Accuracy : 0.991         
+#&gt;    95% CI : (0.99, 0.9919)
+#&gt;                           
+#&gt;     Kappa : 0.9894</code></pre>
+<p>An additional way of evaluating the quality of samples is to examine the internal
+mixture inside neurons with the same label. We call a group of neurons sharing
+the same label as a “cluster”. Given a SOM map, the function <code>sits_som_evaluate_cluster</code>
+examines all clusters to find out the percentage of samples contained in it which do not share its label. This information is saved as a tibble and can also
+be visualized.</p>
+<div class="sourceCode" id="cb114"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb114-1"><a href="improving-the-quality-of-training-samples.html#cb114-1" aria-hidden="true" tabindex="-1"></a><span class="co"># evaluate the misture in the SOM clusters</span></span>
+<span id="cb114-2"><a href="improving-the-quality-of-training-samples.html#cb114-2" aria-hidden="true" tabindex="-1"></a>cluster_mixture <span class="ot">&lt;-</span> <span class="fu">sits_som_evaluate_cluster</span>(som_cluster)</span>
+<span id="cb114-3"><a href="improving-the-quality-of-training-samples.html#cb114-3" aria-hidden="true" tabindex="-1"></a><span class="co"># plot the mixture information.</span></span>
+<span id="cb114-4"><a href="improving-the-quality-of-training-samples.html#cb114-4" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(cluster_mixture)</span></code></pre></div>
+<p><img src="sitsbook_files/figure-html/unnamed-chunk-69-1.png" width="70%" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+<div id="conclusion" class="section level2 hasAnchor" number="4.4">
+<h2><span class="header-section-number">4.4</span> Conclusion<a href="improving-the-quality-of-training-samples.html#conclusion" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>Machine learning methods are now established as a useful technique for remote sensing image analysis. Despite the well-known fact that the quality of the training data is a key factor in the accuracy of the resulting maps, the literature on methods for detecting and removing class noise in SITS training sets is limited. To contribute to solving this challenge, this paper proposed a new technique. The proposed method uses the SOM neural network to group similar samples in a 2D map for dimensionality reduction. The method identifies both mislabeled samples and outliers that are flagged to further investigation. The results demonstrate the positive impact on the overall classification accuracy. Although the class noise removal adds an extra cost to the entire classification process, we believe that it is essential to improve the accuracy of classified maps using SITS analysis mainly for large areas.</p>
+
+</div>
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+<a href="working-with-time-series.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="machine-learning-for-data-cubes-using-the-sits-package.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+    </div>
+  </div>
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/clipboard.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-clipboard.js"></script>
+<script>
+gitbook.require(["gitbook"], function(gitbook) {
+gitbook.start({
+"sharing": {
+"github": false,
+"facebook": true,
+"twitter": true,
+"linkedin": false,
+"weibo": false,
+"instapaper": false,
+"vk": false,
+"whatsapp": false,
+"all": ["facebook", "twitter", "linkedin", "weibo", "instapaper"]
+},
+"fontsettings": {
+"theme": "white",
+"family": "sans",
+"size": 2
+},
+"edit": {
+"link": null,
+"text": null
+},
+"history": {
+"link": null,
+"text": null
+},
+"view": {
+"link": null,
+"text": null
+},
+"download": ["sitsbook.pdf"],
+"search": {
+"engine": "fuse",
+"options": null
+},
+"toc": {
+"collapse": "subsection"
+}
+});
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+</body>
+
+</html>

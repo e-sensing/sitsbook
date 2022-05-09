@@ -15,7 +15,7 @@ knitr::opts_chunk$set(
 # create a temporary working directory for each chapter
 
 # load essentials packages
-library(tibble)
+#library(tibble)
 library(dtwclust)
 library(magrittr)
 library(distill)
