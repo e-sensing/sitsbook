@@ -20,27 +20,31 @@ This chapter presents the machine learning (ML) techniques available in SITS. Th
 
 ## Machine learning classification 
 
-<a href="https://www.kaggle.com/brazildatacube/sits-classification-r" target="_blank">img src="https://kaggle.com/static/images/open-in-kaggle.svg"/></a>
+<a href="https://www.kaggle.com/brazildatacube/sits-classification-r" target="_blank"><img src="https://kaggle.com/static/images/open-in-kaggle.svg"/></a>
 
-The package provides support for the classification of time series, preserving the full temporal resolution of the input data. Instead of extracting metrics from time series segments, it uses all values of the time series. It supports two kinds of machine learning methods. The first group of methods does not explicitly consider spatial or temporal dimensions; these models treat time series as a vector in a high-dimensional feature space. From this class of models, `sits` includes random forests[@Belgiu2016], support  vector machines[@Mountrakis2011],  extreme gradient boosting[@Chen2016], and multi-layer perceptrons[@Parente2019a]. 
-
-The second group of models comprises deep learning methods specifically designed to work with time series. Temporal relations between observed values in a time series are taken into account.  Time series classification models for satellite data include 1D convolution neural networks (1D-CNN) [@Pelletier2019, @Fawaz2020], recurrent neural networks (RNN)[@Russwurm2018], and~attention-based deep learning [@Garnot2020a, @Russwurm2020]. The `sits` package supports two 1D-CNN algorithms: TempCNN[@Pelletier2019] and ResNet[@Fawaz2019]. For models based on 1D-CNN, the order of the samples in the time series is relevant for the classifier. Each layer of the network applies a convolution filter to the output of the previous layer. This cascade of convolutions captures time series features in different time scales [@Pelletier2019]. 
-
-Thus, the following machine learning methods are available in SITS:
+The package provides support for the classification of time series, preserving the full temporal resolution of the input data. Instead of extracting metrics from time series segments, it uses all values of the time series. The following machine learning methods are available:
 
 * Support vector machines (`sits_svm()`)
 * Random forests (`sits_rfor()`)
 * Extreme gradient boosting (`sits_xgboost()`)
-* Deep learning (DL) using multi-layer perceptrons (`sits_mlp()`)
-* DL using Deep Residual Networks (`sits_ResNet()`) 
-* DL with 1D convolutional neural networks (`sits_TempCNN()`)
+* Multi-layer perceptrons (`sits_mlp()`)
+* Deep Residual Networks (`sits_resnet()`) 
+* 1D convolutional neural networks (`sits_tempcnn()`)
+* Temporal attention encoders (`sits_tae()`)
+* Lightweight temporal attention encoders (`sits_lighttae()`)
 
-For the machine learning examples, we use the data set "samples_matogrosso_mod13q1", containing a sits tibble with time series samples from Brazilian Mato Grosso State (Amazon and Cerrado biomes), obtained from the MODIS MOD13Q1 product. The tibble with 1,892 samples and 9 classes ("Cerrado", "Fallow_Cotton", "Forest", "Millet_Cotton", "Pasture","Soy_Corn", "Soy_Cotton", "Soy_Fallow", "Soy_Millet"). Each time series comprehends 12 months (23 data points) with 6 bands ("NDVI", "EVI", "BLUE", "RED", "NIR", "MIR"). The dataset was used in the paper "Big Earth observation time series analysis for monitoring Brazilian agriculture" [@Picoli2018], and is available in the R package "sitsdata", which is downloadable from the website associated to the "e-sensing" project. 
+The package supports two kinds of machine learning. The first group of methods does not explicitly consider spatial or temporal dimensions; these models treat time series as a vector in a high-dimensional feature space. From this class of models, `sits` includes random forests[@Belgiu2016], support  vector machines[@Mountrakis2011],  extreme gradient boosting[@Chen2016], and multi-layer perceptrons[@Parente2019a]. 
 
-The following examples show how to train ML and apply it to classify a single time series; they should not be taken as indication of which method performs better. The most important factor for achieving a good result is the quality of the training data [@Maxwell2018]. Given a good set of samples, users of `sits` should be able to get good results. For examples of ML for classifying large areas, please see [Chapter 6](https://e-sensing.github.io/sitsbook/classification-of-images-in-data-cubes-using-satellite-image-time-series.html) and the papers by the authors [@Picoli2018, @Picoli2020a, @Simoes2020, @Ferreira2020a]. 
+The second group of models comprises deep learning methods specifically designed to work with time series. Temporal relations between observed values in a time series are taken into account. From this kind of model, `sits` supports 1D convolution neural networks such as `tempcnn` [@Pelletier2019], and residual 1D networks based on `resnet` [@Fawaz2020]. It also supports  temporal attention-based enconders (`sits_tae()`) and its simplified version (`sits_lighttae()`) [@Garnot2020a, @Russwurm2020]. In these models, the order of the samples in the time series is relevant for the classifier. Each layer of the network applies a convolution filter to the output of the previous layer. This cascade of convolutions captures time series features in different time scales [@Pelletier2019]. 
 
 
-## Visualizing Samples 
+Experience with `sits` applications shows that SVM, extreme gradient boosting and multi-layer perceptron models tend to have inferior performance those using random forest and temporal deep learning. Arguably, this effect derives from the temporal behavior of land use and land cover classes, where some dates capture more information than others. For example, in deforestation monitoring the dates associates to the actions of forest removal are more informative than earlier or later ones. The same situation occurs in crop mapping, when  a large part of the variation is captured in a few dates. 
+
+
+The following examples show how to train ML and apply it to classify a single time series; they should not be taken as indication of which method performs better. The most important factor for achieving a good result is the quality of the training data [@Maxwell2018]. The examples should not be used to assess the general qualities of the models. Experience shows that classification quality depends on the training samples and on how well the model matches these samples.For examples of ML for classifying large areas, please see [Chapter 6](https://e-sensing.github.io/sitsbook/classification-of-images-in-data-cubes-using-satellite-image-time-series.html) and the papers by the authors [@Picoli2018, @Picoli2020a, @Simoes2020, @Ferreira2020a]. 
+
+
+## Visualizing Sample Patterns 
 
 One useful way of describing and understanding the samples is by plotting them. A direct way of doing so is using the `plot` function, as discussed in [Chapter  3](https://e-sensing.github.io/sitsbook/acessing-time-series-information-in-sits.html). In the plot, the thick red line is the median value for each time instance and the yellow lines are the first and third interquartile ranges. 
 
@@ -76,6 +80,9 @@ Since `sits` is aimed at remote sensing users who are not machine learning exper
 
 When a dataset of time series organised as a SITS tibble is taken as input to the classifier,  the result is the same tibble with one additional column ("predicted"), which contains the information on what labels are have been assigned for each interval. The results can be shown in text format using the function `sits_show_prediction()` or graphically using `plot()`.  
 
+For the machine learning examples, we use the data set "samples_matogrosso_mod13q1", containing a sits tibble with time series samples from Brazilian Mato Grosso State (Amazon and Cerrado biomes), obtained from the MODIS MOD13Q1 product. The tibble with 1,892 samples and 9 classes ("Cerrado", "Fallow_Cotton", "Forest", "Millet_Cotton", "Pasture","Soy_Corn", "Soy_Cotton", "Soy_Fallow", "Soy_Millet"). Each time series comprehends 12 months (23 data points) with 6 bands ("NDVI", "EVI", "BLUE", "RED", "NIR", "MIR"). The dataset was used in the paper "Big Earth observation time series analysis for monitoring Brazilian agriculture" [@Picoli2018], and is available in the R package "sitsdata", which is downloadable from the website associated to the "e-sensing" project. 
+
+
 ## Random forests
 
 The random forest model uses the idea of *decision trees* as its base model, with many refinements. When building the decision trees, each time a split in a tree is considered, a random sample of `m`  features is chosen as split candidates from the full set of `n` features of the sample set[@James2013]. Each of these features is then tested, the one maximizing the decrease in a purity measure is used to build the trees. This criterion is used to identify relevant features and to perform variable selection. This decreases the correlation among trees and improves the prediction performance. The classification performance depends on the number of trees in the forest as well as the number of features randomly selected at each node. SITS provides a `sits_rfor` function which is a front-end to the `randomForest` package[@Wright2017]; its main parameter is `num_trees` (number of trees to grow). In practice, between 100 and 200 trees are sufficient to achieve a reasonable classification result.  
@@ -83,7 +90,7 @@ The random forest model uses the idea of *decision trees* as its base model, wit
 ```{r, eval, fig.cap="Classification of time series using random forests"}
 # Retrieve the set of samples (provided by EMBRAPA) from the 
 # Mato Grosso region for train the Random Forest model.
-rfor_model <- sits_train(data = samples_matogrosso_mod13q1, 
+rfor_model <- sits_train(samples = samples_matogrosso_mod13q1, 
                          ml_method = sits_rfor(num_trees = 200))
 # retrieve a point to be classified
 point_mt_4bands <- sits_select(point_mt_6bands, 
@@ -116,23 +123,18 @@ In `sits`, SVM is implemented as a wrapper of `e1071` R package that uses the `L
 The example below shows how to apply the SVM method for classification of time series using default values. The main parameters for the SVM are `kernel` which controls whether to use a non-linear transformation (default is `radial`), `cost` which measures the punishment for wrongly-classified samples (default is 10), and `cross` which sets the value of the k-fold cross validation (default is 10). . 
 
 ```{r, fig.cap="Classification of time series using SVM"}
-# Filter the data slightly to reduce noise without reducing variability
-samples_filtered <- sits_whittaker(samples_matogrosso_mod13q1, 
-                                   lambda = 0.5,
-                                   bands_suffix = "")
 # Train a machine learning model for the mato grosso dataset using SVM
 # The parameters are those of the "e1071:svm" method
 svm_model <- sits_train(samples_matogrosso_mod13q1, 
                         ml_method = sits_svm())
 # Classify using SVM model and plot the result
 class <- point_mt_4bands %>% 
-    sits_whittaker(lambda = 0.5, bands_suffix = "") %>% 
     sits_classify(svm_model) %>% 
     plot(bands = c("NDVI", "EVI"))
 
 ```
 
-Compared with the output from the random forest classifier, the SVM result includes more classes. In particular, the transition from forest to pasture that occurs after 2004 is more gradual and shows a possible period of land abandonment in 2004 and 2005.  Since the training dataset does not contain samples of deforested areas, places where forest is removed will tend to be classified as "Cerrado", which is the nearest kind of vegetation cover where trees and grasslands are mixed. Also, the classification for 2009 is different from the "Soy-Corn" label assigned from the other years from 2008 to 2017. In this example, the `sits_svm()` method is more sensitive to the distribution of the samples in the feature space than the random forests algorithm. 
+
 
 ## Extreme Gradient Boosting
 
@@ -147,10 +149,9 @@ The learning rate `eta` varies from 0.0 to 1.0 and should be kept small (default
 ```{r, fig.cap="Classification of time series using XGBoost"}
 # Train a machine learning model for the mato grosso dataset using XGBOOST
 # The parameters are those of the "xgboost" package
-xgb_model <- sits_train(samples_filtered, sits_xgboost(verbose = 0))
+xgb_model <- sits_train(samples_matogrosso_mod13q1, sits_xgboost(verbose = 0))
 # Classify using SVM model and plot the result
 point_mt_4bands %>% 
-    sits_whittaker(lambda = 0.50, bands_suffix = "") %>% 
     sits_classify(xgb_model) %>% 
     plot(bands = c("NDVI", "EVI"))
 ```
@@ -165,9 +166,9 @@ In `sits`, users build MLP models using `sits_mlp()`. Since there is no proven m
 
 The choice of the number of layers depends on the inherent separability of the data set to be classified. For data sets where the classes have different signatures, a shallow model (with 3 layers) may provide appropriate responses. More complex situations require models of deeper hierarchy. The user should be aware that some models with many hidden layers may take a long time to train and may not be able to converge. The suggestion is to start with 3 layers and test different options of number of neurons per layer, before increasing the number of layers.
 
-MLP models also need to include the activation function (`activation`). The activation function of a node defines the output of that node given an input or set of inputs. Following standard practices [@Goodfellow2016], we recommend the use of the "relu" and "elu" functions. 
+MLP models also need to include the activation function. The activation function of a node defines the output of that node given an input or set of inputs. Following standard practices [@Goodfellow2016], we use the "relu" activation function. 
 
-Users can also define the optimization method(`optimizer`), which defines the gradient descent algorithm to be used. These methods aim to maximize an objective function by updating the parameters in the opposite direction of the gradient of the objective function [@Ruder2016]. Based on experience with image time series, we recommend that users start by using the default method provided by `sits`, which is the `optimizer_adam` method. Please refer to the `keras` package documentation for more information.
+Users can also define the optimization method(`optimizer`), which defines the gradient descent algorithm to be used. These methods aim to maximize an objective function by updating the parameters in the opposite direction of the gradient of the objective function [@Ruder2016]. Based on experience with image time series, we recommend that users start by using the default method provided by `sits`, which is the `optimizer_adamw` method. Please refer to the `torch` package documentation for more information.
  
 Another relevant parameter is the list of dropout rates (`dropout`). Dropout is a technique for randomly  dropping  units  from  the  neural network during training [@Srivastava2014]. By randomly discarding some neurons, dropout reduces overfitting. Since the purpose of a cascade of neural nets is to improve learning as more data is acquired, discarding some neurons may seem a waste of resources. In practice, dropout  prevents an early convergence to a local minimum [@Goodfellow2016]. We suggest users experiment with different dropout rates, starting from small values (10-30%) and increasing as required. 
 
@@ -179,10 +180,9 @@ In this and in the following examples of using deep learning classifiers, both t
 ```{r, warning = FALSE, message = FALSE}
 # train a machine learning model for the Mato Grosso data using an MLP model
 
-mlp_model <- sits_train(samples_filtered, 
+mlp_model <- sits_train(samples_matogrosso_mod13q1, 
                         sits_mlp(
                         layers           = c(512, 512, 512),
-                        activation       = "relu",
                         dropout_rates    = c(0.10, 0.20, 0.30),
                         epochs           = 100,
                         batch_size       = 64,
@@ -198,7 +198,6 @@ Then, we classify a 16-year time series using the DL model
 # Classify using DL model and plot the result
 point_mt_6bands %>% 
     sits_select(bands = c("NDVI", "EVI", "NIR", "MIR")) %>% 
-    sits_whittaker(lambda = 0.5, bands_suffix = "") %>% 
     sits_classify(mlp_model) %>% 
     plot(bands = c("NDVI", "EVI"))
 ```
@@ -216,25 +215,25 @@ The Use of 1D CNNs for satellite image time series classification is proposed in
 knitr::include_graphics("images/tempcnn.png")
 ```
 
-The function `sits_TempCNN()` implements the model. The code has been derived from the Python source provided by the authors (https://github.com/charlotte-pel/temporalCNN). Most of the parameters corresponds to those chosen by @Pelletier2019. The parameter `cnn_layers` controls the number of 1D-CNN layers and the size of the filters applied at each layer; the default values are three CNNs with 64 units. The parameter `cnn_kernels` indicates the size of the convolution kernels; the default values are kernels of size 5. Activation for all 1D-CNN layers is set by  `cnn_activation` (default = "relu"). The parameter `cnn_L2_rate` controls the regularization rate, with a default of "1e-06". The dropout rates for each 1D-CNN layer are controlled individually by the parameter `cnn_dropout_rates`. Based on discussions with the author, the defaults in `sits` range from 10% to 30%. The `validation_split` controls the size of the test set, relative to the full data set. We recommend to set aside at least 20% of the samples for validation.  
+The function `sits_TempCNN()` implements the model. The code has been derived from the Python source provided by the authors (https://github.com/charlotte-pel/temporalCNN). Most of the parameters corresponds to those chosen by @Pelletier2019. The parameter `cnn_layers` controls the number of 1D-CNN layers and the size of the filters applied at each layer; the default values are three CNNs with 64 units. The parameter `cnn_kernels` indicates the size of the convolution kernels; the default values are kernels of size 5. Activation for all 1D-CNN layers uses the "relu" function. The dropout rates for each 1D-CNN layer are controlled individually by the parameter `cnn_dropout_rates`. Based on discussions with the author, the defaults in `sits` range from 10% to 50%. The `validation_split` controls the size of the test set, relative to the full data set. We recommend to set aside at least 20% of the samples for validation.  
 
 
 ```{r, warning = FALSE, message = FALSE}
+library(torchopt)
 # train a machine learning model using tempCNN
-tCNN_model <- sits_train(samples_filtered, 
-                       sits_TempCNN(
+tempcnn_model <- sits_train(samples_matogrosso_mod13q1, 
+                       sits_tempcnn(
+                          optimizer            = torchopt::optim_adamw,
                           cnn_layers           = c(64, 64, 64),
                           cnn_kernels          = c(5, 5, 5),
-                          cnn_activation       = 'relu',
-                          cnn_L2_rate          = 1e-06,
-                          cnn_dropout_rates    = c(0.10, 0.20, 0.30),
+                          cnn_dropout_rates    = c(0.5, 0.5, 0.5),
                           epochs               = 100,
                           batch_size           = 64,
                           validation_split     = 0.2,
                           verbose              = 0) )
 
 # show training evolution
-plot(tCNN_model)
+plot(tempcnn_model)
 ```
 
 Then, we classify a 16-year time series using the TempCNN model
@@ -242,8 +241,7 @@ Then, we classify a 16-year time series using the TempCNN model
 # Classify using TempCNN model and plot the result
 class <- point_mt_6bands %>% 
     sits_select(bands = c("NDVI", "EVI", "NIR", "MIR")) %>% 
-    sits_whittaker(lambda = 0.5, bands_suffix = "") %>% 
-    sits_classify(tCNN_model) %>% 
+    sits_classify(tempcnn_model) %>% 
     plot(bands = c("NDVI", "EVI"))
 ```
 While the result of the TempCNN model using default parameters is similar to that of the MLP model, it has has the potential to better explore the time series data than the the MLP model. In our experience, TempCNN models are a reliable way for classifying image time series[@Simoes2021]. Recent work which compares different models also provides evidence of a satisfactory behavior[@Russwurm2020].
@@ -257,16 +255,15 @@ The Residual Network (ResNet) is a 1D convolution neural network (CNN) proposed 
 knitr::include_graphics("images/resnet.png")
 ```
 
-In `sits`, the ResNet is implemented using the `sits_ResNet()` function. The default parameters are those proposed by @Wang2017, and we also benefited from the code provided by @Fawaz2019. The first parameter is `blocks`, which controls the number of blocks and the size of filters in each block. By default, the model implements three blocks, the first with 64 filters and the others with 128 filters. Users can control the number of blocks and filter size by changing this parameter. The parameter `kernels` controls the size the of kernels of the three layers inside each block. We have found out that it is useful to experiment a bit with these kernel sizes in the case of satellite image time series. The default activation is "relu", which is recommended in the literature to reduce the problem of vanishing gradients. The default optimizer is the same as proposed in @Wang2017 and @Fawaz2019. 
+In `sits`, the esidual Network  is implemented using the `sits_resnet()` function. The default parameters are those proposed by @Wang2017, and we also benefited from the code provided by @Fawaz2019. The first parameter is `blocks`, which controls the number of blocks and the size of filters in each block. By default, the model implements three blocks, the first with 64 filters and the others with 128 filters. Users can control the number of blocks and filter size by changing this parameter. The parameter `kernels` controls the size the of kernels of the three layers inside each block. We have found out that it is useful to experiment a bit with these kernel sizes in the case of satellite image time series. The default activation is "relu", which is recommended in the literature to reduce the problem of vanishing gradients. The default optimizer is the same as proposed in @Wang2017 and @Fawaz2019. 
 
 ```{r, warning = FALSE, message = FALSE}
 # train a machine learning model using ResNet
-resnet_model <- sits_train(samples_filtered, 
-                       sits_ResNet(
+resnet_model <- sits_train(samples_matogrosso_mod13q1, 
+                       sits_resnet(
                           blocks               = c(64, 128, 128),
-                          kernels              = c(8, 5, 3),
-                          activation           = 'relu',
-                          epochs               = 150,
+                          kernels              = c(7, 5, 3),
+                          epochs               = 100,
                           batch_size           = 64,
                           validation_split     = 0.2,
                           verbose              = 0) )
@@ -280,7 +277,6 @@ Then, we classify a 16-year time series using the ResNet model.
 point_mt_4bands <- sits_select(point_mt_6bands, 
                                bands = c("NDVI", "EVI", "NIR", "MIR"))
 class.tb <- point_mt_4bands %>% 
-    sits_whittaker(lambda = 0.5, bands_suffix = "") %>% 
     sits_classify(resnet_model) %>% 
     plot(bands = c("NDVI", "EVI"))
 ```

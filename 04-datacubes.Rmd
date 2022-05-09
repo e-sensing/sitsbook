@@ -245,55 +245,6 @@ plot(cbers_tile, red = "B15", green = "B16", blue = "B13", date = "2018-09-30")
 ```
 
 
-## Accessing Image Time Series Services{-} 
-
-The `sits` package also supports two services that allow access to individual time series: (a) WTSS (Web Time Series Service), provided by the Brazil Data Cube; (b) SATVEG, provided by the Center for Agricultural Informatics of Brazil's Agricultural Research Agency(EMBRAPA). The WTSS services allows access to all image collections supported by the BDC. The following example shows how to create a data cube associated with the WTSS service, and how to access time series from it. More details on accessing time series are provided in [Chapter  3](https://e-sensing.github.io/sitsbook/acessing-time-series-information-in-sits.html). Users need a BDC access key to access the WTSS service.
-
-```{r, eval = FALSE}
-# enter BDC access credentials 
-Sys.setenv(
-    "BDC_ACCESS_KEY" = <your_bdc_access_key>
-)
-# create a data cube to access time series from the MOD13Q1-6 collection available in the Brazil Data Cube
-cube_wtss <- sits_cube(
-    source = "WTSS",
-    collection = "MOD13Q1-6"
-    
-)
-# access a time series from the MOD13Q1-6 collection
-point_wtss <- sits_get_data(
-    cube = cube_wtss,
-    longitude = -55.50563,
-    latitude  = -11.71557,
-    bands = c("NDVI", "EVI", "CLOUD")
-)
-# plot the point 
-plot(point_wtss)
-
-```
-
-The SATVEG service provides access to three collections obtained by the MODIS sensor: (a) "TERRA", which gives access NDVI and EVI to the MOD13Q1-6 collection from the NASA Terra satellite at 250m resolutionin 16 day intervals; (b) "AQUA", which contains time series from the the MYD13Q1-6 from the NASA Aqua satellite with the same resolution; (c) "COMB", which combines time series from both sensors for improved temporal resolution. Access to SATVEG is illustrated below.
-
-```{r}
-
-# create a data cube to access time series from the MOD13Q1-6 collection available in the Brazil Data Cube
-cube_satveg <- sits_cube(
-    source = "SATVEG",
-    collection = "TERRA"
-    
-)
-# access a time series from the MOD13Q1-6 collection
-point_satveg <- sits_get_data(
-    cube = cube_satveg,
-    longitude = -55.50563,
-    latitude  = -11.71557
-)
-# plot the point 
-plot(point_satveg)
-
-```
-
-
 ## Defining a data cube using files{-}
 
 It is also possible to define data cubes using files that have been download from image collections and are available in a local  computer. These files are not associated to a STAC endpoint that describes them. For this reason, they need to be be organized and named according to a pre-established convention to allow SITS to create a data cube from them. All files associated to a data cube should be in the same directory and have the same spatial resolution and projection. Each file should contain a single image band for a single date. Each file name needs to include date and band. Information on the tile reference system should be provided. Users need to provide information about the original source from with the data was downloaded, to allow `sits` to retrieve information about image attribues such as band names, missing values, etc. When working with local cubes, the following parameters should be provided to the `sits_cube()` function:
@@ -354,6 +305,7 @@ The following code creates a results cube based on the classification of defores
 
 ```{r}
 library(sits)
+library(sitsdata)
 # Create a cube based on a stack of CBERS data
 data_dir <- system.file("extdata/Rondonia", package = "sitsdata")
 # list the first three files 
@@ -363,18 +315,21 @@ The directory has four files. We are interested in building a data cube for the 
 
 ```{r}
 # files are named using the convention 
-# "Sentinel-2_Rondonia_P16D_rfor_20L_2020-06-01_2021-08-31_class.tif"
+# "SENTINEL-2_MSI_20LLP_2020-06-04_2021-08-26_class_v1.tif"
 Rondonia_class_cube <- sits_cube(
-      source = "AWS",
-      collection = "SENTINEL-S2-L2A-COGS",
-      data_dir = data_dir,
-      band = "class",
-      labels = c("Burned_Area", "Cleared_Area", "Highly_Degraded", "Forest"),
-      delim = "_",
-      parse_info = c("X1", "X2", "X3", "X4", "tile", "start_date", "end_date", "band")
+    source = "AWS",
+    collection = "SENTINEL-S2-L2A-COGS",
+    data_dir = data_dir,
+    bands = "class",
+    labels = c("Burned_Area", "Cleared_Area", "Highly_Degraded", "Forest"),
+    delim = "_",
+    parse_info = c("X1", "X2", "tile", "start_date", "end_date", "band", "version")
 )
-# show the timeline of the cube
-sits_timeline(cbers_cube)
+# plot the classified cube
+plot(Rondonia_class_cube, legend = c("Burned_Area" = "firebrick4", 
+                                     "Cleared_Area" = "khaki3",
+                                     "Highly_Degraded" = "orange3",
+                                     "Forest" = "forestgreen"))
 ```
 
 ## Regularizing data cubes{-}
@@ -427,7 +382,7 @@ s2_cube %>%
 To transform irregular cubes into regular ones, the package provides the function 
 `sits_regularize()`. It builds a data cube with a regular timeline and with a best estimate of a valid pixel for each period. In this function, the `period` parameter controls the temporal interval between two images. Values should abide by the ISO8601 time period specification, which states that time interval should be defined as "P[n]Y[n]M[n]D", where Y stands for "years", "M" for months and "D" for days. Thus, "P1M" stands for a one-month period, "P15D" for a fifteen-day period. 
 
-When joining different images to get the best image for a period, `sits_regularize()` uses an aggregation method, defined by the parameter `agg_method`. It specifies how individual values of different pixels should be combined. The default is `least_cc_first`, which organizes the images for the chosen interval in order of increasing cloud cover, and selects the first cloud-free pixel in the sequence. For more details, see `?sits_regularize()`.
+When joining different images to get the best image for a period, `sits_regularize()` uses an aggregation method which organizes the images for the chosen interval in order of increasing cloud cover, and selects the first cloud-free pixel in the sequence. For more details, see `?sits_regularize()`.
 
 
 ```{r, message=FALSE, results='hide'}
@@ -435,11 +390,10 @@ When joining different images to get the best image for a period, `sits_regulari
 reg_cube <- sits_regularize(
           cube       = s2_cube,
           output_dir = "./tempdir/chp4",
-          res = 120,
+          res        = 120,
           period     = "P15D",
-          agg_method = "least_cc_first",
-          multicores = 4
-          
+          multicores = 4,
+          memsize    = 16
 )
 ```
 

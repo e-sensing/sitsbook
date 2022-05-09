@@ -68,7 +68,14 @@ plot(samples_cerrado)
 
 ## Obtaining time series data from data cubes
 
-To get a time series in sits, one has to create a data cube, as described previously.  Users can request one or more time series points from a data cube by using `sits_get_data()`. This function provides a general means of access to image time series. Given a data cube, the user provides the latitude and longitude of the desired location, the bands, and the start date and end date of the time series. If the start and end dates are not provided, it retrieves all the available periods. The result is a tibble that can be visualized using `plot()`.
+To get a time series in sits, one has to create a data cube, as described previously.  Users can request one or more time series points from a data cube by using `sits_get_data()`. This function provides a general means of access to image time series using the `samples` parameter. This parameter accepts the following data types: 
+
+- A data.frame with information on latitude and longitude (mandatory), start_date, end_date and label for each sample point.
+- A csv file with columns latitude and longitude, start_date, end_date and label.
+- A shapefile in either POINT or POLYGON format. See details below.
+- An `sf` object (from the `sf` package) with POINT or POLYGON geometry information. See details below.
+
+In the example below, given a data cube the user provides the latitude and longitude of the desired location, the bands. Since the  start date and end date of the time series are not informed, `sits` obtains them from the data cube. The result is a tibble with one time series that can be visualized using `plot()`.
 
 ```{r, fig.align="center", fig.height=3.1, fig.width=5, fig.cap="NDVI and EVI time series fetched from local raster cube.", message = FALSE}
 
@@ -85,10 +92,14 @@ raster_cube <- sits_cube(
 )
 # a point in the transition forest to pasture in Northern MT
 # obtain a time series from the raster cube for this point
-series <- sits_get_data(cube      = raster_cube,
-                        longitude = -55.57320, 
-                        latitude  = -11.50566,
-                        bands     = c("NDVI", "EVI"))
+# first, create a tibble with latitude and longitude information
+sample_latlong <- tibble::tibble(
+    longitude = -55.57320, 
+    latitude  = -11.50566 
+)
+series <- sits_get_data(cube    = raster_cube,
+                        samples = sample_latlong,
+                        bands   = c("NDVI", "EVI"))
 plot(series)
 ```
 
@@ -97,7 +108,7 @@ A useful case is when a set of labelled samples are available to be used as a tr
 ```{r, message=FALSE}
 # retrieve a list of samples described by a CSV file
 samples_csv_file <- system.file("extdata/samples/samples_sinop_crop.csv",
-                           package = "sits")
+                                package = "sits")
 # for demonstration, read the CSV file into an R object
 samples_csv <- read.csv(samples_csv_file)
 # print the first three lines
@@ -110,39 +121,53 @@ The main difference between the files used by *sits* to retrieve training sample
 samples_modis_4bands[1:5,]
 ````
 
-Given a suitably built CSV sample file, `sits_get_data()` requires two parameters: (a) `cube`, the name of the R object that describes the data cube; (b) `file`, the name of the CSV file. 
+Given a suitably built CSV sample file, `sits_get_data()` requires two parameters: (a) `cube`, the name of the R object that describes the data cube; (b) `samples`, the name of the CSV file. 
 ```{r}
 # get the points from a data cube in raster brick format
-points <- sits_get_data(cube = raster_cube, file = samples_csv_file)
+points <- sits_get_data(cube = raster_cube, samples = samples_csv_file)
 # show the tibble with the first three points
 points[1:3,]
 ```
 
-Users can also specify samples by providing shapefiles in point or polygon format. In this case, the geographical location is inferred from the geometries associated with the shapefile. For files containing points, the geographical location is obtained directly; for files with polygon, the parameter `.n_shp_pol` (defaults to 20) determines the number of samples to be extracted from each polygon. The temporal information is inferred from the data cube from which the samples are extracted or can be provided explicitly by the user. The label information is taken from the attribute file associated with the  shapefile. The parameter `shp_attr` indicates the name of the column which contains the label to be associated with each time series. 
+Users can also specify samples by providing shapefiles or `sf` objects in point or polygon format. In this case, the geographical location is inferred from the geometries associated with the shapefile. For files containing points, the geographical location is obtained directly. For polygon shapes, the parameter `n_sam_pol` (defaults to 20) determines the number of samples to be extracted from each polygon. The temporal information can be provided explicitly by the user; if absent, it is inferred from the data cube from which the samples are extracted. If label information is available in the shapefile, users should include the parameter `label_attr` to indicate the name of the column which contains the label to be associated with each time series.
 
 ```{r, warning = FALSE, message = FALSE}
-# define the input shapefile
-shp_file <- system.file("extdata/shapefiles/agriculture/parcel_agriculture.shp", 
+# obtain a set of points inside the state of Rondonia, Brazil
+# provide a shapefile with the state boundaries
+shp_file <- system.file("extdata/shapefiles/rondonia/rondonia.shp", 
                         package = "sits")
 
-# set the start and end dates 
-start_date <- "2013-09-14"
-end_date   <- "2014-08-29"
+# read the shapefile into an "sf" object
+sf_shape <- sf::st_read(shp_file)
 
-# define the attribute name that contains the label
-shp_attr <- "ext_na"
+# define the number of samples to be extracted
+n_sam_pol <- 20
+# define the interval for which time series is required
+start_date  <- "2020-06-01"
+end_date    <-  "2021-08-29"
 
-# define the number of samples to extract from each polygon
-.n_shp_pol <- 10
+# create a data cube based on data stored in the Microsoft Planetary Computer
+# select a region of interest that corresponds to the state of Rondonia
+# enter the region of interest as an "sf" object
+l8_cube <- sits_cube(
+    source      = "BDC",
+    collection  = "MOD13Q1-6",
+    roi         = sf_shape,
+    bands       = c("NDVI", "EVI"),
+    start_date  = start_date,
+    end_date    = end_date
+)
 
-# read the points in the shapefile and produce a CSV file
-samples <- sits_get_data(cube       = raster_cube, 
-                         file       = shp_file, 
-                         start_date = start_date, 
-                         end_date   = end_date, 
-                         shp_attr   = shp_attr, 
-                         .n_shp_pol = .n_shp_pol)
-samples[1:3,]
+# read the points in the shapefile and produce a tibble with time series
+# users can replace the shapefile with the equivalent sf object. 
+samples_rondonia <- sits_get_data(
+    cube         = l8_cube, 
+    samples      = shp_file, 
+    start_date   = start_date, 
+    end_date     = end_date, 
+    n_sam_pol    = n_sam_pol,
+    multicores   = 4
+)
 ```
 
 ## Filtering techniques for time series
@@ -155,15 +180,15 @@ The literature on satellite image time series has several applications of filter
 
 The Savitzky-Golay filter works by fitting a successive array of $2n+1$ adjacent data points with a $d$-degree polynomial through linear least squares. The central point $i$ of the window array assumes the value of the interpolated polynomial. An equivalent and much faster solution than this convolution procedure is given by the closed expression
 $$
-  {\hat{x}_{i}=\sum _{j=-n}^{n}C_{j}\,x_{i+j}},
+{\hat{x}_{i}=\sum _{j=-n}^{n}C_{j}\,x_{i+j}},
 $$
-  where $\hat{x}$ is the the filtered time series, $C_{j}$ are the Savitzky-Golay smoothing coefficients, and $x$ is the original time series.
+where $\hat{x}$ is the the filtered time series, $C_{j}$ are the Savitzky-Golay smoothing coefficients, and $x$ is the original time series.
 
 The coefficients $C_{j}$ depend uniquely on the polynomial degree ($d$) and the length of the window data points (given by parameter $n$). If ${d=0}$, the coefficients are constants ${C_{j}=1/(2n+1)}$ and the Savitzky-Golay filter will be equivalent to moving average filter. When the time series are equally spaced, the coefficients have an analytical solution. According to @Madden1978, for ${d\in{}[2,3]}$ each $C_{j}$ smoothing coefficients can be obtained by
 $$
-  C_{j}=\frac{3(3n^2+3n-1-5j^2)}{(2n+3)(2n+1)(2n-1)}.
+C_{j}=\frac{3(3n^2+3n-1-5j^2)}{(2n+3)(2n+1)(2n-1)}.
 $$
-  
+
 In general, the Savitzky-Golay filter produces smoother results for a larger value of $n$ and/or a smaller value of $d$ [@Chen2004]. The optimal value for these two parameters can vary from case to case. In SITS, the user can set the order of the polynomial using the parameter `order` (default = 3), the size of the temporal window with the parameter `length` (default = 5), and the temporal expansion with the parameter `scaling` (default = 1). The following example shows the effect of Savitsky-Golay filter on a point extracted from the MOD13Q1 product, ranging from 2000-02-18 to 2018-01-01.
 
 
@@ -183,33 +208,33 @@ Notice that the resulting smoothed curve has both desirable and unwanted propert
 
 The Whittaker smoother attempts to fit a curve that represents the raw data, but is penalized if subsequent points vary too much [@Atzberger2011]. The Whittaker filter is a balancing between the residual to the original data and the "smoothness" of the fitted curve. The residual, as measured by the sum of squares of all $n$ time series points deviations, is given by
 $$
-  RSS=\sum_{i}(x_{i} - \hat{x_{i}})^2,
+RSS=\sum_{i}(x_{i} - \hat{x_{i}})^2,
 $$
-   where $x$ and $\hat{x}$ are the original and the filtered time series vectors, respectively. The smoothness is assumed to be the measure of the sum of the squares of the third-order differences of the time series [@Whittaker1922], which is given by
+where $x$ and $\hat{x}$ are the original and the filtered time series vectors, respectively. The smoothness is assumed to be the measure of the sum of the squares of the third-order differences of the time series [@Whittaker1922], which is given by
 $$
-  \begin{split}
+\begin{split}
 S\!S\!D = (\hat{x}_4 - 3\hat{x}_3 + 3\hat{x}_2 - \hat{x}_1)^2 + (\hat{x}_5 - 3\hat{x}_4 + 3\hat{x}_3 - \hat{x}_2)^2 \\ + \ldots + (\hat{x}_n - 3\hat{x}_{n-1} + 3\hat{x}_{n-2} - \hat{x}_{n-3})^2.
 \end{split}
 $$
-  
-  The filter is obtained by finding a new time series $\hat{x}$ whose points minimize the expression
+
+The filter is obtained by finding a new time series $\hat{x}$ whose points minimize the expression
 $$
-  RSS+\lambda{}S\!S\!D,
+RSS+\lambda{}S\!S\!D,
 $$ 
-   where $\lambda{}$, a scalar, works as a "smoothing weight" parameter. The minimization can be obtained by differentiating the expression with respect to $\hat{x}$ and equating it to zero. The solution of the resulting linear system of equations gives the filtered time series, which, in matrix form, can be expressed as
+where $\lambda{}$, a scalar, works as a "smoothing weight" parameter. The minimization can be obtained by differentiating the expression with respect to $\hat{x}$ and equating it to zero. The solution of the resulting linear system of equations gives the filtered time series, which, in matrix form, can be expressed as
 
 $$
-  \hat{x} = ({\rm I} + \lambda {D}^{\intercal} D)^{-1}x,
+\hat{x} = ({\rm I} + \lambda {D}^{\intercal} D)^{-1}x,
 $$
-  where ${\rm I}$ is the identity matrix and 
+where ${\rm I}$ is the identity matrix and 
 $$
-  D = \left[\begin{array}{ccccccc}
-             1 & -3 & 3 & -1 & 0 & 0 &\cdots \\
-             0 & 1 & -3 & 3 & -1 & 0 &\cdots \\
-             0 & 0 & 1 & -3 & 3 & -1 & \cdots \\
-             \vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \ddots
-             \end{array}
-             \right]
+D = \left[\begin{array}{ccccccc}
+1 & -3 & 3 & -1 & 0 & 0 &\cdots \\
+0 & 1 & -3 & 3 & -1 & 0 &\cdots \\
+0 & 0 & 1 & -3 & 3 & -1 & \cdots \\
+\vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \ddots
+\end{array}
+\right]
 $$
 
 The following example shows the effect of Whitakker filter on a point extracted from the MOD13Q1 product, ranging from 2000-02-18 to 2018-01-01. The `lambda` parameter controls the smoothing of the filter. By default, it is set to 0.5, a small value. For illustrative purposes, we show the effect of a larger smoothing parameter

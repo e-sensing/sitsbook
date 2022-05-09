@@ -35,7 +35,7 @@ val_rfor
 
 ## Comparing different machine learning methods using k-fold validation
 
-One useful function in SITS is the capacity to compare different validation methods and store them in an XLS file for further analysis. The following example shows how to do this, using the Mato Grosso data set. We take five models: random forests(`sits_rfor`), support vector machines (`sits_svm`), extreme gradient boosting (`sits_xgboost`), multi-layer perceptron (`sits_mlp`) and temporal convolutional neural network (`sits_TempCNN`). For simplicity, we use the default parameters provided by sits. After computing the confusion matrix and the statistics for each model, we store the result in a list. When the calculation is finished, the function `sits_to_xlsx` writes all of the results in an Excel-compatible spreadsheet.
+One useful function in SITS is the capacity to compare different validation methods and store them in an XLS file for further analysis. The following example shows how to do this, using the Mato Grosso data set. We take five models: random forests(`sits_rfor()`), support vector machines (`sits_svm()`), extreme gradient boosting (`sits_xgboost()`), multi-layer perceptron (`sits_mlp()`) and temporal convolutional neural network (`sits_tempcnn()`). For simplicity, we use the default parameters provided by sits. After computing the confusion matrix and the statistics for each model, we store the result in a list. When the calculation is finished, the function `sits_to_xlsx` writes all of the results in an Excel-compatible spreadsheet.
 
 
 ```{r, eval = FALSE}
@@ -87,7 +87,7 @@ results[[length(results) + 1]] <- conf_mlp
 # Temporal CNN
 conf_tcnn <- sits_kfold_validate(
     samples_matogrosso_mod13q1,
-    ml_method = sits_TempCNN())
+    ml_method = sits_tempcnn())
 
 # Give a name to the SVM model
 conf_tcnn$name <- "TempCNN"
@@ -153,15 +153,13 @@ To use the `sits_accuracy` function to produce the adjusted area estimates, user
 In what follows, we show a simple example of using the accuracy function to estimate the quality of the classification
 ```{r}
 # select a sample with 2 bands (NDVI and EVI)
-samples_modis_2bands <- sits_select(samples_modis_4bands,
-                                     bands = c("NDVI", "EVI"))
+samples_modis_ndvi <- sits_select(samples_modis_4bands, bands = "NDVI")
 # build an extreme gradient boosting model
-xgb_model <- sits_train(samples_modis_2bands, ml_method = sits_xgboost())
+xgb_model <- sits_train(samples_modis_ndvi, ml_method = sits_xgboost())
 # create a data cube based on files
 data_dir <- system.file("extdata/raster/mod13q1", package = "sits")
 cube <- sits_cube(
-    source     = "LOCAL",
-    origin     = "BDC",
+    source     = "BDC",
     collection = "MOD13Q1-6",
     name       = "Sinop",
     data_dir   = data_dir,
