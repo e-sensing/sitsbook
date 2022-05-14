@@ -4,6 +4,8 @@ knitr::opts_chunk$set(
     comment = "#>",
     echo = TRUE,
     cache = TRUE,
+    warnings = FALSE,
+    message = FALSE,
     fig.retina = 0.8, # figures are either vectors or 300 dpi diagrams
     dpi = 300,
     out.width = "70%",
@@ -15,7 +17,7 @@ knitr::opts_chunk$set(
 # create a temporary working directory for each chapter
 
 # load essentials packages
-#library(tibble)
+library(tibble)
 library(dtwclust)
 library(magrittr)
 library(distill)
@@ -28,6 +30,12 @@ library("kableExtra")
 show_table <- function(tb) {
     kableExtra::kbl(tb) %>% 
         kableExtra::kable_material()
+}
+if (!knitr:::is_html_output())
+{
+    options("width" = 56)
+    knitr::opts_chunk$set(tidy.opts = list(width.cutoff = 56, indent = 2), 
+                          tidy = TRUE)
 }
     
 
