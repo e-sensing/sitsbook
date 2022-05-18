@@ -103,35 +103,62 @@
 \newcommand{\CSLIndent}[1]{\hspace{\cslhangindent}#1}
 \usepackage[top=3.0cm,left=3.0cm,right=3.0cm,bottom=2.43cm]{geometry}
 \linespread{1.2}
-\usepackage{booktabs}
-\usepackage{longtable}
+\usepackage{booktabs} % Better horizontal rules in tables
+%\usepackage{longtable}
 \usepackage[bf,singlelinecheck=off]{caption}
+\usepackage{float}
 
 \usepackage[T1]{fontenc}
-\usepackage[usefilenames,RMstyle={Text,Semibold},SSstyle={Text,Semibold},TTstyle={Text,Semibold}]{plex-otf} %
+\usepackage[usefilenames,RMstyle={Text,Semibold},SSstyle={Text,Semibold},TTstyle={Text,Semibold}]{plex-otf} %Use IBM Plex font family
 
 \usepackage{framed,color}
 \usepackage[x11names]{xcolor}
 \definecolor{shadecolor}{RGB}{248,248,248}
 
-\usepackage{amsmath}
+\usepackage{amsmath} % good math formulas
 \usepackage{microtype}
-\usepackage{hyperref} 
+\usepackage{hyperref}
 \usepackage{listings}
+\widowpenalty=10000
+\clubpenalty=10000
 \lstset{
   language=R,
   breaklines=true,
+  breakatwhitespace=false,
   frame=single,
   basicstyle=\ttfamily, 
-  stringstyle=\color{DodgerBlue4},
-  commentstyle=\color{LightGoldenrod4},
-  keywordstyle=\color{Sienna4},
+  %stringstyle=\color{Sienna4},
+  commentstyle=\color{DarkOliveGreen},
+  keywordstyle=\color{Red4},
+  keywordstyle=[2]\color{black},
   columns=flexible,
-  keepspaces=true, 
   showstringspaces=false,
   numbers=none,
   backgroundcolor=\color{shadecolor}
 }
+\lstdefinelanguage{R}%
+  {keywords={dplyr, filter, file, library, plot, system,%
+      sits_apply, sits_classify, sits_cube, sits_get_data,%
+      sits_labels, sits_classification, sits_smooth, sits_uncertainty,%
+      sits_accuracy, sits_confidence_sampling,%
+      sits_bands, sits_labels_summary, sits_clustering,%
+      sits_whittaker, sits_sgolay, sits_lighttae, sits_tae, sits_resnet,%
+      sits_tempcnn, sits_mlp, sits_regularize, sits_select, sits_train,%
+      sits_rfor, sits_svm, sits_xgboost, sits_reduce_imbalance,%
+      sits_kfold_validate, sits_to_xlsx, sits_as_sf},%
+   morekeywords=[2]{source, label, samples, collection, ml_method,%
+      start_date, end_date, tiles, dates, data_dir, delim, parse_info},%
+   %alsoother={._$},%
+   sensitive,%
+   morecomment=[l]\#,%
+   morestring=[d]",%
+   morestring=[d]'% 2001 Robert Denham
+  }%
+% Add your keywords here, and have this in a separate file
+% and include it in your preamble
+% \lstset{emph={sits_cube,sits_classify},
+%     emphstyle=\color{red}
+% }
 
 \renewcommand{\textfraction}{0.05}
 \renewcommand{\topfraction}{0.8}
@@ -237,7 +264,7 @@ Observation Data Cubes with Satellite Image Time Series}
 Sanchez \and Lorena Santos \and Pedro R. Andrade \and Charlotte
 Peletier \and Alexandre Carvalho \and Karine Ferreira \and Gilberto
 Queiroz \and Victor Maus}
-\date{2022-05-13}
+\date{2022-05-18}
 
 \begin{document}
 \maketitle
@@ -257,6 +284,42 @@ Queiroz \and Victor Maus}
 }
 \listoffigures
 \listoftables
+\begin{lstlisting}
+## Loading required package: proxy
+\end{lstlisting}
+
+\begin{lstlisting}
+## 
+## Attaching package: 'proxy'
+\end{lstlisting}
+
+\begin{lstlisting}
+## The following objects are masked from 'package:stats':
+## 
+##     as.dist, dist
+\end{lstlisting}
+
+\begin{lstlisting}
+## The following object is masked from 'package:base':
+## 
+##     as.matrix
+\end{lstlisting}
+
+\begin{lstlisting}
+## Loading required package: dtw
+\end{lstlisting}
+
+\begin{lstlisting}
+## Loaded dtw v1.22-3. See ?dtw for help, citation("dtw") for use in publication.
+\end{lstlisting}
+
+\begin{lstlisting}
+## dtwclust:
+## Setting random number generator to L'Ecuyer-CMRG (see RNGkind()).
+## To read the included vignettes type: browseVignettes("dtwclust").
+## See news(package = "dtwclust") after package updates.
+\end{lstlisting}
+
 \hypertarget{preface}{%
 \chapter*{Preface}\label{preface}}
 \addcontentsline{toc}{chapter}{Preface}
@@ -264,51 +327,22 @@ Queiroz \and Victor Maus}
 Using time series derived from big Earth Observation data sets is one of
 the leading research trends in Land Use Science and Remote Sensing. One
 of the more promising uses of satellite time series is its application
-to classify land use and land cover since our growing demand for natural
-resources has caused significant environmental impacts.
+to classify land use and land cover. Information on land is critical for
+sustainable development because our growing demand for natural resources
+is causing significant environmental impacts.
 
 This book presents \passthrough{\lstinline!sits!}, an open-source R
-package for land use and land cover change mapping using satellite image
-time series. The package uses machine learning techniques to classify
-image time series obtained from data cubes. Methods available include
-linear and quadratic discrimination analysis, support vector machines,
-random forests, boosting, deep learning, and convolutional neural
-networks. The package also provides functions for post-processing and
-sample quality assessment.
-
-\hypertarget{how-sits-works}{%
-\section*{\texorpdfstring{How \texttt{sits}
-works}{How sits works}}\label{how-sits-works}}
-\addcontentsline{toc}{section}{How \texttt{sits} works}
-
-The package provides a set of tools for analysis, visualization and
-classification of satellite image time series. The package supports
-classification of image data cubes using machine learning methods. The
-basic workflow in SITS is:
-
-\begin{enumerate}
-\def\labelenumi{\arabic{enumi}.}
-\tightlist
-\item
-  Select a subset of an image collection available on a cloud providers
-  such as AWS, Microsoft Planetary Computer, Digital Earth Africa or
-  Brazil Data Cube.
-\item
-  Build a regular data cube using the chosen image collection.
-\item
-  Extract time series from the data cube which are used as training
-  data.
-\item
-  Perform quality control and filtering on the samples.
-\item
-  Train a machine learning model using the extracted samples.
-\item
-  Classify the data cube using the trained model.
-\item
-  Post-process the classified images.
-\item
-  Evaluate the accuracy of the classification using best practices.
-\end{enumerate}
+package for land use and land cover classification using big Earth
+observation data. Users can build regular data cubes from collections in
+AWS, Microsoft Planetary Computer, Brazil Data Cube, and Digital Earth
+Africa. The software includes functions for quality assessment of
+training samples using self-organized maps. It provides machine learning
+and deep learning algorithms for classification of big Earth observation
+data cubes. Post-processing methods includes Bayesian smoothing and
+uncertainty assessment. Users can apply best practices for estimating
+area and assessing accuracy of land change. Thus,
+\passthrough{\lstinline!sits!} is an end-to-end toolkit for land mapping
+with Earth observation.
 
 \hypertarget{who-this-book-is-for}{%
 \section*{Who this book is for}\label{who-this-book-is-for}}
@@ -317,17 +351,16 @@ basic workflow in SITS is:
 The target audience for \textbf{sits} is the new generation of
 specialists who understand the principles of remote sensing and can
 write scripts in \textbf{R}. Ideally, users should have basic knowledge
-of data science methods using R. If you are new to R, we recommend the
-excellent self-learning book
-\href{https://rstudio-education.github.io/hopr/}{``Hands-On Programming
-with R''} by Garrett Golemund from RStudio. If you want more information
-on the data science methods used in this book, please look at the
-following references:
+of data science methods using R. If you want more information on methods
+used in this book, please look at the following references:
 
 \begin{itemize}
 \item
+  Garrett Golemund, ``Hands-On Programming with R''. O'Reilly, 2014.
+  \url{https://rstudio-education.github.io/hopr/}.
+\item
   Hadley Wickham and Gareth Golemund, ``R for Data Science''. O'Reilly,
-  2017. \url{https://r4ds.had.co.nz/}. .
+  2017. \url{https://r4ds.had.co.nz/}.
 \item
   Gareth James, Daniela Witten, Trevor Hastie, Robert Tibshirani, ``An
   Introduction to Statistical Learning with Applications in R'',
@@ -400,13 +433,12 @@ The \passthrough{\lstinline!sits!} package relies on the
 \passthrough{\lstinline!sf!} and \passthrough{\lstinline!terra!} R
 packages, which in turn require the GDAL and PROJ libraries. Please
 follow the instructions below for installing
-\passthrough{\lstinline!sf!} together with GDAL, provided by Edzer
-Pebesma.
+\passthrough{\lstinline!sf!} and \passthrough{\lstinline!terra!}
+together with GDAL, provided by Edzer Pebesma.
 
-\hypertarget{installing-sf-and-gdal}{%
-\section*{\texorpdfstring{Installing \texttt{sf} and
-GDAL}{Installing sf and GDAL}}\label{installing-sf-and-gdal}}
-\addcontentsline{toc}{section}{Installing \texttt{sf} and GDAL}
+\hypertarget{support-for-gdal-and-proj}{%
+\section*{Support for GDAL and PROJ}\label{support-for-gdal-and-proj}}
+\addcontentsline{toc}{section}{Support for GDAL and PROJ}
 
 \hypertarget{windows-and-macos}{%
 \subsubsection*{Windows and MacOS}\label{windows-and-macos}}
@@ -414,7 +446,9 @@ GDAL}{Installing sf and GDAL}}\label{installing-sf-and-gdal}}
 
 Windows and MacOS users are strongly encouraged to install the
 \passthrough{\lstinline!sf!} and \passthrough{\lstinline!terra!} binary
-packages from CRAN.
+packages from CRAN. To install \passthrough{\lstinline!sits!} from
+source, please install package \passthrough{\lstinline!Rtools!} to have
+access to the compiling environment.
 
 \hypertarget{ubuntu}{%
 \subsubsection*{Ubuntu}\label{ubuntu}}
@@ -463,42 +497,23 @@ pacman -S gdal proj geos
 yay/pacaur/yaourt/whatever -S udunits
 \end{lstlisting}
 
-\hypertarget{other}{%
-\subsubsection*{Other}\label{other}}
-\addcontentsline{toc}{subsubsection}{Other}
-
-To install on Debian, the
-\href{https://github.com/rocker-org/geospatial}{rocker geospatial}
-Dockerfiles may be helpful. Ubuntu Dockerfiles are found
-\href{https://github.com/r-spatial/sf/tree/master/inst/docker}{here}.
-
-\hypertarget{lwgeom}{%
-\subsubsection*{lwgeom}\label{lwgeom}}
-\addcontentsline{toc}{subsubsection}{lwgeom}
-
-Functions and methods that require \passthrough{\lstinline!liblwgeom!},
-including \passthrough{\lstinline!st\_make\_valid!} and all spherical or
-ellipsoidal metrics (area, distances), have since sf 0.5-5 been moved to
-their own package, \href{https://github.com/r-spatial/lwgeom}{lwgeom},
-which is also on \href{https://cran.r-project.org/package=lwgeom}{CRAN}.
-
 \hypertarget{installing-the-sits-package}{%
 \section*{\texorpdfstring{Installing the \texttt{sits}
 package}{Installing the sits package}}\label{installing-the-sits-package}}
 \addcontentsline{toc}{section}{Installing the \texttt{sits} package}
 
-\passthrough{\lstinline!sits!} is currently available on
-\href{https://github.com/e-sensing/sits}{GitHub}. Thus, installing the
-package can be accomplished via
-\href{https://cran.r-project.org/web/packages/devtools/index.html}{devtools},
-as presented by the code snippet below:
+\passthrough{\lstinline!sits!} is currently available on GitHub
+\url{https://github.com/e-sensing/sits}. To install the package, install
+\passthrough{\lstinline!devtools!} if not already available, as then
+install sits as follows:
 
 \begin{lstlisting}[language=R]
+install.packages("devtools")
 devtools::install_github("e-sensing/sits", dependencies = TRUE)
 \end{lstlisting}
 
-Please also install the ``sitsdata'' package, which contains data for
-the examples in the book.
+To run the examples in the book, please also install the ``sitsdata''
+package.
 
 \begin{lstlisting}[language=R]
 devtools::install_github("e-sensing/sitsdata")
@@ -512,16 +527,17 @@ devtools::install_github("e-sensing/sitsdata")
 \section*{Funding Sources}\label{funding-sources}}
 \addcontentsline{toc}{section}{Funding Sources}
 
-We acknowledge and thank the project funders:
+The authors acknowledge the funders that supported the development of
+\passthrough{\lstinline!sits!}:
 
 \begin{enumerate}
 \def\labelenumi{\arabic{enumi}.}
 \item
-  Amazon Fund, established by the Brazilian government with financial
-  contribution from Norway, through the contract between the Brazilian
+  Amazon Fund, established by the Brazil with financial contribution
+  from Norway, through contract 17.2.0536.1. between the Brazilian
   Development Bank (BNDES) and the Foundation for Science, Technology
   and Space Applications (FUNCATE), for the establishment of the Brazil
-  Data Cube, process 17.2.0536.1.
+  Data Cube,
 \item
   Coordenação de Aperfeiçoamento de Pessoal de Nível Superior-Brasil
   (CAPES) and from the Conselho Nacional de Desenvolvimento Científico e
@@ -545,9 +561,8 @@ We acknowledge and thank the project funders:
 \section*{Community Contributions}\label{community-contributions}}
 \addcontentsline{toc}{section}{Community Contributions}
 
-The authors would like to acknowledge the contributions of Marius Appel,
-Tim Appelhans, Henrik Bengtsson, Robert Hijmans, Edzer Pebesma, and Ron
-Wehrens, respectively chief developers of the R packages
+The authors thank Marius Appel, Tim Appelhans, Henrik Bengtsson, Robert
+Hijmans, Edzer Pebesma, and Ron Wehrens, for their R packages
 \passthrough{\lstinline!gdalcubes!}, \passthrough{\lstinline!leafem!},
 \passthrough{\lstinline!data.table!}, \passthrough{\lstinline!terra!},
 \passthrough{\lstinline!sf!}/\passthrough{\lstinline!stars!}, and
@@ -567,28 +582,31 @@ We thank the authors of these papers for making their code available.
 \item
   Marius Appel and Edzer Pebesma, ``On-Demand Processing of Data Cubes
   from Satellite Image Collections with the Gdalcubes Library.'' Data 4
-  (3): 1--16, 2020.
+  (3): 1--16, 2020. \url{https://doi.org/10.3390/data4030092}
 \item
   Hassan Fawaz, Germain Forestier, Jonathan Weber, Lhassane Idoumghar,
   and Pierre-Alain Muller, ``Deep learning for time series
   classification: a review''. Data Mining and Knowledge Discovery,
   33(4): 917--963, 2019.
+  \url{https://doi.org/10.1007/s10618-019-00619-1}.
 \item
   Edzer Pebesma, ``Simple Features for R: Standardized Support for
   Spatial Vector Data''. R Journal, 10(1):2018.
 \item
   Charlotte Pelletier, Geoffrey Webb, and Francois Petitjean. ``Temporal
   Convolutional Neural Network for the Classification of Satellite Image
-  Time Series.'' Remote Sensing 11 (5), 2019.
+  Time Series''. Remote Sensing 11 (5), 2019.
+  \url{https://doi.org/10.3390/rs11050523}
 \item
   Ron Wehrens and Kruisselbrink, Johannes. ``Flexible Self-Organising
   Maps in kohonen 3.0''. Journal of Statistical Software, 87, 7 (2018).
+  \url{https://doi.org/10.18637/jss.v087.i07}.
 \item
   Vivien Garnot, Loic Landrieu, Sebastien Giordano, and Nesrine Chehata,
   ``Satellite Image Time Series Classification with Pixel-Set Encoders
   and Temporal Self-Attention'', Conference on Computer Vision and
-  Pattern Recognition, 2020. \textless doi:
-  10.1109/CVPR42600.2020.01234\textgreater.
+  Pattern Recognition, 2020.
+  \url{https://doi.org/10.1109/CVPR42600.2020.01234}.
 \item
   Vivien Garnot, Loic Landrieu, ``Lightweight Temporal Self-Attention
   for Classifying Satellite Images Time Series'', 2020.
@@ -598,6 +616,8 @@ We thank the authors of these papers for making their code available.
   Classification with Pixel-Set Encoders and Temporal Self-Attention.''
   ReScience C 7 (2), 2021. \url{doi:10.5281/zenodo.4835356}.
 \end{itemize}
+
+\newpage
 
 \hypertarget{publications-using-sits}{%
 \section*{Publications using sits}\label{publications-using-sits}}
@@ -662,34 +682,106 @@ generate their results.
 \hypertarget{introduction-to-sits}{%
 \chapter{Introduction to SITS}\label{introduction-to-sits}}
 
-\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+\hypertarget{how-sits-works}{%
+\section*{\texorpdfstring{How \texttt{sits}
+works}{How sits works}}\label{how-sits-works}}
+\addcontentsline{toc}{section}{How \texttt{sits} works}
 
-This chapter presents an overview of \passthrough{\lstinline!sits!}, by
-showing a simple example of land use and land cover classification. For
-detailed descriptions of the functions, please see the following
-chapters.
-
-\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
-
-The \passthrough{\lstinline!sits!} package supports the complete cycle
-of data analysis for time series classification, including data
-acquisition, visualization, filtering, clustering, classification,
-validation, and post-processing. It adopts a \emph{time-first,
-space-later} approach, where each spatial location is associated to a
-time series. A set of locations with known labels is used to train a
-machine learning classifiers. The resulting model is applied to the data
-cube and each time series is classified separately. After the
-classification, spatial smoothing methods capture information from
-neighbors. This way of working is illustrated in Figure 1.
+The package adopts a \emph{time-first, space-later} approach. Each
+spatial location is associated to a time series. Locations with known
+labels train a machine learning classifier, which classifies each time
+series of a data cube, as shown in Figure 1.
 
 \begin{figure}
 
-{\centering \includegraphics[width=0.65\linewidth,height=0.65\textheight]{images/sits_general_view} 
+{\centering \includegraphics[width=0.8\linewidth]{images/sits_general_view} 
 
 }
 
 \caption{Using time series for land classification (source: authors)}\label{fig:sits-overview}
 \end{figure}
+
+\newpage
+
+The package provides a set of tools for analysis, visualization and
+classification of satellite image time series. Users follow a typical
+workflow:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  Select an analysis-ready data image collection on cloud providers such
+  as AWS, Microsoft Planetary Computer, Digital Earth Africa and Brazil
+  Data Cube.
+\item
+  Build a regular data cube using the chosen image collection.
+\item
+  Obtain new bands and indices with operations on data cubes.
+\item
+  Extract time series samples from the data cube to be used as training
+  data.
+\item
+  Perform quality control and filtering on the time series samples.
+\item
+  Train a machine learning model using the extracted samples.
+\item
+  Use the model to classify the data cube and get class probabilities
+  for each pixel.
+\item
+  Post-process the probability cube to remove outliers.
+\item
+  Produce a labeled map from the post-processed probability cube.
+\item
+  Evaluate the accuracy of the classification using best practices.
+\end{enumerate}
+
+Each step of workflow corresponds to a function of the
+\passthrough{\lstinline!sits!} API, as shown in the table and figure
+below. These functions have convenient default parameters and behavior.
+A single function builds machine learning models ranging from random
+forests to neural networks. Functions that process big data cubes
+implement efficient processing internally. Thus, users can achieve good
+results without in-depth knowledge about machine learning and parallel
+processing.
+
+\begin{table}[H]
+
+\caption{\label{tab:api_tab}The `sits` API workflow for land classification}
+\centering
+\resizebox{\linewidth}{!}{
+\begin{tabular}[t]{>{}lll}
+\toprule
+API\_function & Inputs & Output\\
+\midrule
+\textcolor{RawSienna}{\ttfamily{sits\_cube()}} & ARD image collection & Irregular data cube\\
+\textcolor{RawSienna}{\ttfamily{sits\_regularize()}} & Irregular data cube & Regular data cube\\
+\textcolor{RawSienna}{\ttfamily{sits\_apply()}} & Regular data cube & Regular data cube\\
+\textcolor{RawSienna}{\ttfamily{}} &  & with new bands and indices\\
+\textcolor{RawSienna}{\ttfamily{sits\_get\_data()}} & Data cube and sample locations & Time series\\
+\addlinespace
+\textcolor{RawSienna}{\ttfamily{sits\_som()}} & Time series & Improved time series samples\\
+\textcolor{RawSienna}{\ttfamily{sits\_train()}} & Time series and ML algorithm & ML classification model\\
+\textcolor{RawSienna}{\ttfamily{sits\_classify()}} & ML classification model & Probability cube\\
+\textcolor{RawSienna}{\ttfamily{}} & and regular data cube & \\
+\textcolor{RawSienna}{\ttfamily{sits\_smooth()}} & Probability cube & Post-processed probs cube\\
+\addlinespace
+\textcolor{RawSienna}{\ttfamily{sits\_label\_classification()}} & Post-processed probs cube & Classified map\\
+\textcolor{RawSienna}{\ttfamily{sits\_accuracy()}} & Classified map and validation samples & Accuracy assessment\\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\begin{figure}
+
+{\centering \includegraphics[width=1\linewidth,height=1\textheight]{images/sits_api} 
+
+}
+
+\caption{Main functions of the SITS API}\label{fig:api}
+\end{figure}
+
+\newpage
 
 \hypertarget{creating-a-data-cube}{%
 \section*{Creating a Data Cube}\label{creating-a-data-cube}}
@@ -764,11 +856,11 @@ plot(sinop_cube, red = "EVI", green = "NDVI", blue = "EVI",
 
 \begin{figure}
 
-{\centering \includegraphics[width=0.65\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-8-1} 
+{\centering \includegraphics[width=0.65\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-6-1} 
 
 }
 
-\caption{Color composite image for 2013-09-14}\label{fig:unnamed-chunk-8}
+\caption{Color composite image for 2013-09-14}\label{fig:unnamed-chunk-6}
 \end{figure}
 
 The \passthrough{\lstinline!sits\_cube()!} function defines a \emph{data
@@ -833,7 +925,7 @@ samples_forest_ndvi <- sits_select(samples_forest, band = "NDVI")
 plot(samples_forest_ndvi)
 \end{lstlisting}
 
-\begin{center}\includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-10-1} \end{center}
+\begin{center}\includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-8-1} \end{center}
 
 \hypertarget{training-a-machine-learning-model}{%
 \section*{Training a machine learning
@@ -882,11 +974,11 @@ plot(sinop_probs, labels = c("Forest", "Pasture"))
 
 \begin{figure}
 
-{\centering \includegraphics[width=1\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-12-1} 
+{\centering \includegraphics[width=1\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-10-1} 
 
 }
 
-\caption{Probability map for classes of each pixel}\label{fig:unnamed-chunk-12}
+\caption{Probability map for classes of each pixel}\label{fig:unnamed-chunk-10}
 \end{figure}
 
 In the example above, as well as others in this book, we have chosen to
@@ -920,11 +1012,11 @@ plot(sinop_smooth, labels = c("Forest", "Pasture"))
 
 \begin{figure}
 
-{\centering \includegraphics[width=0.8\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-13-1} 
+{\centering \includegraphics[width=0.8\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-11-1} 
 
 }
 
-\caption{Smoothed probability maps}\label{fig:unnamed-chunk-13}
+\caption{Smoothed probability maps}\label{fig:unnamed-chunk-11}
 \end{figure}
 
 \hypertarget{labelling-a-probability-data-cube}{%
@@ -947,11 +1039,11 @@ plot(sinop_label, title = "Sinop-label")
 
 \begin{figure}
 
-{\centering \includegraphics[width=0.8\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-14-1} 
+{\centering \includegraphics[width=0.8\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-12-1} 
 
 }
 
-\caption{Labeled classification map}\label{fig:unnamed-chunk-14}
+\caption{Labeled classification map}\label{fig:unnamed-chunk-12}
 \end{figure}
 
 The resulting classification files can be read by QGIS. Links to the
@@ -972,33 +1064,6 @@ sinop_label$file_info[[1]]
 #> # ... with 6 more variables: ymax <dbl>, xres <dbl>,
 #> #   yres <dbl>, nrows <dbl>, ncols <dbl>, path <chr>
 \end{lstlisting}
-
-\hypertarget{how-the-sits-api-works}{%
-\section*{How the sits API works}\label{how-the-sits-api-works}}
-\addcontentsline{toc}{section}{How the sits API works}
-
-The core functions of the \textbf{sits} API are presented in Figure
-@ref(fig:api). Each function carries out one task of the land
-classification workflow. These functions are: (a)
-\passthrough{\lstinline!sits\_cube()!} which creates a cube; (b)
-\passthrough{\lstinline!sits\_get\_data()!} which extracts training data
-from the cube; (c) \passthrough{\lstinline!sits\_train()!} that trains a
-machine learning model; (d) \passthrough{\lstinline!sits\_classify()!}
-which classifies the cube; (e) \passthrough{\lstinline!sits\_smooth()!}
-that does the spatial smoothing; and (f)
-\passthrough{\lstinline!sits\_label\_classication()!} that produces the
-final labelled image. These six functions encapsulate the core of the
-package. Each of these core functions is described in a chapter in this
-book.
-
-\begin{figure}
-
-{\centering \includegraphics[width=0.8\linewidth,height=0.8\textheight]{images/sits_api} 
-
-}
-
-\caption{Main functions of the SITS API}\label{fig:api}
-\end{figure}
 
 \hypertarget{final-remarks}{%
 \section*{Final remarks}\label{final-remarks}}
@@ -1400,7 +1465,7 @@ plot(s2_20LKP_cube_MSPC, red = "B11", blue = "B05", green = "B8A",
   date = "2019-07-18")
 \end{lstlisting}
 
-\begin{center}\includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-21-1} \end{center}
+\begin{center}\includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-19-1} \end{center}
 
 Access to Landsat-8 (collection-2, level-2) images is done in a similar
 fashion in MSPC. The collection ``LANDSAT-8-C2-L2'' contains LANDSAT-8
@@ -1429,7 +1494,7 @@ plot(s2_L8_cube_MSPC, red = "B06", green = "B05", blue = "B02",
   date = "2019-07-28")
 \end{lstlisting}
 
-\begin{center}\includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-23-1} \end{center}
+\begin{center}\includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-21-1} \end{center}
 
 \hypertarget{assessing-digital-earth-africa}{%
 \section*{Assessing Digital Earth
@@ -1507,7 +1572,7 @@ dea_cube %>%
   plot(red = "B11", blue = "B05", green = "B8A", date = "2019-09-07")
 \end{lstlisting}
 
-\begin{center}\includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-26-1} \end{center}
+\begin{center}\includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-24-1} \end{center}
 
 \hypertarget{assessing-the-brazil-data-cube}{%
 \section*{Assessing the Brazil Data
@@ -1537,7 +1602,7 @@ cubes in the BDC are regularly spaced in time and cloud-corrected.
 
 }
 
-\caption{Hierarchical BDC tiling system showing overlayed on Brazilian Biomes (a), illustrating that one large tile (b) contains four medium tiles (c) and that medium tile contains four small tiles}\label{fig:unnamed-chunk-27}
+\caption{Hierarchical BDC tiling system showing overlayed on Brazilian Biomes (a), illustrating that one large tile (b) contains four medium tiles (c) and that medium tile contains four small tiles}\label{fig:unnamed-chunk-25}
 \end{figure}
 
 The regular ARD image collections available in the BDC are:
@@ -1576,7 +1641,14 @@ plot(cbers_tile, red = "B15", green = "B16", blue = "B13",
   date = "2018-09-30")
 \end{lstlisting}
 
-\begin{center}\includegraphics[width=0.9\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-29-1} \end{center}
+\begin{figure}
+
+{\centering \includegraphics[width=0.9\linewidth,height=0.9\textheight]{images/cbers_4_image_bdc} 
+
+}
+
+\caption{Plot of CBERS-4 image obtained from the BDC with a single tile covering an area of $6  imes4$ degrees with $10,504 imes6,865$ pixels in the Brazilian Cerrado.}\label{fig:unnamed-chunk-28}
+\end{figure}
 
 \hypertarget{defining-a-data-cube-using-files}{%
 \section*{Defining a data cube using
@@ -1695,7 +1767,7 @@ sits_bands(cbers_cube)
 plot(cbers_cube, band = "NDVI", date = "2018-08-29")
 \end{lstlisting}
 
-\begin{center}\includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-33-1} \end{center}
+\begin{center}\includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-32-1} \end{center}
 
 It is also possible to create local cubes based on results that have
 been produced by classification or post-classification algorithms. In
@@ -1779,7 +1851,7 @@ plot(Rondonia_class_cube, legend = c(Burned_Area = "firebrick4",
   Forest = "forestgreen"))
 \end{lstlisting}
 
-\begin{center}\includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-35-1} \end{center}
+\begin{center}\includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-34-1} \end{center}
 
 \hypertarget{regularizing-data-cubes}{%
 \section*{Regularizing data cubes}\label{regularizing-data-cubes}}
@@ -1824,7 +1896,7 @@ s2_cube %>%
   plot(band = "B11", time = 1)
 \end{lstlisting}
 
-\begin{center}\includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-37-1} \end{center}
+\begin{center}\includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-36-1} \end{center}
 
 \begin{lstlisting}[language=R]
 # select tile '20LKP' of the irregular cube and show
@@ -1897,7 +1969,7 @@ reg_cube %>%
   plot(band = "B11", time = 1)
 \end{lstlisting}
 
-\begin{center}\includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-41-1} \end{center}
+\begin{center}\includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-40-1} \end{center}
 
 All pixels of the regular data cube have the same timeline.
 
@@ -2105,11 +2177,11 @@ plot(samples_cerrado)
 
 \begin{figure}
 
-{\centering \includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-48-1} 
+{\centering \includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-47-1} 
 
 }
 
-\caption{Plot of all Cerrado samples }\label{fig:unnamed-chunk-48}
+\caption{Plot of all Cerrado samples }\label{fig:unnamed-chunk-47}
 \end{figure}
 
 \hypertarget{obtaining-time-series-data-from-data-cubes}{%
@@ -2169,11 +2241,11 @@ plot(series)
 
 \begin{figure}
 
-{\centering \includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-49-1} 
+{\centering \includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-48-1} 
 
 }
 
-\caption{NDVI and EVI time series fetched from local raster cube.}\label{fig:unnamed-chunk-49}
+\caption{NDVI and EVI time series fetched from local raster cube.}\label{fig:unnamed-chunk-48}
 \end{figure}
 
 A useful case is when a set of labelled samples are available to be used
@@ -2398,11 +2470,11 @@ sits_merge(point_sg, point_ndvi) %>%
 
 \begin{figure}
 
-{\centering \includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-54-1} 
+{\centering \includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-53-1} 
 
 }
 
-\caption{Savitzky-Golay filter applied on a multi-year NDVI time series.}\label{fig:unnamed-chunk-54}
+\caption{Savitzky-Golay filter applied on a multi-year NDVI time series.}\label{fig:unnamed-chunk-53}
 \end{figure}
 
 Notice that the resulting smoothed curve has both desirable and unwanted
@@ -2474,11 +2546,11 @@ sits_merge(point_whit, point_ndvi) %>%
 
 \begin{figure}
 
-{\centering \includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-55-1} 
+{\centering \includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-54-1} 
 
 }
 
-\caption{Whittaker filter applied on a one-year NDVI time series.}\label{fig:unnamed-chunk-55}
+\caption{Whittaker filter applied on a one-year NDVI time series.}\label{fig:unnamed-chunk-54}
 \end{figure}
 
 In the same way as what is observed in the Savitsky-Golay filter, high
@@ -2742,7 +2814,7 @@ to the input, called the best matching unit (BMU).
 
 }
 
-\caption{SOM 2D map creation (source: Santos et al.(2021)}\label{fig:unnamed-chunk-60}
+\caption{SOM 2D map creation (source: Santos et al.(2021)}\label{fig:unnamed-chunk-59}
 \end{figure}
 
 The input data for quality assessment is a set of training samples.
@@ -2768,7 +2840,7 @@ reference paper \protect\hyperlink{ref-Santos2021a}{{[}20{]}}.
 
 }
 
-\caption{Using SOM for class noise reduction (source: Santos et al.(2021)}\label{fig:unnamed-chunk-61}
+\caption{Using SOM for class noise reduction (source: Santos et al.(2021)}\label{fig:unnamed-chunk-60}
 \end{figure}
 
 As an example, we take a time series dataset from the Cerrado region of
@@ -2917,7 +2989,7 @@ plot(som_cluster)
 #> graphical parameter
 \end{lstlisting}
 
-\begin{center}\includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-65-1} \end{center}
+\begin{center}\includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-64-1} \end{center}
 
 The SOM grid has 225 neurons, as defined by the product of the
 parameters \passthrough{\lstinline!grid\_xdim!} and
@@ -2994,7 +3066,7 @@ between the agricultural classes (``Soy\_Corn'', ``Soy\_Cotton'' and
 plot(som_eval)
 \end{lstlisting}
 
-\begin{center}\includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-67-1} \end{center}
+\begin{center}\includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-66-1} \end{center}
 
 \hypertarget{som-based-quality-assessment-part-3-using-probabilities-to-detect-noisy-samples}{%
 \subsection{SOM-based quality assessment part 3: using probabilities to
@@ -3123,10 +3195,10 @@ sits_accuracy_summary(assess_orig)
 #> 
 #> Overall Statistics
 #>                             
-#>  Accuracy : 0.9473          
-#>    95% CI : (0.9453, 0.9492)
+#>  Accuracy : 0.9466          
+#>    95% CI : (0.9446, 0.9486)
 #>                             
-#>     Kappa : 0.9386
+#>     Kappa : 0.9378
 \end{lstlisting}
 
 \begin{lstlisting}[language=R]
@@ -3160,7 +3232,7 @@ cluster_mixture <- sits_som_evaluate_cluster(som_cluster)
 plot(cluster_mixture)
 \end{lstlisting}
 
-\begin{center}\includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-71-1} \end{center}
+\begin{center}\includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-70-1} \end{center}
 
 \hypertarget{conclusion}{%
 \section{Conclusion}\label{conclusion}}
@@ -3297,11 +3369,11 @@ samples_matogrosso_mod13q1 %>%
 
 \begin{figure}
 
-{\centering \includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-73-1} 
+{\centering \includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-72-1} 
 
 }
 
-\caption{Visualisation of samples associated to class Forest in band NDVI}\label{fig:unnamed-chunk-73}
+\caption{Visualisation of samples associated to class Forest in band NDVI}\label{fig:unnamed-chunk-72}
 \end{figure}
 
 An alternative to visualise the samples is to estimate a statistical
@@ -3327,11 +3399,11 @@ samples_matogrosso_mod13q1 %>%
 
 \begin{figure}
 
-{\centering \includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-74-1} 
+{\centering \includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-73-1} 
 
 }
 
-\caption{Patterns for the samples for Mato Grosso}\label{fig:unnamed-chunk-74}
+\caption{Patterns for the samples for Mato Grosso}\label{fig:unnamed-chunk-73}
 \end{figure}
 
 The resulting plots provide some insights over the time series behaviour
@@ -3555,11 +3627,11 @@ class <- point_mt_4bands %>%
 
 \begin{figure}
 
-{\centering \includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-76-1} 
+{\centering \includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-75-1} 
 
 }
 
-\caption{Classification of time series using SVM}\label{fig:unnamed-chunk-76}
+\caption{Classification of time series using SVM}\label{fig:unnamed-chunk-75}
 \end{figure}
 
 \hypertarget{extreme-gradient-boosting}{%
@@ -3625,11 +3697,11 @@ point_mt_4bands %>%
 
 \begin{figure}
 
-{\centering \includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-77-1} 
+{\centering \includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-76-1} 
 
 }
 
-\caption{Classification of time series using XGBoost}\label{fig:unnamed-chunk-77}
+\caption{Classification of time series using XGBoost}\label{fig:unnamed-chunk-76}
 \end{figure}
 
 In general, the results from the extreme gradient boosting model are
@@ -3748,7 +3820,7 @@ mlp_model <- sits_train(samples_matogrosso_mod13q1, sits_mlp(layers = c(512,
 plot(mlp_model)
 \end{lstlisting}
 
-\begin{center}\includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-78-1} \end{center}
+\begin{center}\includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-77-1} \end{center}
 
 Then, we classify a 16-year time series using the DL model
 
@@ -3760,7 +3832,7 @@ point_mt_6bands %>%
   plot(bands = c("NDVI", "EVI"))
 \end{lstlisting}
 
-\begin{center}\includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-79-1} \end{center}
+\begin{center}\includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-78-1} \end{center}
 
 The multi-layer perceptron model is able to capture more subtle changes
 than the random forests and XGBoost models. For example, the transition
@@ -3815,7 +3887,7 @@ model.
 
 }
 
-\caption{Structure of tempCNN architecture (source: Pelletier et al.(2019))}\label{fig:unnamed-chunk-80}
+\caption{Structure of tempCNN architecture (source: Pelletier et al.(2019))}\label{fig:unnamed-chunk-79}
 \end{figure}
 
 The function \passthrough{\lstinline!sits\_TempCNN()!} implements the
@@ -3848,7 +3920,7 @@ tempcnn_model <- sits_train(samples_matogrosso_mod13q1, sits_tempcnn(optimizer =
 plot(tempcnn_model)
 \end{lstlisting}
 
-\begin{center}\includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-81-1} \end{center}
+\begin{center}\includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-80-1} \end{center}
 
 Then, we classify a 16-year time series using the TempCNN model
 
@@ -3860,7 +3932,7 @@ class <- point_mt_6bands %>%
   plot(bands = c("NDVI", "EVI"))
 \end{lstlisting}
 
-\begin{center}\includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-82-1} \end{center}
+\begin{center}\includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-81-1} \end{center}
 
 While the result of the TempCNN model using default parameters is
 similar to that of the MLP model, it has has the potential to better
@@ -3897,7 +3969,7 @@ deep networks to be trained.
 
 }
 
-\caption{Structure of ResNet architecture (source: Wang et al.(2017))}\label{fig:unnamed-chunk-83}
+\caption{Structure of ResNet architecture (source: Wang et al.(2017))}\label{fig:unnamed-chunk-82}
 \end{figure}
 
 In \passthrough{\lstinline!sits!}, the esidual Network is implemented
@@ -3928,7 +4000,7 @@ resnet_model <- sits_train(samples_matogrosso_mod13q1, sits_resnet(blocks = c(64
 plot(resnet_model)
 \end{lstlisting}
 
-\begin{center}\includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-84-1} \end{center}
+\begin{center}\includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-83-1} \end{center}
 
 Then, we classify a 16-year time series using the ResNet model.
 
@@ -3941,7 +4013,7 @@ class.tb <- point_mt_4bands %>%
   plot(bands = c("NDVI", "EVI"))
 \end{lstlisting}
 
-\begin{center}\includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-85-1} \end{center}
+\begin{center}\includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-84-1} \end{center}
 
 \hypertarget{considerations-on-model-choice}{%
 \section{Considerations on model
@@ -4053,7 +4125,7 @@ customised approach is depicted in the figure below.
 
 }
 
-\caption{Parallel processing in sits (source: Simoes et al.(2021)}\label{fig:unnamed-chunk-87}
+\caption{Parallel processing in sits (source: Simoes et al.(2021)}\label{fig:unnamed-chunk-86}
 \end{figure}
 
 This approach has many advantages. It works in any virtual machine that
@@ -4419,11 +4491,11 @@ plot(raster_probs)
 
 \begin{figure}
 
-{\centering \includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-89-1} 
+{\centering \includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-88-1} 
 
 }
 
-\caption{Probability values for classified image}\label{fig:unnamed-chunk-89}
+\caption{Probability values for classified image}\label{fig:unnamed-chunk-88}
 \end{figure}
 
 The plots show the class probabilities, which can then be smoothed by a
@@ -4439,11 +4511,11 @@ plot(raster_probs_bayes)
 
 \begin{figure}
 
-{\centering \includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-90-1} 
+{\centering \includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-89-1} 
 
 }
 
-\caption{Probability values smoothed by bayesian method}\label{fig:unnamed-chunk-90}
+\caption{Probability values smoothed by bayesian method}\label{fig:unnamed-chunk-89}
 \end{figure}
 
 The bayesian smoothing has removed some of local variability associated
@@ -4454,11 +4526,11 @@ shown below.
 
 \begin{figure}
 
-{\centering \includegraphics[width=0.9\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-91-1} 
+{\centering \includegraphics[width=0.9\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-90-1} 
 
 }
 
-\caption{Classified image without smoothing}\label{fig:unnamed-chunk-91}
+\caption{Classified image without smoothing}\label{fig:unnamed-chunk-90}
 \end{figure}
 
 The resulting labelled map shows a number of likely misclassified pixels
@@ -4466,11 +4538,11 @@ which can be removed using the bayesian smoother.
 
 \begin{figure}
 
-{\centering \includegraphics[width=0.9\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-92-1} 
+{\centering \includegraphics[width=0.9\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-91-1} 
 
 }
 
-\caption{Classified image with Bayesian smoothing}\label{fig:unnamed-chunk-92}
+\caption{Classified image with Bayesian smoothing}\label{fig:unnamed-chunk-91}
 \end{figure}
 
 Comparing the two plots, it is apparent that the smoothing procedure has
@@ -4573,22 +4645,22 @@ plot(raster_probs_bil)
 
 \begin{figure}
 
-{\centering \includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-93-1} 
+{\centering \includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-92-1} 
 
 }
 
-\caption{Probability values for classified image smoothed by bilateral filter}\label{fig:unnamed-chunk-93}
+\caption{Probability values for classified image smoothed by bilateral filter}\label{fig:unnamed-chunk-92}
 \end{figure}
 
 The impact on the classified image can be seen in the following example.
 
 \begin{figure}
 
-{\centering \includegraphics[width=0.9\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-94-1} 
+{\centering \includegraphics[width=0.9\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-93-1} 
 
 }
 
-\caption{Classified image with bilateral smoothing}\label{fig:unnamed-chunk-94}
+\caption{Classified image with bilateral smoothing}\label{fig:unnamed-chunk-93}
 \end{figure}
 
 Bayesian smoothing tends to produce more homogeneous labeled images than
@@ -4678,18 +4750,18 @@ val_rfor
 #> 
 #>           Reference
 #> Prediction Cerrado Pasture
-#>    Cerrado     394      12
-#>    Pasture       6     334
+#>    Cerrado     395      11
+#>    Pasture       5     335
 #>                                      
-#>           Accuracy : 0.9759          
-#>             95% CI : (0.9621, 0.9856)
+#>           Accuracy : 0.9786          
+#>             95% CI : (0.9654, 0.9877)
 #>                                      
-#>              Kappa : 0.9514          
+#>              Kappa : 0.9568          
 #>                                      
-#>  Prod Acc  Cerrado : 0.9850          
-#>  Prod Acc  Pasture : 0.9653          
-#>  User Acc  Cerrado : 0.9704          
-#>  User Acc  Pasture : 0.9824          
+#>  Prod Acc  Cerrado : 0.9875          
+#>  Prod Acc  Pasture : 0.9682          
+#>  User Acc  Cerrado : 0.9729          
+#>  User Acc  Pasture : 0.9853          
 #> 
 \end{lstlisting}
 
@@ -4779,7 +4851,7 @@ accuracy of 97\% and is the best-performing model.
 
 }
 
-\caption{Result of 5-fold cross validation of Mato Grosso dataset using TempCNN}\label{fig:unnamed-chunk-98}
+\caption{Result of 5-fold cross validation of Mato Grosso dataset using TempCNN}\label{fig:unnamed-chunk-97}
 \end{figure}
 
 \hypertarget{accuracy-assessment}{%

@@ -10,23 +10,91 @@ source("common.R")
 dir.create("./tempdir/chp3")
 ```
 
----
-
-This chapter presents an overview of `sits`, by showing a simple example of land use and land cover classification. For detailed descriptions of the functions, please see the following chapters. 
-
----
-
 <a href="https://www.kaggle.com/esensing/introduction-to-sits" target="_blank"><img src="https://kaggle.com/static/images/open-in-kaggle.svg"/></a>
 
+## How `sits` works {-}
 
-The `sits` package supports the complete cycle of data analysis for time series classification, including data acquisition, visualization, filtering, clustering, classification, validation, and post-processing. It adopts a *time-first, space-later* approach, where each spatial location is associated to a time series. A set of locations with known labels is used to train a machine learning classifiers. The resulting model is applied to the data cube and each time series is classified separately. After the classification, spatial smoothing methods capture information from neighbors. This way of working is illustrated in Figure 1.
+The package adopts a *time-first, space-later* approach. Each spatial location is associated to a time series. Locations with known labels train a machine learning classifier, which classifies each time series of a data cube, as shown  in Figure 1.
 
-```{r sits-overview, echo = FALSE, out.width = "65%", out.height = "65%", fig.align="center", fig.cap="Using time series for land classification (source: authors)"}
+```{r sits-overview, echo = FALSE, out.width = "80%", fig.align="center", fig.cap="Using time series for land classification (source: authors)"}
 knitr::include_graphics("images/sits_general_view.png")
 ```
 
+\newpage
+
+The package provides a set of tools for analysis, visualization and classification of satellite image time series. Users follow a typical workflow: 
+
+1. Select an analysis-ready data image collection on cloud providers such as AWS, Microsoft Planetary Computer, Digital Earth Africa and Brazil Data Cube. 
+2. Build a regular data cube using the chosen image collection.
+3. Obtain new bands and indices with operations on data cubes.
+4. Extract time series samples from the data cube to be used as training data.
+5. Perform quality control and filtering on the time series samples. 
+6. Train a machine learning model using the extracted samples.
+7. Use the model to classify the data cube and get class probabilities for each pixel.
+8. Post-process the probability cube to remove outliers. 
+9. Produce a labeled map from the post-processed probability cube.
+10. Evaluate the accuracy of the classification using best practices.
+
+Each step of workflow corresponds to a function of the `sits` API, as shown in the table and figure below. These functions have convenient default parameters and behavior. A single function builds machine learning models ranging from random forests to neural networks. Functions that process big data cubes implement efficient processing internally. Thus, users can achieve good results without in-depth knowledge about machine learning and parallel processing. 
+
+```{r api_tab, echo = FALSE}
+library(kableExtra)
+
+sits_api <- data.frame(
+    API_function = c("sits_cube()", 
+                     "sits_regularize()",
+                     "sits_apply()",
+                     "",
+                     "sits_get_data()", 
+                     "sits_som()",
+                     "sits_train()", 
+                     "sits_classify()", 
+                     "",
+                     "sits_smooth()",
+                     "sits_label_classification()", 
+                     "sits_accuracy()"),
+    Inputs = c("ARD image collection", 
+               "Irregular data cube", 
+               "Regular data cube", 
+               "",
+               "Data cube and sample locations",
+               "Time series", 
+               "Time series and ML algorithm", 
+               "ML classification model", 
+               "and regular data cube",
+               "Probability cube", 
+               "Post-processed probs cube",
+               "Classified map and validation samples"),
+    Output = c("Irregular data cube", 
+               "Regular data cube",
+               "Regular data cube",
+               "with new bands and indices",
+               "Time series",
+               "Improved time series samples",
+               "ML classification model", 
+               "Probability cube", 
+               "",
+               "Post-processed probs cube",
+               "Classified map",
+               "Accuracy assessment")
+)
+kableExtra::kbl(sits_api, 
+                caption = "The `sits` API workflow for land classification",
+                booktabs = TRUE) %>%
+    kableExtra::kable_styling(position = "center", 
+                              latex_options = c("scale_down", "HOLD_position")) %>% 
+    kableExtra::column_spec(column = 1, monospace = TRUE, color =  "RawSienna")
+```
 
 
+```{r api, echo = FALSE, out.width = "100%", out.height = "100%", fig.align="center", fig.cap="Main functions of the SITS API"}
+
+
+knitr::include_graphics("images/sits_api.png") 
+```
+
+
+\newpage
 ## Creating a Data Cube{-}
 
 The first step in using `sits` is creating a regular data cube, which is a set of image files covering a chosen area, where each image has the same spectral bands and spatial resolution, and the temporal resolutions is a set of adjacent and regular intervals. 
@@ -43,15 +111,15 @@ In the example, the images are stored in the user's local machine. To build a da
 
 4. `parse_info` - description of the local file names, so that `sits` can identify tile, band and date information. In this case, local MOD13Q1 images have names of the type `TERRA_MODIS_012010_EVI_2014-07-28.tif`. In this case, the file is parsed as `X1_X2_tile_band_date`. 
 
-```{r, out.width = "65%", fig.cap="Color composite image for 2013-09-14"}
+```{r, out.width = "65%", fig.cap="Color composite image for 2013-09-14", strip.white = FALSE}
 data_dir <- system.file("extdata/sinop", package = "sitsdata")
 
 # create a raster metadata file based on the information about the files
 sinop_cube <- sits_cube(
-    source = "BDC",
+    source = "BDC",    
     collection  = "MOD13Q1-6",
-    data_dir = data_dir,
-    parse_info = c("X1", "X2", "tile", "band", "date")
+    data_dir = data_dir,  
+    parse_info = c("X1", "X2", "tile", "band", "date")  
 )
 # plot a color composite  for the first date (2013-09-14)
 plot(sinop_cube, 
@@ -159,15 +227,6 @@ The resulting classification files can be read by QGIS. Links to the  associated
 sinop_label$file_info[[1]]
 ```
 
-
-## How the sits API works{-} 
-
-The core functions of the **sits** API are presented in Figure \@ref(fig:api). Each function carries out one task of the land classification workflow.  These functions are: (a) `sits_cube()` which creates a cube; (b) `sits_get_data()` which extracts training data from the cube; (c) `sits_train()` that trains a machine learning model; (d) `sits_classify()` which classifies the cube; (e) `sits_smooth()` that does the spatial smoothing; and (f) `sits_label_classication()` that produces the final labelled image. These six functions encapsulate the core of the package.  Each of these core functions is described in a chapter in this book. 
-
-```{r api, echo = FALSE, out.width = "80%", out.height = "80%", fig.align="center", fig.cap="Main functions of the SITS API"}
-
-knitr::include_graphics("images/sits_api.png")
-```
 
 
 
