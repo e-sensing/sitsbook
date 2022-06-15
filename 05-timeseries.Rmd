@@ -4,32 +4,24 @@
 source("common.R")
 ```
 
----
-
-This chapter describes how to access information from time series in SITS.
-
----
-
-## Data structures for satellite time series
+## Data structures for satellite time series{-}
 
 <a href="https://www.kaggle.com/esensing/working-with-time-series-in-sits" target="_blank"><img src="https://kaggle.com/static/images/open-in-kaggle.svg"/></a>
 
 
 The `sits` package requires a set of time series data, describing properties in spatiotemporal locations of interest. For land use classification, this set consists of samples provided by experts that take in-situ field observations or recognize land classes using high-resolution images. The package can also be used for any type of classification, provided that the timeline and bands of the time series (used for training) match that of the data cubes. 
 
-For handling time series, the package uses a `sits tibble` to organize time series data with associated spatial information. A `tibble` is a generalization of a `data.frame`, the usual way in R to organize data in tables. Tibbles are part of the `tidyverse`, a collection of R packages designed to work together in data manipulation [@Wickham2017]. As an example of how the sits tibble works, the following code shows the first three lines of a tibble containing $1,882$ labeled samples of land cover in Mato Grosso state of Brazil. The samples contain time series extracted from the MODIS MOD13Q1 product from 2000 to 2016, provided every $16$ days at $250$-meter resolution in the Sinusoidal projection. Based on ground surveys and high-resolution imagery, it includes samples of nine classes: "Forest", "Cerrado", "Pasture", "Soybean-fallow", "Fallow-Cotton", "Soybean-Cotton", "Soybean-Corn", "Soybean-Millet", and "Soybean-Sunflower". 
+For handling time series, the package uses a `tibble` to organize time series data with associated spatial information. A `tibble` is a generalization of a `data.frame`, the usual way in R to organize data in tables. Tibbles are part of the `tidyverse`, a collection of R packages designed to work together in data manipulation [@Wickham2017].  The following code shows the first three lines of a tibble containing $1,882$ labeled samples of land cover in Mato Grosso state of Brazil. The samples contain time series extracted from the MODIS MOD13Q1 product from 2000 to 2016, provided every $16$ days at $250$-meter resolution in the Sinusoidal projection. Based on ground surveys and high-resolution imagery, it includes samples of nine classes: "Forest", "Cerrado", "Pasture", "Soy_Fallow", "Fallow_Cotton", "Soy_Cotton", "Soy_Corn", "Soy_Millet", and "Soy_Sunflower". 
 
 ```{r}
 # data set of samples
-library(sits)
-library(sitsdata)
 data("samples_matogrosso_mod13q1")
 samples_matogrosso_mod13q1[1:3,]
 ```
 
-A sits tibble contains data and metadata. The first six columns contain the metadata: spatial and temporal information, the label assigned to the sample, and the data cube from where the data has been extracted. The spatial location is given in longitude and latitude coordinates for the "WGS84" ellipsoid. For example, the first sample has been labeled "Cerrado, at location (-58.5631, -13.8844) and is considered valid for the period (2007-09-14, 2008-08-28). Informing the dates where the label is valid is crucial for correct classification. In this case, the researchers involved in labeling the samples chose to use the agricultural calendar in Brazil, where the spring crop is planted in the months of September and October, and the autumn crop is planted in the months of February and March. For other applications and other countries, the relevant dates will most likely be different from those used in the example. The `time_series` column contains the time series data for each spatiotemporal location. This data is also organized as a tibble, with a column with the dates and the other columns with the values for each spectral band. 
+A sits tibble contains data and metadata. The first six columns contain the metadata: spatial and temporal information, the label assigned to the sample, and the data cube from where the data has been extracted. The spatial location is given in longitude and latitude coordinates for the "WGS84" ellipsoid. For example, the first sample has been labeled "Pasture", at location (-58.5631, -13.8844) and is considered valid for the period (2007-09-14, 2008-08-28). Informing the dates where the label is valid is crucial for correct classification. In this case, the researchers involved in labeling the samples chose to use the agricultural calendar in Brazil, where the spring crop is planted in the months of September and October, and the autumn crop is planted in the months of February and March. For other applications and other countries, the relevant dates will most likely be different from those used in the example. The `time_series` column contains the time series data for each spatiotemporal location. This data is also organized as a tibble, with a column with the dates and the other columns with the values for each spectral band. 
 
-## Utilities for handling time series
+## Utilities for handling time series{-}
 
 The package provides functions for data manipulation and displaying information for sits tibble. For example, `sits_labels_summary()` shows the labels of the sample set and their frequencies.
 
@@ -39,9 +31,9 @@ sits_labels_summary(samples_matogrosso_mod13q1)
 
 In many cases, it is helpful to relabel the data set. For example, there may be situations when one wants to use a smaller set of labels, since samples in one label on the original set may not be distinguishable from samples with other labels. We then could use `sits_relabel()`, which requires a conversion list (for details, see `?sits_relabel`).
 
-Given that we have used the tibble data format for the metadata and the embedded time series, one can use the functions from `dplyr`, `tidyr`, and `purrr` packages of the `tidyverse` [@Wickham2017] to process the data. For example, the following code uses `sits_select()` to get a subset of the sample data set with two bands (NDVI and EVI) and then uses the `dplyr::filter()` to select the samples labelled either as "Cerrado" or "Pasture". 
+Given that we have used the tibble data format for the metadata and the embedded time series, one can use the functions from `dplyr`, `tidyr`, and `purrr` packages of the `tidyverse` [@Wickham2017] to process the data. For example, the following code uses `sits_select()` to get a subset of the sample data set with two bands (NDVI and EVI) and then uses the `dplyr::filter()` to select the samples labelled as "Cerrado". 
 
-```{r, message = FALSE}
+```{r, tidy="styler", message = FALSE}
 # select NDVI band
 samples_ndvi <- sits_select(samples_matogrosso_mod13q1, 
                             bands = "NDVI")
@@ -50,62 +42,57 @@ samples_ndvi <- sits_select(samples_matogrosso_mod13q1,
 samples_cerrado <- dplyr::filter(samples_ndvi, label == "Cerrado")
 ```
 
-## Time series visualisation
+## Time series visualisation{-}
 
 Given a small number of samples to display, `plot()` tries to group as many spatial locations together. In the following example, the first 12 samples of  "Cerrado" class refer to the same spatial location in consecutive time periods. For this reason, these samples are plotted together.
 
-```{r cerrado-12, fig.align="center", fig.height=3.1, fig.width=5, fig.cap="Plot of the first 'Cerrado' sample" }
+```{r cerrado-12, fig.align="center", out.width="70%", fig.cap="Plot of the first 'Cerrado' sample" }
 # plot the first 12 samples
 plot(samples_cerrado[1:12,])
 ```
 
 For a large number of samples, where the number of individual plots would be substantial, the default visualization combines all samples together in a single temporal interval (even if they belong to different years). All samples with the same band and label are aligned to a common time interval. This plot is useful to show the spread of values for the time series of each band. The strong red line in the plot shows the median of the values, while the two orange lines are the first and third interquartile ranges. The documentation of `plot.sits()` has more details about the different ways it can display data.
 
-```{r fig.align="center", fig.height=3.1, fig.width=5, fig.cap="Plot of all Cerrado samples "}
+```{r fig.align="center", out.width="70%", fig.cap="Plot of all Cerrado samples "}
 # plot all cerrado samples together
 plot(samples_cerrado)
 ```
 
-## Obtaining time series data from data cubes
+## Obtaining time series data from data cubes{-}
 
 To get a time series in sits, one has to create a data cube, as described previously.  Users can request one or more time series points from a data cube by using `sits_get_data()`. This function provides a general means of access to image time series using the `samples` parameter. This parameter accepts the following data types: 
 
-- A data.frame with information on latitude and longitude (mandatory), start_date, end_date and label for each sample point.
-- A csv file with columns latitude and longitude, start_date, end_date and label.
-- A shapefile in either POINT or POLYGON format. See details below.
-- An `sf` object (from the `sf` package) with POINT or POLYGON geometry information. See details below.
+1. A data.frame with information on latitude and longitude (mandatory), start_date, end_date and label for each sample point.
+2. A csv file with columns latitude and longitude, start_date, end_date and label.
+3. A shapefile containing either POINT or POLYGON geometries. See details below.
+4. An `sf` object (from the `sf` package) with POINT or POLYGON geometry information. See details below.
 
-In the example below, given a data cube the user provides the latitude and longitude of the desired location, the bands. Since the  start date and end date of the time series are not informed, `sits` obtains them from the data cube. The result is a tibble with one time series that can be visualized using `plot()`.
+In the example below, given a data cube the user provides the latitude and longitude of the desired location. Since the bands, start date and end date of the time series are not informed, `sits` obtains them from the data cube. The result is a tibble with one time series that can be visualized using `plot()`.
 
-```{r, fig.align="center", fig.height=3.1, fig.width=5, fig.cap="NDVI and EVI time series fetched from local raster cube.", message = FALSE}
-
-# Obtain a raster cube with 23 instances for one year
-# Select the band "ndvi", "evi" from images available in the "sitsdata" package
+```{r, tidy="styler", fig.align="center", out.width="70%", fig.cap="NDVI and EVI time series fetched from local raster cube.", message = FALSE}
+# Obtain a raster cube with based on local files
 data_dir <- system.file("extdata/sinop", package = "sitsdata")
-
-# create a raster metadata file based on the information about the files
 raster_cube <- sits_cube(
     source     = "BDC",
     collection = "MOD13Q1-6",
     data_dir   = data_dir,
     parse_info = c("X1", "X2", "tile", "band", "date")
 )
-# a point in the transition forest to pasture in Northern MT
-# obtain a time series from the raster cube for this point
-# first, create a tibble with latitude and longitude information
+# obtain a time series from the raster cube from a point
 sample_latlong <- tibble::tibble(
     longitude = -55.57320, 
     latitude  = -11.50566 
 )
 series <- sits_get_data(cube    = raster_cube,
-                        samples = sample_latlong,
-                        bands   = c("NDVI", "EVI"))
+                        samples = sample_latlong
+)
 plot(series)
 ```
 
-A useful case is when a set of labelled samples are available to be used as a training data set. In this case, one usually has trusted observations that are labelled and commonly stored in plain text files in comma-separated values (CSV) or using shapefiles (SHP). Function `sits_get_data()` takes a CSV or SHP file path as an argument. For each training sample, CSV files should provide latitude and longitude, start and end dates that define the temporal bounds, and a label associated with a ground sample. An example of a CSV file used is shown below. 
+A useful case is when a set of labelled samples are available to be used as a training data set. In this case, one usually has trusted observations that are labelled and commonly stored in plain text files in comma-separated values (CSV) or using shapefiles (SHP). 
+\newpage
 
-```{r, message=FALSE}
+```{r, tidy="styler", message=FALSE}
 # retrieve a list of samples described by a CSV file
 samples_csv_file <- system.file("extdata/samples/samples_sinop_crop.csv",
                                 package = "sits")
@@ -115,131 +102,77 @@ samples_csv <- read.csv(samples_csv_file)
 samples_csv[1:3,]
 ```
 
-The main difference between the files used by *sits* to retrieve training samples from those used traditionally in remote sensing data analysis is that users are expected to provide the temporal information (`start_date` and `end_date`). In the simplest case, all samples share the same dates. That is not a strict requirement. Users can specify different dates, as long as they have a compatible duration. For example, the data set `samples_modis_4bands` provided with the sits package contains samples from different years covering the same duration. These samples were obtained from the MOD13Q1 product, which contains the same number of images per year. Thus, all time series in the data set `samples_modis_4bands` have the same number of instances. 
-
-````{r}
-samples_modis_4bands[1:5,]
-````
+To retrieve training samples for time series analysis, users need to provide the temporal information (`start_date` and `end_date`). In the simplest case, all samples share the same dates. That is not a strict requirement. Users can specify different dates, as long as they have a compatible duration. For example, the data set `samples_matogrosso_mod13q1` provided with the `sitsdata` package contains samples from different years covering the same duration. These samples were obtained from the MOD13Q1 product, which contains the same number of images per year. Thus, all time series in the data set `samples_matogrosso_mod13q1` have the same number of instances. 
 
 Given a suitably built CSV sample file, `sits_get_data()` requires two parameters: (a) `cube`, the name of the R object that describes the data cube; (b) `samples`, the name of the CSV file. 
-```{r}
+```{r, tidy="styler"}
 # get the points from a data cube in raster brick format
-points <- sits_get_data(cube = raster_cube, samples = samples_csv_file)
+points <- sits_get_data(
+    cube = raster_cube, 
+    samples = samples_csv_file)
 # show the tibble with the first three points
 points[1:3,]
 ```
+\newpage
+Users can also specify samples by providing shapefiles or `sf` objects containing POINT or POLYGON geometries. The geographical location is inferred from the geometries associated with the shapefile or `sf` object. For files containing points, the geographical location is obtained directly. For polygon geometries, the parameter `n_sam_pol` (defaults to 20) determines the number of samples to be extracted from each polygon. The temporal information can be provided explicitly by the user; if absent, it is inferred from the data cube. If label information is available in the shapefile or `sf` object, users should include the parameter `label_attr` to indicate the column which contains the label to be associated with each time series.
 
-Users can also specify samples by providing shapefiles or `sf` objects in point or polygon format. In this case, the geographical location is inferred from the geometries associated with the shapefile. For files containing points, the geographical location is obtained directly. For polygon shapes, the parameter `n_sam_pol` (defaults to 20) determines the number of samples to be extracted from each polygon. The temporal information can be provided explicitly by the user; if absent, it is inferred from the data cube from which the samples are extracted. If label information is available in the shapefile, users should include the parameter `label_attr` to indicate the name of the column which contains the label to be associated with each time series.
-
-```{r, warning = FALSE, message = FALSE}
+```{r, tidy="styler", warning = FALSE, message = FALSE, error = FALSE}
 # obtain a set of points inside the state of Mato Grosso, Brazil
-# provide a shapefile with the state boundaries
 shp_file <- system.file("extdata/shapefiles/mato_grosso/mt.shp", 
                         package = "sits")
-
 # read the shapefile into an "sf" object
 sf_shape <- sf::st_read(shp_file)
+```
 
-# define the number of samples to be extracted
-n_sam_pol <- 20
-# define the interval for which time series is required
-start_date  <- "2020-06-01"
-end_date    <-  "2021-08-29"
-
-# create a data cube based on data stored in the Microsoft Planetary Computer
-# select a region of interest that corresponds to the state of Rondonia
-# enter the region of interest as an "sf" object
-l8_cube <- sits_cube(
+```{r, tidy="styler"}
+# create a data cube based on MOD13Q1 collection from BDC
+modis_cube <- sits_cube(
     source      = "BDC",
     collection  = "MOD13Q1-6",
     roi         = sf_shape,
     bands       = c("NDVI", "EVI"),
-    start_date  = start_date,
-    end_date    = end_date
+    start_date  = "2020-06-01", end_date    = "2021-08-29"
 )
-
-# read the points in the shapefile and produce a tibble with time series
-# users can replace the shapefile with the equivalent sf object. 
-samples_rondonia <- sits_get_data(
-    cube         = l8_cube, 
+# read the points from the cube and produce a tibble with time series
+samples_mt <- sits_get_data(
+    cube         = modis_cube, 
     samples      = shp_file, 
-    start_date   = start_date, 
-    end_date     = end_date, 
-    n_sam_pol    = n_sam_pol,
-    multicores   = 4
+    start_date   = "2020-06-01", end_date     = "2021-08-29", 
+    n_sam_pol    = 20, multicores   = 4
 )
 ```
-
-## Filtering techniques for time series
+\newpage
+## Filtering techniques for time series{-}
 
 Satellite image time series generally is contaminated by atmospheric influence, geolocation error, and directional effects [@Lambin2006]. Atmospheric noise, sun angle, interferences on observations or different equipment specifications, as well as the very nature of the climate-land dynamics can be sources of variability [@Atkinson2012]. Inter-annual climate variability also changes the phenological cycles of the vegetation, resulting in time series whose periods and intensities do not match on a year-to-year basis. To make the best use of available satellite data archives, methods for satellite image time series analysis need to deal with  *noisy* and *non-homogeneous* data sets. In this vignette, we discuss filtering techniques to improve time series data that present missing values or noise.
 
 The literature on satellite image time series has several applications of filtering to correct or smooth vegetation index data. The package supports the well-known Savitzky–Golay (`sits_sgolay()`) and Whittaker (`sits_whittaker()`) filters. In an evaluation of MERIS NDVI time series filtering for estimating phenological parameters in India, @Atkinson2012 found that the Whittaker filter provides good results. @Zhou2016 found that the Savitzky-Golay filter is good for reconstruction in tropical evergreen broadleaf forests.
 
-### Savitzky–Golay filter
+### Savitzky–Golay filter{-}
 
-The Savitzky-Golay filter works by fitting a successive array of $2n+1$ adjacent data points with a $d$-degree polynomial through linear least squares. The central point $i$ of the window array assumes the value of the interpolated polynomial. An equivalent and much faster solution than this convolution procedure is given by the closed expression
-$$
-{\hat{x}_{i}=\sum _{j=-n}^{n}C_{j}\,x_{i+j}},
-$$
-where $\hat{x}$ is the the filtered time series, $C_{j}$ are the Savitzky-Golay smoothing coefficients, and $x$ is the original time series.
-
-The coefficients $C_{j}$ depend uniquely on the polynomial degree ($d$) and the length of the window data points (given by parameter $n$). If ${d=0}$, the coefficients are constants ${C_{j}=1/(2n+1)}$ and the Savitzky-Golay filter will be equivalent to moving average filter. When the time series are equally spaced, the coefficients have an analytical solution. According to @Madden1978, for ${d\in{}[2,3]}$ each $C_{j}$ smoothing coefficients can be obtained by
-$$
-C_{j}=\frac{3(3n^2+3n-1-5j^2)}{(2n+3)(2n+1)(2n-1)}.
-$$
-
-In general, the Savitzky-Golay filter produces smoother results for a larger value of $n$ and/or a smaller value of $d$ [@Chen2004]. The optimal value for these two parameters can vary from case to case. In SITS, the user can set the order of the polynomial using the parameter `order` (default = 3), the size of the temporal window with the parameter `length` (default = 5), and the temporal expansion with the parameter `scaling` (default = 1). The following example shows the effect of Savitsky-Golay filter on a point extracted from the MOD13Q1 product, ranging from 2000-02-18 to 2018-01-01.
+The Savitzky-Golay filter works by fitting a successive array of $2n+1$ adjacent data points with a $d$-degree polynomial through linear least squares. The main parameters for the filter are  the polynomial degree ($d$) and the length of the window data points ($n$). In general, it produces smoother results for a larger value of $n$ and/or a smaller value of $d$ [@Chen2004]. The optimal value for these two parameters can vary from case to case. In SITS, the user can set the order of the polynomial using the parameter `order` (default = 3), the size of the temporal window with the parameter `length` (default = 5), and the temporal expansion with the parameter `scaling` (default = 1). The following example shows the effect of Savitsky-Golay filter on a point extracted from the MOD13Q1 product, ranging from 2000-02-18 to 2018-01-01.
 
 
-```{r, fig.align="center", fig.height=5, fig.width=8, fig.cap="Savitzky-Golay filter applied on a multi-year NDVI time series."}
+```{r, fig.align="center", out.width="70%", fig.cap="Savitzky-Golay filter applied on a multi-year NDVI time series."}
 
 # Take NDVI band of the first sample data set
 point_ndvi <- sits_select(point_mt_6bands, band = "NDVI")
-# apply Savitzky–Golay filter
-point_sg <- sits_sgolay(point_ndvi, length = 15)
+# apply Savitzky Golay filter
+point_sg <- sits_sgolay(point_ndvi, length = 11)
 # merge the point and plot the series
 sits_merge(point_sg, point_ndvi) %>% plot()
 ```
 
-Notice that the resulting smoothed curve has both desirable and unwanted properties. For the period 2000 to 2008, the Savitsky-Golay filter remove noise resulting from clouds. However, after 2010, when the region has been converted to agriculture, the filter removes an important part of the natural variability from the crop cycle. Therefore, the `length` parameter is arguably too big and results in oversmoothing. Users can try to reduce this parameter and analyse the results.
+Notice that the resulting smoothed curve has both desirable and unwanted properties. For the period 2000 to 2008, the Savitsky-Golay filter removes noise resulting from clouds. However, after 2010, when the region has been converted to agriculture, the filter removes an important part of the natural variability from the crop cycle. Therefore, the `length` parameter is arguably too big and results in oversmoothing. Users can try to reduce this parameter and analyse the results.
 
-### Whittaker filter
+### Whittaker filter{-}
 
-The Whittaker smoother attempts to fit a curve that represents the raw data, but is penalized if subsequent points vary too much [@Atzberger2011]. The Whittaker filter is a balancing between the residual to the original data and the "smoothness" of the fitted curve. The residual, as measured by the sum of squares of all $n$ time series points deviations, is given by
-$$
-RSS=\sum_{i}(x_{i} - \hat{x_{i}})^2,
-$$
-where $x$ and $\hat{x}$ are the original and the filtered time series vectors, respectively. The smoothness is assumed to be the measure of the sum of the squares of the third-order differences of the time series [@Whittaker1922], which is given by
-$$
-\begin{split}
-S\!S\!D = (\hat{x}_4 - 3\hat{x}_3 + 3\hat{x}_2 - \hat{x}_1)^2 + (\hat{x}_5 - 3\hat{x}_4 + 3\hat{x}_3 - \hat{x}_2)^2 \\ + \ldots + (\hat{x}_n - 3\hat{x}_{n-1} + 3\hat{x}_{n-2} - \hat{x}_{n-3})^2.
-\end{split}
-$$
+The Whittaker smoother attempts to fit a curve that represents the raw data, but is penalized if subsequent points vary too much [@Atzberger2011]. The Whittaker filter is a balancing between the residual to the original data and the "smoothness" of the fitted curve. The filter has one parameter: $\lambda{}$ that works as a "smoothing weight" parameter. 
 
-The filter is obtained by finding a new time series $\hat{x}$ whose points minimize the expression
-$$
-RSS+\lambda{}S\!S\!D,
-$$ 
-where $\lambda{}$, a scalar, works as a "smoothing weight" parameter. The minimization can be obtained by differentiating the expression with respect to $\hat{x}$ and equating it to zero. The solution of the resulting linear system of equations gives the filtered time series, which, in matrix form, can be expressed as
+The following example shows the effect of Whitakker filter on a point extracted from the MOD13Q1 product, ranging from 2000-02-18 to 2018-01-01. The `lambda` parameter controls the smoothing of the filter. By default, it is set to 0.5, a small value. For illustrative purposes, we show the effect of a larger smoothing parameter.
+\newpage
 
-$$
-\hat{x} = ({\rm I} + \lambda {D}^{\intercal} D)^{-1}x,
-$$
-where ${\rm I}$ is the identity matrix and 
-$$
-D = \left[\begin{array}{ccccccc}
-1 & -3 & 3 & -1 & 0 & 0 &\cdots \\
-0 & 1 & -3 & 3 & -1 & 0 &\cdots \\
-0 & 0 & 1 & -3 & 3 & -1 & \cdots \\
-\vdots & \vdots & \vdots & \vdots & \vdots & \vdots & \ddots
-\end{array}
-\right]
-$$
-
-The following example shows the effect of Whitakker filter on a point extracted from the MOD13Q1 product, ranging from 2000-02-18 to 2018-01-01. The `lambda` parameter controls the smoothing of the filter. By default, it is set to 0.5, a small value. For illustrative purposes, we show the effect of a larger smoothing parameter
-
-```{r, fig.align="center", fig.height=5, fig.width=8, fig.cap="Whittaker filter applied on a one-year NDVI time series."}
+```{r, fig.align="center", out.width="70%", fig.cap="Whittaker filter applied on a one-year NDVI time series."}
 
 # Take NDVI band of the first sample data set
 point_ndvi <- sits_select(point_mt_6bands, band = "NDVI")
@@ -249,4 +182,4 @@ point_whit <- sits_whittaker(point_ndvi, lambda = 8)
 sits_merge(point_whit, point_ndvi) %>% plot()
 ```
 
-In the same way as what is observed in the Savitsky-Golay filter, high values of the smoothing parameter `lambda` produce an oversmoothed time series that reduces the capacity of the time series to represent natural variations on crop growth. For this reason, low smoothing values are recommended when using the `sits_whittaker` function.
+In the same way as what is observed in the Savitsky-Golay filter, high values of the smoothing parameter `lambda` produce an over-smoothed time series that reduces the capacity of the time series to represent natural variations on crop growth. For this reason, low smoothing values are recommended when using the `sits_whittaker` function.

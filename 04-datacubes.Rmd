@@ -6,203 +6,147 @@ dir.create("./tempdir/chp4")
 library(sits)
 ```
 
----
-
-This chapter describes how to use Earth observation data cubes in SITS.
-
----
-
-
 ## Analysis-ready data image collections{-}
 
-Many large collections of Earth observation data are available in cloud computing services, that also provide computing facilities to process them. Investment in infrastructure is minimized, and sharing of data and software increases.  Cloud services such as Amazon Web Service (AWS), Microsoft's Planetary Computer (MSPC), and Digital Earth Africa (DEAfrica) provide access to collections of analysis-ready data (ARD). These collections which have been processed by space agencies to improve multidate comparability. Such processing includes conversion from radiance measures at the top of the atmosphere to reflectance measures from ground areas. Variations in sun incidence angles are also compensated. We define an *ARD image collections* as:
+Many collections of Earth observation analysis-ready data (ARD) are available in cloud services such as Amazon Web Service, Brazil Data Cube, Digital Earth Africa, and Microsoft's Planetary Computer. These collections which have been processed by space agencies to improve multidate comparability. Such processing includes conversion from radiance measures at the top of the atmosphere to reflectance measures from ground areas. Variations in sun incidence angles are also compensated.  In general, timelines of the images of an ARD image collection are different. Images still contain cloudy or missing pixels and bands for the images in the collection may have different resolutions. Figure 8 shows an example of the Landsat ARD image collection. There are missing values and clouds in most images. 
 
-1. An ARD image collection is a set of files from a given sensor (or a combined set of sensors) that has been corrected to ensure comparability of measurements between different dates.
-2. All images are reprojected to a cartographic projection following well-established standards.
-3. Image collections are cropped into a tiling system.  
-4. In general, the timelines of the images that are part of one tile are not regular. Also, these timelines are not the same as those associated to a different tile. 
-5. ARD image collections do not guarantee that every pixel of an image has a valid value, since its images still contains cloudy or missing pixels. 
-6. The bands for the images in the collection may have different resolutions. 
-
-Figure \@ref(fig:ardtile) shows an example of the Landsat ARD image collection. The figure shows a collection of images that have been reprocessed to a standard tiling system. Because of the way remote sensing satellites acquire data over the Earth's surface, there are missing values in most images. In ARD image collection, neighboring images have different timelines. ARD image collection are not regular data cubes; they need further processing to used directly in machine learning methods.  
-
-```{r ardtile, echo = FALSE, out.width = "70%", out.height = "70%", fig.align="center", fig.cap="ARD image collection (source: USGS)"}
+```{r ardtile, echo = FALSE, out.width="70%", fig.align="center", fig.cap="ARD image collection (source: USGS)"}
 knitr::include_graphics("images/usgs_ard_tile.png")
 ```
 
-As of version 1.0.0, `sits` supports access to the following ARD image collections:
+ARD image collections are organized in spatial partitions. Sentinel-2/2A ARD images are produced according to the MGRS tiling system. This system divides the world in 60 UTM zones of 8 degrees of longitude width. Each zone is divided in blocks of 6 degrees of latitude. Then, each block is split into tiles of 110 x 110 km2 with a 10 km overlap. As an example, we shows the MGRS tiling system used in Sentinel-2 images for a part of the Northeastern coast of Brazil, contained in UTM zone 24, block M. The city of Fortaleza, shown in the centre of the image, is contained in MGRS tile 24MWA. 
 
-1. AWS: Open data Sentinel-2/2A level 2A collections for the Earth's land surface. 
-2. Brazil Data Cube (BDC): Open data collections of Sentinel-2/2A, Landsat-8, CBERS-4/4A, and MODIS images for Brazil. These collections organized as regular data cubes. 
-3. Digital Earth Africa (DEAFRICA): Open data collections of Sentinel-2/2A and Landsat-8 for Africa.
-4. Microsoft Planetary Computer (MSPC): Open data collections of Sentinel-2/2A and Landsat-8 for the Earth's land areas. 
-5. USGS: Landsat-4/5/7/8 collections for the whole Earth available in AWS, which require payment to access. 
-Except for the USGS Landsat collection, users can access open data collections without payment. In the case of USGS, users should be registered in AWS and to pay for the cost of data access.
-
-To better understand how ARD image collection are organized, one should consider their spatial partition. Sentinel-2/2A images are produced according to the MGRS tiling system. This system divides the world in 60 UTM zones of 8 degrees of longitude width. Each zone is divided in blocks of 6 degrees of latitude. Then, each block is split into tiles of 110 x 110 km2 with a 10 km overlap. As an example, Figure \@ref(fig:mgrs) shows the MGRS tiling system used in Sentinel-2 images for a part of the Northeastern coast of Brazil, contained in UTM zone 24, block M. The city of Fortaleza, shown in the centre of the image, is contained in MGRS tile 24MWA. 
-
-```{r wrs, echo = FALSE, out.width = "90%", out.height = "90%", fig.align="center", fig.cap="MGRS tiling system used by Sentinel-2 images (source: GISSurfer 2.0)"}
+```{r wrs, echo = FALSE, out.width="70%", fig.align="center", fig.cap="MGRS tiling system used by Sentinel-2 images (source: GISSurfer 2.0)"}
 knitr::include_graphics("images/s2_mgrs_grid.png")
 ```
 
-
 The Landsat 5/7/8/9 satellites use the Worldwide Reference System (WRS-2) to allow access to images by specifying a nominal scene center designated by path and row numbers. WRS-2 breaks the coverage of Landsat satellites into images identified by path and row.  The path is the descending orbit of the satellite; the WRS-2 system has 233 paths per orbit and each path is divided in  119 rows. Images in WRS-2 are geometrically corrected to the UTM projection. 
 
-```{r mgrs, echo = FALSE, out.width = "90%", out.height = "90%", fig.align="center", fig.cap="WRS-2 tiling system used by Landsat-5/7/8/9 images (source: INPE and ESRI)"}
+```{r mgrs, echo = FALSE, out.width="70%", fig.align="center", fig.cap="WRS-2 tiling system used by Landsat-5/7/8/9 images (source: INPE and ESRI)"}
 knitr::include_graphics("images/landsat_wrs_grid.png")
 ```
 
+## ARD image collections handled by sits{-}
+
+As of version 1.0.0, `sits` supports access to the following ARD image collections:
+
+1. Amazon Web Services (AWS): Open data Sentinel-2/2A level 2A collections for the Earth's land surface. 
+2. Brazil Data Cube (BDC): Open data collections of Sentinel-2/2A, Landsat-8, CBERS-4/4A, and MODIS images for Brazil. These collections organized as regular data cubes. 
+3. Digital Earth Africa (DEA): Open data collections of Sentinel-2/2A and Landsat-8 for Africa.
+4. Microsoft Planetary Computer (MSPC): Open data collections of Sentinel-2/2A and Landsat-8 for the Earth's land areas. 
+5. USGS: Landsat-4/5/7/8 collections available in AWS, which require payment to access. 
+
+
 ## Regular image data cubes{-}
 
-Machine learning and deep learning (ML/DL) classification algorithms require the input data to be consistent. The dimensionality of the data used for training the model has to be the same as that of the data to be classified. There should be no gaps in the input data and no missing values are allowed. Thus, to make best use of ML/DL algoritms for remote sensing data, it is strongly recommended that ARD image collections are converted to *regular data cubes*. Regular data cubes organize satellite data for a given area in a consistent spatiotemporal arrangement. Following [@Appel2019], we consider that a *regular data cube* should meet the following definition:
+Machine learning and deep learning (ML/DL) classification algorithms require the input data to be consistent. The dimensionality of the data used for training the model has to be the same as that of the data to be classified. There should be no gaps in the input data and no missing values are allowed. Thus, to use of ML/DL algorithms for remote sensing data, ARD image collections should be converted to regular data cubes. Following [@Appel2019], a *regular data cube*  meets the following definition:
 
 1. A regular data cube is a four-dimensional structure with dimensions x (longitude or easting), y (latitude or northing), time, and bands.
 2. Its spatial dimensions refer to a single spatial reference system (SRS). Cells of a data cube have a constant spatial size with respect to the cube’s SRS.
 3. The temporal dimension is composed of a set of continuous and equally-spaced intervals. 
 4. For every combination of dimensions, a cell has a single value.
 
-A regular data cube defines a well-constructed partition of space-time. All cells of a data cube have the same spatiotemporal extent. The spatial resolution of each cell is the same in X and Y dimensions. All temporal intervals are the same. Each cell contains a valid set of measures. For each position in space, the data cube should provide a valid time series. For each time interval, the regular data cube should provide a valid 2D image (see Figure \@ref(fig:dcconcept)). 
+All cells of a data cube have the same spatiotemporal extent. The spatial resolution of each cell is the same in X and Y dimensions. All temporal intervals are the same. Each cell contains a valid set of measures. For each position in space, the data cube should provide a valid time series. For each time interval, the regular data cube should provide a valid 2D image (see Figure 11). 
 
-```{r dcconcept, echo = FALSE, out.width = "90%", out.height = "100%", fig.align="center", fig.cap="Conceptual view of data cubes (source: authors)"}
+```{r dcconcept, echo = FALSE, out.width="90%", fig.align="center", fig.cap="Conceptual view of data cubes (source: authors)"}
 knitr::include_graphics("images/datacube_conception.png")
 ```
 
-Currently, the only cloud service that supports the above definition of data cubes is the Brazil Data Cube (BDC). Analysis-ready data (ARD) collections available in AWS, MSPC, USGS and DE Africa are not regular in space and time. Bands may have different resolutions, images may not cover the entire time, and time intervals are not regular. For this reason, subsets of these collections need to be converted to regular data cubes before further processing. To produce data cubes for machine-learning data analysis, users should first create an irregular data cube from an ARD collection and then use `sits_regularize()`, as described below.
+Currently, the only cloud service that provides regular data cubes by default is the Brazil Data Cube (BDC). Analysis-ready data (ARD) collections available in AWS, MSPC, USGS and DE Africa are not regular in space and time. Bands may have different resolutions, images may not cover the entire time, and time intervals are not regular. For this reason, subsets of these collections need to be converted to regular data cubes before further processing. To produce data cubes for machine-learning data analysis, users should first create an irregular data cube from an ARD collection and then use `sits_regularize()`, as described below.
 
 ## Creating data cubes{-}
 
 <a href="https://www.kaggle.com/esensing/creating-data-cubes-in-sits" target="_blank"><img src="https://kaggle.com/static/images/open-in-kaggle.svg"/></a>
 
-To obtain information on ARD image collection, `sits` uses information provided by implementations of the STAC (SpatioTemporal Asset Catalogue) protocol. [STAC](https://stacspec.org/) is a specification of geospatial information which has been adopted by many large image collection providers. A 'spatiotemporal asset' is any file that represents information about the earth captured in a certain space and time. To access STAC endpoints, `sits` uses the [rstac](http://github.com/brazil-data-cube/rstac) R package.
+To obtain information on ARD image collection from cloud providers, `sits` uses the STAC (SpatioTemporal Asset Catalogue) protocol, which is a specification of geospatial information which has been adopted by many large image collection providers. A 'spatiotemporal asset' is any file that represents information about the Earth captured in a certain space and time. To access STAC endpoints, `sits` uses the [rstac](http://github.com/brazil-data-cube/rstac) R package.
 
 All access to image collections and data cubes is done using `sits_cube()`,  which requires the following common parameters:
 
-1. `source`: name of the provider from the list of providers suported by `sits`. See the next section for a description of the providers.
-2. `collection`: a collection available in the provider and supported by `sits`. See the next section to learn how to get information on collections.
-3. `url`: URL associated to the STAC endpoint of the provider. In most cases, `sits` has information about the default endpoint, so this parameter can be omitted. 
-4. `tiles`: Most satellites, when organised as analysis-ready data, conform to a reference system that divides Earth into granules or tiles. By specifying one or more tiles, the user selects a region of interest. in practice, either `tiles` or `roi` should be specified. 
-5. `roi`: a region of interest. Can be defined using: (a) a named vector ("lon_min", "lon_max", "lat_min", "lat_max") with lat/long values in WGS 84; (b) an *sf* object from the *sf* package, a data frame with feature attributes and feature geometries. When selecting images that compose a data cube based on a `roi`, sits does not crop them directly; the software selects the images that intersect with its convex hull. 
-6. `start_date`: the initial date for the temporal interval containing the time series of images.
-7. `end_date`: the final date for the temporal interval containing the time series of images.
+1. `source`: name of the provider from the list of providers supported by `sits`. 
+2. `collection`: a collection available in the provider and supported by `sits`. To find out which collections are supported by `sits`, see `sits_list_collections()`. 
+3. `platform`: optional parameter specifying the platform in case of collections that include more than one satellite. 
+4. `tiles`: Set of tiles of image collection reference system. Either `tiles` or `roi` should be specified. 
+5. `roi`: a region of interest. Either: (a) a named vector ("lon_min", "lon_max", "lat_min", "lat_max") within WGS 84; or (b) an *sf* object.  All images that intersect the convex hull of the `roi` are selected. 
+6. `bands`: (optional) bands to be used. If missing, all bands from the collection are used.
+7. `start_date`: the initial date for the temporal interval containing the time series of images.
+8. `end_date`: the final date for the temporal interval containing the time series of images.
 
-```{r, eval=FALSE}
-# main parameters
-new_cube <- sits_cube(
-    source = <a provider supported by sits>,
-    collection = <a collection supported by the provider>,
-    tiles = <tiles in the collection reference system>,
-    roi = <region of interest>,
-    bands = <bands used for processing>,
-    start_date = <initial date for the interval>,
-    end_date = <final date for the interval>
-)
-```
+The `sits_cube()` function produces a tibble with metadata about the desired images. It has the information required for further processing, but does not contain the actual data. The attributes of individual image files can be assessed by listing the `file_info` column of the tibble. 
 
-The `sits_cube()` function produces a tibble with metadata about the images that satisfy the requirements stated in its parameters (spatiotemporal extent, resolution, and area of interest). It has the information required for further processing, but does not contain the actual data. In `sits`, the term "data cube" is used in a generic fashion, including both regular and irregular cubes. In what follows, we describe how to create data cubes using image collections in the various cloud services supported by `sits`. To find out which collections are supported by `sits`, use `sits_list_collections()`. 
 
 ## Assessing Amazon Web Services{-}
 
-In AWS (Amazon Web Services), there are two types of collections: *open-data* and *requester-pays*. Open data collections can be accessed worldwide without cost. Requester-pays collections require payment associated to an AWS account. Users with access to AWS EC2 virtual machines may select requester-pays collection for efficiency reasons, specially if their machines are in the same geographical region as the collection. Currently, `sits` supports collections "SENTINEL-S2-L2A" (requester-pays) and "SENTINEL-S2-L2A-COGS" (open-data). Both collections support all Sentinel-2/2A bands.  The bands in 10m resolution are "B02", "B03", "B04", and "B08". The  20m bands are "B05", "B06", "B07", B8A", "B8A", "B11", and "B12". Bands "B01" and "B09" are available at 60m resolution. 
-The example below shows how to access one tile of the "SENTINEL-S2-L2A-COGS" collection. Such access does not require AWS credentials, since the collection is open data. The `tiles` parameter allows selection of desired area, according to the MGRS reference system. 
+AWS holds are two kinds of collections: *open-data* and *requester-pays*. Open data collections can be accessed worldwide without cost. Requester-pays collections require payment associated to an AWS account. Currently, `sits` supports collections `SENTINEL-S2-L2A` (requester-pays) and `SENTINEL-S2-L2A-COGS` (open-data). Both collections support all Sentinel-2/2A bands.  The bands in 10m resolution are `B02`, `B03`, `B04`, and `B08`. The  20m bands are `B05`, `B06`, `B07`, `B8A`, `B11`, and `B12`. Bands `B01` and `B09` are available at 60m resolution. A `CLOUD` band is also available. The example below shows how to access one tile of the open data "SENTINEL-S2-L2A-COGS" collection.  The `tiles` parameter allows selection of desired area, according to the MGRS reference system. 
 
-```{r}
+```{r, tidy="styler"}
 # create a data cube covering an area in the Brazilian Amazon
 # Sentinel-2 images over the Rondonia region
 s2_20LKP_cube <- sits_cube(
-        source = "AWS",
-        collection = "SENTINEL-S2-L2A-COGS",
-        tiles = "20LKP",
-        start_date = "2018-07-12",
-        end_date = "2019-07-28",
-        bands = c("B04", "B08", "B11", "CLOUD")
+    source = "AWS",
+    collection = "SENTINEL-S2-L2A-COGS",
+    start_date = "2018-07-12",
+    end_date = "2019-07-28",
+    tiles = "20LKP",
+    bands = c("B04", "B08", "B11", "CLOUD")
 )
-# show part of the contents of the data cube tibble
-print(dplyr::select(s2_20LKP_cube, tile, xmin, xmax, ymin, ymax, file_info))
 ```
 
-The attributes of individual image files that are part of the data cube can be assessed by listing the `file_info` column of the tibble. This column contains a list that points to the file information tibble, which holds information on individual images, including date, band, resolution, bounding box, path and cloud cover. The `path` collumn contains the address of the file in the cloud server. As an example, the path `vsicurl/https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/20/L/KP/2018/7/S2A_20LKP_20180713_0_L2A/B04.tif` enables `sits` to access a file stored in AWS in the collection `sentinel-s2-l2a-cogs` that contains band 4 of tile `20LKP` of a Sentinel-2A image acquired in "2018-07-13" and reprocessed by ESA to the ARD format. 
 
-```{r}
-# show the first 3 images of the cube
-# show basic information about each image
-file_info <- s2_20LKP_cube$file_info[[1]]
-print(dplyr::select(file_info[1:3,], date, band, xres, nrows, ncols, cloud_cover))
-```
+## Assessing Microsoft's Planetary Computer{-}
 
-## Assessing Microsoft's Planetary Computing{-}
+Microsoft's Planetary Computer (MSPC) hosts two open data collections: `SENTINEL-2-L2A` and `LANDSAT-C2-L2`. The first collection contains SENTINEL-2/2A ARD images, with the same bands and resolutions as those available in AWS (see above). The example below shows how to access the `SENTINEL-2-L2A` collection. 
 
-Microsoft's Planetary Computing (MSPC) services hosts two open data collections: "SENTINEL-2-L2A" and "LANDSAT-8-C2-L2". The first collection contains SENTINEL-2/2A ARD images. The bands in 10m resolution are "B02", "B03", "B04", and "B08". The  20m bands are "B05", "B06", "B07", "B8A", "B11", and "B12". Bands "B01" and "B09" are available at 60m resolution. A cloud band is also included. The example below shows how to access one tile of the "SENTINEL-S2-L2A" collection. 
-
-```{r}
+```{r, tidy="styler",  out.width="60%", fig.align="center", fig.cap= "Sentinel-2 image in an area of the state of Rondonia, Brazil"}
 # create a data cube covering an area in the Brazilian Amazon
-# Sentinel-2 images over the Rondonia region
 s2_20LKP_cube_MSPC <- sits_cube(
-        source = "MSPC",
-        collection = "SENTINEL-2-L2A",
-        tiles = "20LKP",
-        start_date = "2019-07-01",
-        end_date = "2019-07-28",
-        bands = c("B05", "B8A", "B11", "CLOUD")
+      source = "MSPC",
+      collection = "SENTINEL-2-L2A",
+      tiles = "20LKP",
+      start_date = "2019-07-01",
+      end_date = "2019-07-28",
+      bands = c("B05", "B8A", "B11", "CLOUD")
 )
-# show the timeline of the cube
-sits_timeline(s2_20LKP_cube_MSPC)
+# plot a color composite of one date of the cube
+plot(s2_20LKP_cube_MSPC, red = "B11", blue = "B05", green = "B8A", 
+     date = "2019-07-18")
 ```
 
+The `LANDSAT-C2-L2` collection provides access to data from Landsat-4, 5, 7, 8, and 9 satellites. Images from these satellites have been intercalibrated to ensure data consistency. For compatibility between the different Landsat sensors, the band names are `BLUE`, `GREEN`, `RED`,  `NIR08`,  `SWIR16`, and `SWIR22`. All images have 30m resolution. For this collection,  tile search is not supported; the `roi` parameter should be used. The example shows how to retrieve data from a region of interest covering the city of Brasilia in Brazil. 
 
-```{r}
-# plot a colour composite of one date of the cube
-plot(s2_20LKP_cube_MSPC, red = "B11", blue = "B05", green = "B8A", date = "2019-07-18")
-```
-
-Access to Landsat-8 (collection-2, level-2) images is done in a similar fashion in MSPC. The  collection "LANDSAT-8-C2-L2" contains LANDSAT-8 ARD images with bands "B01", "B02", "B03",  "B04",  "B05", "B06", "B07" in 30m resolution. The selected tile is path 223, row 067 that covers part of the Brazilian Amazonia
-
-```{r}
-# create a data cube covering an area in the Brazilian Amazon
-# Sentinel-2 images over the Rondonia region
+```{r, tidy="styler", out.width="65%", fig.align="center", fig.cap= "Landsat-8 image in an area of the city of Brasilia, Brazil"}
+# Read a shapefile thar covers the city of Brasilia
+shp_file <- system.file("extdata/shapefiles/df_bsb/df_bsb.shp", 
+                        package = "sits")
+sf_bsb <- sf::read_sf(shp_file)
+# select the cube
 s2_L8_cube_MSPC <- sits_cube(
         source = "MSPC",
-        collection = "LANDSAT-8-C2-L2",
-        tiles = "223067",
+        collection = "LANDSAT-C2-L2",
+        roi = sf_bsb,
         start_date = "2019-06-01",
         end_date = "2019-10-01",
-        bands = c("B02", "B05", "B06", "CLOUD")
+        bands = c("BLUE", "NIR08", "SWIR16", "CLOUD")
 )
-# show the timeline of the cube
-sits_timeline(s2_L8_cube_MSPC)
+# Plot the second tile that covers Brasilia
+plot(s2_L8_cube_MSPC[2,], red = "SWIR16", green = "NIR08", blue = "BLUE", 
+     date = "2019-07-30")
 ```
 
-
-```{r}
-# plot a colour composite of one date of the cube
-plot(s2_L8_cube_MSPC, red = "B06", green = "B05", blue = "B02", date = "2019-07-28")
-```
 
 ## Assessing Digital Earth Africa{-}
 
-Digital Earth Africa (DEAFRICA) is a cloud service that provides open access Earth Observation data for the African continent. The ARD image collections available in `sits` are "S2_L2A" (Sentinel-2 level 2A) and LS8_SR ("LANDSAT-8/OLI"). There is a difference from the specification of data cubes using DEAFRICA data and those from other providers. The STAC interface for DEAFRICA does not implement the concept of tiles. Thus, users need to specify their area of interest using the `roi` parameter, either using a named vector ("lon_min", "lat_min", "lon_max", "lat_max") with values in WGS 84 or an `sf` object of type `POLYGON`.
-```{r}
-dea_cube <- sits_cube(source = "DEAFRICA",
-                  collection = "s2_l2a",
-                  bands = c("B05", "B8A", "B11"),
-                  roi = c(lon_min = 24.97,
-                          lat_min = -34.30,
-                          lon_max = 25.87,
-                          lat_max = -32.63),
-                  start_date = "2019-09-01",
-                  end_date = "2019-10-01"
+Digital Earth Africa (DEAFRICA) is a cloud service that provides open access Earth Observation data for the African continent. The ARD image collections available in `sits` are `S2_L2A` (Sentinel-2 level 2A) and `LS8_SR` (Landsat-8). Since the STAC interface for DEAFRICA does not implement the concept of tiles, users users need to specify their area of interest using the `roi` parameter. The requested `roi` produces a cube that contains three MGRS tiles ("35HLD", "35HKD", and "35HLC") covering part of South Africa. 
+```{r, tidy="styler", out.width="60%", fig.align="center", fig.cap="Sentinel-2 image in an area over South Africa"}
+dea_cube <- sits_cube(
+    source = "DEAFRICA",
+    collection = "S2_L2A",
+    bands = c("B05", "B8A", "B11"),
+    roi = c(lon_min = 24.97, lat_min = -34.30,
+            lon_max = 25.87, lat_max = -32.63),
+    start_date = "2019-09-01",
+    end_date = "2019-10-01"
 )
-# show the contents of the cube
-print(dplyr::select(dea_cube, tile, xmin, xmax, ymin, ymax))
-```
-In this case, the requested `roi` has resulted in a cube that contains three MGRS tiles ("35HLD", "35HKD", and "35HLC") covering part of South Africa. This data cube is not regular, as shown by executing `sits_timeline()`, where the result are three different timelines, one for each tile.
-
-```{r}
-# show the timeline of the cube
-sits_timeline(dea_cube)
-```
-Despite the fact the cube is not regular, we can visualize its contents using `plot()`.
-
-```{r}
+# plot tile 35HLC
 dea_cube %>% 
     dplyr::filter(tile == "35HLC") %>% 
     plot(red = "B11", blue = "B05", green = "B8A", date = "2019-09-07")
@@ -210,16 +154,16 @@ dea_cube %>%
 
 ## Assessing the Brazil Data Cube{-}
 
-The [Brazil Data Cube](http://brazildatacube.org/) (BDC) is being built by Brazil’s National Institute for Space Research (INPE). Its goal is to create regular multidimensional data cubes for Brazil. The BDC uses three hierarchical grids based on the Albers Equal Area projection and SIRGAS 2000 datum. The three grids are generated taking -54 $^\circ$ longitude as the central reference and defining tiles of $6\times4$, $3\times2$ and $1.5\times1$ degrees. The large grid is composed by tiles of $672\times440$ km^2^ and is used for CBERS-4 AWFI collections at 64 meter resolution; each CBERS-4 AWFI tile contains images of $10,504\times6,865$ pixels. The medium grid is used for Landsat-8 OLI collections at 30 meter resolution; tiles have an extension of $336\times220$ km^2^ and each image has $11,204\times7,324$ pixels. The small grid covers $168\times110$ km^2^ and is used for Sentinel-2 MSI collections at 10m resolutions; each image has $16,806\times10,986$ pixels. The data cubes in the BDC are regularly spaced in time and cloud-corrected. 
+The [Brazil Data Cube](http://brazildatacube.org/) (BDC) is built by Brazil’s National Institute for Space Research (INPE). The BDC uses three hierarchical grids based on the Albers Equal Area projection and SIRGAS 2000 datum. The three grids are generated taking -54$^\circ$ longitude as the central reference and defining tiles of $6\times4$, $3\times2$ and $1.5\times1$ degrees. The large grid is composed by tiles of $672\times440$ km^2^ and is used for CBERS-4 AWFI collections at 64 meter resolution; each CBERS-4 AWFI tile contains images of $10,504\times6,865$ pixels. The medium grid is used for Landsat-8 OLI collections at 30 meter resolution; tiles have an extension of $336\times220$ km^2^ and each image has $11,204\times7,324$ pixels. The small grid covers $168\times110$ km^2^ and is used for Sentinel-2 MSI collections at 10m resolutions; each image has $16,806\times10,986$ pixels. The data cubes in the BDC are regularly spaced in time and cloud-corrected. 
 
-```{r, echo = FALSE, out.width = "50%", out.height = "50%", fig.align="center", fig.cap="Hierarchical BDC tiling system showing overlayed on Brazilian Biomes (a), illustrating that one large tile (b) contains four medium tiles (c) and that medium tile contains four small tiles"}
+```{r, echo = FALSE, out.width="70%", fig.align="center", fig.cap="Hierarchical BDC tiling system showing overlayed on Brazilian Biomes (a), illustrating that one large tile (b) contains four medium tiles (c) and that medium tile contains four small tiles"}
 
 knitr::include_graphics("images/bdc_grid.png")
 ```
 
-The regular ARD image collections available in the BDC are: "LC8_30_16D_STK-1" (Landsat OLI, 30m resolution, 16-day intervals),  "S2-SEN2COR_10_16D_STK-1" (Sentinel-2 MSI images with all bands interpolated to 10 meter resolution, 16-day intervals), "CB4_64_16D_STK-1" (CBERS 4/4A AWFI, 64m resolution, 16 days intervals), "CB4_20_1M_STK-1" (CBERS 4/4A MUX, 20m resoluton, one month intervals) and "MOD13Q1-6" (MODIS MOD13SQ1 product, collection 6, 250m resolution, 16-day intervals). For more details, use `sits_list_collections(source = "BDC")`.
+The collections available in the BDC are: `LC8_30_16D_STK-1` (Landsat-8 OLI, 30m resolution, 16-day intervals),  `S2-SEN2COR_10_16D_STK-1` (Sentinel-2 MSI images at 10 meter resolution, 16-day intervals), `CB4_64_16D_STK-1` (CBERS 4/4A AWFI, 64m resolution, 16 days intervals), `CB4_20_1M_STK-1` (CBERS 4/4A MUX, 20m resolution, one month intervals) and `MOD13Q1-6` (MODIS MOD13SQ1 product, collection 6, 250m resolution, 16-day intervals). For more details, use `sits_list_collections(source = "BDC")`.
 
-To access the Brazil Data Cube, users need to provide their credentials using environmental variables, as shown below. Obtaining a BDC access key is free. Users only need to register at the [BDC site](https://brazildatacube.dpi.inpe.br/portal/explore) to obtain it. 
+To access the Brazil Data Cube, users need to provide their credentials using an environment variables, as shown below. Obtaining a BDC access key is free. Users need to register at the [BDC site](https://brazildatacube.dpi.inpe.br/portal/explore) to obtain the key.
 ```{r,eval = FALSE}
 Sys.setenv(
     "BDC_ACCESS_KEY" = <your_bdc_access_key>
@@ -228,7 +172,7 @@ Sys.setenv(
 
 In the example below, the data cube is defined as one tile ("022024") of "CB4_64_16D_STK-1" collection which holds CBERS AWFI images at 16 days resolution.
 
-```{r, eval = FALSE}
+```{r, tidy="styler", eval = FALSE}
 # define a tile from the CBERS-4/4A AWFI collection
 cbers_tile <- sits_cube(
     source = "BDC",
@@ -242,153 +186,102 @@ cbers_tile <- sits_cube(
 plot(cbers_tile, red = "B15", green = "B16", blue = "B13", date = "2018-09-30")
 ```
 
-```{r, echo = FALSE, out.width = "90%", out.height = "90%", fig.align="center", fig.cap="Plot of CBERS-4 image obtained from the BDC with a single tile covering an area of $6\times4$ degrees with $10,504\times6,865$ pixels in the Brazilian Cerrado."}
+```{r, echo = FALSE, out.width="70%", fig.align="center", fig.cap="Plot of CBERS-4 image obtained from the BDC with a single tile covering an area in the Brazilian Cerrado."}
 
 knitr::include_graphics("images/cbers_4_image_bdc.png")
 ```
 
-## Defining a data cube using files{-}
+## Defining a data cube using ARD local files{-}
 
-It is also possible to define data cubes using files that have been download from image collections and are available in a local  computer. These files are not associated to a STAC endpoint that describes them. For this reason, they need to be be organized and named according to a pre-established convention to allow SITS to create a data cube from them. All files associated to a data cube should be in the same directory and have the same spatial resolution and projection. Each file should contain a single image band for a single date. Each file name needs to include date and band. Information on the tile reference system should be provided. Users need to provide information about the original source from with the data was downloaded, to allow `sits` to retrieve information about image attribues such as band names, missing values, etc. When working with local cubes, the following parameters should be provided to the `sits_cube()` function:
+ARD images downloaded from cloud collections to a local computer are not associated to a STAC endpoint that describes them. They need to be be organized and named to allow `sits` to create a data cube from them. All local files should be in the same directory and have the same spatial resolution and projection. Each file should contain a single image band for a single date. Each file name needs to include tile, date and band information. Users need to provide information about the original data source to allow `sits` to retrieve information about image attributes such as band names, missing values, etc. When working with local cubes,  `sits_cube()` needs the following parameters: 
 
-1. `source`: name of the original data provider (possible values are "BDC" (Brazil Data Cube), "AWS" (Amazon Web Services), USGS (USGS Landsat), "MS-PC" (Microsoft Planetary Computer) or "DEAFRICA" (Digital Earth Africa)). 
-2 `collection`:  name of the collection from where the data was extracted. 
-3. `data_dir`: directory where images are located.
+1. `source`: name of the original data provider; either `BDC`, `AWS`, `USGS`, `MSPC` or `DEAFRICA`. 
+2. `collection`:  collection from where the data was extracted. 
+3. `data_dir`: local directory for images.
 4. `bands`: optional parameter to describe the bands to be retrieved.
-5. `parse_info`: information to parse the file names and extract the information on the tile, date and band associated with each individual file. It is assumed that file names contain image descriptors separated by a delimiter (usually "_"). For example, `CBERS-4_AWFI_022024_B13_2018-02-02.tif` and `SENTINEL-2_MSI_L20KP_20m_B08_2021_03_29.jp2` are valid file names for sits. The `parse_info` parameter is a list of strings indicating at which position the names of `tile`, `date` and `band` are to be found. In the two file names above, the parsing info is respectively `c("X1", "X2", "tile", band", "date")` and `c("X1", "X2", "tile", "X3", "band", "date")`;
+5. `parse_info`: information to parse the file names. File names need to contain information on tile, date and band, separated by a delimiter (usually "_").
 6. `delim`: separator character between descriptors in the file name (default is "_").
 
-The following example shows how to define a data cube based on local files available as part of the *sits* package.
+The example shows how to define a data cube based files available in the *sitsdata* package.  Considering the file name `CB4_64_16D_STK_022024_2018-08-29_2018-09-13_EVI.tif`, to retrieve information about the images, one needs to set the `parse_info` parameter to `c("X1", "X2", "X3", "X4", "tile", "date", "X5", "band")`. 
 
 ```{r}
 library(sits)
 # Create a cube based on a stack of CBERS data
 data_dir <- system.file("extdata/CBERS", package = "sitsdata")
-# list the first three files 
-list.files(data_dir)[1:2]
+# list the first file
+list.files(data_dir)[1]
 ```
-In this example, considering the file names, to retrieve information about the images, one needs to set the `parse_info` parameter to `c("X1", "X2", "X3", "X4", "tile", "date", "X5", "band")`. In this case, the first four parts of the file name are discarded, the fifth ("022024") represents the tile, the sixth ("2018-08-29") is the image acquisition date, and the seventh ("EVI" or "NDVI") stands for the image band. The following code creates a local cube.
 
-```{r}
-# files are named using the convention 
-# "CB4_64_16D_STK_022024_2018-08-29_2018-09-13_EVI.tif"
+```{r, tidy="styler", out.width="60%", fig.align="center", fig.cap="CBERS-4 NDVI in an area over Brazil"}
+# create a data cube from local files
 cbers_cube <- sits_cube(
-      source = "BDC",
-      collection = "CB4_64_16D_STK-1",
-      data_dir = data_dir,
-      delim = "_",
-      parse_info = c("X1", "X2", "X3", "X4", "tile", "date", "X5", "band")
+    source = "BDC",
+    collection = "CB4_64_16D_STK-1",
+    data_dir = data_dir,
+    parse_info = c("X1", "X2", "X3", "X4", "tile", "date", "X5", "band")
 )
-# show the timeline of the cube
-sits_timeline(cbers_cube)
-```
-
-```{r}
-# show the bands of the cube
-sits_bands(cbers_cube)
-```
-
-```{r}
 # plot the band NDVI in the first time instance
 plot(cbers_cube, band = "NDVI", date = "2018-08-29")
 ```
 
-It is also possible to create local cubes based on results that have been produced by classification or post-classification algorithms. In this case, there are more parameters that are required (see below) and the parameter `parse_info` is specified differently, as follows:
+## Defining a data cube using classified images{-}
 
-1. `source`:  name of the original data provider (possible values are "BDC" (Brazil Data Cube), "AWS" (Amazon Web Services), USGS (USGS Landsat), "MS-PC" (Microsoft Planetary Computer) or "DEAFRICA" (Digital Earth Africa)). 
+It is also possible to create local cubes based on results that have been produced by classification or post-classification algorithms. In this case, there are more parameters that are required and the parameter `parse_info` is specified differently, as follows:
+
+1. `source`:  name of the original data provider. 
 2. `collection`:  name of the collection from where the data was extracted. 
-3. `data_dir`: directory where the image data is located.
-4. `band`: Band name is associated to the type of result. Use `probs` for probability cubes produced by `sits_classify()`; `bayes`, `bilateral`, `gaussian` according to the function selected when using `sits_smooth()`; `entropy` when using `sits_uncertainty()`, `class` for cubes produced `sits_label_classification`.
-5.`labels`: Labels associated to the classification results. 
-6.`version`: The version of the result (default = "v1")
-7. `parse_info`: File name parsing information has to allow `sits` to deduce the values of "tile", "start_date", "end_date", "band" and "version" from the file name. Default is \code{c("X1", "X2", "tile", "start_date", "end_date", "band", "version"). Note that, unlike non-classified image files, cubes with results have both "start_date" and "end_date". 
+3. `data_dir`: local directory for the classified images.
+4. `band`: Band name is associated to the type of result. Use `probs` for probability cubes produced by `sits_classify()`; `bayes`, `bilateral`, `gaussian` according to the function selected when using `sits_smooth()`; `entropy` when using `sits_uncertainty()`, `class` for labelled cubes.
+5. `labels`: Labels associated to the classification results. 
+6. `version`: Version of the result (default = "v1").
+7. `parse_info`: File name parsing information to allow `sits` to deduce the values of "tile", "start_date", "end_date", "band" and "version" from the file name. Unlike non-classified image files, cubes produced by classification and post-classification have both "start_date" and "end_date". 
 
-The following code creates a results cube based on the classification of deforestation in Brazil, a study that is described in more detail in our "Case Studies" chapter.  This classified cube was obtained by a large data cube of Sentinel-2 images, covering the state of Rondonia, Brazil comprising 40 tiles, 10 spectral bands, and covering the period from 2020-06-01 to 2021-09-11. Samples of four classes were trained by a random forest classifier. 
+The following code creates a results cube based on the classification of deforestation in Brazil.  This classified cube was obtained by a large data cube of Sentinel-2 images, covering the state of Rondonia, Brazil comprising 40 tiles, 10 spectral bands, and covering the period from 2020-06-01 to 2021-09-11. Samples of four classes were trained by a random forest classifier. 
 
-```{r}
-library(sits)
-library(sitsdata)
-# Create a cube based on a stack of CBERS data
+```{r, tidy="styler", out.width="80%", fig.align="center", fig.cap="Classified data cube for year 2020/2021 in Rondonia, Brazil"}
+# Create a cube based on a classified image 
 data_dir <- system.file("extdata/Rondonia", package = "sitsdata")
-# list the first three files 
-list.files(data_dir)
-```
-The directory has four files. We are interested in building a data cube for the classification result. That is achieved by the code below.
-
-```{r}
-# files are named using the convention 
-# "SENTINEL-2_MSI_20LLP_2020-06-04_2021-08-26_class_v1.tif"
+# file is named "SENTINEL-2_MSI_20LLP_2020-06-04_2021-08-26_class_v1.tif" 
 Rondonia_class_cube <- sits_cube(
     source = "AWS",
     collection = "SENTINEL-S2-L2A-COGS",
     data_dir = data_dir,
     bands = "class",
-    labels = c("Burned_Area", "Cleared_Area", "Highly_Degraded", "Forest"),
-    delim = "_",
-    parse_info = c("X1", "X2", "tile", "start_date", "end_date", "band", "version")
+    labels = c("Burned_Area", "Cleared_Area", 
+               "Highly_Degraded", "Forest"),
+    parse_info = c("X1", "X2", "tile", "start_date", "end_date", 
+                   "band", "version")
 )
 # plot the classified cube
-plot(Rondonia_class_cube, legend = c("Burned_Area" = "firebrick4", 
-                                     "Cleared_Area" = "khaki3",
-                                     "Highly_Degraded" = "orange3",
-                                     "Forest" = "forestgreen"))
+plot(Rondonia_class_cube)
 ```
 
 ## Regularizing data cubes{-}
 
-Analysis-ready data (ARD) collections available in AWS, MSPC, USGS and DE Africa are not regular in space and time. Bands may have different resolutions, images may not cover the entire time, and time intervals are not regular. For this reason, subsets of these collection need to be converted to regular data cubes before further processing and data analysis. This is done in *sits* by the function `sits_regularize()`, which relies on the package *gdalcubes* [@Appel2019]. For details in gdalcubes, please see [https://github.com/appelmar/gdalcubes](https://github.com/appelmar/gdalcubes).
+Analysis-ready data (ARD) collections available in AWS, MSPC, USGS and DEAFRICA are not regular in space and time. Bands may have different resolutions, images may not cover the entire time, and time intervals are not regular. For this reason, subsets of these collection need to be converted to regular data cubes before further processing and data analysis. This is done in *sits* by the function `sits_regularize()`, which uses the package *gdalcubes* [@Appel2019]. In the following example, the user has created an irregular data cube from the Sentinel-2 collection available in Microsoft's Planetary Computer (MSPC) for tiles "20LKP and "20LLP" in the state of Rondonia, Brazil. As described earlier in this chapter, because of the way ARD image collections are built, some of the images have invalid pixels, as shown below.  We first build an irregular data cube using `sits_cube()`.
 
-In the following example, the user has created an irregular data cube from the Sentinel-2 collection available in Microsoft's Planetary Computer (MSPC) for tiles "20LKP and "20LLP" in the state of Rondonia, Brazil. As described earlier in this chapter, because of the way ARD image collections are built, some of the images have invalid pixels, as shown below.  We first build an irregular data cube using `sits_cube()`.
-
-```{r}
-# creating an irregular data cube in MSPC
+```{r, tidy="styler", out.width="60%", fig.align="center", fig.cap="Sentinel-2 tile 20LLP for date 2018-07-03"}
+# creating an irregular data cube from MSPC
 s2_cube <- sits_cube(
     source = "MSPC",
     collection = "SENTINEL-2-L2A",
     tiles = c("20LKP", "20LLP"),
     start_date = as.Date("2018-07-01"),
     end_date = as.Date("2018-08-31"),
-    bands = c("B11", "CLOUD")
+    bands = c("B05", "B8A", "B12", "CLOUD")
 )
-```
-Because of different acquisition orbits of the Sentinel-2 and Sentinel-2A satellites, the two tiles also have different timelines.
-
-
-After building the cube, we can plot the first image, which only covers part of the tile.
-
-```{r}
 # plot the first image of the irregular cube
 s2_cube %>% 
     dplyr::filter(tile == "20LLP") %>% 
-    plot(band = "B11", time = 1)
+    plot(red = "B12", green = "B8A", blue = "B05", date = "2018-07-03")
 ```
 
-```{r}
-# select tile "20LKP" of the irregular cube and show its timeline
-s2_cube %>% 
-    dplyr::filter(tile == "20LKP") %>% 
-    sits_timeline()
-```
+Because of different acquisition orbits of the Sentinel-2 and Sentinel-2A satellites, the two tiles also have different timelines. Tile "20LKP" has 12 instances and tile "20LLP" has 24 instances. The function  `sits_regularize()` builds a data cube with a regular timeline and with a best estimate of a valid pixel for each period. In this function, the `period` parameter controls the temporal interval between two images. Values of `period` use the ISO8601 time period specification, which defines time intervalsas "P[n]Y[n]M[n]D", where Y stands for "years", "M" for months and "D" for days. Thus, "P1M" stands for a one-month period, "P15D" for a fifteen-day period. When joining different images to get the best image for a period, `sits_regularize()` uses an aggregation method which organizes the images for the chosen interval in order of increasing cloud cover, and selects the first cloud-free pixel in the sequence. 
 
-Because of different acquisition orbits of the Sentinel-2 and Sentinel-2A satellites, the two tiles also have different timelines. Tile "20LKP" has 12 instances.
+\newpage
 
-
-Tile "20LLP" has 24 instances.
-```{r}
-# select tile "20LLP" of the irregular cube and show its timeline
-s2_cube %>% 
-    dplyr::filter(tile == "20LLP") %>% 
-    sits_timeline()
-```
-
-To transform irregular cubes into regular ones, the package provides the function 
-`sits_regularize()`. It builds a data cube with a regular timeline and with a best estimate of a valid pixel for each period. In this function, the `period` parameter controls the temporal interval between two images. Values should abide by the ISO8601 time period specification, which states that time interval should be defined as "P[n]Y[n]M[n]D", where Y stands for "years", "M" for months and "D" for days. Thus, "P1M" stands for a one-month period, "P15D" for a fifteen-day period. 
-
-When joining different images to get the best image for a period, `sits_regularize()` uses an aggregation method which organizes the images for the chosen interval in order of increasing cloud cover, and selects the first cloud-free pixel in the sequence. For more details, see `?sits_regularize()`.
-
-
-```{r, message=FALSE, results='hide'}
-# regularize the cube to one month intervals
+```{r, tidy="styler", message=FALSE, results='hide', out.width="60%", fig.align="center", fig.cap="Regularized image for tile Sentinel-2 tile 20LLP"}
+# regularize the cube to 15 day intervals
 reg_cube <- sits_regularize(
           cube       = s2_cube,
           output_dir = "./tempdir/chp4",
@@ -397,29 +290,29 @@ reg_cube <- sits_regularize(
           multicores = 4,
           memsize    = 16
 )
-```
-
-The pixels of the regular data cube cover the full MGRS tile, as shown below.
-
-```{r}
-# plot the first image of the irregular cube
+# plot the first image of the tile 20LLP of the regularized cube
+# The pixels of the regular data cube cover the full MGRS tile
 reg_cube %>% 
     dplyr::filter(tile == "20LLP") %>% 
-    plot(band = "B11", time = 1)
+    plot(red = "B12", green = "B8A", blue = "B05")
 ```
 
-All pixels of the regular data cube have the same timeline.
-```{r}
-# select tile "20LKP" of the irregular cube and show its timeline
-reg_cube %>% 
-    dplyr::filter(tile == "20LKP") %>% 
-    sits_timeline()
-```
-```{r}
-# select tile "20LLP" of the irregular cube and show its timeline
-reg_cube %>% 
-    dplyr::filter(tile == "20LLP") %>% 
-    sits_timeline()
+After obtaining a regular data cube, users can perform data analysis and classification operations, as shown what follows and in the next chapter.
+
+## Mathematical operations on regular data cubes{-}
+
+Many analysis operations on remote sensing require operations on one or multiple bands. These operations include thresholding, decision trees, and band ratios. Given a regular data cube, these operations can be performed using `sits_apply()`. Users specify the mathematical operation as function of the bands available on the cube. The function then performs the operation for all tiles and all temporal intervals. The flexibility of `sits_apply()` allows users to perform different types of mathematical operations in data cubes in a simple and efficient fashion.  The example below shows the computation of the normalized burn ratio (NBR) as the difference between the near infrared and the short wave infrared band, here calculated using the `B8A` and `B12` bands.
+
+```{r, tidy="styler", out.width="60%", fig.align="center", fig.cap="NBR ratio for a regular data cube built using Sentinel-2 tiles and 20LKP and 20LLP"}
+# calculate the normalized burn ratio 
+reg_cube_NBR <- sits_apply(reg_cube,
+    NBR = (B8A - B12)/(B8A + B12),
+    output_dir = "./tempdir/chp4",
+    multicores = 4,
+    memsize = 12
+)
+# plot the NBR for the first date
+plot(reg_cube_NBR, band = "NBR")
 ```
 
-We recommend that all data analysis using `sits` is done using regular data cubes. Therefore, after selecting an ARD image collection from a cloud service with `sits_cube()`, users should use the `sits_regularize()` function. The case of the Brazil Data Cube is an exception, since collections in the BDC recognised by SITS are regular. 
+

@@ -2,21 +2,19 @@ set.seed(123)
 
 knitr::opts_chunk$set(
     comment = "#>",
+    tidy = "styler",
     echo = TRUE,
     cache = TRUE,
     warnings = FALSE,
     message = FALSE,
-    fig.retina = 0.8, # figures are either vectors or 300 dpi diagrams
     dpi = 300,
-    out.width = "70%",
-    fig.width = 6,
-    fig.align = 'center',
-    fig.asp = 0.618,  # 1 / phi
     fig.show = "hold"
 )
 # create a temporary working directory for each chapter
 
 # load essentials packages
+library(sits)
+library(sitsdata)
 library(tibble)
 library(dtwclust)
 library(magrittr)
@@ -34,7 +32,7 @@ show_table <- function(tb) {
 if (!knitr:::is_html_output())
 {
     options("width" = 56)
-    knitr::opts_chunk$set(tidy.opts = list(width.cutoff = 56, indent = 2), 
+    knitr::opts_chunk$set(tidy.opts = list(width.cutoff = 60, indent = 4), 
                           tidy = TRUE)
 }
     
