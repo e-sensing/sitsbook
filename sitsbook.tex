@@ -35,6 +35,18 @@
   \KOMAoptions{parskip=half}}
 \makeatother
 \usepackage{xcolor}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\hypersetup{
+  pdftitle={sits: Data Analysis and Machine Learning on Earth Observation Data Cubes with Satellite Image Time Series},
+  pdfauthor={Gilberto Camara; Rolf Simoes; Felipe Souza; Alber Sanchez; Lorena Santos; Charlotte Peletier; Pedro R. Andrade; Karine Ferreira; Gilberto Queiroz},
+  colorlinks=true,
+  linkcolor={Maroon},
+  filecolor={Maroon},
+  citecolor={Blue},
+  urlcolor={Blue},
+  pdfcreator={LaTeX via pandoc}}
+\urlstyle{same} % disable monospaced font for URLs
 \usepackage{listings}
 \newcommand{\passthrough}[1]{#1}
 \lstset{defaultdialect=[5.3]Lua}
@@ -189,25 +201,13 @@
 \ifLuaTeX
   \usepackage{selnolig}  % disable illegal ligatures
 \fi
-\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
-\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
-\urlstyle{same} % disable monospaced font for URLs
-\hypersetup{
-  pdftitle={sits: Data Analysis and Machine Learning on Earth Observation Data Cubes with Satellite Image Time Series},
-  pdfauthor={Gilberto Camara; Rolf Simoes; Felipe Souza; Alber Sanchez; Lorena Santos; Charlotte Peletier; Pedro R. Andrade; Karine Ferreira; Gilberto Queiroz},
-  colorlinks=true,
-  linkcolor={Maroon},
-  filecolor={Maroon},
-  citecolor={Blue},
-  urlcolor={Blue},
-  pdfcreator={LaTeX via pandoc}}
 
 \title{\textbf{sits}: Data Analysis and Machine Learning on Earth
 Observation Data Cubes with Satellite Image Time Series}
 \author{Gilberto Camara \and Rolf Simoes \and Felipe Souza \and Alber
 Sanchez \and Lorena Santos \and Charlotte Peletier \and Pedro R.
 Andrade \and Karine Ferreira \and Gilberto Queiroz}
-\date{2022-06-19}
+\date{2022-06-27}
 
 \begin{document}
 \maketitle
@@ -296,13 +296,13 @@ more information on topics you are interested in.
 \begin{longtable}[]{@{}
   >{\raggedright\arraybackslash}p{(\columnwidth - 2\tabcolsep) * \real{0.1220}}
   >{\raggedright\arraybackslash}p{(\columnwidth - 2\tabcolsep) * \real{0.8780}}@{}}
-\toprule()
+\toprule
 \begin{minipage}[b]{\linewidth}\raggedright
 \textbf{Chapter}
 \end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
 \textbf{Description}
 \end{minipage} \\
-\midrule()
+\midrule
 \endhead
 \href{https://e-sensing.github.io/sitsbook/introduction.html}{Chr 1} &
 Provides an overview of \textbf{sits}. \\
@@ -324,7 +324,7 @@ based on the machine learning probabilities. \\
 Presents case studies of LUCC classification. \\
 \href{https://e-sensing.github.io/sitsbook/extensibility-guide.html}{Chr
 9} & How to develop extensions to \textbf{sits}. \\
-\bottomrule()
+\bottomrule
 \end{longtable}
 
 \hypertarget{main-reference-for-sits}{%
@@ -377,15 +377,24 @@ repositories; you can install them with:
 apt-get -y update && apt-get install -y  libudunits2-dev libgdal-dev libgeos-dev libproj-dev
 \end{lstlisting}
 
-To get more up-to-date versions of dependencies such as GDAL, we
-recommend adding the ubuntugis-unstable PPA to the package repositories
-and installing them as follows:
+Access to the Swiss Data Cube requires gdal 3.4 (see the instructions
+below). Note that gdal running in \passthrough{\lstinline!docker!}
+containers requires the security flag
+\passthrough{\lstinline!--security-opt seccomp=unconfined!} on start.
+
+To get more recent versions of libraries such as gdal (3.4 or higher),
+we recommend using the repository ubuntugis-unstable PPA, which could be
+added as follows:
 
 \begin{lstlisting}[language=sh]
 sudo add-apt-repository ppa:ubuntugis/ubuntugis-unstable
 sudo apt-get update
 sudo apt-get install libudunits2-dev libgdal-dev libgeos-dev libproj-dev 
 \end{lstlisting}
+
+If you get an error while adding this PPA repository, it could be
+because you miss the package
+\passthrough{\lstinline!software-properties-common!}.
 
 Adding this PPA is required for installing \passthrough{\lstinline!sf!}
 on older versions of Ubuntu (e.g.~Xenial).
@@ -775,11 +784,11 @@ plot(sinop,
 
 \begin{figure}
 
-{\centering \includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-13-1} 
+{\centering \includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-6-1} 
 
 }
 
-\caption{Color composite image for 2013-09-14}\label{fig:unnamed-chunk-13}
+\caption{Color composite image for 2013-09-14}\label{fig:unnamed-chunk-6}
 \end{figure}
 
 The R object returned by \passthrough{\lstinline!sits\_cube()!} contains
@@ -790,7 +799,8 @@ refers to one band of an image at one of the temporal instances of the
 cube.
 
 \begin{lstlisting}[language=R]
-# show the contents of the R object that describes the data cube for the Sinop region
+# show the contents of the R object that describes the data
+# cube for the Sinop region
 sinop
 \end{lstlisting}
 
@@ -815,10 +825,11 @@ and ``EVI''). This data set is available in package
 \passthrough{\lstinline!sitsdata!}.
 
 \begin{lstlisting}[language=R]
-# load the MODIS samples for Mato Grosso from the "sitsdata" package
+# load the MODIS samples for Mato Grosso from the
+# 'sitsdata' package
 library(sitsdata)
 data("samples_matogrosso_mod13q1", package = "sitsdata")
-samples_matogrosso_mod13q1[1:3,]
+samples_matogrosso_mod13q1[1:3, ]
 \end{lstlisting}
 
 \begin{lstlisting}
@@ -861,11 +872,11 @@ plot(samples_forest_ndvi)
 
 \begin{figure}
 
-{\centering \includegraphics{sitsbook_files/figure-latex/unnamed-chunk-16-1} 
+{\centering \includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-9-1} 
 
 }
 
-\caption{Joint plot of all samples in band NDVI for class Forest}\label{fig:unnamed-chunk-16}
+\caption{Joint plot of all samples in band NDVI for class Forest}\label{fig:unnamed-chunk-9}
 \end{figure}
 
 \hypertarget{training-a-machine-learning-model}{%
@@ -909,11 +920,11 @@ plot(rf_model)
 
 \begin{figure}
 
-{\centering \includegraphics{sitsbook_files/figure-latex/unnamed-chunk-17-1} 
+{\centering \includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-10-1} 
 
 }
 
-\caption{Most relevant variables of random forest model}\label{fig:unnamed-chunk-17}
+\caption{Most relevant variables of random forest model}\label{fig:unnamed-chunk-10}
 \end{figure}
 
 \hypertarget{data-cube-classification}{%
@@ -950,11 +961,11 @@ plot(sinop_probs, labels = c("Forest"))
 
 \begin{figure}
 
-{\centering \includegraphics{sitsbook_files/figure-latex/unnamed-chunk-18-1} 
+{\centering \includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-11-1} 
 
 }
 
-\caption{Probability map for class forest}\label{fig:unnamed-chunk-18}
+\caption{Probability map for class forest}\label{fig:unnamed-chunk-11}
 \end{figure}
 
 After classification has been completed, we plot the probability maps
@@ -989,11 +1000,11 @@ plot(sinop_bayes, labels = c("Forest"))
 
 \begin{figure}
 
-{\centering \includegraphics{sitsbook_files/figure-latex/unnamed-chunk-19-1} 
+{\centering \includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-12-1} 
 
 }
 
-\caption{Smoothed probability map for class Forest}\label{fig:unnamed-chunk-19}
+\caption{Smoothed probability map for class Forest}\label{fig:unnamed-chunk-12}
 \end{figure}
 
 \hypertarget{labelling-a-probability-data-cube}{%
@@ -1018,11 +1029,11 @@ plot(sinop_map, title = "Sinop Classification Map")
 
 \begin{figure}
 
-{\centering \includegraphics{sitsbook_files/figure-latex/unnamed-chunk-20-1} 
+{\centering \includegraphics[width=0.8\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-13-1} 
 
 }
 
-\caption{Classification map for Sinop}\label{fig:unnamed-chunk-20}
+\caption{Classification map for Sinop}\label{fig:unnamed-chunk-13}
 \end{figure}
 
 In the above example, the color legend is taken for the predefined color
@@ -1183,11 +1194,14 @@ the following ARD image collections:
   Digital Earth Africa (DEA): Open data collections of Sentinel-2/2A and
   Landsat-8 for Africa.
 \item
-  Microsoft Planetary Computer (MSPC): Open data collections of
+  Microsoft Planetary Computer (MPC): Open data collections of
   Sentinel-2/2A and Landsat-4//5/7/8/9 for the Earth's land areas.
 \item
   USGS: Landsat-4/5/7/8/9 collections available in AWS, which require
   payment to access.
+\item
+  Swiss Data Cube (SDC): Open data collection of Sentinel-2/2A and
+  Landsat-8 images for Switzerland.
 \end{enumerate}
 
 \hypertarget{regular-image-data-cubes}{%
@@ -1345,16 +1359,12 @@ s2_20LKP_cube <- sits_cube(
 )
 \end{lstlisting}
 
-\begin{lstlisting}
-#>   |                                                      |                                              |   0%  |                                                      |==============================================| 100%
-\end{lstlisting}
-
 \hypertarget{assessing-microsofts-planetary-computer}{%
 \section*{Assessing Microsoft's Planetary
 Computer}\label{assessing-microsofts-planetary-computer}}
 \addcontentsline{toc}{section}{Assessing Microsoft's Planetary Computer}
 
-Microsoft's Planetary Computer (MSPC) hosts two open data collections:
+Microsoft's Planetary Computer (MPC) hosts two open data collections:
 \passthrough{\lstinline!SENTINEL-2-L2A!} and
 \passthrough{\lstinline!LANDSAT-C2-L2!}. The first collection contains
 SENTINEL-2/2A ARD images, with the same bands and resolutions as those
@@ -1363,33 +1373,26 @@ available in AWS (see above). The example below shows how to access the
 
 \begin{lstlisting}[language=R]
 # create a data cube covering an area in the Brazilian Amazon
-s2_20LKP_cube_MSPC <- sits_cube(
-      source = "MSPC",
+s2_20LKP_cube_MPC <- sits_cube(
+      source = "MPC",
       collection = "SENTINEL-2-L2A",
       tiles = "20LKP",
       start_date = "2019-07-01",
       end_date = "2019-07-28",
       bands = c("B05", "B8A", "B11", "CLOUD")
 )
-\end{lstlisting}
-
-\begin{lstlisting}
-#>   |                                                      |                                              |   0%  |                                                      |==============================================| 100%
-\end{lstlisting}
-
-\begin{lstlisting}[language=R]
 # plot a color composite of one date of the cube
-plot(s2_20LKP_cube_MSPC, red = "B11", blue = "B05", green = "B8A", 
+plot(s2_20LKP_cube_MPC, red = "B11", blue = "B05", green = "B8A", 
      date = "2019-07-18")
 \end{lstlisting}
 
 \begin{figure}
 
-{\centering \includegraphics[width=0.6\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-25-1} 
+{\centering \includegraphics[width=0.6\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-18-1} 
 
 }
 
-\caption{Sentinel-2 image in an area of the state of Rondonia, Brazil}\label{fig:unnamed-chunk-25}
+\caption{Sentinel-2 image in an area of the state of Rondonia, Brazil}\label{fig:unnamed-chunk-18}
 \end{figure}
 
 The \passthrough{\lstinline!LANDSAT-C2-L2!} collection provides access
@@ -1410,33 +1413,26 @@ shp_file <- system.file("extdata/shapefiles/df_bsb/df_bsb.shp",
                         package = "sits")
 sf_bsb <- sf::read_sf(shp_file)
 # select the cube
-s2_L8_cube_MSPC <- sits_cube(
-        source = "MSPC",
+s2_L8_cube_MPC <- sits_cube(
+        source = "MPC",
         collection = "LANDSAT-C2-L2",
         roi = sf_bsb,
         start_date = "2019-06-01",
         end_date = "2019-10-01",
         bands = c("BLUE", "NIR08", "SWIR16", "CLOUD")
 )
-\end{lstlisting}
-
-\begin{lstlisting}
-#>   |                                                      |                                              |   0%  |                                                      |==                                            |   4%  |                                                      |===                                           |   7%  |                                                      |=====                                         |  11%  |                                                      |=======                                       |  15%  |                                                      |=========                                     |  19%  |                                                      |==========                                    |  22%  |                                                      |============                                  |  26%  |                                                      |==============                                |  30%  |                                                      |===============                               |  33%  |                                                      |=================                             |  37%  |                                                      |===================                           |  41%  |                                                      |====================                          |  44%  |                                                      |======================                        |  48%  |                                                      |========================                      |  52%  |                                                      |==========================                    |  56%  |                                                      |===========================                   |  59%  |                                                      |=============================                 |  63%  |                                                      |===============================               |  67%  |                                                      |================================              |  70%  |                                                      |==================================            |  74%  |                                                      |====================================          |  78%  |                                                      |=====================================         |  81%  |                                                      |=======================================       |  85%  |                                                      |=========================================     |  89%  |                                                      |===========================================   |  93%  |                                                      |============================================  |  96%  |                                                      |==============================================| 100%
-\end{lstlisting}
-
-\begin{lstlisting}[language=R]
 # Plot the second tile that covers Brasilia
-plot(s2_L8_cube_MSPC[2,], red = "SWIR16", green = "NIR08", blue = "BLUE", 
+plot(s2_L8_cube_MPC[2,], red = "SWIR16", green = "NIR08", blue = "BLUE", 
      date = "2019-07-30")
 \end{lstlisting}
 
 \begin{figure}
 
-{\centering \includegraphics[width=0.65\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-26-1} 
+{\centering \includegraphics[width=0.65\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-19-1} 
 
 }
 
-\caption{Landsat-8 image in an area of the city of Brasilia, Brazil}\label{fig:unnamed-chunk-26}
+\caption{Landsat-8 image in an area of the city of Brasilia, Brazil}\label{fig:unnamed-chunk-19}
 \end{figure}
 
 \hypertarget{assessing-digital-earth-africa}{%
@@ -1466,14 +1462,6 @@ dea_cube <- sits_cube(
     start_date = "2019-09-01",
     end_date = "2019-10-01"
 )
-\end{lstlisting}
-
-\begin{lstlisting}
-#>   |                                                      |==============================================| 100%
-#>   |                                                      |                                              |   0%  |                                                      |===============                               |  33%  |                                                      |===============================               |  67%  |                                                      |==============================================| 100%
-\end{lstlisting}
-
-\begin{lstlisting}[language=R]
 # plot tile 35HLC
 dea_cube %>% 
     dplyr::filter(tile == "35HLC") %>% 
@@ -1482,11 +1470,11 @@ dea_cube %>%
 
 \begin{figure}
 
-{\centering \includegraphics[width=0.6\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-27-1} 
+{\centering \includegraphics[width=0.6\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-20-1} 
 
 }
 
-\caption{Sentinel-2 image in an area over South Africa}\label{fig:unnamed-chunk-27}
+\caption{Sentinel-2 image in an area over South Africa}\label{fig:unnamed-chunk-20}
 \end{figure}
 
 \hypertarget{assessing-the-brazil-data-cube}{%
@@ -1516,7 +1504,7 @@ cubes in the BDC are regularly spaced in time and cloud-corrected.
 
 }
 
-\caption{Hierarchical BDC tiling system showing overlayed on Brazilian Biomes (a), illustrating that one large tile (b) contains four medium tiles (c) and that medium tile contains four small tiles}\label{fig:unnamed-chunk-28}
+\caption{Hierarchical BDC tiling system showing overlayed on Brazilian Biomes (a), illustrating that one large tile (b) contains four medium tiles (c) and that medium tile contains four small tiles}\label{fig:unnamed-chunk-21}
 \end{figure}
 
 The collections available in the BDC are:
@@ -1568,7 +1556,7 @@ plot(cbers_tile, red = "B15", green = "B16", blue = "B13", date = "2018-09-30")
 
 }
 
-\caption{Plot of CBERS-4 image obtained from the BDC with a single tile covering an area in the Brazilian Cerrado.}\label{fig:unnamed-chunk-31}
+\caption{Plot of CBERS-4 image obtained from the BDC with a single tile covering an area in the Brazilian Cerrado.}\label{fig:unnamed-chunk-24}
 \end{figure}
 
 \hypertarget{defining-a-data-cube-using-ard-local-files}{%
@@ -1648,11 +1636,11 @@ plot(cbers_cube, band = "NDVI", date = "2018-08-29")
 
 \begin{figure}
 
-{\centering \includegraphics[width=0.6\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-33-1} 
+{\centering \includegraphics[width=0.6\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-26-1} 
 
 }
 
-\caption{CBERS-4 NDVI in an area over Brazil}\label{fig:unnamed-chunk-33}
+\caption{CBERS-4 NDVI in an area over Brazil}\label{fig:unnamed-chunk-26}
 \end{figure}
 
 \hypertarget{defining-a-data-cube-using-classified-images}{%
@@ -1732,11 +1720,11 @@ plot(Rondonia_class_cube)
 
 \begin{figure}
 
-{\centering \includegraphics[width=0.8\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-34-1} 
+{\centering \includegraphics[width=0.8\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-27-1} 
 
 }
 
-\caption{Classified data cube for year 2020/2021 in Rondonia, Brazil}\label{fig:unnamed-chunk-34}
+\caption{Classified data cube for year 2020/2021 in Rondonia, Brazil}\label{fig:unnamed-chunk-27}
 \end{figure}
 
 \hypertarget{regularizing-data-cubes}{%
@@ -1763,20 +1751,13 @@ below. We first build an irregular data cube using
 \begin{lstlisting}[language=R]
 # creating an irregular data cube from MSPC
 s2_cube <- sits_cube(
-    source = "MSPC",
+    source = "MPC",
     collection = "SENTINEL-2-L2A",
     tiles = c("20LKP", "20LLP"),
     start_date = as.Date("2018-07-01"),
     end_date = as.Date("2018-08-31"),
     bands = c("B05", "B8A", "B12", "CLOUD")
 )
-\end{lstlisting}
-
-\begin{lstlisting}
-#>   |                                                      |                                              |   0%  |                                                      |=======================                       |  50%  |                                                      |==============================================| 100%
-\end{lstlisting}
-
-\begin{lstlisting}[language=R]
 # plot the first image of the irregular cube
 s2_cube %>% 
     dplyr::filter(tile == "20LLP") %>% 
@@ -1785,11 +1766,11 @@ s2_cube %>%
 
 \begin{figure}
 
-{\centering \includegraphics[width=0.6\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-35-1} 
+{\centering \includegraphics[width=0.6\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-28-1} 
 
 }
 
-\caption{Sentinel-2 tile 20LLP for date 2018-07-03}\label{fig:unnamed-chunk-35}
+\caption{Sentinel-2 tile 20LLP for date 2018-07-03}\label{fig:unnamed-chunk-28}
 \end{figure}
 
 Because of different acquisition orbits of the Sentinel-2 and
@@ -1832,11 +1813,11 @@ reg_cube %>%
 
 \begin{figure}
 
-{\centering \includegraphics[width=0.6\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-36-1} 
+{\centering \includegraphics[width=0.6\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-29-1} 
 
 }
 
-\caption{Regularized image for tile Sentinel-2 tile 20LLP}\label{fig:unnamed-chunk-36}
+\caption{Regularized image for tile Sentinel-2 tile 20LLP}\label{fig:unnamed-chunk-29}
 \end{figure}
 
 After obtaining a regular data cube, users can perform data analysis and
@@ -1877,11 +1858,11 @@ plot(reg_cube_NBR, band = "NBR")
 
 \begin{figure}
 
-{\centering \includegraphics[width=0.6\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-37-1} 
+{\centering \includegraphics[width=0.6\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-30-1} 
 
 }
 
-\caption{NBR ratio for a regular data cube built using Sentinel-2 tiles and 20LKP and 20LLP}\label{fig:unnamed-chunk-37}
+\caption{NBR ratio for a regular data cube built using Sentinel-2 tiles and 20LKP and 20LLP}\label{fig:unnamed-chunk-30}
 \end{figure}
 
 \hypertarget{working-with-time-series}{%
@@ -1921,7 +1902,7 @@ includes samples of nine classes: ``Forest'', ``Cerrado'', ``Pasture'',
 \begin{lstlisting}[language=R]
 # data set of samples
 data("samples_matogrosso_mod13q1")
-samples_matogrosso_mod13q1[1:3,]
+samples_matogrosso_mod13q1[1:3, ]
 \end{lstlisting}
 
 \begin{lstlisting}
@@ -2021,7 +2002,7 @@ periods. For this reason, these samples are plotted together.
 
 \begin{lstlisting}[language=R]
 # plot the first 12 samples
-plot(samples_cerrado[1:12,])
+plot(samples_cerrado[1:12, ])
 \end{lstlisting}
 
 \begin{figure}
@@ -2051,11 +2032,11 @@ plot(samples_cerrado)
 
 \begin{figure}
 
-{\centering \includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-42-1} 
+{\centering \includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-35-1} 
 
 }
 
-\caption{Plot of all Cerrado samples }\label{fig:unnamed-chunk-42}
+\caption{Plot of all Cerrado samples }\label{fig:unnamed-chunk-35}
 \end{figure}
 
 \hypertarget{obtaining-time-series-data-from-data-cubes}{%
@@ -2118,11 +2099,11 @@ plot(series)
 
 \begin{figure}
 
-{\centering \includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-43-1} 
+{\centering \includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-36-1} 
 
 }
 
-\caption{NDVI and EVI time series fetched from local raster cube.}\label{fig:unnamed-chunk-43}
+\caption{NDVI and EVI time series fetched from local raster cube.}\label{fig:unnamed-chunk-36}
 \end{figure}
 
 A useful case is when a set of labelled samples are available to be used
@@ -2301,16 +2282,17 @@ point_ndvi <- sits_select(point_mt_6bands, band = "NDVI")
 # apply Savitzky Golay filter
 point_sg <- sits_sgolay(point_ndvi, length = 11)
 # merge the point and plot the series
-sits_merge(point_sg, point_ndvi) %>% plot()
+sits_merge(point_sg, point_ndvi) %>%
+    plot()
 \end{lstlisting}
 
 \begin{figure}
 
-{\centering \includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-48-1} 
+{\centering \includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-41-1} 
 
 }
 
-\caption{Savitzky-Golay filter applied on a multi-year NDVI time series.}\label{fig:unnamed-chunk-48}
+\caption{Savitzky-Golay filter applied on a multi-year NDVI time series.}\label{fig:unnamed-chunk-41}
 \end{figure}
 
 Notice that the resulting smoothed curve has both desirable and unwanted
@@ -2346,16 +2328,17 @@ point_ndvi <- sits_select(point_mt_6bands, band = "NDVI")
 # apply Whitakker filter
 point_whit <- sits_whittaker(point_ndvi, lambda = 8)
 # merge the point and plot the series
-sits_merge(point_whit, point_ndvi) %>% plot()
+sits_merge(point_whit, point_ndvi) %>%
+    plot()
 \end{lstlisting}
 
 \begin{figure}
 
-{\centering \includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-49-1} 
+{\centering \includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-42-1} 
 
 }
 
-\caption{Whittaker filter applied on a one-year NDVI time series.}\label{fig:unnamed-chunk-49}
+\caption{Whittaker filter applied on a one-year NDVI time series.}\label{fig:unnamed-chunk-42}
 \end{figure}
 
 In the same way as what is observed in the Savitsky-Golay filter, high
@@ -2536,7 +2519,8 @@ minority samples, as shown below.
 \begin{lstlisting}[language=R]
 # remove cluster 3 from the samples
 clusters_new <- dplyr::filter(clusters, cluster != 3)
-# clear clusters, leaving only the majority class in each cluster
+# clear clusters, leaving only the majority class in each
+# cluster
 clean <- sits_cluster_clean(clusters_new)
 # show clusters samples frequency
 sits_cluster_frequency(clean)
@@ -2579,7 +2563,7 @@ to the input, called the best matching unit.
 
 }
 
-\caption{SOM 2D map creation (source: Santos et al.(2021)}\label{fig:unnamed-chunk-53}
+\caption{SOM 2D map creation (source: Santos et al.(2021)}\label{fig:unnamed-chunk-46}
 \end{figure}
 
 The input data for quality assessment is a set of training samples,
@@ -2604,7 +2588,7 @@ reference paper \protect\hyperlink{ref-Santos2021a}{{[}18{]}}.
 
 }
 
-\caption{Using SOM for class noise reduction (source: Santos et al.(2021)}\label{fig:unnamed-chunk-54}
+\caption{Using SOM for class noise reduction (source: Santos et al.(2021)}\label{fig:unnamed-chunk-47}
 \end{figure}
 
 As an example, we take a time series dataset from the Cerrado region of
@@ -2700,7 +2684,7 @@ plot(som_cluster)
 
 \begin{figure}
 \centering
-\includegraphics{sitsbook_files/figure-latex/unnamed-chunk-57-1.pdf}
+\includegraphics{sitsbook_files/figure-latex/unnamed-chunk-50-1.pdf}
 \caption{SOM map for the Cerrado samples}
 \end{figure}
 
@@ -2731,7 +2715,7 @@ been mapped to a neuron whose majority is that label. \newpage
 # produce a tibble with a summary of the mixed labels
 som_eval <- sits_som_evaluate_cluster(som_cluster)
 # show the result
-som_eval 
+som_eval
 \end{lstlisting}
 
 \begin{lstlisting}
@@ -2780,11 +2764,11 @@ plot(som_eval)
 
 \begin{figure}
 
-{\centering \includegraphics[width=0.9\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-59-1} 
+{\centering \includegraphics[width=0.9\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-52-1} 
 
 }
 
-\caption{Confusion between classes as measured by SOM.}\label{fig:unnamed-chunk-59}
+\caption{Confusion between classes as measured by SOM.}\label{fig:unnamed-chunk-52}
 \end{figure}
 
 \hypertarget{som-based-quality-assessment-part-3-using-probabilities-to-detect-noisy-samples}{%
@@ -2936,11 +2920,11 @@ plot(new_cluster_mixture)
 
 \begin{figure}
 
-{\centering \includegraphics[width=0.9\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-62-1} 
+{\centering \includegraphics[width=0.9\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-55-1} 
 
 }
 
-\caption{Cluster confusion plot for samples cleaned by SOM}\label{fig:unnamed-chunk-62}
+\caption{Cluster confusion plot for samples cleaned by SOM}\label{fig:unnamed-chunk-55}
 \end{figure}
 
 A further comparison between the original and clean samples is to run a
@@ -2967,9 +2951,9 @@ sits_accuracy_summary(assess_orig)
 
 \begin{lstlisting}
 #> Overall Statistics                            
-#>  Accuracy : 0.9458          
-#>    95% CI : (0.9438, 0.9478)
-#>     Kappa : 0.9368
+#>  Accuracy : 0.9455          
+#>    95% CI : (0.9435, 0.9475)
+#>     Kappa : 0.9365
 \end{lstlisting}
 
 \begin{lstlisting}[language=R]
@@ -2984,9 +2968,9 @@ sits_accuracy_summary(assess_new)
 
 \begin{lstlisting}
 #> Overall Statistics                            
-#>  Accuracy : 0.9906          
-#>    95% CI : (0.9896, 0.9916)
-#>     Kappa : 0.989
+#>  Accuracy : 0.9908          
+#>    95% CI : (0.9898, 0.9917)
+#>     Kappa : 0.9892
 \end{lstlisting}
 
 The SOM-based analysis discards samples which can be confused with
@@ -3084,18 +3068,18 @@ sits_labels_summary(balanced_samples)
 #> # A tibble: 12 x 3
 #>    label            count   prop
 #>    <chr>            <int>  <dbl>
-#>  1 Dense_Woodland    1600 0.0967
-#>  2 Dunes             1000 0.0604
-#>  3 Fallow_Cotton     1000 0.0604
-#>  4 Millet_Cotton     1000 0.0604
-#>  5 Pasture           1600 0.0967
-#>  6 Rocky_Savanna     1480 0.0894
-#>  7 Savanna           1600 0.0967
-#>  8 Savanna_Parkland  1584 0.0957
-#>  9 Silviculture      1000 0.0604
-#> 10 Soy_Corn          1592 0.0962
-#> 11 Soy_Cotton        1568 0.0947
-#> 12 Soy_Fallow        1528 0.0923
+#>  1 Dense_Woodland    1600 0.0969
+#>  2 Dunes             1000 0.0606
+#>  3 Fallow_Cotton     1000 0.0606
+#>  4 Millet_Cotton     1000 0.0606
+#>  5 Pasture           1592 0.0965
+#>  6 Rocky_Savanna     1504 0.0911
+#>  7 Savanna           1592 0.0965
+#>  8 Savanna_Parkland  1580 0.0957
+#>  9 Silviculture      1000 0.0606
+#> 10 Soy_Corn          1588 0.0962
+#> 11 Soy_Cotton        1532 0.0928
+#> 12 Soy_Fallow        1516 0.0919
 \end{lstlisting}
 
 \begin{lstlisting}[language=R]
@@ -3117,16 +3101,16 @@ som_eval <- sits_som_evaluate_cluster(som_cluster_bal)
 
 \begin{lstlisting}[language=R]
 # show the result
-plot(som_eval) 
+plot(som_eval)
 \end{lstlisting}
 
 \begin{figure}
 
-{\centering \includegraphics[width=0.9\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-68-1} 
+{\centering \includegraphics[width=0.9\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-61-1} 
 
 }
 
-\caption{Confusion by cluster for the balanced data set}\label{fig:unnamed-chunk-68}
+\caption{Confusion by cluster for the balanced data set}\label{fig:unnamed-chunk-61}
 \end{figure}
 
 As shown in the Figure, the balanced data set shows less confusion per
@@ -3281,7 +3265,7 @@ samples_matogrosso_mod13q1 %>%
 \end{lstlisting}
 
 \begin{figure}
-\includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-70-1} \caption{Visualisation of samples associated to class Forest in band NDVI}\label{fig:unnamed-chunk-70}
+\includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-63-1} \caption{Visualisation of samples associated to class Forest in band NDVI}\label{fig:unnamed-chunk-63}
 \end{figure}
 
 An alternative to visualise the samples is to estimate a statistical
@@ -3306,7 +3290,7 @@ samples_matogrosso_mod13q1 %>%
 \end{lstlisting}
 
 \begin{figure}
-\includegraphics[width=0.8\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-71-1} \caption{Patterns for the samples for Mato Grosso}\label{fig:unnamed-chunk-71}
+\includegraphics[width=0.8\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-64-1} \caption{Patterns for the samples for Mato Grosso}\label{fig:unnamed-chunk-64}
 \end{figure}
 
 The resulting plots provide some insights over the time series behaviour
@@ -3414,7 +3398,7 @@ plot(point_class, bands = c("NDVI", "EVI"))
 \end{lstlisting}
 
 \begin{figure}
-\includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-72-1} \caption{Classification of time series using random forests}\label{fig:unnamed-chunk-72}
+\includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-65-1} \caption{Classification of time series using random forests}\label{fig:unnamed-chunk-65}
 \end{figure}
 
 \begin{lstlisting}[language=R]
@@ -3537,7 +3521,7 @@ plot(point_class, bands = c("NDVI", "EVI"))
 \end{lstlisting}
 
 \begin{figure}
-\includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-74-1} \caption{Classification of time series using SVM}\label{fig:unnamed-chunk-74}
+\includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-67-1} \caption{Classification of time series using SVM}\label{fig:unnamed-chunk-67}
 \end{figure}
 
 \hypertarget{extreme-gradient-boosting}{%
@@ -3607,7 +3591,7 @@ plot(point_class, bands = c("NDVI", "EVI"))
 \end{lstlisting}
 
 \begin{figure}
-\includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-75-1} \caption{Classification of time series using XGBoost}\label{fig:unnamed-chunk-75}
+\includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-68-1} \caption{Classification of time series using XGBoost}\label{fig:unnamed-chunk-68}
 \end{figure}
 
 In general, the results from the extreme gradient boosting model are
@@ -3741,7 +3725,7 @@ mlp_model <- sits_train(
 plot(mlp_model)
 \end{lstlisting}
 
-\includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-76-1}
+\includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-69-1}
 
 Then, we classify a 16-year time series using the DL model
 
@@ -3753,7 +3737,7 @@ point_mt_6bands %>%
     plot(bands = c("NDVI", "EVI"))
 \end{lstlisting}
 
-\includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-77-1}
+\includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-70-1}
 
 The multi-layer perceptron model is able to capture more subtle changes
 than the random forests and XGBoost models. For example, the transition
@@ -3810,7 +3794,7 @@ model.
 
 }
 
-\caption{Structure of tempCNN architecture (source: Pelletier et al.(2019))}\label{fig:unnamed-chunk-78}
+\caption{Structure of tempCNN architecture (source: Pelletier et al.(2019))}\label{fig:unnamed-chunk-71}
 \end{figure}
 
 The function \passthrough{\lstinline!sits\_TempCNN()!} implements the
@@ -3849,7 +3833,7 @@ tempcnn_model <- sits_train(samples_matogrosso_mod13q1,
 plot(tempcnn_model)
 \end{lstlisting}
 
-\includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-79-1}
+\includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-72-1}
 
 Then, we classify a 16-year time series using the TempCNN model
 
@@ -3861,7 +3845,7 @@ class <- point_mt_6bands %>%
     plot(bands = c("NDVI", "EVI"))
 \end{lstlisting}
 
-\includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-80-1}
+\includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-73-1}
 
 While the result of the TempCNN model using default parameters is
 similar to that of the MLP model, it has has the potential to better
@@ -3898,7 +3882,7 @@ deep networks to be trained.
 
 }
 
-\caption{Structure of ResNet architecture (source: Wang et al.(2017))}\label{fig:unnamed-chunk-81}
+\caption{Structure of ResNet architecture (source: Wang et al.(2017))}\label{fig:unnamed-chunk-74}
 \end{figure}
 
 In \passthrough{\lstinline!sits!}, the esidual Network is implemented
@@ -3934,7 +3918,7 @@ resnet_model <- sits_train(samples_matogrosso_mod13q1,
 plot(resnet_model)
 \end{lstlisting}
 
-\includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-82-1}
+\includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-75-1}
 
 Then, we classify a 16-year time series using the ResNet model.
 
@@ -3947,7 +3931,7 @@ class.tb <- point_mt_4bands %>%
     plot(bands = c("NDVI", "EVI"))
 \end{lstlisting}
 
-\includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-83-1}
+\includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-76-1}
 
 \hypertarget{considerations-on-model-choice}{%
 \section*{Considerations on model
@@ -4060,7 +4044,7 @@ customised approach is depicted in the figure below.
 
 }
 
-\caption{Parallel processing in sits (source: Simoes et al.(2021)}\label{fig:unnamed-chunk-85}
+\caption{Parallel processing in sits (source: Simoes et al.(2021)}\label{fig:unnamed-chunk-78}
 \end{figure}
 
 This approach has many advantages. It works in any virtual machine that
@@ -4402,47 +4386,42 @@ a matrix
 # Retrieve the data for the Mato Grosso state
 data("samples_modis_4bands")
 
-# select the bands "ndvi", "evi"
-samples_2bands <- sits_select(samples_modis_4bands, bands = c("NDVI", "EVI"))
+# select the bands 'ndvi', 'evi'
+samples_2bands <- sits_select(samples_modis_4bands, bands = c("NDVI",
+    "EVI"))
 
-#select a rfor model
+# select a rfor model
 rfor_model <- sits_train(samples_2bands, ml_method = sits_rfor())
 
 data_dir <- system.file("extdata/sinop", package = "sitsdata")
 
-# create a raster metadata file based on the information about the files
-raster_cube <- sits_cube(source   = "BDC",
-                       collection = "MOD13Q1-6",
-                       data_dir   = data_dir,
-                       parse_info = c("X1", "X2", "tile", "band", "date")
-)
+# create a raster metadata file based on the information
+# about the files
+raster_cube <- sits_cube(source = "BDC", collection = "MOD13Q1-6",
+    data_dir = data_dir, parse_info = c("X1", "X2", "tile", "band",
+        "date"))
 # classify the raster image and generate a probability file
-raster_probs <- sits_classify(raster_cube, ml_model = rfor_model, 
-                              memsize = 12, multicores = 3, 
-                              output_dir = "./tempdir/chp8")
+raster_probs <- sits_classify(raster_cube, ml_model = rfor_model,
+    memsize = 12, multicores = 3, output_dir = "./tempdir/chp8")
 
 plot(raster_probs)
 \end{lstlisting}
 
-\includegraphics{sitsbook_files/figure-latex/unnamed-chunk-87-1.pdf} The
+\includegraphics{sitsbook_files/figure-latex/unnamed-chunk-80-1.pdf} The
 plots show the class probabilities, which can then be smoothed by a
 bayesian smoother.
 
 \begin{lstlisting}[language=R]
 # smooth the result with a bayesian filter
-raster_probs_bayes <- sits_smooth(raster_probs, 
-                                  type = "bayes",
-                                  memsize = 12, 
-                                  multicores = 3,
-                                  output_dir = "./tempdir/chp8"
-                                  )
+raster_probs_bayes <- sits_smooth(raster_probs, type = "bayes",
+    memsize = 12, multicores = 3, output_dir = "./tempdir/chp8")
 # plot the result
 plot(raster_probs_bayes)
 \end{lstlisting}
 
 \begin{figure}
 \centering
-\includegraphics{sitsbook_files/figure-latex/unnamed-chunk-88-1.pdf}
+\includegraphics{sitsbook_files/figure-latex/unnamed-chunk-81-1.pdf}
 \caption{Probability values smoothed by bayesian method}
 \end{figure}
 
@@ -4454,11 +4433,11 @@ shown below.
 
 \begin{figure}
 
-{\centering \includegraphics[width=0.9\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-89-1} 
+{\centering \includegraphics[width=0.9\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-82-1} 
 
 }
 
-\caption{Classified image without smoothing}\label{fig:unnamed-chunk-89}
+\caption{Classified image without smoothing}\label{fig:unnamed-chunk-82}
 \end{figure}
 
 The resulting labelled map shows a number of likely misclassified pixels
@@ -4466,11 +4445,11 @@ which can be removed using the bayesian smoother.
 
 \begin{figure}
 
-{\centering \includegraphics[width=0.9\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-90-1} 
+{\centering \includegraphics[width=0.9\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-83-1} 
 
 }
 
-\caption{Classified image with Bayesian smoothing}\label{fig:unnamed-chunk-90}
+\caption{Classified image with Bayesian smoothing}\label{fig:unnamed-chunk-83}
 \end{figure}
 
 Comparing the two plots, it is apparent that the smoothing procedure has
@@ -4565,18 +4544,15 @@ The following example shows the behavior of the bilateral smoother.
 
 \begin{lstlisting}[language=R]
 # smooth the result with a bilateral filter
-raster_probs_bil <- sits_smooth(raster_probs, 
-                                  type = "bilateral",
-                                  sigma = 8,
-                                  tau = 0.1,
-                                  output_dir = "./tempdir/chp8")
+raster_probs_bil <- sits_smooth(raster_probs, type = "bilateral",
+    sigma = 8, tau = 0.1, output_dir = "./tempdir/chp8")
 # plot the result
 plot(raster_probs_bil)
 \end{lstlisting}
 
 \begin{figure}
 \centering
-\includegraphics{sitsbook_files/figure-latex/unnamed-chunk-91-1.pdf}
+\includegraphics{sitsbook_files/figure-latex/unnamed-chunk-84-1.pdf}
 \caption{Probability values for classified image smoothed by bilateral
 filter}
 \end{figure}
@@ -4585,11 +4561,11 @@ The impact on the classified image can be seen in the following example.
 
 \begin{figure}
 
-{\centering \includegraphics[width=0.9\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-92-1} 
+{\centering \includegraphics[width=0.9\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-85-1} 
 
 }
 
-\caption{Classified image with bilateral smoothing}\label{fig:unnamed-chunk-92}
+\caption{Classified image with bilateral smoothing}\label{fig:unnamed-chunk-85}
 \end{figure}
 
 Bayesian smoothing tends to produce more homogeneous labeled images than
@@ -4665,11 +4641,11 @@ corresponding confusion matrix and the accuracy statistics (overall and
 by class).
 
 \begin{lstlisting}[language=R]
-# perform a five fold validation for the "cerrado_2classes" data set
-# Random Forest machine learning method using default parameters
-val_rfor <- sits_kfold_validate(cerrado_2classes, 
-                                     folds = 5, 
-                                     ml_method = sits_rfor())
+# perform a five fold validation for the 'cerrado_2classes'
+# data set Random Forest machine learning method using
+# default parameters
+val_rfor <- sits_kfold_validate(cerrado_2classes, folds = 5,
+    ml_method = sits_rfor())
 # print the validation statistics
 val_rfor
 \end{lstlisting}
@@ -4679,18 +4655,18 @@ val_rfor
 #> 
 #>           Reference
 #> Prediction Cerrado Pasture
-#>    Cerrado     394      15
-#>    Pasture       6     331
+#>    Cerrado     397      15
+#>    Pasture       3     331
 #>                                      
-#>           Accuracy : 0.9718          
-#>             95% CI : (0.9573, 0.9825)
+#>           Accuracy : 0.9759          
+#>             95% CI : (0.9621, 0.9856)
 #>                                      
-#>              Kappa : 0.9433          
+#>              Kappa : 0.9514          
 #>                                      
-#>  Prod Acc  Cerrado : 0.9850          
+#>  Prod Acc  Cerrado : 0.9925          
 #>  Prod Acc  Pasture : 0.9566          
-#>  User Acc  Cerrado : 0.9633          
-#>  User Acc  Pasture : 0.9822          
+#>  User Acc  Cerrado : 0.9636          
+#>  User Acc  Pasture : 0.9910          
 #> 
 \end{lstlisting}
 
@@ -4714,35 +4690,29 @@ function \passthrough{\lstinline!sits\_to\_xlsx!} writes all of the
 results in an Excel-compatible spreadsheet.
 
 \begin{lstlisting}[language=R]
-# Retrieve the set of samples for the Mato Grosso region (provided by EMBRAPA)
+# Retrieve the set of samples for the Mato Grosso region
+# (provided by EMBRAPA)
 data("samples_matogrosso_mod13q1")
 # create a list to store the results
 results <- list()
 
 # SVM model
-conf_svm <- sits_kfold_validate(
-    samples_matogrosso_mod13q1,
-    ml_method = sits_svm())
+conf_svm <- sits_kfold_validate(samples_matogrosso_mod13q1, ml_method = sits_svm())
 # Give a name to the SVM model
 conf_svm$name <- "svm"
 # store the result
 results[[length(results) + 1]] <- conf_svm
 
 # Random Forest
-conf_rfor <- sits_kfold_validate(
-    samples_matogrosso_mod13q1,
-    folds = 5,
-    multicores = 2,
-    ml_method = sits_rfor())
-# Give a name to the results 
+conf_rfor <- sits_kfold_validate(samples_matogrosso_mod13q1,
+    folds = 5, multicores = 2, ml_method = sits_rfor())
+# Give a name to the results
 conf_rfor$name <- "rfor"
 # store the results in a list
 results[[length(results) + 1]] <- conf_rfor
 
 ## Extreme Gradient Boosting
-conf_xgb <- sits_kfold_validate(
-    samples_matogrosso_mod13q1,
-    ml_method = sits_xgboost())
+conf_xgb <- sits_kfold_validate(samples_matogrosso_mod13q1, ml_method = sits_xgboost())
 
 # Give a name to the SVM model
 conf_xgb$name <- "xgboost"
@@ -4750,9 +4720,7 @@ conf_xgb$name <- "xgboost"
 results[[length(results) + 1]] <- conf_xgb
 
 # Multi-layer perceptron
-conf_mlp <- sits_kfold_validate(
-    samples_matogrosso_mod13q1,
-    ml_method = sits_mlp())
+conf_mlp <- sits_kfold_validate(samples_matogrosso_mod13q1, ml_method = sits_mlp())
 
 # Give a name to the SVM model
 conf_mlp$name <- "MLP"
@@ -4760,8 +4728,7 @@ conf_mlp$name <- "MLP"
 results[[length(results) + 1]] <- conf_mlp
 
 # Temporal CNN
-conf_tcnn <- sits_kfold_validate(
-    samples_matogrosso_mod13q1,
+conf_tcnn <- sits_kfold_validate(samples_matogrosso_mod13q1,
     ml_method = sits_tempcnn())
 
 # Give a name to the SVM model
@@ -4769,7 +4736,7 @@ conf_tcnn$name <- "TempCNN"
 # store the results in a list
 results[[length(results) + 1]] <- conf_tcnn
 
-xlsx_file <- paste0(getwd(),"/model_comparison.xlsx")
+xlsx_file <- paste0(getwd(), "/model_comparison.xlsx")
 # Save to an XLS file
 sits_to_xlsx(results, file = xlsx_file)
 \end{lstlisting}
@@ -4786,7 +4753,7 @@ accuracy of 97\% and is the best-performing model.
 
 }
 
-\caption{Result of 5-fold cross validation of Mato Grosso dataset using TempCNN}\label{fig:unnamed-chunk-96}
+\caption{Result of 5-fold cross validation of Mato Grosso dataset using TempCNN}\label{fig:unnamed-chunk-89}
 \end{figure}
 
 \hypertarget{accuracy-assessment}{%
@@ -4805,7 +4772,8 @@ the reference values. This function calculates the confusion matrix and
 then the resulting statistics using the R package ``caret''.
 
 \begin{lstlisting}[language=R]
-# read a tibble with 400 time series of Cerrado and 346 of Pasture
+# read a tibble with 400 time series of Cerrado and 346 of
+# Pasture
 data(cerrado_2classes)
 # create a model for classification of time series
 svm_model <- sits_train(cerrado_2classes, sits_svm())
@@ -4829,7 +4797,7 @@ object.
 
 \begin{lstlisting}[language=R]
 # print the accuracy statistics
-acc_ts 
+acc_ts
 \end{lstlisting}
 
 \begin{lstlisting}
@@ -4919,48 +4887,44 @@ samples_modis_ndvi <- sits_select(samples_modis_4bands, bands = "NDVI")
 xgb_model <- sits_train(samples_modis_ndvi, ml_method = sits_xgboost())
 # create a data cube based on files
 data_dir <- system.file("extdata/raster/mod13q1", package = "sits")
-cube <- sits_cube(
-    source     = "BDC",
-    collection = "MOD13Q1-6",
-    name       = "Sinop",
-    data_dir   = data_dir,
-    parse_info = c("X1", "X2", "tile", "band", "date")
-)
+cube <- sits_cube(source = "BDC", collection = "MOD13Q1-6", name = "Sinop",
+    data_dir = data_dir, parse_info = c("X1", "X2", "tile", "band",
+        "date"))
 # classify the data cube with xgb model
 probs_cube <- sits_classify(cube, xgb_model)
 # label the classification
 label_cube <- sits_label_classification(probs_cube, output_dir = "./tempdir/chp9")
 # get ground truth points
 ground_truth <- system.file("extdata/samples/samples_sinop_crop.csv",
-                            package = "sits")
+    package = "sits")
 # calculate accuracy according to Olofsson's method
 area_acc <- sits_accuracy(label_cube, validation_csv = ground_truth)
-# print the area estimated accuracy 
+# print the area estimated accuracy
 area_acc
 \end{lstlisting}
 
 \begin{lstlisting}
 #> Area Weigthed Statistics
-#> Overall Accuracy = 0.81
+#> Overall Accuracy = 0.76
 #> 
 #> Area-Weighted Users and Producers Accuracy
 #>          User Producer
-#> Cerrado   1.0     0.72
-#> Forest    0.6     1.00
-#> Pasture   0.8     1.00
-#> Soy_Corn  1.0     0.71
+#> Cerrado  1.00     0.67
+#> Forest   0.60     1.00
+#> Pasture  0.75     0.61
+#> Soy_Corn 0.86     0.72
 #> 
 #> Mapped Area x Estimated Area (ha)
 #>          Mapped Area (ha) Error-Adjusted Area (ha)
-#> Cerrado          41235.80                 57639.97
-#> Forest           82020.83                 49212.50
-#> Pasture          22882.54                 18306.04
-#> Soy_Corn         50144.11                 71124.78
+#> Cerrado          32568.99                 48735.95
+#> Forest           80834.84                 48500.90
+#> Pasture          19029.43                 23393.51
+#> Soy_Corn         63850.02                 75652.92
 #>          Conf Interval (ha)
-#> Cerrado            32152.16
-#> Forest             39378.20
-#> Pasture             8969.96
-#> Soy_Corn           33379.96
+#> Cerrado            31687.26
+#> Forest             38808.81
+#> Pasture            20163.53
+#> Soy_Corn           37558.62
 \end{lstlisting}
 
 This is an illustrative example to express the situation where there is
@@ -4989,61 +4953,39 @@ output_dir <- "/data/cubes_RO_20m_P16D_cloud"
 start_date <- "2020-06-01"
 end_date <- "2021-09-11"
 
-bands <- c("B02", "B03", "B04", "B05", "B08", "B8A", "B11", "B12", "CLOUD")
+bands <- c("B02", "B03", "B04", "B05", "B08", "B8A", "B11", "B12",
+    "CLOUD")
 
-tile_names <- c("19LHH", "19LHJ", "20LKM", "20LKN", "20LKP", "20LLM", "20LLN",
-                "20LLP", "20LLQ", "20LLR", "20LMM", "20LMN", "20LMP", "20LMQ",
-                "20LMR", "20LNL", "20LNM", "20LNN", "20LNP", "20LNQ", "20LNR",
-                "20LPL", "20LPM", "20LPN", "20LPP", "20LPQ", "20LQL", "20LQM",
-                "20LQN", "20LRN", "20LRM", "20LRL", "20LQK", "20LPR", "20MNS",
-                "20MMS", "20LKQ", "19LHK", "19LGK", "20LKR")
+tile_names <- c("19LHH", "19LHJ", "20LKM", "20LKN", "20LKP",
+    "20LLM", "20LLN", "20LLP", "20LLQ", "20LLR", "20LMM", "20LMN",
+    "20LMP", "20LMQ", "20LMR", "20LNL", "20LNM", "20LNN", "20LNP",
+    "20LNQ", "20LNR", "20LPL", "20LPM", "20LPN", "20LPP", "20LPQ",
+    "20LQL", "20LQM", "20LQN", "20LRN", "20LRM", "20LRL", "20LQK",
+    "20LPR", "20MNS", "20MMS", "20LKQ", "19LHK", "19LGK", "20LKR")
 
 #### source ####
 
 # create output directory
-if (!dir.exists(output_dir))
-    dir.create(output_dir)
+if (!dir.exists(output_dir)) dir.create(output_dir)
 stopifnot(dir.exists(output_dir))
 
 
-s2_cube_2021 <- sits_cube(
-  source = "AWS",
-  collection = "SENTINEL-S2-L2A-COGS",
-  bands = bands,
-  tiles = tile_names,
-  start_date = start_date,
-  end_date = end_date,
-  multicores = 20
-)
+s2_cube_2021 <- sits_cube(source = "AWS", collection = "SENTINEL-S2-L2A-COGS",
+    bands = bands, tiles = tile_names, start_date = start_date,
+    end_date = end_date, multicores = 20)
 
 # regularize
 system.time({
-    reg_cube <- sits_regularize(
-        cube = s2_cube_2021,
-        period = period,
-        res = 20,
-        output_dir = output_dir,
-        multicores = 5,
-        multithreads = 1,
-        memsize = 120
-    )
+    reg_cube <- sits_regularize(cube = s2_cube_2021, period = period,
+        res = 20, output_dir = output_dir, multicores = 5, multithreads = 1,
+        memsize = 120)
 })
 
-sits_apply(
-    local,
-    NBR = (B08 - B12) / (B08 + B12),
-    memsize = 256,
-    multicores = 72,
-    output_dir = cube_dir
-)
+sits_apply(local, NBR = (B08 - B12)/(B08 + B12), memsize = 256,
+    multicores = 72, output_dir = cube_dir)
 
-sits_apply(
-    local,
-    EVI = 2.5 * (B08 - B04) / ((B08 + 6.0 * B04 - 7.5 * B02) + 1.0),
-    memsize = 256,
-    multicores = 72,
-    output_dir = cube_dir
-)
+sits_apply(local, EVI = 2.5 * (B08 - B04)/((B08 + 6 * B04 - 7.5 *
+    B02) + 1), memsize = 256, multicores = 72, output_dir = cube_dir)
 
 cube_dir <- "/data/cubes_RO_20m_P16D_cloud"
 out_dir <- "/data/results/RO_P16D_cloud/tcnn"
@@ -5057,27 +4999,19 @@ in_samples_file <- "/home/rolf.simoes/data/samples_RO/Amostras_RO_sits_names.csv
 library(dplyr)
 library(sits)
 
-if (!dir.exists(out_dir))
-    dir.create(out_dir, recursive = TRUE)
+if (!dir.exists(out_dir)) dir.create(out_dir, recursive = TRUE)
 stopifnot(dir.exists(out_dir))
 
 stopifnot(file.exists(in_samples_file))
 
-local <- sits_cube(
-    source = "AWS",
-    collection = "SENTINEL-S2-L2A-COGS",
-    data_dir = cube_dir,
-    parse_info = c("x", "tile", "band", "date"),
-    multicores = 64
-)
+local <- sits_cube(source = "AWS", collection = "SENTINEL-S2-L2A-COGS",
+    data_dir = cube_dir, parse_info = c("x", "tile", "band",
+        "date"), multicores = 64)
 
 if (!file.exists(rds_samples_file)) {
 
-    samples_tb <- sits_get_data(
-        cube = local,
-        file = in_samples_file,
-        multicores = 10
-    )
+    samples_tb <- sits_get_data(cube = local, file = in_samples_file,
+        multicores = 10)
 
     saveRDS(samples_tb, file = rds_samples_file)
 } else {
@@ -5086,10 +5020,7 @@ if (!file.exists(rds_samples_file)) {
 
 if (!file.exists(rds_model_file)) {
 
-    model <- sits_train(
-        data = samples_tb,
-        ml_method = sits_lightgbm()
-    )
+    model <- sits_train(data = samples_tb, ml_method = sits_lightgbm())
 
     saveRDS(model, file = rds_model_file)
 } else {
@@ -5097,61 +5028,43 @@ if (!file.exists(rds_model_file)) {
 }
 
 
-probs <- sits_classify(
-    data = local,
-    ml_model = model,
-    output_dir = out_dir,
-    memsize = 400,
-    multicores = 100,
-    progress = TRUE
-)
+probs <- sits_classify(data = local, ml_model = model, output_dir = out_dir,
+    memsize = 400, multicores = 100, progress = TRUE)
 
 
 sits:::.sits_parallel_start(10, FALSE)
 
 my_libpaths <- .libPaths()
 
-parallel::clusterExport(sits:::sits_env$cluster,
-                        c("probs", "out_dir", "my_libpaths"))
+parallel::clusterExport(sits:::sits_env$cluster, c("probs", "out_dir",
+    "my_libpaths"))
 
-parallel::clusterEvalQ(sits:::sits_env$cluster,
-                       .libPaths(my_libpaths))
+parallel::clusterEvalQ(sits:::sits_env$cluster, .libPaths(my_libpaths))
 
-parallel::clusterEvalQ(sits:::sits_env$cluster,
-                       library(sits))
+parallel::clusterEvalQ(sits:::sits_env$cluster, library(sits))
 
-probs_bayes_lst <- sits:::.sits_parallel_map(seq_len(nrow(probs)), function(i) {
+probs_bayes_lst <- sits:::.sits_parallel_map(seq_len(nrow(probs)),
+    function(i) {
 
-    probs_tile <- probs[i,]
+        probs_tile <- probs[i, ]
 
-    sits_smooth(
-        cube = probs_tile,
-        type = "bayes",
-        window_size = 5,
-        smoothenes = 20,
-        covar = FALSE,
-        multicores = 1,
-        memsize = 48,
-        output_dir = out_dir
-    )
-})
+        sits_smooth(cube = probs_tile, type = "bayes", window_size = 5,
+            smoothenes = 20, covar = FALSE, multicores = 1, memsize = 48,
+            output_dir = out_dir)
+    })
 
 probs_bayes <- dplyr::bind_rows(probs_bayes_lst)
 
-parallel::clusterExport(sits:::sits_env$cluster,
-                        c("probs_bayes"))
+parallel::clusterExport(sits:::sits_env$cluster, c("probs_bayes"))
 
-class_lst <- sits:::.sits_parallel_map(seq_len(nrow(probs_bayes)), function(i) {
+class_lst <- sits:::.sits_parallel_map(seq_len(nrow(probs_bayes)),
+    function(i) {
 
-    probs_bayes_tile <- probs_bayes[i,]
+        probs_bayes_tile <- probs_bayes[i, ]
 
-    sits_label_classification(
-        cube = probs_bayes_tile,
-        multicores = 1,
-        memsize = 48,
-        output_dir = out_dir
-    )
-})
+        sits_label_classification(cube = probs_bayes_tile, multicores = 1,
+            memsize = 48, output_dir = out_dir)
+    })
 
 class <- dplyr::bind_rows(class_lst)
 
@@ -5273,7 +5186,7 @@ software best meets their needs.
 \hypertarget{refs}{}
 \begin{CSLReferences}{0}{0}
 \leavevmode\vadjust pre{\hypertarget{ref-Woodcock2020}{}}%
-\CSLLeftMargin{{[}1{]} }%
+\CSLLeftMargin{{[}1{]} }
 \CSLRightInline{C. E. Woodcock, T. R. Loveland, M. Herold, and M. E.
 Bauer, {``Transitioning from change detection to monitoring with remote
 sensing: {A} paradigm shift,''} \emph{Remote Sensing of Environment},
@@ -5281,40 +5194,40 @@ vol. 238, p. 111558, 2020, doi:
 \href{https://doi.org/10.1016/j.rse.2019.111558}{10.1016/j.rse.2019.111558}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Appel2019}{}}%
-\CSLLeftMargin{{[}2{]} }%
+\CSLLeftMargin{{[}2{]} }
 \CSLRightInline{M. Appel and E. Pebesma, {``On-{Demand Processing} of
 {Data Cubes} from {Satellite Image Collections} with the gdalcubes
 {Library},''} \emph{Data}, vol. 4, no. 3, pp. 1--16, 2019, doi:
 \href{https://doi.org/10.3390/data4030092}{10.3390/data4030092}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Wickham2017}{}}%
-\CSLLeftMargin{{[}3{]} }%
+\CSLLeftMargin{{[}3{]} }
 \CSLRightInline{H. Wickham and G. Grolemund, \emph{R for {Data Science}:
 {Import}, {Tidy}, {Transform}, {Visualize}, and {Model Data}}. {O'Reilly
 Media, Inc.}, 2017.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Lambin2006}{}}%
-\CSLLeftMargin{{[}4{]} }%
+\CSLLeftMargin{{[}4{]} }
 \CSLRightInline{E. F. Lambin and M. Linderman, {``Time series of remote
 sensing data for land change science,''} \emph{IEEE Transactions on
 Geoscience and Remote Sensing}, vol. 44, no. 7, pp. 1926--1928, 2006.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Atkinson2012}{}}%
-\CSLLeftMargin{{[}5{]} }%
+\CSLLeftMargin{{[}5{]} }
 \CSLRightInline{P. M. Atkinson, C. Jeganathan, J. Dash, and C.
 Atzberger, {``Inter-comparison of four models for smoothing satellite
 sensor time-series data to estimate vegetation phenology,''}
 \emph{Remote Sensing of Environment}, vol. 123, pp. 400--417, 2012.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Zhou2016}{}}%
-\CSLLeftMargin{{[}6{]} }%
+\CSLLeftMargin{{[}6{]} }
 \CSLRightInline{J. Zhou, L. Jia, M. Menenti, and B. Gorte, {``On the
 performance of remote sensing time series reconstruction methods: {A}
 spatial comparison,''} \emph{Remote Sensing of Environment}, vol. 187,
 pp. 367--384, 2016.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Chen2004}{}}%
-\CSLLeftMargin{{[}7{]} }%
+\CSLLeftMargin{{[}7{]} }
 \CSLRightInline{J. Chen, Per. Jönsson, M. Tamura, Z. Gu, B. Matsushita,
 and L. Eklundh, {``A simple method for reconstructing a high-quality
 {NDVI} time-series data set based on the {Savitzky}\textendash{{Golay}}
@@ -5323,21 +5236,21 @@ filter,''} \emph{Remote Sensing of Environment}, vol. 91, no. 3, pp.
 \href{https://doi.org/10.1016/j.rse.2004.03.014}{10.1016/j.rse.2004.03.014}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Atzberger2011}{}}%
-\CSLLeftMargin{{[}8{]} }%
+\CSLLeftMargin{{[}8{]} }
 \CSLRightInline{C. Atzberger and P. H. Eilers, {``Evaluating the
 effectiveness of smoothing algorithms in the absence of ground reference
 measurements,''} \emph{International Journal of Remote Sensing}, vol.
 32, no. 13, pp. 3689--3709, 2011.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Maxwell2018}{}}%
-\CSLLeftMargin{{[}9{]} }%
+\CSLLeftMargin{{[}9{]} }
 \CSLRightInline{A. E. Maxwell, T. A. Warner, and F. Fang,
 {``Implementation of machine-learning classification in remote sensing:
 An applied review,''} \emph{International Journal of Remote Sensing},
 vol. 39, no. 9, pp. 2784--2817, 2018.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Frenay2014}{}}%
-\CSLLeftMargin{{[}10{]} }%
+\CSLLeftMargin{{[}10{]} }
 \CSLRightInline{B. Frenay and M. Verleysen, {``Classification in the
 {Presence} of {Label Noise}: {A Survey},''} \emph{IEEE Transactions on
 Neural Networks and Learning Systems}, vol. 25, no. 5, pp. 845--869,
@@ -5345,14 +5258,14 @@ Neural Networks and Learning Systems}, vol. 25, no. 5, pp. 845--869,
 \href{https://doi.org/10.1109/TNNLS.2013.2292894}{10.1109/TNNLS.2013.2292894}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Keogh2003}{}}%
-\CSLLeftMargin{{[}11{]} }%
+\CSLLeftMargin{{[}11{]} }
 \CSLRightInline{E. Keogh, J. Lin, and W. Truppel, {``Clustering of time
 series subsequences is meaningless: {Implications} for previous and
 future research,''} in \emph{Data {Mining}, 2003. {ICDM} 2003. {Third
 IEEE International Conference} on}, 2003, pp. 115--122.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Petitjean2012}{}}%
-\CSLLeftMargin{{[}12{]} }%
+\CSLLeftMargin{{[}12{]} }
 \CSLRightInline{F. Petitjean, J. Inglada, and P. Gancarski, {``Satellite
 {Image Time Series Analysis Under Time Warping},''} \emph{IEEE
 Transactions on Geoscience and Remote Sensing}, vol. 50, no. 8, pp.
@@ -5360,7 +5273,7 @@ Transactions on Geoscience and Remote Sensing}, vol. 50, no. 8, pp.
 \href{https://doi.org/10.1109/TGRS.2011.2179050}{10.1109/TGRS.2011.2179050}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Maus2016}{}}%
-\CSLLeftMargin{{[}13{]} }%
+\CSLLeftMargin{{[}13{]} }
 \CSLRightInline{V. Maus, G. Camara, R. Cartaxo, A. Sanchez, F. M. Ramos,
 and G. R. Queiroz, {``A {Time-Weighted Dynamic Time Warping Method} for
 {Land-Use} and {Land-Cover Mapping},''} \emph{IEEE Journal of Selected
@@ -5369,32 +5282,32 @@ pp. 3729--3739, 2016, doi:
 \href{https://doi.org/10.1109/JSTARS.2016.2517118}{10.1109/JSTARS.2016.2517118}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Ward1963}{}}%
-\CSLLeftMargin{{[}14{]} }%
+\CSLLeftMargin{{[}14{]} }
 \CSLRightInline{J. H. Ward, {``Hierarchical grouping to optimize an
 objective function,''} \emph{Journal of the American statistical
 association}, vol. 58, no. 301, pp. 236--244, 1963.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Hennig2015}{}}%
-\CSLLeftMargin{{[}15{]} }%
+\CSLLeftMargin{{[}15{]} }
 \CSLRightInline{C. Hennig, {``Clustering strategy and method
 selection,''} in \emph{Handbook of cluster analysis}, C. Hennig, M.
 Meila, F. Murtagh, and R. Rocci, Eds. {CRC Press}, 2015.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Rand1971}{}}%
-\CSLLeftMargin{{[}16{]} }%
+\CSLLeftMargin{{[}16{]} }
 \CSLRightInline{W. M. Rand, {``Objective {Criteria} for the {Evaluation}
 of {Clustering Methods},''} \emph{Journal of the American Statistical
 Association}, vol. 66, no. 336, pp. 846--850, 1971, doi:
 \href{https://doi.org/10.1080/01621459.1971.10482356}{10.1080/01621459.1971.10482356}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Kohonen1990}{}}%
-\CSLLeftMargin{{[}17{]} }%
+\CSLLeftMargin{{[}17{]} }
 \CSLRightInline{T. Kohonen, {``The self-organizing map,''}
 \emph{Proceedings of the IEEE}, vol. 78, no. 9, pp. 1464--1480, 1990,
 doi: \href{https://doi.org/10.1109/5.58325}{10.1109/5.58325}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Santos2021a}{}}%
-\CSLLeftMargin{{[}18{]} }%
+\CSLLeftMargin{{[}18{]} }
 \CSLRightInline{L. A. Santos, K. R. Ferreira, G. Camara, M. C. A.
 Picoli, and R. E. Simoes, {``Quality control and class noise reduction
 of satellite image time series,''} \emph{ISPRS Journal of Photogrammetry
@@ -5402,14 +5315,14 @@ and Remote Sensing}, vol. 177, pp. 75--88, 2021, doi:
 \href{https://doi.org/10.1016/j.isprsjprs.2021.04.014}{10.1016/j.isprsjprs.2021.04.014}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Wehrens2018}{}}%
-\CSLLeftMargin{{[}19{]} }%
+\CSLLeftMargin{{[}19{]} }
 \CSLRightInline{R. Wehrens and J. Kruisselbrink, {``Flexible
 {Self-Organizing Maps} in kohonen 3.0,''} \emph{Journal of Statistical
 Software}, vol. 87, no. 1, pp. 1--18, 2018, doi:
 \href{https://doi.org/10.18637/jss.v087.i07}{10.18637/jss.v087.i07}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Santos2021}{}}%
-\CSLLeftMargin{{[}20{]} }%
+\CSLLeftMargin{{[}20{]} }
 \CSLRightInline{L. A. Santos, K. Ferreira, M. Picoli, G. Camara, R.
 Zurita-Milla, and E.-W. Augustijn, {``Identifying {Spatiotemporal
 Patterns} in {Land Use} and {Cover Samples} from {Satellite Image Time
@@ -5417,21 +5330,21 @@ Series},''} \emph{Remote Sensing}, vol. 13, no. 5, p. 974, 2021, doi:
 \href{https://doi.org/10.3390/rs13050974}{10.3390/rs13050974}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Johnson2019}{}}%
-\CSLLeftMargin{{[}21{]} }%
+\CSLLeftMargin{{[}21{]} }
 \CSLRightInline{J. M. Johnson and T. M. Khoshgoftaar, {``Survey on deep
 learning with class imbalance,''} \emph{Journal of Big Data}, vol. 6,
 no. 1, p. 27, 2019, doi:
 \href{https://doi.org/10.1186/s40537-019-0192-5}{10.1186/s40537-019-0192-5}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Chawla2002}{}}%
-\CSLLeftMargin{{[}22{]} }%
+\CSLLeftMargin{{[}22{]} }
 \CSLRightInline{N. V. Chawla, K. W. Bowyer, L. O. Hall, and W. P.
 Kegelmeyer, {``{SMOTE}: Synthetic minority over-sampling technique,''}
 \emph{Journal of Artificial Intelligence Research}, vol. 16, no. 1, pp.
 321--357, 2002.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Janowicz2012}{}}%
-\CSLLeftMargin{{[}23{]} }%
+\CSLLeftMargin{{[}23{]} }
 \CSLRightInline{K. Janowicz, S. Scheider, T. Pehle, and G. Hart,
 {``Geospatial semantics and linked spatiotemporal data \textendash{}
 {Past}, present, and future,''} \emph{Semantic Web}, vol. 3, no. 4, pp.
@@ -5439,20 +5352,20 @@ Kegelmeyer, {``{SMOTE}: Synthetic minority over-sampling technique,''}
 \href{https://doi.org/10.3233/SW-2012-0077}{10.3233/SW-2012-0077}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Belgiu2016}{}}%
-\CSLLeftMargin{{[}24{]} }%
+\CSLLeftMargin{{[}24{]} }
 \CSLRightInline{M. Belgiu and L. Dragut, {``Random {Forest} in remote
 sensing: {A} review of applications and future directions,''}
 \emph{ISPRS Journal of Photogrammetry and Remote Sensing}, vol. 114, pp.
 24--31, 2016.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Mountrakis2011}{}}%
-\CSLLeftMargin{{[}25{]} }%
+\CSLLeftMargin{{[}25{]} }
 \CSLRightInline{G. Mountrakis, J. Im, and C. Ogole, {``Support vector
 machines in remote sensing: {A} review,''} \emph{ISPRS Journal of
 Photogrammetry and Remote Sensing}, vol. 66, no. 3, pp. 247--259, 2011.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Chen2016}{}}%
-\CSLLeftMargin{{[}26{]} }%
+\CSLLeftMargin{{[}26{]} }
 \CSLRightInline{T. Chen and C. Guestrin, {``{XGBoost}: {A Scalable Tree
 Boosting System},''} in \emph{Proceedings of the 22nd {ACM SIGKDD
 International Conference} on {Knowledge Discovery} and {Data Mining}},
@@ -5460,7 +5373,7 @@ International Conference} on {Knowledge Discovery} and {Data Mining}},
 \href{https://doi.org/10.1145/2939672.2939785}{10.1145/2939672.2939785}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Parente2019a}{}}%
-\CSLLeftMargin{{[}27{]} }%
+\CSLLeftMargin{{[}27{]} }
 \CSLRightInline{L. Parente, E. Taquary, A. P. Silva, C. Souza, and L.
 Ferreira, {``Next {Generation Mapping}: {Combining Deep Learning},
 {Cloud Computing}, and {Big Remote Sensing Data},''} \emph{Remote
@@ -5468,20 +5381,20 @@ Sensing}, vol. 11, no. 23, p. 2881, 2019, doi:
 \href{https://doi.org/10.3390/rs11232881}{10.3390/rs11232881}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Pelletier2019}{}}%
-\CSLLeftMargin{{[}28{]} }%
+\CSLLeftMargin{{[}28{]} }
 \CSLRightInline{C. Pelletier, G. I. Webb, and F. Petitjean, {``Temporal
 {Convolutional Neural Network} for the {Classification} of {Satellite
 Image Time Series},''} \emph{Remote Sensing}, vol. 11, no. 5, 2019.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Fawaz2020}{}}%
-\CSLLeftMargin{{[}29{]} }%
+\CSLLeftMargin{{[}29{]} }
 \CSLRightInline{H. Fawaz \emph{et al.}, {``{InceptionTime}: {Finding
 AlexNet} for time series classification,''} \emph{Data Mining and
 Knowledge Discovery}, vol. 34, no. 6, pp. 1936--1962, 2020, doi:
 \href{https://doi.org/10.1007/s10618-020-00710-y}{10.1007/s10618-020-00710-y}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Garnot2020a}{}}%
-\CSLLeftMargin{{[}30{]} }%
+\CSLLeftMargin{{[}30{]} }
 \CSLRightInline{V. Garnot, L. Landrieu, S. Giordano, and N. Chehata,
 {``Satellite {Image Time Series Classification With Pixel-Set Encoders}
 and {Temporal Self-Attention},''} in \emph{2020 {IEEE}/{CVF Conference}
@@ -5490,13 +5403,13 @@ on {Computer Vision} and {Pattern Recognition} ({CVPR})}, 2020, pp.
 \href{https://doi.org/10.1109/CVPR42600.2020.01234}{10.1109/CVPR42600.2020.01234}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Russwurm2020}{}}%
-\CSLLeftMargin{{[}31{]} }%
+\CSLLeftMargin{{[}31{]} }
 \CSLRightInline{M. Rußwurm, C. Pelletier, M. Zollner, S. Lefèvre, and M.
 Körner, {``{BreizhCrops}: {A Time Series Dataset} for {Crop Type
 Mapping},''} 2020.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Picoli2018}{}}%
-\CSLLeftMargin{{[}32{]} }%
+\CSLLeftMargin{{[}32{]} }
 \CSLRightInline{M. Picoli \emph{et al.}, {``Big earth observation time
 series analysis for monitoring {Brazilian} agriculture,''} \emph{ISPRS
 journal of photogrammetry and remote sensing}, vol. 145, pp. 328--339,
@@ -5504,7 +5417,7 @@ journal of photogrammetry and remote sensing}, vol. 145, pp. 328--339,
 \href{https://doi.org/10.1016/j.isprsjprs.2018.08.007}{10.1016/j.isprsjprs.2018.08.007}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Picoli2020a}{}}%
-\CSLLeftMargin{{[}33{]} }%
+\CSLLeftMargin{{[}33{]} }
 \CSLRightInline{M. C. A. Picoli \emph{et al.}, {``{CBERS} data cube: A
 powerful technology for mapping and monitoring {Brazilian} biomes.''} in
 \emph{{ISPRS Annals} of the {Photogrammetry}, {Remote Sensing} and
@@ -5513,21 +5426,21 @@ doi:
 \href{https://doi.org/10.5194/isprs-annals-V-3-2020-533-2020}{10.5194/isprs-annals-V-3-2020-533-2020}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Simoes2020}{}}%
-\CSLLeftMargin{{[}34{]} }%
+\CSLLeftMargin{{[}34{]} }
 \CSLRightInline{R. Simoes \emph{et al.}, {``Land use and cover maps for
 {Mato Grosso State} in {Brazil} from 2001 to 2017,''} \emph{Scientific
 Data}, vol. 7, no. 1, p. 34, 2020, doi:
 \href{https://doi.org/10.1038/s41597-020-0371-4}{10.1038/s41597-020-0371-4}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Ferreira2020a}{}}%
-\CSLLeftMargin{{[}35{]} }%
+\CSLLeftMargin{{[}35{]} }
 \CSLRightInline{K. R. Ferreira \emph{et al.}, {``Earth {Observation Data
 Cubes} for {Brazil}: {Requirements}, {Methodology} and {Products},''}
 \emph{Remote Sensing}, vol. 12, no. 24, p. 4033, 2020, doi:
 \href{https://doi.org/10.3390/rs12244033}{10.3390/rs12244033}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Maus2019}{}}%
-\CSLLeftMargin{{[}36{]} }%
+\CSLLeftMargin{{[}36{]} }
 \CSLRightInline{V. Maus, G. Câmara, M. Appel, and E. Pebesma,
 {``{dtwSat}: {Time-Weighted Dynamic Time Warping} for {Satellite Image
 Time Series Analysis} in {R},''} \emph{Journal of Statistical Software},
@@ -5535,65 +5448,65 @@ vol. 88, no. 5, pp. 1--31, 2019, doi:
 \href{https://doi.org/10.18637/jss.v088.i05}{10.18637/jss.v088.i05}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-James2013}{}}%
-\CSLLeftMargin{{[}37{]} }%
+\CSLLeftMargin{{[}37{]} }
 \CSLRightInline{G. James, D. Witten, T. Hastie, and R. Tibshirani,
 \emph{An {Introduction} to {Statistical Learning}: With {Applications}
 in {R}}. {New York, EUA}: {Springer}, 2013.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Wright2017}{}}%
-\CSLLeftMargin{{[}38{]} }%
+\CSLLeftMargin{{[}38{]} }
 \CSLRightInline{J. S. Wright \emph{et al.}, {``Rainforest-initiated wet
 season onset over the southern {Amazon},''} \emph{Proceedings of the
 National Academy of Sciences}, 2017, doi:
 \href{https://doi.org/10.1073/pnas.1621516114}{10.1073/pnas.1621516114}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Hastie2009}{}}%
-\CSLLeftMargin{{[}39{]} }%
+\CSLLeftMargin{{[}39{]} }
 \CSLRightInline{T. Hastie, R. Tibshirani, and J. Friedman, \emph{The
 {Elements} of {Statistical Learning}. {Data Mining}, {Inference}, and
 {Prediction}}. {New York}: {Springer}, 2009.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Cortes1995}{}}%
-\CSLLeftMargin{{[}40{]} }%
+\CSLLeftMargin{{[}40{]} }
 \CSLRightInline{C. Cortes and V. Vapnik, {``Support-vector networks,''}
 \emph{Machine learning}, vol. 20, no. 3, pp. 273--297, 1995.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Chang2011}{}}%
-\CSLLeftMargin{{[}41{]} }%
+\CSLLeftMargin{{[}41{]} }
 \CSLRightInline{C.-C. Chang and C.-J. Lin, {``{LIBSVM}: A library for
 support vector machines,''} \emph{ACM transactions on intelligent
 systems and technology (TIST)}, vol. 2, no. 3, p. 27, 2011.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Chollet2018}{}}%
-\CSLLeftMargin{{[}42{]} }%
+\CSLLeftMargin{{[}42{]} }
 \CSLRightInline{F. Chollet and J. J. Allaire, \emph{Deep {Learning} with
 {R}}. {Manning Publications Co.}, 2018.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Goodfellow2016}{}}%
-\CSLLeftMargin{{[}43{]} }%
+\CSLLeftMargin{{[}43{]} }
 \CSLRightInline{I. Goodfellow, Y. Bengio, and A. Courville, \emph{Deep
 {Learning}}. {MIT Press}, 2016.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Ruder2016}{}}%
-\CSLLeftMargin{{[}44{]} }%
+\CSLLeftMargin{{[}44{]} }
 \CSLRightInline{S. Ruder, {``An overview of gradient descent
 optimization algorithms,''} \emph{CoRR}, vol. abs/1609.04747, 2016.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Srivastava2014}{}}%
-\CSLLeftMargin{{[}45{]} }%
+\CSLLeftMargin{{[}45{]} }
 \CSLRightInline{N. Srivastava, G. Hinton, A. Krizhevsky, I. Sutskever,
 and R. Salakhutdinov, {``Dropout: {A} simple way to prevent neural
 networks from overfitting,''} \emph{The Journal of Machine Learning
 Research}, vol. 15, no. 1, pp. 1929--1958, 2014.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Wang2017}{}}%
-\CSLLeftMargin{{[}46{]} }%
+\CSLLeftMargin{{[}46{]} }
 \CSLRightInline{Z. Wang, W. Yan, and T. Oates, {``Time {Series
 Classification} from {Scratch} with {Deep Neural Networks}: {A Strong
 Baseline},''} 2017.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Russwurm2017}{}}%
-\CSLLeftMargin{{[}47{]} }%
+\CSLLeftMargin{{[}47{]} }
 \CSLRightInline{M. Rußwurm and M. Korner, {``Temporal vegetation
 modelling using long short-term memory networks for crop identification
 from medium-resolution multi-spectral satellite images,''} in
@@ -5601,20 +5514,20 @@ from medium-resolution multi-spectral satellite images,''} in
 {Pattern Recognition Workshops}}, 2017, pp. 11--19.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Russwurm2018}{}}%
-\CSLLeftMargin{{[}48{]} }%
+\CSLLeftMargin{{[}48{]} }
 \CSLRightInline{M. Russwurm and M. Korner, {``Multi-temporal land cover
 classification with sequential recurrent encoders,''} \emph{ISPRS
 International Journal of Geo-Information}, vol. 7, no. 4, p. 129, 2018.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Simoes2021}{}}%
-\CSLLeftMargin{{[}49{]} }%
+\CSLLeftMargin{{[}49{]} }
 \CSLRightInline{R. Simoes \emph{et al.}, {``Satellite {Image Time Series
 Analysis} for {Big Earth Observation Data},''} \emph{Remote Sensing},
 vol. 13, no. 13, p. 2428, 2021, doi:
 \href{https://doi.org/10.3390/rs13132428}{10.3390/rs13132428}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-He2016}{}}%
-\CSLLeftMargin{{[}50{]} }%
+\CSLLeftMargin{{[}50{]} }
 \CSLRightInline{K. He, X. Zhang, S. Ren, and J. Sun, {``Deep {Residual
 Learning} for {Image Recognition},''} in \emph{2016 {IEEE Conference} on
 {Computer Vision} and {Pattern Recognition} ({CVPR})}, 2016, pp.
@@ -5622,7 +5535,7 @@ Learning} for {Image Recognition},''} in \emph{2016 {IEEE Conference} on
 \href{https://doi.org/10.1109/CVPR.2016.90}{10.1109/CVPR.2016.90}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Hochreiter1998}{}}%
-\CSLLeftMargin{{[}51{]} }%
+\CSLLeftMargin{{[}51{]} }
 \CSLRightInline{S. Hochreiter, {``The vanishing gradient problem during
 learning recurrent neural nets and problem solutions,''}
 \emph{International Journal of Uncertainty, Fuzziness and
@@ -5630,35 +5543,35 @@ Knowledge-Based Systems}, vol. 6, no. 2, pp. 107--116, 1998, doi:
 \href{https://doi.org/10.1142/S0218488598000094}{10.1142/S0218488598000094}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Fawaz2019}{}}%
-\CSLLeftMargin{{[}52{]} }%
+\CSLLeftMargin{{[}52{]} }
 \CSLRightInline{H. I. Fawaz, G. Forestier, J. Weber, L. Idoumghar, and
 P.-A. Muller, {``Deep learning for time series classification: A
 review,''} \emph{Data Mining and Knowledge Discovery}, vol. 33, no. 4,
 pp. 917--963, 2019.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Karim2019}{}}%
-\CSLLeftMargin{{[}53{]} }%
+\CSLLeftMargin{{[}53{]} }
 \CSLRightInline{F. Karim, S. Majumdar, H. Darabi, and S. Harford,
 {``Multivariate {LSTM-FCNs} for time series classification,''}
 \emph{Neural Networks}, vol. 116, pp. 237--245, 2019, doi:
 \href{https://doi.org/10.1016/j.neunet.2019.04.014}{10.1016/j.neunet.2019.04.014}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Huang2014}{}}%
-\CSLLeftMargin{{[}54{]} }%
+\CSLLeftMargin{{[}54{]} }
 \CSLRightInline{X. Huang, Q. Lu, L. Zhang, and A. Plaza, {``New
 postprocessing methods for remote sensing image classification: {A}
 systematic study,''} \emph{IEEE Transactions on Geoscience and Remote
 Sensing}, vol. 52, no. 11, pp. 7140--7159, 2014.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Schindler2012}{}}%
-\CSLLeftMargin{{[}55{]} }%
+\CSLLeftMargin{{[}55{]} }
 \CSLRightInline{K. Schindler, {``An overview and comparison of smooth
 labeling methods for land-cover classification,''} \emph{IEEE
 transactions on geoscience and remote sensing}, vol. 50, no. 11, pp.
 4534--4545, 2012.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Tomasi1998}{}}%
-\CSLLeftMargin{{[}56{]} }%
+\CSLLeftMargin{{[}56{]} }
 \CSLRightInline{C. Tomasi and R. Manduchi, {``Bilateral filtering for
 gray and color images,''} in \emph{Sixth {International Conference} on
 {Computer Vision} ({IEEE Cat}. {No}.{98CH36271})}, 1998, pp. 839--846,
@@ -5666,20 +5579,20 @@ doi:
 \href{https://doi.org/10.1109/ICCV.1998.710815}{10.1109/ICCV.1998.710815}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Paris2007}{}}%
-\CSLLeftMargin{{[}57{]} }%
+\CSLLeftMargin{{[}57{]} }
 \CSLRightInline{S. Paris, P. Kornprobst, J. Tumblin, and F. Durand, {``A
 gentle introduction to bilateral filtering and its applications,''} in
 \emph{{ACM SIGGRAPH} 2007 courses}, 2007, pp. 1--es, doi:
 \href{https://doi.org/10.1145/1281500.1281602}{10.1145/1281500.1281602}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-DAmour2020}{}}%
-\CSLLeftMargin{{[}58{]} }%
+\CSLLeftMargin{{[}58{]} }
 \CSLRightInline{A. D'Amour \emph{et al.}, {``Underspecification
 {Presents Challenges} for {Credibility} in {Modern Machine Learning},''}
 \emph{arXiv:2011.03395 {[}cs, stat{]}}, 2020.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Wadoux2021}{}}%
-\CSLLeftMargin{{[}59{]} }%
+\CSLLeftMargin{{[}59{]} }
 \CSLRightInline{A. M. J.-C. Wadoux, G. B. M. Heuvelink, S. de Bruin, and
 D. J. Brus, {``Spatial cross-validation is not the right way to evaluate
 map accuracy,''} \emph{Ecological Modelling}, vol. 457, p. 109692, 2021,
@@ -5687,7 +5600,7 @@ doi:
 \href{https://doi.org/10.1016/j.ecolmodel.2021.109692}{10.1016/j.ecolmodel.2021.109692}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Olofsson2013}{}}%
-\CSLLeftMargin{{[}60{]} }%
+\CSLLeftMargin{{[}60{]} }
 \CSLRightInline{P. Olofsson, G. M. Foody, S. V. Stehman, and C. E.
 Woodcock, {``Making better use of accuracy data in land change studies:
 {Estimating} accuracy and area and quantifying uncertainty using
@@ -5696,28 +5609,28 @@ stratified estimation,''} \emph{Remote Sensing of Environment}, vol.
 \href{https://doi.org/10.1016/j.rse.2012.10.031}{10.1016/j.rse.2012.10.031}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Olofsson2014}{}}%
-\CSLLeftMargin{{[}61{]} }%
+\CSLLeftMargin{{[}61{]} }
 \CSLRightInline{P. Olofsson, G. M. Foody, M. Herold, S. V. Stehman, C.
 E. Woodcock, and M. A. Wulder, {``Good practices for estimating area and
 assessing accuracy of land change,''} \emph{Remote Sensing of
 Environment}, vol. 148, pp. 42--57, 2014.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Gorelick2017}{}}%
-\CSLLeftMargin{{[}62{]} }%
+\CSLLeftMargin{{[}62{]} }
 \CSLRightInline{N. Gorelick, M. Hancher, M. Dixon, S. Ilyushchenko, D.
 Thau, and R. Moore, {``Google {Earth Engine}: {Planetary-scale}
 geospatial analysis for everyone,''} \emph{Remote Sensing of
 Environment}, vol. 202, pp. 18--27, 2017.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Lewis2017}{}}%
-\CSLLeftMargin{{[}63{]} }%
+\CSLLeftMargin{{[}63{]} }
 \CSLRightInline{A. Lewis \emph{et al.}, {``The {Australian Geoscience
 Data Cube} \textemdash{} {Foundations} and lessons learned,''}
 \emph{Remote Sensing of Environment}, vol. 202, pp. 276--292, 2017, doi:
 \href{https://doi.org/10.1016/j.rse.2017.03.015}{10.1016/j.rse.2017.03.015}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Schramm2021}{}}%
-\CSLLeftMargin{{[}64{]} }%
+\CSLLeftMargin{{[}64{]} }
 \CSLRightInline{M. Schramm \emph{et al.}, {``The {openEO
 API}\textendash{{Harmonising}} the {Use} of {Earth Observation Cloud
 Services Using Virtual Data Cube Functionalities},''} \emph{Remote
@@ -5725,21 +5638,21 @@ Sensing}, vol. 13, no. 6, p. 1125, 2021, doi:
 \href{https://doi.org/10.3390/rs13061125}{10.3390/rs13061125}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Ghemawat2003}{}}%
-\CSLLeftMargin{{[}65{]} }%
+\CSLLeftMargin{{[}65{]} }
 \CSLRightInline{S. Ghemawat, H. Gobioff, and S.-T. Leung, {``The
 {Google} file system,''} in \emph{Proceedings of the nineteenth {ACM}
 symposium on {Operating} systems principles}, 2003, pp. 29--43, doi:
 \href{https://doi.org/10.1145/945445.945450}{10.1145/945445.945450}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Dean2008}{}}%
-\CSLLeftMargin{{[}66{]} }%
+\CSLLeftMargin{{[}66{]} }
 \CSLRightInline{J. Dean and S. Ghemawat, {``{MapReduce}: Simplified data
 processing on large clusters,''} \emph{Communications of the ACM}, vol.
 51, no. 1, pp. 107--113, 2008, doi:
 \href{https://doi.org/10.1145/1327452.1327492}{10.1145/1327452.1327492}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Amani2020}{}}%
-\CSLLeftMargin{{[}67{]} }%
+\CSLLeftMargin{{[}67{]} }
 \CSLRightInline{M. Amani \emph{et al.}, {``Google {Earth Engine Cloud
 Computing Platform} for {Remote Sensing Big Data Applications}: {A
 Comprehensive Review},''} \emph{IEEE Journal of Selected Topics in
@@ -5748,7 +5661,7 @@ Applied Earth Observations and Remote Sensing}, vol. 13, pp. 5326--5350,
 \href{https://doi.org/10.1109/JSTARS.2020.3021052}{10.1109/JSTARS.2020.3021052}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Giuliani2020}{}}%
-\CSLLeftMargin{{[}68{]} }%
+\CSLLeftMargin{{[}68{]} }
 \CSLRightInline{G. Giuliani, B. Chatenoux, T. Piller, F. Moser, and P.
 Lacroix, {``Data {Cube} on {Demand} ({DCoD}): {Generating} an earth
 observation {Data Cube} anywhere in the world,''} \emph{International

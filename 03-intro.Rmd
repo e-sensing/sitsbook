@@ -152,7 +152,7 @@ The data structure associated to the time series is a table that contains data a
 
 It is useful to plot the dispersion of the time series. In what follows, for brevity we will select only one label ("Forest") and one index ("NDVI"). The resulting plot shows all of the time series associated to the label and attribute, highlighting the median and the first and third quartiles.
 
-```{r, fig.dim = c(5.66, 3.5), tidy="styler", fig.align = 'center', fig.cap="Joint plot of all samples in band NDVI for class Forest", strip.white = FALSE}
+```{r, out.width = "70%", tidy="styler", fig.align = 'center', fig.cap="Joint plot of all samples in band NDVI for class Forest", strip.white = FALSE}
 samples_forest <- dplyr::filter(
     samples_matogrosso_mod13q1, 
     label == "Forest"
@@ -170,7 +170,7 @@ After obtaining the time series, the next step is to train a machine learning (M
 
 The `sits_train()` function provides a single interface for all models. It takes two inputs: (a) `samples` organized as a time series table; (b) `ml_method` which is a function that implements an ML algorithm. Each algorithm requires specific parameters that are user-controllable. To simplify the learning curve, `sits` provides default parameters which should in general result in a suitable result. The result of `sits_train()` is a machine learning classification model. For more details, please see the "Machine Learning for Data Cubes" chapter.
 
-```{r, fig.dim = c(6.47, 4), tidy="styler", fig.align="center", fig.cap="Most relevant variables of random forest model"}
+```{r, out.width = "70%", tidy="styler", fig.align="center", fig.cap="Most relevant variables of random forest model"}
 # select the bands "ndvi", "evi"
 samples_2bands <- sits_select(
     data = samples_matogrosso_mod13q1, 
@@ -189,7 +189,7 @@ plot(rf_model)
 
 After training the machine learning model, the next step is to classify the data cube using `sits_classify()`. This function produces a set of raster probability maps, one for each class. For each of these maps, the value of a pixel is proportional to the the probability that it belongs to the class. This function has two mandatoty parameters: `data`, the data cube or time series tibble to be classified; and `ml_model`, the trained ML model. Optional parameters include: (a) `multicores`, number of cores to be used; (b) `memsize`, RAM used in the classification; (c) `output_dir`, the directory where the classified files will be written. Details of the classification process are available in "Classification of Images in Data Cubes".
 
-```{r, fig.dim = c(5.66, 3.5), tidy="styler", fig.align = 'center', fig.cap = "Probability map for class forest"}
+```{r, out.width = "70%", tidy="styler", fig.align = 'center', fig.cap = "Probability map for class forest"}
 
 # classify the raster image
 sinop_probs <- sits_classify(
@@ -209,7 +209,7 @@ After classification has been completed, we plot the probability maps for class 
 
 When working with big EO data, there is much variability in each class. As a result, some pixels will be misclassified. These errors are more likely to occur in transition areas between classes. To offset these problems,  the `sits_smooth()` function takes a probability cube as input and  uses the class probabilities of each pixel's neighborhood to reduce labeling uncertainty. We then plot the smoothed probability map for class "Forest" to compare with the previous plot.
 
-```{r, fig.dim = c(5.66, 3.5),  tidy="styler", fig.align = 'center', fig.cap = "Smoothed probability map for class Forest"}
+```{r, out.width = "70%",  tidy="styler", fig.align = 'center', fig.cap = "Smoothed probability map for class Forest"}
 # perform spatial smoothing
 sinop_bayes <- sits_smooth(
     cube = sinop_probs,
@@ -224,7 +224,7 @@ plot(sinop_bayes, labels = c("Forest"))
 
 After removing outliers using local smoothing, one can obtain the labeled classification map using the function `sits_label_classification()`. This function assigns each pixel to the class with highest probability.
 
-```{r, fig.dim = c(6.47, 4), tidy="styler", fig.cap = "Classification map for Sinop", fig.align="center"}
+```{r, out.width = "80%", tidy="styler", fig.cap = "Classification map for Sinop", fig.align="center"}
 
 # label the probability file 
 # (by default selecting the class with higher probability)
