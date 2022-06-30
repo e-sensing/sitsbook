@@ -67,7 +67,14 @@ For the machine learning examples, we use the data set "samples_matogrosso_mod13
 
 ## Random forests{-}
 
-The random forest model uses the idea of *decision trees* as its base model, with many refinements. When building the decision trees, each time a split in a tree is considered, a random sample of `m` features is chosen as split candidates from the full set of `n` features of the sample set[@James2013]. Each of these features is then tested, the one maximizing the decrease in a purity measure is used to build the trees. This criterion is used to identify relevant features and to perform variable selection. This decreases the correlation among trees and improves the prediction performance. The classification performance depends on the number of trees in the forest as well as the number of features randomly selected at each node. SITS provides a `sits_rfor` function which is a front-end to the `randomForest` package[@Wright2017]; its main parameter is `num_trees` (number of trees to grow). In practice, between 100 and 200 trees are sufficient to achieve a reasonable classification result.
+The random forest model uses the idea of *decision trees* as its base model, with many refinements. When building the decision trees, each time a split in a tree is considered, a random sample of `m` features is chosen as split candidates from the full set of `n` features of the sample set[@James2013]. Each of these features is then tested, the one maximizing the decrease in a purity measure is used to build the trees. This criterion is used to identify relevant features and to perform variable selection. This decreases the correlation among trees and improves the prediction performance. The classification performance depends on the number of trees in the forest as well as the number of features randomly selected at each node. 
+
+```{r api, echo = FALSE, out.width = "100%", out.height = "100%", fig.align="center", fig.cap="Diagram of a random decision forest (source: Venkata Jagannath in Wikipedia)."}
+
+knitr::include_graphics("images/random_forest.png") 
+```
+
+SITS provides a `sits_rfor` function which is a front-end to the `randomForest` package[@Wright2017]; its main parameter is `num_trees` (number of trees to grow). In practice, about 100 trees are sufficient to achieve a reasonable classification result. The model can be visualised using `plot()`
 
 ```{r, tidy="styler",out.width = "70%", fig.cap="Classification of time series using random forests"}
 # Retrieve the set of samples (provided by EMBRAPA) from the 
@@ -76,6 +83,13 @@ rfor_model <- sits_train(
     samples = samples_matogrosso_mod13q1, 
     ml_method = sits_rfor(num_trees = 100)
 )
+# plot the most important variables of the model
+plot(rfor_model)
+```
+ta
+
+
+```{r, tidy="styler",out.width = "70%", fig.cap="Classification of time series using random forests"}
 # retrieve a point to be classified
 point_mt_4bands <- sits_select(
     data = point_mt_6bands, 
@@ -96,7 +110,7 @@ sits_show_prediction(point_class)
 
 The result shows that the area started out as a forest in 2000, it was deforested from 2004 to 2005, used as pasture from 2006 to 2007, and for double-cropping agriculture from 2009 onwards.They are consistent with expert evaluation of the process of land use change in this region of Amazonia.
 
-Random forests are robust to outliers and able to deal with irrelevant inputs [@Hastie2009]. However, despite being robust, this approach tends to overemphasize some variables and thus rarely turns out to be the classifier with the smallest error. One reason is that the performance of random forests tends to stabilize after a part of the trees are grown [@Hastie2009]. In general, random forests can be useful to provide a baseline to compare with more sophisticated methods.
+Random forests are robust to outliers and able to deal with irrelevant inputs [@Hastie2009]. However, despite being robust, this approach tends to overemphasize some variables and thus rarely turns out to be the classifier with the smallest error. One reason is that the performance of random forests tends to stabilize after a part of the trees are grown [@Hastie2009]. In cases where abrupt change takes places, such deforestation mapping, random forest (if properly trained) will emphasize the temporal instances and bands that capture such quick change. Random forests can be useful to provide a baseline to compare with more sophisticated methods. 
 
 ## Support Vector Machines{-}
 
