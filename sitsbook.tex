@@ -24,22 +24,12 @@
   \usepackage[]{microtype}
   \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
 }{}
-\makeatletter
-\@ifundefined{KOMAClassName}{% if non-KOMA class
-  \IfFileExists{parskip.sty}{%
-    \usepackage{parskip}
-  }{% else
-    \setlength{\parindent}{0pt}
-    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
-}{% if KOMA class
-  \KOMAoptions{parskip=half}}
-\makeatother
 \usepackage{xcolor}
 \IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
 \IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
 \hypersetup{
-  pdftitle={sits: Data Analysis and Machine Learning on Earth Observation Data Cubes with Satellite Image Time Series},
-  pdfauthor={Gilberto Camara; Rolf Simoes; Felipe Souza; Alber Sanchez; Lorena Santos; Charlotte Peletier; Pedro R. Andrade; Karine Ferreira; Gilberto Queiroz},
+  pdftitle={sits: Satellite Image Time Series Analysis on Earth Observation Data Cubes},
+  pdfauthor={Gilberto Camara; Rolf Simoes; Felipe Souza; Charlotte Peletier; Alber Sanchez; Pedro R. Andrade; Karine Ferreira; Gilberto Queiroz},
   colorlinks=true,
   linkcolor={Maroon},
   filecolor={Maroon},
@@ -120,6 +110,7 @@
 \usepackage{hyperref}
 
 \widowpenalty=10000
+%\usepackage[defaultlines=3, all]{nowidow}
 \clubpenalty=10000
 \usepackage{listings}
 \usepackage{fancyvrb}
@@ -202,19 +193,19 @@
   \usepackage{selnolig}  % disable illegal ligatures
 \fi
 
-\title{\textbf{sits}: Data Analysis and Machine Learning on Earth
-Observation Data Cubes with Satellite Image Time Series}
-\author{Gilberto Camara \and Rolf Simoes \and Felipe Souza \and Alber
-Sanchez \and Lorena Santos \and Charlotte Peletier \and Pedro R.
+\title{\textbf{sits}: Satellite Image Time Series Analysis on Earth
+Observation Data Cubes}
+\author{Gilberto Camara \and Rolf Simoes \and Felipe
+Souza \and Charlotte Peletier \and Alber Sanchez \and Pedro R.
 Andrade \and Karine Ferreira \and Gilberto Queiroz}
-\date{2022-06-27}
+\date{2022-07-03}
 
 \begin{document}
 \maketitle
 
 \thispagestyle{empty}
 \begin{center}
-\includegraphics{images/cover2.png}
+\includegraphics{images/cover_sits_book.png}
 \end{center}
 
 \setlength{\abovedisplayskip}{-5pt}
@@ -368,23 +359,26 @@ access to the compiling environment.
 \subsubsection*{Ubuntu}\label{ubuntu}}
 \addcontentsline{toc}{subsubsection}{Ubuntu}
 
-For Unix-likes, GDAL (\textgreater= 2.0.1), GEOS (\textgreater= 3.4.0)
-and Proj.4 (\textgreater= 4.8.0) are required. Dependencies for recent
-versions of Ubuntu (18.04 and later) are available in the official
-repositories; you can install them with:
+For Ubuntu versions 20.04 (focal) and 22.04 (jammy), we provide a script
+for fast installation, based on the work by Dirk Eddelbuettel in
+\href{https://github.com/eddelbuettel/r2u}{r2u} project. The script
+installs binary versions of sits and all its dependencies. It requires R
+version 4.2.0 or later. To download the script use:
 
-\begin{lstlisting}[language=sh]
-apt-get -y update && apt-get install -y  libudunits2-dev libgdal-dev libgeos-dev libproj-dev
+\begin{lstlisting}[language=bash]
+wget https://raw.githubusercontent.com/e-sensing/sitsbook/master/utils/fast_sits_installation_ubuntu.sh
 \end{lstlisting}
 
-Access to the Swiss Data Cube requires gdal 3.4 (see the instructions
-below). Note that gdal running in \passthrough{\lstinline!docker!}
-containers requires the security flag
-\passthrough{\lstinline!--security-opt seccomp=unconfined!} on start.
+and run the script as sudo:
 
-To get more recent versions of libraries such as gdal (3.4 or higher),
-we recommend using the repository ubuntugis-unstable PPA, which could be
-added as follows:
+\begin{lstlisting}[language=bash]
+sudo sh fast_sits_installation_ubuntu.sh
+\end{lstlisting}
+
+Alternatively, the installation can be done step-by-step. We recommend
+using the latest version of the GDAL, GEOS, and PROJ4 libraries. To do
+so, use the repository \passthrough{\lstinline!ubuntugis-unstable!},
+which should be done as follows:
 
 \begin{lstlisting}[language=sh]
 sudo add-apt-repository ppa:ubuntugis/ubuntugis-unstable
@@ -394,10 +388,17 @@ sudo apt-get install libudunits2-dev libgdal-dev libgeos-dev libproj-dev
 
 If you get an error while adding this PPA repository, it could be
 because you miss the package
-\passthrough{\lstinline!software-properties-common!}.
+\passthrough{\lstinline!software-properties-common!}. When GDAL is
+running in \passthrough{\lstinline!docker!} containers, please add the
+security flag
+\passthrough{\lstinline!--security-opt seccomp=unconfined!} on start.
 
-Adding this PPA is required for installing \passthrough{\lstinline!sf!}
-on older versions of Ubuntu (e.g.~Xenial).
+\hypertarget{debian}{%
+\subsubsection{Debian}\label{debian}}
+
+To install on Debian, use the
+\href{https://github.com/rocker-org/geospatial}{rocker geospatial}
+dockerfiles.
 
 \hypertarget{fedora}{%
 \subsubsection*{Fedora}\label{fedora}}
@@ -409,30 +410,28 @@ The following command installs all required dependencies:
 sudo dnf install gdal-devel proj-devel geos-devel sqlite-devel udunits2-devel
 \end{lstlisting}
 
-\hypertarget{arch}{%
-\subsubsection*{Arch}\label{arch}}
-\addcontentsline{toc}{subsubsection}{Arch}
-
-Get gdal, proj and geos from the main repos, and udunits from the AUR:
-
-\begin{lstlisting}
-pacman -S gdal proj geos
-yay/pacaur/yaourt/whatever -S udunits
-\end{lstlisting}
-
 \hypertarget{installing-the-sits-package}{%
 \section*{\texorpdfstring{Installing the \texttt{sits}
 package}{Installing the sits package}}\label{installing-the-sits-package}}
 \addcontentsline{toc}{section}{Installing the \texttt{sits} package}
 
-\passthrough{\lstinline!sits!} is currently available on GitHub
-\url{https://github.com/e-sensing/sits}. To install the package, install
+\passthrough{\lstinline!sits!} is available on CRAN and should be
+installed as other R packages.
+
+\begin{lstlisting}[language=R]
+install.packages("sits")
+\end{lstlisting}
+
+The source code repository is on GitHub
+\url{https://github.com/e-sensing/sits}. To install the development
+version of \passthrough{\lstinline!sits!}, which contains the latest
+updates but might be unstable, users should install
 \passthrough{\lstinline!devtools!} if not already available, as then
 install sits as follows:
 
 \begin{lstlisting}[language=R]
 install.packages("devtools")
-devtools::install_github("e-sensing/sits", dependencies = TRUE)
+devtools::install_github("e-sensing/sits@dev", dependencies = TRUE)
 \end{lstlisting}
 
 To run the examples in the book, please also install the ``sitsdata''
@@ -704,7 +703,7 @@ API\_function & Inputs & Output\\
 
 }
 
-\caption{Main functions of the SITS API}\label{fig:api}
+\caption{Main functions of the SITS API (source: authors).}\label{fig:api}
 \end{figure}
 
 \newpage
@@ -784,12 +783,14 @@ plot(sinop,
 
 \begin{figure}
 
-{\centering \includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-6-1} 
+{\centering \includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-7-1} 
 
 }
 
-\caption{Color composite image for 2013-09-14}\label{fig:unnamed-chunk-6}
+\caption{Color composite image MOIDS cube for 2013-09-14 (red = EVI, green = NDVI, blue = EVI).}\label{fig:unnamed-chunk-7}
 \end{figure}
+
+\newpage
 
 The R object returned by \passthrough{\lstinline!sits\_cube()!} contains
 the metadata that describes the the contents of the data cube. The
@@ -799,8 +800,7 @@ refers to one band of an image at one of the temporal instances of the
 cube.
 
 \begin{lstlisting}[language=R]
-# show the contents of the R object that describes the data
-# cube for the Sinop region
+# show the R object that describes the data cube
 sinop
 \end{lstlisting}
 
@@ -829,16 +829,15 @@ and ``EVI''). This data set is available in package
 # 'sitsdata' package
 library(sitsdata)
 data("samples_matogrosso_mod13q1", package = "sitsdata")
-samples_matogrosso_mod13q1[1:3, ]
+samples_matogrosso_mod13q1[1:2, ]
 \end{lstlisting}
 
 \begin{lstlisting}
-#> # A tibble: 3 x 7
+#> # A tibble: 2 x 7
 #>   longitude latitude start_date end_date   label   cube 
 #>       <dbl>    <dbl> <date>     <date>     <chr>   <chr>
 #> 1     -57.8    -9.76 2006-09-14 2007-08-29 Pasture bdc_~
 #> 2     -59.4    -9.31 2014-09-14 2015-08-29 Pasture bdc_~
-#> 3     -59.4    -9.31 2013-09-14 2014-08-29 Pasture bdc_~
 #> # ... with 1 more variable: time_series <list>
 \end{lstlisting}
 
@@ -872,11 +871,11 @@ plot(samples_forest_ndvi)
 
 \begin{figure}
 
-{\centering \includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-9-1} 
+{\centering \includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-10-1} 
 
 }
 
-\caption{Joint plot of all samples in band NDVI for class Forest}\label{fig:unnamed-chunk-9}
+\caption{Joint plot of all samples in band NDVI for class Forest.}\label{fig:unnamed-chunk-10}
 \end{figure}
 
 \hypertarget{training-a-machine-learning-model}{%
@@ -884,24 +883,21 @@ plot(samples_forest_ndvi)
 model}\label{training-a-machine-learning-model}}
 \addcontentsline{toc}{section}{Training a machine learning model}
 
-After obtaining the time series, the next step is to train a machine
-learning (ML) model. Since the time series data has four attributes
-(``EVI'', ``NDVI'', ``NIR'', ``MIR'') and the data cube images only two,
-we select the ``NDVI'' and ``EVI'' values and use the resulting data for
-training. To build the classification model, we use a random forest
-model called by the \passthrough{\lstinline!sits\_rfor()!} function.
-
-The \passthrough{\lstinline!sits\_train()!} function provides a single
-interface for all models. It takes two inputs: (a)
-\passthrough{\lstinline!samples!} organized as a time series table; (b)
-\passthrough{\lstinline!ml\_method!} which is a function that implements
-an ML algorithm. Each algorithm requires specific parameters that are
-user-controllable. To simplify the learning curve,
-\passthrough{\lstinline!sits!} provides default parameters which should
-in general result in a suitable result. The result of
-\passthrough{\lstinline!sits\_train()!} is a machine learning
-classification model. For more details, please see the ``Machine
+The next step is to train a machine learning (ML) model using
+\passthrough{\lstinline!sits\_train()!}. It takes two inputs,
+\passthrough{\lstinline!samples!} (a time series table) and
+\passthrough{\lstinline!ml\_method!} (a function that implements a ML
+algorithm). The result is a model that is used classification. Each
+algorithm requires specific parameters that are user-controllable. For
+novice users, \passthrough{\lstinline!sits!} provides default parameters
+which produces a good result. For more details, please see the ``Machine
 Learning for Data Cubes'' chapter.
+
+Since the time series data has four attributes (``EVI'', ``NDVI'',
+``NIR'', ``MIR'') and the data cube images only two, we select the
+``NDVI'' and ``EVI'' values and use the resulting data for training. To
+build the classification model, we use a random forest model called by
+the \passthrough{\lstinline!sits\_rfor()!} function.
 
 \begin{lstlisting}[language=R]
 # select the bands "ndvi", "evi"
@@ -920,11 +916,11 @@ plot(rf_model)
 
 \begin{figure}
 
-{\centering \includegraphics[width=0.8\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-10-1} 
+{\centering \includegraphics[width=0.8\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-11-1} 
 
 }
 
-\caption{Most relevant variables of random forest model}\label{fig:unnamed-chunk-10}
+\caption{Most relevant variables of trained random forests model.}\label{fig:unnamed-chunk-11}
 \end{figure}
 
 \hypertarget{data-cube-classification}{%
@@ -961,11 +957,11 @@ plot(sinop_probs, labels = c("Forest"))
 
 \begin{figure}
 
-{\centering \includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-11-1} 
+{\centering \includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-12-1} 
 
 }
 
-\caption{Probability map for class forest}\label{fig:unnamed-chunk-11}
+\caption{Probability map for class Forest.}\label{fig:unnamed-chunk-12}
 \end{figure}
 
 After classification has been completed, we plot the probability maps
@@ -1000,11 +996,11 @@ plot(sinop_bayes, labels = c("Forest"))
 
 \begin{figure}
 
-{\centering \includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-12-1} 
+{\centering \includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-13-1} 
 
 }
 
-\caption{Smoothed probability map for class Forest}\label{fig:unnamed-chunk-12}
+\caption{Smoothed probability map for class Forest.}\label{fig:unnamed-chunk-13}
 \end{figure}
 
 \hypertarget{labelling-a-probability-data-cube}{%
@@ -1015,11 +1011,10 @@ cube}\label{labelling-a-probability-data-cube}}
 After removing outliers using local smoothing, one can obtain the
 labeled classification map using the function
 \passthrough{\lstinline!sits\_label\_classification()!}. This function
-assigns each pixel to the class with highest probability.
+assigns each pixel to the class with highest probability. \newpage
 
 \begin{lstlisting}[language=R]
 # label the probability file 
-# (by default selecting the class with higher probability)
 sinop_map <- sits_label_classification(
     cube = sinop_bayes, 
     output_dir = "./tempdir/chp3"
@@ -1029,11 +1024,11 @@ plot(sinop_map, title = "Sinop Classification Map")
 
 \begin{figure}
 
-{\centering \includegraphics[width=0.8\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-13-1} 
+{\centering \includegraphics[width=0.8\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-14-1} 
 
 }
 
-\caption{Classification map for Sinop}\label{fig:unnamed-chunk-13}
+\caption{Classification map for Sinop}\label{fig:unnamed-chunk-14}
 \end{figure}
 
 In the above example, the color legend is taken for the predefined color
@@ -1114,18 +1109,16 @@ cubes}\label{earth-observation-data-cubes}}
 collections}\label{analysis-ready-data-image-collections}}
 \addcontentsline{toc}{section}{Analysis-ready data image collections}
 
-Many collections of Earth observation analysis-ready data (ARD) are
-available in cloud services such as Amazon Web Service, Brazil Data
-Cube, Digital Earth Africa, and Microsoft's Planetary Computer. These
-collections which have been processed by space agencies to improve
-multidate comparability. Such processing includes conversion from
-radiance measures at the top of the atmosphere to reflectance measures
-from ground areas. Variations in sun incidence angles are also
-compensated. In general, timelines of the images of an ARD image
-collection are different. Images still contain cloudy or missing pixels
-and bands for the images in the collection may have different
-resolutions. Figure 8 shows an example of the Landsat ARD image
-collection. There are missing values and clouds in most images.
+Collections of Earth observation analysis-ready data (ARD) are available
+in cloud services such as Amazon Web Service, Brazil Data Cube, Digital
+Earth Africa, and Microsoft's Planetary Computer. These collections
+which have been processed to improve multidate comparability. Radiance
+measures at the top of the atmosphere have been converted to ground
+reflectance measures. In general, timelines of the images of an ARD
+image collection are different. Images still contain cloudy or missing
+pixels; bands for the images in the collection may have different
+resolutions. Figure 9 shows an example of the Landsat ARD image
+collection.
 
 \begin{figure}
 
@@ -1133,18 +1126,15 @@ collection. There are missing values and clouds in most images.
 
 }
 
-\caption{ARD image collection (source: USGS)}\label{fig:ardtile}
+\caption{ARD image collection (source: USGS). Reproduction based on fair use doctrine.}\label{fig:ardtile}
 \end{figure}
 
 ARD image collections are organized in spatial partitions. Sentinel-2/2A
-ARD images are produced according to the MGRS tiling system. This system
-divides the world in 60 UTM zones of 8 degrees of longitude width. Each
-zone is divided in blocks of 6 degrees of latitude. Then, each block is
-split into tiles of 110 x 110 km2 with a 10 km overlap. As an example,
-we shows the MGRS tiling system used in Sentinel-2 images for a part of
-the Northeastern coast of Brazil, contained in UTM zone 24, block M. The
-city of Fortaleza, shown in the centre of the image, is contained in
-MGRS tile 24MWA.
+images follow the MGRS tiling system, which divides the world in 60 UTM
+zones of 8 degrees of longitude each. Each zone has blocks of 6 degrees
+of latitude. Blocks are split into tiles of 110 x 110 km2 with a 10 km
+overlap. Figure 10 shows the MGRS tiling system for a part of the
+Northeastern coast of Brazil, contained in UTM zone 24, block M.
 
 \begin{figure}
 
@@ -1152,16 +1142,16 @@ MGRS tile 24MWA.
 
 }
 
-\caption{MGRS tiling system used by Sentinel-2 images (source: GISSurfer 2.0)}\label{fig:wrs}
+\caption{MGRS tiling system used by Sentinel-2 images (source: GISSurfer 2.0). Reproduction based on fair use doctrine.}\label{fig:wrs}
 \end{figure}
 
 The Landsat 5/7/8/9 satellites use the Worldwide Reference System
-(WRS-2) to allow access to images by specifying a nominal scene center
-designated by path and row numbers. WRS-2 breaks the coverage of Landsat
-satellites into images identified by path and row. The path is the
-descending orbit of the satellite; the WRS-2 system has 233 paths per
-orbit and each path is divided in 119 rows. Images in WRS-2 are
-geometrically corrected to the UTM projection.
+(WRS-2), which breaks the coverage of Landsat satellites into images
+identified by path and row. The path is the descending orbit of the
+satellite; the WRS-2 system has 233 paths per orbit and each path is
+divided in 119 rows,where each row refers to ta latitudinal center line
+of a frame of imagery. Images in WRS-2 are geometrically corrected to
+the UTM projection.
 
 \begin{figure}
 
@@ -1169,7 +1159,7 @@ geometrically corrected to the UTM projection.
 
 }
 
-\caption{WRS-2 tiling system used by Landsat-5/7/8/9 images (source: INPE and ESRI)}\label{fig:mgrs}
+\caption{WRS-2 tiling system used by Landsat-5/7/8/9 images (source: INPE and ESRI). Reproduction based on fair use doctrine.}\label{fig:mgrs}
 \end{figure}
 
 \hypertarget{ard-image-collections-handled-by-sits}{%
@@ -1388,11 +1378,11 @@ plot(s2_20LKP_cube_MPC, red = "B11", blue = "B05", green = "B8A",
 
 \begin{figure}
 
-{\centering \includegraphics[width=0.6\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-18-1} 
+{\centering \includegraphics[width=0.6\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-19-1} 
 
 }
 
-\caption{Sentinel-2 image in an area of the state of Rondonia, Brazil}\label{fig:unnamed-chunk-18}
+\caption{Sentinel-2 image in an area of the state of Rondonia, Brazil}\label{fig:unnamed-chunk-19}
 \end{figure}
 
 The \passthrough{\lstinline!LANDSAT-C2-L2!} collection provides access
@@ -1406,6 +1396,8 @@ All images have 30m resolution. For this collection, tile search is not
 supported; the \passthrough{\lstinline!roi!} parameter should be used.
 The example shows how to retrieve data from a region of interest
 covering the city of Brasilia in Brazil.
+
+\newpage
 
 \begin{lstlisting}[language=R]
 # Read a shapefile thar covers the city of Brasilia
@@ -1428,11 +1420,11 @@ plot(s2_L8_cube_MPC[2,], red = "SWIR16", green = "NIR08", blue = "BLUE",
 
 \begin{figure}
 
-{\centering \includegraphics[width=0.65\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-19-1} 
+{\centering \includegraphics[width=0.65\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-20-1} 
 
 }
 
-\caption{Landsat-8 image in an area of the city of Brasilia, Brazil}\label{fig:unnamed-chunk-19}
+\caption{Landsat-8 image in an area of the city of Brasilia, Brazil}\label{fig:unnamed-chunk-20}
 \end{figure}
 
 \hypertarget{assessing-digital-earth-africa}{%
@@ -1470,11 +1462,11 @@ dea_cube %>%
 
 \begin{figure}
 
-{\centering \includegraphics[width=0.6\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-20-1} 
+{\centering \includegraphics[width=0.6\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-21-1} 
 
 }
 
-\caption{Sentinel-2 image in an area over South Africa}\label{fig:unnamed-chunk-20}
+\caption{Sentinel-2 image in an area over South Africa}\label{fig:unnamed-chunk-21}
 \end{figure}
 
 \hypertarget{assessing-the-brazil-data-cube}{%
@@ -1496,7 +1488,8 @@ extension of \(336\times220\) km\textsuperscript{2} and each image has
 \(11,204\times7,324\) pixels. The small grid covers \(168\times110\)
 km\textsuperscript{2} and is used for Sentinel-2 MSI collections at 10m
 resolutions; each image has \(16,806\times10,986\) pixels. The data
-cubes in the BDC are regularly spaced in time and cloud-corrected.
+cubes in the BDC are regularly spaced in time and cloud-corrected
+\protect\hyperlink{ref-Ferreira2020a}{{[}3{]}}.
 
 \begin{figure}
 
@@ -1504,7 +1497,7 @@ cubes in the BDC are regularly spaced in time and cloud-corrected.
 
 }
 
-\caption{Hierarchical BDC tiling system showing overlayed on Brazilian Biomes (a), illustrating that one large tile (b) contains four medium tiles (c) and that medium tile contains four small tiles}\label{fig:unnamed-chunk-21}
+\caption{Hierarchical BDC tiling system showing overlayed on Brazilian Biomes (a), illustrating that one large tile (b) contains four medium tiles (c) and that medium tile contains four small tiles. Source: Ferreira et al.(2020). Reproduction under fair use doctrine.}\label{fig:unnamed-chunk-22}
 \end{figure}
 
 The collections available in the BDC are:
@@ -1556,7 +1549,7 @@ plot(cbers_tile, red = "B15", green = "B16", blue = "B13", date = "2018-09-30")
 
 }
 
-\caption{Plot of CBERS-4 image obtained from the BDC with a single tile covering an area in the Brazilian Cerrado.}\label{fig:unnamed-chunk-24}
+\caption{Plot of CBERS-4 image obtained from the BDC with a single tile covering an area in the Brazilian Cerrado.}\label{fig:unnamed-chunk-25}
 \end{figure}
 
 \hypertarget{defining-a-data-cube-using-ard-local-files}{%
@@ -1636,11 +1629,11 @@ plot(cbers_cube, band = "NDVI", date = "2018-08-29")
 
 \begin{figure}
 
-{\centering \includegraphics[width=0.6\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-26-1} 
+{\centering \includegraphics[width=0.6\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-27-1} 
 
 }
 
-\caption{CBERS-4 NDVI in an area over Brazil}\label{fig:unnamed-chunk-26}
+\caption{CBERS-4 NDVI in an area over Brazil}\label{fig:unnamed-chunk-27}
 \end{figure}
 
 \hypertarget{defining-a-data-cube-using-classified-images}{%
@@ -1720,11 +1713,11 @@ plot(Rondonia_class_cube)
 
 \begin{figure}
 
-{\centering \includegraphics[width=0.8\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-27-1} 
+{\centering \includegraphics[width=0.8\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-28-1} 
 
 }
 
-\caption{Classified data cube for year 2020/2021 in Rondonia, Brazil}\label{fig:unnamed-chunk-27}
+\caption{Classified data cube for year 2020/2021 in Rondonia, Brazil}\label{fig:unnamed-chunk-28}
 \end{figure}
 
 \hypertarget{regularizing-data-cubes}{%
@@ -1766,11 +1759,11 @@ s2_cube %>%
 
 \begin{figure}
 
-{\centering \includegraphics[width=0.6\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-28-1} 
+{\centering \includegraphics[width=0.6\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-29-1} 
 
 }
 
-\caption{Sentinel-2 tile 20LLP for date 2018-07-03}\label{fig:unnamed-chunk-28}
+\caption{Sentinel-2 tile 20LLP for date 2018-07-03}\label{fig:unnamed-chunk-29}
 \end{figure}
 
 Because of different acquisition orbits of the Sentinel-2 and
@@ -1813,11 +1806,11 @@ reg_cube %>%
 
 \begin{figure}
 
-{\centering \includegraphics[width=0.6\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-29-1} 
+{\centering \includegraphics[width=0.6\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-30-1} 
 
 }
 
-\caption{Regularized image for tile Sentinel-2 tile 20LLP}\label{fig:unnamed-chunk-29}
+\caption{Regularized image for tile Sentinel-2 tile 20LLP}\label{fig:unnamed-chunk-30}
 \end{figure}
 
 After obtaining a regular data cube, users can perform data analysis and
@@ -1858,11 +1851,11 @@ plot(reg_cube_NBR, band = "NBR")
 
 \begin{figure}
 
-{\centering \includegraphics[width=0.6\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-30-1} 
+{\centering \includegraphics[width=0.6\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-31-1} 
 
 }
 
-\caption{NBR ratio for a regular data cube built using Sentinel-2 tiles and 20LKP and 20LLP}\label{fig:unnamed-chunk-30}
+\caption{NBR ratio for a regular data cube built using Sentinel-2 tiles and 20LKP and 20LLP}\label{fig:unnamed-chunk-31}
 \end{figure}
 
 \hypertarget{working-with-time-series}{%
@@ -1889,7 +1882,7 @@ generalization of a \passthrough{\lstinline!data.frame!}, the usual way
 in R to organize data in tables. Tibbles are part of the
 \passthrough{\lstinline!tidyverse!}, a collection of R packages designed
 to work together in data manipulation
-\protect\hyperlink{ref-Wickham2017}{{[}3{]}}. The following code shows
+\protect\hyperlink{ref-Wickham2017}{{[}4{]}}. The following code shows
 the first three lines of a tibble containing \(1,882\) labeled samples
 of land cover in Mato Grosso state of Brazil. The samples contain time
 series extracted from the MODIS MOD13Q1 product from 2000 to 2016,
@@ -1902,36 +1895,33 @@ includes samples of nine classes: ``Forest'', ``Cerrado'', ``Pasture'',
 \begin{lstlisting}[language=R]
 # data set of samples
 data("samples_matogrosso_mod13q1")
-samples_matogrosso_mod13q1[1:3, ]
+samples_matogrosso_mod13q1[1:4, ]
 \end{lstlisting}
 
 \begin{lstlisting}
-#> # A tibble: 3 x 7
+#> # A tibble: 4 x 7
 #>   longitude latitude start_date end_date   label   cube 
 #>       <dbl>    <dbl> <date>     <date>     <chr>   <chr>
 #> 1     -57.8    -9.76 2006-09-14 2007-08-29 Pasture bdc_~
 #> 2     -59.4    -9.31 2014-09-14 2015-08-29 Pasture bdc_~
 #> 3     -59.4    -9.31 2013-09-14 2014-08-29 Pasture bdc_~
+#> 4     -57.8    -9.76 2006-09-14 2007-08-29 Pasture bdc_~
 #> # ... with 1 more variable: time_series <list>
 \end{lstlisting}
 
 A sits tibble contains data and metadata. The first six columns contain
-the metadata: spatial and temporal information, the label assigned to
-the sample, and the data cube from where the data has been extracted.
-The spatial location is given in longitude and latitude in WGS84
-coordinates. The first sample has been labeled ``Pasture'' at location
-(-58.5631, -13.8844) and is considered valid for the period (2007-09-14,
-2008-08-28). Informing the dates where the label is valid is crucial for
-correct classification. In this case, the researchers involved in
-labeling the samples chose to use the agricultural calendar in Brazil,
-where the spring crop is planted in the months of September and October,
-and the autumn crop is planted in the months of February and March. For
-other applications and other countries, the relevant dates will most
-likely be different from those used in the example. The
-\passthrough{\lstinline!time\_series!} column contains the time series
-data for each spatiotemporal location. This data is also organized as a
-tibble, with a column with the dates and the other columns with the
-values for each spectral band.
+spatial and temporal information, the label assigned to the sample, and
+the data cube from where the data has been extracted. The first sample
+has been labeled ``Pasture'' at location (-58.5631, -13.8844) and is
+valid for the period (2006-09-14, 2007-08-29). Informing the dates where
+the label is valid is crucial for correct classification. In this case,
+the researchers involved in labeling the samples chose to use the
+agricultural calendar in Brazil. For other applications and other
+countries, the relevant dates will most likely be different from those
+used in the example. The \passthrough{\lstinline!time\_series!} column
+contains the time series data for each spatiotemporal location. This
+data is also organized as a tibble, with a column with the dates and the
+other columns with the values for each spectral band.
 
 \hypertarget{utilities-for-handling-time-series}{%
 \section*{Utilities for handling time
@@ -1974,7 +1964,7 @@ embedded time series, one can use the functions from
 \passthrough{\lstinline!dplyr!}, \passthrough{\lstinline!tidyr!}, and
 \passthrough{\lstinline!purrr!} packages of the
 \passthrough{\lstinline!tidyverse!}
-\protect\hyperlink{ref-Wickham2017}{{[}3{]}} to process the data. For
+\protect\hyperlink{ref-Wickham2017}{{[}4{]}} to process the data. For
 example, the following code uses
 \passthrough{\lstinline!sits\_select()!} to get a subset of the sample
 data set with two bands (NDVI and EVI) and then uses the
@@ -1987,7 +1977,8 @@ samples_ndvi <- sits_select(samples_matogrosso_mod13q1,
                             bands = "NDVI")
 
 # select only samples with Cerrado label
-samples_cerrado <- dplyr::filter(samples_ndvi, label == "Cerrado")
+samples_cerrado <- dplyr::filter(samples_ndvi, 
+                                 label == "Cerrado")
 \end{lstlisting}
 
 \hypertarget{time-series-visualisation}{%
@@ -2014,16 +2005,13 @@ plot(samples_cerrado[1:12, ])
 \caption{Plot of the first 'Cerrado' sample}\label{fig:cerrado-12}
 \end{figure}
 
-For a large number of samples, where the number of individual plots
-would be substantial, the default visualization combines all samples
-together in a single temporal interval (even if they belong to different
-years). All samples with the same band and label are aligned to a common
-time interval. This plot is useful to show the spread of values for the
-time series of each band. The strong red line in the plot shows the
+For a large number of samples, the default visualization combines all
+samples together in a single temporal interval even if they belong to
+different years. This plot is useful to show the spread of values for
+the time series of each band. The strong red line in the plot shows the
 median of the values, while the two orange lines are the first and third
-interquartile ranges. The documentation of
-\passthrough{\lstinline!plot.sits()!} has more details about the
-different ways it can display data.
+interquartile ranges. See \passthrough{\lstinline!?plot!} for more
+details on data visualization in \passthrough{\lstinline!sits!}.
 
 \begin{lstlisting}[language=R]
 # plot all cerrado samples together
@@ -2032,11 +2020,11 @@ plot(samples_cerrado)
 
 \begin{figure}
 
-{\centering \includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-35-1} 
+{\centering \includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-36-1} 
 
 }
 
-\caption{Plot of all Cerrado samples }\label{fig:unnamed-chunk-35}
+\caption{Plot of all Cerrado samples }\label{fig:unnamed-chunk-36}
 \end{figure}
 
 \hypertarget{obtaining-time-series-data-from-data-cubes}{%
@@ -2075,7 +2063,7 @@ and longitude of the desired location. Since the bands, start date and
 end date of the time series are not informed,
 \passthrough{\lstinline!sits!} obtains them from the data cube. The
 result is a tibble with one time series that can be visualized using
-\passthrough{\lstinline!plot()!}.
+\passthrough{\lstinline!plot()!}. \newpage
 
 \begin{lstlisting}[language=R]
 # Obtain a raster cube with based on local files
@@ -2099,11 +2087,11 @@ plot(series)
 
 \begin{figure}
 
-{\centering \includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-36-1} 
+{\centering \includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-37-1} 
 
 }
 
-\caption{NDVI and EVI time series fetched from local raster cube.}\label{fig:unnamed-chunk-36}
+\caption{NDVI and EVI time series fetched from local raster cube.}\label{fig:unnamed-chunk-37}
 \end{figure}
 
 A useful case is when a set of labelled samples are available to be used
@@ -2231,11 +2219,11 @@ series}\label{filtering-techniques-for-time-series}}
 
 Satellite image time series generally is contaminated by atmospheric
 influence, geolocation error, and directional effects
-\protect\hyperlink{ref-Lambin2006}{{[}4{]}}. Atmospheric noise, sun
+\protect\hyperlink{ref-Lambin2006}{{[}5{]}}. Atmospheric noise, sun
 angle, interferences on observations or different equipment
 specifications, as well as the very nature of the climate-land dynamics
 can be sources of variability
-\protect\hyperlink{ref-Atkinson2012}{{[}5{]}}. Inter-annual climate
+\protect\hyperlink{ref-Atkinson2012}{{[}6{]}}. Inter-annual climate
 variability also changes the phenological cycles of the vegetation,
 resulting in time series whose periods and intensities do not match on a
 year-to-year basis. To make the best use of available satellite data
@@ -2250,9 +2238,9 @@ supports the well-known Savitzky--Golay
 (\passthrough{\lstinline!sits\_sgolay()!}) and Whittaker
 (\passthrough{\lstinline!sits\_whittaker()!}) filters. In an evaluation
 of MERIS NDVI time series filtering for estimating phenological
-parameters in India, \protect\hyperlink{ref-Atkinson2012}{{[}5{]}} found
+parameters in India, \protect\hyperlink{ref-Atkinson2012}{{[}6{]}} found
 that the Whittaker filter provides good results.
-\protect\hyperlink{ref-Zhou2016}{{[}6{]}} found that the Savitzky-Golay
+\protect\hyperlink{ref-Zhou2016}{{[}7{]}} found that the Savitzky-Golay
 filter is good for reconstruction in tropical evergreen broadleaf
 forests.
 
@@ -2266,7 +2254,7 @@ linear least squares. The main parameters for the filter are the
 polynomial degree (\(d\)) and the length of the window data points
 (\(n\)). In general, it produces smoother results for a larger value of
 \(n\) and/or a smaller value of \(d\)
-\protect\hyperlink{ref-Chen2004}{{[}7{]}}. The optimal value for these
+\protect\hyperlink{ref-Chen2004}{{[}8{]}}. The optimal value for these
 two parameters can vary from case to case. In SITS, the user can set the
 order of the polynomial using the parameter
 \passthrough{\lstinline!order!} (default = 3), the size of the temporal
@@ -2288,11 +2276,11 @@ sits_merge(point_sg, point_ndvi) %>%
 
 \begin{figure}
 
-{\centering \includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-41-1} 
+{\centering \includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-42-1} 
 
 }
 
-\caption{Savitzky-Golay filter applied on a multi-year NDVI time series.}\label{fig:unnamed-chunk-41}
+\caption{Savitzky-Golay filter applied on a multi-year NDVI time series.}\label{fig:unnamed-chunk-42}
 \end{figure}
 
 Notice that the resulting smoothed curve has both desirable and unwanted
@@ -2310,7 +2298,7 @@ parameter and analyse the results.
 
 The Whittaker smoother attempts to fit a curve that represents the raw
 data, but is penalized if subsequent points vary too much
-\protect\hyperlink{ref-Atzberger2011}{{[}8{]}}. The Whittaker filter is
+\protect\hyperlink{ref-Atzberger2011}{{[}9{]}}. The Whittaker filter is
 a balancing between the residual to the original data and the
 ``smoothness'' of the fitted curve. The filter has one parameter:
 \(\lambda{}\) that works as a ``smoothing weight'' parameter.
@@ -2334,11 +2322,11 @@ sits_merge(point_whit, point_ndvi) %>%
 
 \begin{figure}
 
-{\centering \includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-42-1} 
+{\centering \includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-43-1} 
 
 }
 
-\caption{Whittaker filter applied on a one-year NDVI time series.}\label{fig:unnamed-chunk-42}
+\caption{Whittaker filter applied on a one-year NDVI time series.}\label{fig:unnamed-chunk-43}
 \end{figure}
 
 In the same way as what is observed in the Savitsky-Golay filter, high
@@ -2361,9 +2349,9 @@ classification models is assessing their quality. Experience with
 machine learning methods has shown that the limiting factor in obtaining
 good results is the number and quality of training samples. Large and
 accurate data sets are better, no matter the algorithm used
-\protect\hyperlink{ref-Maxwell2018}{{[}9{]}}; noisy training samples can
-have a negative effect on classification performance
-\protect\hyperlink{ref-Frenay2014}{{[}10{]}}. Therefore, it is useful to
+\protect\hyperlink{ref-Maxwell2018}{{[}10{]}}; noisy training samples
+can have a negative effect on classification performance
+\protect\hyperlink{ref-Frenay2014}{{[}11{]}}. Therefore, it is useful to
 apply pre-processing methods to improve the quality of the samples and
 to remove those that might have been wrongly labeled or that have low
 discriminatory power.
@@ -2387,9 +2375,9 @@ Self-organizing Maps (SOM). The two methods have different computational
 complexities. As discussed below, AHC results are somewhat easier to
 interpret than those of SOM. However, AHC has a computational complexity
 of \(\mathcal{O}(n^2)\) given the number of time series \(n\), whereas
-SOM complexity is linear with respect to n.~Therefore, for large data
-sets, AHC requires an substantial amount of memory and running time; in
-these cases, SOM is recommended.
+SOM complexity is linear with respect to n.~For large data sets, AHC
+requires an substantial amount of memory and running time; in these
+cases, SOM is recommended.
 
 \hypertarget{hierachical-clustering-for-sample-quality-control}{%
 \section*{Hierachical clustering for sample quality
@@ -2402,7 +2390,7 @@ between any two elements from a data set. Depending on the distance
 functions and linkage criteria, the algorithm decides which two clusters
 are merged at each iteration. This approach is useful for exploring data
 samples due to its visualization power and ease of use
-\protect\hyperlink{ref-Keogh2003}{{[}11{]}}. In
+\protect\hyperlink{ref-Keogh2003}{{[}12{]}}. In
 \passthrough{\lstinline!sits!}, AHC is implemented using
 \passthrough{\lstinline!sits\_cluster\_dendro()!}.
 
@@ -2435,9 +2423,9 @@ and \passthrough{\lstinline!linkage!}. The
 \passthrough{\lstinline!dist\_method!} parameter specifies how to
 calculate the distance between two time series. We recommend a metric
 that uses dynamic time warping
-(DTW)\protect\hyperlink{ref-Petitjean2012}{{[}12{]}}, as DTW is reliable
+(DTW)\protect\hyperlink{ref-Petitjean2012}{{[}13{]}}, as DTW is reliable
 method for measuring differences between satellite image time series
-\protect\hyperlink{ref-Maus2016}{{[}13{]}}. The options available in
+\protect\hyperlink{ref-Maus2016}{{[}14{]}}. The options available in
 \passthrough{\lstinline!sits!} are based on those provided by package
 \passthrough{\lstinline!dtwclust!}, which include
 \passthrough{\lstinline!dtw\_basic!}, \passthrough{\lstinline!dtw\_lb!},
@@ -2448,38 +2436,21 @@ distances.
 The \passthrough{\lstinline!linkage!} parameter defines the metric used
 for computing the distance between clusters. The recommended linkage
 criteria are: \passthrough{\lstinline!complete!} or
-\passthrough{\lstinline!ward.D2!}. Complete-linkage prioritizes the
+\passthrough{\lstinline!ward.D2!}. Complete linkage prioritizes the
 within-cluster dissimilarities, producing clusters with shorter distance
-samples. Complete-linkage clustering can be sensitive to outliers, which
-can increase the resulting intracluster data variance. As an
-alternative, Ward proposes criteria to minimize the data variance by
-means of either \emph{sum-of-squares} or \emph{sum-of-squares-error}
-\protect\hyperlink{ref-Ward1963}{{[}14{]}}. Ward's intuition is that
-clusters of multivariate observations, such as time series, should be
-approximately elliptical in shape
-\protect\hyperlink{ref-Hennig2015}{{[}15{]}}.
-
-After creating a dendrogram, an important question emerges: \emph{where
-to cut the dendrogram?} The answer depends on what are the purposes of
-the cluster analysis, which needs to balance two objectives: get
-clusters as large as possible, and get clusters as homogeneous as
-possible with respect to their known classes. The
+samples, but results are sensitive to outliers. As an alternative, Ward
+proposes to minimize the data variance by means of either
+\emph{sum-of-squares} or \emph{sum-of-squares-error}
+\protect\hyperlink{ref-Ward1963}{{[}15{]}}. To cut the dendrogram, the
 \passthrough{\lstinline!sits\_cluster\_dendro()!} function computes the
-\emph{adjusted rand index} (ARI) for a series of the different number of
-generated clusters. This function returns the height where the cut of
-the dendrogram maximizes the index. For more detaily, please see
-\protect\hyperlink{ref-Rand1971}{{[}16{]}}.
-
-In the example above after calculating the dendrogram, the ARI index
-indicates that six (6) clusters are the best possible arrangement.
-However, these clusters may still contain a mixed composition of samples
-of different classes.
-
-The result of the \passthrough{\lstinline!sits\_cluster!} operation is a
-\passthrough{\lstinline!sits\_tibble!} with one additional column,
-called ``cluster''. The function
+\emph{adjusted rand index} (ARI)
+\protect\hyperlink{ref-Rand1971}{{[}16{]}} and returns the height where
+the cut of the dendrogram maximizes the index . In the example, the ARI
+index indicates that six (6) clusters are present. The result of
+\passthrough{\lstinline!sits\_cluster\_dendro()!} is a time series
+tibble with one additional column, called ``cluster''. The function
 \passthrough{\lstinline!sits\_cluster\_frequency()!} provides
-information on the composition of each cluster,
+information on the composition of each cluster.
 
 \begin{lstlisting}[language=R]
 # show clusters samples frequency
@@ -2494,33 +2465,23 @@ sits_cluster_frequency(clusters)
 #>   Total   205 189  51  80 141  80   746
 \end{lstlisting}
 
-The result shows that each cluster have a predominance of either
-``Cerrado'' or ``Pasture'' class with the exception of cluster \(3\).
-The table how the samples are distributed across the clusters and helps
-identify two kinds of problems. The first is relative to small amounts
-of samples of one class in clusters dominated by another (\emph{e.g.}
-clusters \(1\), \(2\), \(4\), \(5\), and \(6\)), while the second is
-relative to those samples in non-dominated clusters (\emph{e.g.} cluster
-\(3\)). These confusions can be an indication of samples with poor
-quality, and inadequacy of selected parameters for cluster analysis, or
-even a natural confusion due to the inherent variability of the land
-classes.
-
-It is possible to remove clusters with mixed classes using the
-\passthrough{\lstinline!dplyr!} package. In the example above, removing
-cluster \(3\) can be done using the
-\passthrough{\lstinline!dplyr::filter()!} function. The resulting
-clusters still contained mixed labels, possibly resulting from outliers.
-In this case, users may want to remove the outliers and leave only the
-most frequent class. To do this, one can use
-\passthrough{\lstinline!sits\_cluster\_clean()!}, which removes all
-minority samples, as shown below.
+The cluster frequency table shows that each cluster has a predominance
+of either ``Cerrado'' or ``Pasture'' class with the exception of cluster
+\(3\) which has a mix of samples from both classes. Such confusion may
+have resulted from incorrect labeling, inadequacy of selected bands and
+spatial resolution, or even a natural confusion due to the variability
+of the land classes. To remove cluster \(3\) use
+\passthrough{\lstinline!dplyr::filter()!}. The resulting clusters still
+contained mixed labels, possibly resulting from outliers. In this case,
+users may want to remove the outliers and leave only the most frequent
+class using \passthrough{\lstinline!sits\_cluster\_clean()!}. After
+cleaning the samples, the result set of samples is likely to improve the
+classification results.
 
 \begin{lstlisting}[language=R]
 # remove cluster 3 from the samples
 clusters_new <- dplyr::filter(clusters, cluster != 3)
-# clear clusters, leaving only the majority class in each
-# cluster
+# clear clusters, leaving only the majority class
 clean <- sits_cluster_clean(clusters_new)
 # show clusters samples frequency
 sits_cluster_frequency(clean)
@@ -2533,10 +2494,6 @@ sits_cluster_frequency(clean)
 #>   Pasture   0 176   0 140   0   316
 #>   Total   203 176  80 140  80   679
 \end{lstlisting}
-
-After cleaning the samples using dendrograms, users are expected to have
-a better set of samples which will provide more accurate estimates of
-land classification.
 
 \hypertarget{using-self-organizing-maps-for-sample-quality-control}{%
 \section*{Using self-organizing maps for sample quality
@@ -2563,7 +2520,7 @@ to the input, called the best matching unit.
 
 }
 
-\caption{SOM 2D map creation (source: Santos et al.(2021)}\label{fig:unnamed-chunk-46}
+\caption{SOM 2D map creation (source: Santos et al.(2021). Reproduction under fair use doctrine.}\label{fig:unnamed-chunk-47}
 \end{figure}
 
 The input data for quality assessment is a set of training samples,
@@ -2588,7 +2545,7 @@ reference paper \protect\hyperlink{ref-Santos2021a}{{[}18{]}}.
 
 }
 
-\caption{Using SOM for class noise reduction (source: Santos et al.(2021)}\label{fig:unnamed-chunk-47}
+\caption{Using SOM for class noise reduction (source: Santos et al.(2021). Reproduction under fair use doctrine.}\label{fig:unnamed-chunk-48}
 \end{figure}
 
 As an example, we take a time series dataset from the Cerrado region of
@@ -2632,40 +2589,44 @@ sits_labels_summary(
 #> 12 Soy_Fallow        2098 0.0418
 \end{lstlisting}
 
-\hypertarget{som-based-quality-assessment-part-1-creating-the-som-map}{%
-\subsection*{SOM-based quality assessment part 1: creating the SOM
-map}\label{som-based-quality-assessment-part-1-creating-the-som-map}}
-\addcontentsline{toc}{subsection}{SOM-based quality assessment part 1:
-creating the SOM map}
+\hypertarget{som-based-quality-assessment-creating-the-som-map}{%
+\subsection*{SOM-based quality assessment: creating the SOM
+map}\label{som-based-quality-assessment-creating-the-som-map}}
+\addcontentsline{toc}{subsection}{SOM-based quality assessment: creating
+the SOM map}
 
-To run the SOM-based quality assessment, the first step is to run
+To perform the SOM-based quality assessment, the first step is to run
 \passthrough{\lstinline!sits\_som\_map()!} which uses the
 \passthrough{\lstinline!kohonen!} R package
-\protect\hyperlink{ref-Wehrens2018}{{[}19{]}} to compute a SOM grid.
-Each sample is assigned to a neuron, and neurons are placed in the grid
-based on similarity. This function has six main parameters. In
-\passthrough{\lstinline!data!}, the user should provide the name of the
-R object containing the samples. The size of the SOM grid is controlled
-by \passthrough{\lstinline!grid\_xdim!} and
-\passthrough{\lstinline!grid\_ydim!}. The starting learning rate is set
-using \passthrough{\lstinline!alpha!}; this learning rate decreases
-during the interactions. The distance metric is controlled by
-\passthrough{\lstinline!distance!}; options available currently are
-``sumofsquares'' and ``euclidean''. The number of iterations is set by
-\passthrough{\lstinline!rlen!}. For more details on the implementation,
-please also consult \passthrough{\lstinline!?kohonen::supersom!}.
+\protect\hyperlink{ref-Wehrens2018}{{[}19{]}} to compute a SOM grid,
+controlled by five parameters. The grid size is given by
+\passthrough{\lstinline!grid\_xdim!} and
+\passthrough{\lstinline!grid\_ydim!}. The starting learning rate is
+\passthrough{\lstinline!alpha!}, which decreases during the
+interactions. To measure separation between samples, use
+\passthrough{\lstinline!distance!} (either ``sumofsquares'' or
+``euclidean''). The number of iterations is set by
+\passthrough{\lstinline!rlen!}. For more details, please consult
+\passthrough{\lstinline!?kohonen::supersom!}.
 
 \begin{lstlisting}[language=R]
 # clustering time series using SOM
-som_cluster <- sits_som_map(
-    data = samples_cerrado_mod13q1_2bands,
+som_cluster <- sits_som_map(samples_cerrado_mod13q1_2bands,
     grid_xdim = 15,
     grid_ydim = 15,
     alpha = 1.0,
     distance = "euclidean",
     rlen = 20
 )
+# plot the som map
+plot(som_cluster)
 \end{lstlisting}
+
+\begin{figure}
+\centering
+\includegraphics{sitsbook_files/figure-latex/unnamed-chunk-50-1.pdf}
+\caption{SOM map for the Cerrado samples}
+\end{figure}
 
 The output of the \passthrough{\lstinline!sits\_som\_map()!} is a list
 with 3 elements: (a) the original set of time series with two additional
@@ -2678,38 +2639,27 @@ assigned to it; and (c) the SOM grid. To plot the SOM grid, use
 \passthrough{\lstinline!plot()!}. The neurons are labelled using
 majority voting.
 
-\begin{lstlisting}[language=R]
-plot(som_cluster)
-\end{lstlisting}
-
-\begin{figure}
-\centering
-\includegraphics{sitsbook_files/figure-latex/unnamed-chunk-50-1.pdf}
-\caption{SOM map for the Cerrado samples}
-\end{figure}
-
 The SOM grid shows that most classes are associated to neurons close to
 each other. The are exceptions. Some ``Pasture'' neurons are far from
 the main cluster, because the transition between areas of open savanna
 and pasture is not always well defined and depends on climate and
 latitude. Also, the neurons associated to ``Soy\_Fallow'' are dispersed
-in the map; this indicates possible problems in distinguising this class
-from the other agricultural classes. Thus, the SOM grid provides a
+in the map; this indicates possible problems in distinguishing this
+class from the other agricultural classes. Thus, the SOM grid provides a
 measures of sample quality.
 
-\hypertarget{som-based-quality-assessment-part-2-assessing-confusion-between-labels}{%
-\subsection*{SOM-based quality assessment part 2: assessing confusion
-between
-labels}\label{som-based-quality-assessment-part-2-assessing-confusion-between-labels}}
-\addcontentsline{toc}{subsection}{SOM-based quality assessment part 2:
-assessing confusion between labels}
+\hypertarget{som-based-quality-assessment-measuring-confusion-between-labels}{%
+\subsection*{SOM-based quality assessment: measuring confusion between
+labels}\label{som-based-quality-assessment-measuring-confusion-between-labels}}
+\addcontentsline{toc}{subsection}{SOM-based quality assessment:
+measuring confusion between labels}
 
 The second step in SOM-based quality assessment is understanding the
 confusion between labels. The function
 \passthrough{\lstinline!sits\_som\_evaluate\_cluster()!} groups neurons
 by their majority label and produces a tibble. For each label, the
 tibble show the percentage of samples with a different label that have
-been mapped to a neuron whose majority is that label. \newpage
+been mapped to a neuron whose majority is that label.
 
 \begin{lstlisting}[language=R]
 # produce a tibble with a summary of the mixed labels
@@ -2847,8 +2797,7 @@ and \passthrough{\lstinline!posterior\_threshold!} is 60\%. The
 \passthrough{\lstinline!sits\_som\_clean\_samples()!} has an additional
 parameter (\passthrough{\lstinline!keep!}) which indicates which samples
 should be kept in the set based on their prior and posterior
-probabilities of being noisy and the assigned label. The default value
-for \passthrough{\lstinline!keep!} is
+probabilities. The default for \passthrough{\lstinline!keep!} is
 \passthrough{\lstinline!c("clean", "analyze")!}. As a result of the
 cleaning, about 900 samples have been considered to be noisy and thus
 removed.
@@ -2881,24 +2830,12 @@ sits_labels_summary(new_samples)
 #> 11 Soy_Fallow        1139 0.0287
 \end{lstlisting}
 
-Comparing the original and the new sample set, we observe that all
-samples of the class which had the highest confusion with other classes
-(``Millet\_Cotton'') have been removed. Most samples of class
-``Silviculture'' (planted forests) have also been removed from the set,
-since in the SOM map they have been confused with natural forests and
-woodlands. Further analysis includes calculating the SOM map and
-confusion matrix for the new set of samples, as shown in the following
-example. As expected, the new confusion map shows a significant
-improvement over the previous one. This result should be interpreted
-carefully, since it may be due to different effects. The most direct
-interpretation is that ``Millet\_Cotton'' and ``Silviculture'' cannot be
-easily separated from the other classes, given the current attributes (a
-time series of ``NDVI'' and ``EVI'' indices from MODIS images). In such
-situations, users should consider improving the number of samples from
-the less represented classes, including more MODIS bands, or working
-with higher resolution satellites. In general, results of the SOM method
-should be interpreted based on the users' understanding of the
-ecosystems and agricultural practices of the study region.
+All samples of the class which had the highest confusion with
+others(``Millet\_Cotton'') have been removed. Most samples of class
+``Silviculture'' (planted forests) have also been removed, since in the
+SOM map they have been confused with natural forests and woodlands.
+Further analysis includes calculating the SOM map and confusion matrix
+for the new set, as shown in the following example.
 
 \begin{lstlisting}[language=R]
 # evaluate the misture in the SOM clusters of new samples
@@ -2908,7 +2845,6 @@ new_cluster <- sits_som_map(
    grid_ydim = 15,
    alpha = 1.0,
    distance = "euclidean",
-   rlen = 20
 )
 \end{lstlisting}
 
@@ -2927,16 +2863,31 @@ plot(new_cluster_mixture)
 \caption{Cluster confusion plot for samples cleaned by SOM}\label{fig:unnamed-chunk-55}
 \end{figure}
 
+As expected, the new confusion map shows a significant improvement over
+the previous one. This result should be interpreted carefully, since it
+may be due to different effects. The most direct interpretation is that
+``Millet\_Cotton'' and ``Silviculture'' cannot be easily separated from
+the other classes, given the current attributes (a time series of
+``NDVI'' and ``EVI'' indices from MODIS images). In such situations,
+users should consider improving the number of samples from the less
+represented classes, including more MODIS bands, or working with higher
+resolution satellites. In general, results of the SOM method should be
+interpreted based on the users' understanding of the ecosystems and
+agricultural practices of the study region.
+
 A further comparison between the original and clean samples is to run a
 5-fold validation on the original and on the cleaned sample sets using
-\passthrough{\lstinline!sits\_kfold\_validate()!} and a random forest
-model. As the results show, the SOM procedure improves the validation
-results from 95\% to 99\%. Again, this improvement should not be
-interpreted as a better fit for the final map accuracy. A 5-fold
-validation procedure only measures how well the machine learning model
-fits the samples; it is not an accuracy assessment of classification
-results. For more details on accuracy measures, please see chapter on
-``Validation and Accuracy Measures''.
+\passthrough{\lstinline!sits\_kfold\_validate()!} and a random forests
+model. The SOM procedure improves the validation results from 95\% on
+the original data set to 99\% in the cleaned one. This improvement
+should not be interpreted as providing better fit for the final map
+accuracy. A 5-fold validation procedure only measures how well the
+machine learning model fits the samples; it is not an accuracy
+assessment of classification results. The result indicates that the
+resulting training set after the SOM sample removal procedure is more
+internally consistent than the original one. For more details on
+accuracy measures, please see chapter on ``Validation and Accuracy
+Measures''.
 
 \begin{lstlisting}[language=R]
 # run a k-fold validation
@@ -2967,10 +2918,10 @@ sits_accuracy_summary(assess_new)
 \end{lstlisting}
 
 \begin{lstlisting}
-#> Overall Statistics                            
-#>  Accuracy : 0.9908          
-#>    95% CI : (0.9898, 0.9917)
-#>     Kappa : 0.9892
+#> Overall Statistics                          
+#>  Accuracy : 0.991         
+#>    95% CI : (0.99, 0.9919)
+#>     Kappa : 0.9894
 \end{lstlisting}
 
 The SOM-based analysis discards samples which can be confused with
@@ -2992,46 +2943,37 @@ of the study region.
 \addcontentsline{toc}{section}{Reducing sample imbalance}
 
 Many training samples for Earth observation data analysis are
-imbalanced. This situation arises when the number of labels associated
-to each of the classes have a large difference in size. When dealing
-with heterogeneous landscapes with both natural and anthropic land
-covers, it is inevitable that some classes will be more prevalent than
-others. One example is the Cerrado data set used in this chapter (see
-above), where the three most frequent classes (``Dense Woodland'',
-``Savanna'' and ``Pasture'') include 53\% of all samples, while the
-three least frequent classes (``Millet-Cotton'', ``Silviculture'', and
-``Dunes'') together comprise only 2.5\% of the data set. Sample
-imbalance is an undesirable property of a training data set. Machine
-learning classification algorithms tend to be more accurate for classes
-with many samples and less accurate for the other classes. Reducing
-sample imbalance can have a positive effect on classification accuracy.
-Unbalanced data sets have a negative effect on classification
-performance of traditional classification
-algorithms\protect\hyperlink{ref-Johnson2019}{{[}21{]}}.
+imbalanced. This situation arises when the distribution of samples
+associated to each class is uneven. One example is the Cerrado data set
+used in this chapter. The three most frequent classes (``Dense
+Woodland'', ``Savanna'' and ``Pasture'') include 53\% of all samples,
+while the three least frequent classes (``Millet-Cotton'',
+``Silviculture'', and ``Dunes'') comprise only 2.5\% of the data set.
+Sample imbalance is an undesirable property of a training set. Since
+machine learning algorithms tend to be more accurate for classes with
+many samples. The instances belonging to the minority group are
+misclassified more often than those belonging to the majority group.
+Thus, reducing sample imbalance can have a positive effect on
+classification accuracy\protect\hyperlink{ref-Johnson2019}{{[}21{]}}.
 
 The function \passthrough{\lstinline!sits\_reduce\_imbalance()!} deals
 with class imbalance; it oversamples minority classes and undersamples
 majority ones. Oversampling requires generation of synthetic samples.
-The package uses the SMOTE method
-\protect\hyperlink{ref-Chawla2002}{{[}22{]}} that estimates new samples
-by considering the cluster formed by the nearest neighbors of each
-minority class. The SMOTE method work as follows: \emph{``Take the
-difference between the feature vector (sample) under consideration and
-its nearest neighbor. Multiply this difference by a random number
-between 0 and 1, and add it to the feature vector under consideration.
-This causes the selection of a random point along the line segment
-between two specific
-features''}\protect\hyperlink{ref-Chawla2002}{{[}22{]}}.
+The package uses the SMOTE method that estimates new samples by
+considering the cluster formed by the nearest neighbors of each minority
+class. SMOTE takes two samples from this cluster and produces a new one
+by a random interpolation between them
+\protect\hyperlink{ref-Chawla2002}{{[}22{]}}.
 
 To perform undersampling for the majority classes,
 \passthrough{\lstinline!sits\_reduce\_imbalance()!} builds a SOM map,
 based on the required number of samples to be selected. Each dimension
 of the SOM is set to
-\passthrough{\lstinline!ceiling(sqrt(new\_number\_samples/4))!} so as to
-allow a reasonable number of neurons to group similar samples. After
+\passthrough{\lstinline!ceiling(sqrt(new\_number\_samples/4))!} to allow
+a reasonable number of neurons to group similar samples. After
 calculating the SOM map, the algorithm extracts four samples per neuron
-to generate a set of samples that approximates the variation that is
-present in the original samples.
+to generate a reduced set of samples that approximates the variation of
+the original one.
 
 The \passthrough{\lstinline!sits\_reduce\_imbalance()!} algorithm has
 two parameters: \passthrough{\lstinline!n\_samples\_over!} and
@@ -3041,23 +2983,21 @@ second parameter controls undersampling; all classes with more samples
 than its value are undersampled. The following example shows the use of
 \passthrough{\lstinline!sits\_reduce\_imbalance()!} in the Cerrado data
 set used in this chapter. We generate a balanced data set where all
-classes have between 1000 and 1500 samples. The method generates
-synthetic samples for clases with less than 1000 samples, and uses the
-SOM map to reduce classes with many samples. We then show the new label
-distribution. We use
+classes have between 1000 and 1500 samples. We use
 \passthrough{\lstinline!sits\_som\_evaluate\_cluster()!} to estimate the
 confusion between classes of the balanced data set.
 
 \begin{lstlisting}[language=R]
 # reducing imbalances in the Cerrado data set
-# no class should have less than 1000 samples
-# no class should have more than 1500 samples
 balanced_samples <- sits_reduce_imbalance(
     samples = samples_cerrado_mod13q1_2bands,
     n_samples_over = 1000,
     n_samples_under = 1500,
     multicores = 4
 )
+\end{lstlisting}
+
+\begin{lstlisting}[language=R]
 # print the balanced samples
 # some classes have more than 1500 samples due to the SOM map
 # each class has betwen 10% and 6% of the full set
@@ -3068,18 +3008,18 @@ sits_labels_summary(balanced_samples)
 #> # A tibble: 12 x 3
 #>    label            count   prop
 #>    <chr>            <int>  <dbl>
-#>  1 Dense_Woodland    1600 0.0969
-#>  2 Dunes             1000 0.0606
-#>  3 Fallow_Cotton     1000 0.0606
-#>  4 Millet_Cotton     1000 0.0606
-#>  5 Pasture           1592 0.0965
-#>  6 Rocky_Savanna     1504 0.0911
-#>  7 Savanna           1592 0.0965
-#>  8 Savanna_Parkland  1580 0.0957
-#>  9 Silviculture      1000 0.0606
-#> 10 Soy_Corn          1588 0.0962
-#> 11 Soy_Cotton        1532 0.0928
-#> 12 Soy_Fallow        1516 0.0919
+#>  1 Dense_Woodland    1600 0.0966
+#>  2 Dunes             1000 0.0604
+#>  3 Fallow_Cotton     1000 0.0604
+#>  4 Millet_Cotton     1000 0.0604
+#>  5 Pasture           1600 0.0966
+#>  6 Rocky_Savanna     1508 0.0910
+#>  7 Savanna           1600 0.0966
+#>  8 Savanna_Parkland  1580 0.0954
+#>  9 Silviculture      1000 0.0604
+#> 10 Soy_Corn          1584 0.0956
+#> 11 Soy_Cotton        1576 0.0951
+#> 12 Soy_Fallow        1516 0.0915
 \end{lstlisting}
 
 \begin{lstlisting}[language=R]
@@ -3106,11 +3046,11 @@ plot(som_eval)
 
 \begin{figure}
 
-{\centering \includegraphics[width=0.9\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-61-1} 
+{\centering \includegraphics[width=0.9\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-62-1} 
 
 }
 
-\caption{Confusion by cluster for the balanced data set}\label{fig:unnamed-chunk-61}
+\caption{Confusion by cluster for the balanced data set}\label{fig:unnamed-chunk-62}
 \end{figure}
 
 As shown in the Figure, the balanced data set shows less confusion per
@@ -3164,22 +3104,37 @@ package}\label{machine-learning-for-data-cubes-using-the-sits-package}}
 classification}\label{machine-learning-classification}}
 \addcontentsline{toc}{section}{Machine learning classification}
 
-The package \passthrough{\lstinline!sits!} provides support for the
-classification of time series, preserving the full temporal resolution
-of the input data. Instead of extracting metrics from time series
-segments, it uses all values of the time series. The following machine
-learning methods are available:
+The \passthrough{\lstinline!sits!} package supports for time series
+classification, preserving the temporal resolution of the input data.
+Instead of extracting metrics from time series segments, it uses all
+values of the time series. Our hypothesis is that building
+high-dimensional spaces using all values of the time series, coupled
+with advanced statistical learning methods, is a robust and efficient
+approach for land cover classification of large data sets. Thus, we use
+the full depth of satellite image time series to create large
+dimensional spaces for statistical classification.
+
+The goal of a machine learning models is to approximate a function
+\(y = f(x)\) that maps an input \(x\) to a category \(y\). A model
+defines a mapping \(y = f(x;\theta)\) and learns the value of the
+parameters \(\theta\) that result in the best function approximation
+\protect\hyperlink{ref-Goodfellow2016}{{[}24{]}}. The difference between
+the different algorithms is the approach they take to build the mapping
+that classifies the input data.
+
+The following machine learning methods are available in
+\passthrough{\lstinline!sits!}:
 
 \begin{itemize}
 \tightlist
 \item
-  Support vector machines (\passthrough{\lstinline!sits\_svm()!})
-\item
   Random forests (\passthrough{\lstinline!sits\_rfor()!})
+\item
+  Support vector machines (\passthrough{\lstinline!sits\_svm()!})
 \item
   Extreme gradient boosting (\passthrough{\lstinline!sits\_xgboost()!})
 \item
-  Multi-layer perceptrons (\passthrough{\lstinline!sits\_mlp()!})
+  Multilayer perceptrons (\passthrough{\lstinline!sits\_mlp()!})
 \item
   Deep Residual Networks (\passthrough{\lstinline!sits\_resnet()!})
 \item
@@ -3192,54 +3147,65 @@ learning methods are available:
   (\passthrough{\lstinline!sits\_lighttae()!})
 \end{itemize}
 
-The package supports two kinds of machine learning. The first group of
-methods does not explicitly consider spatial or temporal dimensions;
-these models treat time series as a vector in a high-dimensional feature
-space. From this class of models, \passthrough{\lstinline!sits!}
-includes random forests\protect\hyperlink{ref-Belgiu2016}{{[}24{]}},
-support vector machines\protect\hyperlink{ref-Mountrakis2011}{{[}25{]}},
-extreme gradient boosting\protect\hyperlink{ref-Chen2016}{{[}26{]}}, and
-multi-layer perceptrons\protect\hyperlink{ref-Parente2019a}{{[}27{]}}.
+\newpage
 
-The second group of models comprises deep learning methods specifically
-designed to work with time series. Temporal relations between observed
-values in a time series are taken into account. From this kind of model,
+These methods can be subdivided in two types. The first group does not
+explicitly consider spatial or temporal dimensions; these algorithms
+treat time series as a vector in a high-dimensional feature space. They
+include random forests \protect\hyperlink{ref-Belgiu2016}{{[}25{]}},
+support vector machines
+\protect\hyperlink{ref-Mountrakis2011}{{[}26{]}}, extreme gradient
+boosting \protect\hyperlink{ref-Chen2016}{{[}27{]}}, and multilayer
+perceptrons \protect\hyperlink{ref-Parente2019a}{{[}28{]}}. The second
+group of models comprises deep learning methods designed to work with
+time series. Temporal relations between observed values in a time series
+are taken into account. From this kind of models,
 \passthrough{\lstinline!sits!} supports 1D convolution neural networks
-such as \passthrough{\lstinline!tempcnn!}
-\protect\hyperlink{ref-Pelletier2019}{{[}28{]}}, and residual 1D
-networks based on \passthrough{\lstinline!resnet!}
-\protect\hyperlink{ref-Fawaz2020}{{[}29{]}}. It also supports temporal
-attention-based enconders (\passthrough{\lstinline!sits\_tae()!}) and
-its simplified version (\passthrough{\lstinline!sits\_lighttae()!})
-\protect\hyperlink{ref-Russwurm2020}{{[}31{]}}. In these models, the
+\protect\hyperlink{ref-Pelletier2019}{{[}29{]}}, residual 1D networks
+\protect\hyperlink{ref-Fawaz2020}{{[}30{]}}, and temporal
+attention-based encoders \protect\hyperlink{ref-Garnot2020a}{{[}31{]}},
+\protect\hyperlink{ref-Russwurm2020}{{[}32{]}}. In these algorithms, the
 order of the samples in the time series is relevant for the classifier.
-Each layer of the network applies a convolution filter to the output of
-the previous layer. This cascade of convolutions captures time series
-features in different time scales
-\protect\hyperlink{ref-Pelletier2019}{{[}28{]}}.
 
-Experience with \passthrough{\lstinline!sits!} applications shows that
-SVM, extreme gradient boosting and multi-layer perceptron models tend to
-have inferior performance those using random forest and temporal deep
-learning. Arguably, this effect derives from the temporal behavior of
-land use and land cover classes, where some dates capture more
-information than others. For example, in deforestation monitoring the
-dates associates to the actions of forest removal are more informative
-than earlier or later ones. The same situation occurs in crop mapping,
-when a large part of the variation is captured in a few dates.
+Experience with \passthrough{\lstinline!sits!} shows that SVM, extreme
+gradient boosting and multilayer perceptron models tend to have inferior
+performance those using random forests and temporal deep learning. This
+difference derives from the temporal behavior of land use and land cover
+classes, where some dates capture more information than others. For
+example, in deforestation monitoring the dates associates to the actions
+of forest removal are more informative than earlier or later ones. The
+same situation occurs in crop mapping, when a large part of the
+variation is captured in a few dates. In these cases, classification
+methods which consider the temporal order of samples are more likely to
+capture the seasonal behavior of the image time series. Random forests
+methods that use individual measures as nodes in the decision trees can
+also capture particular events such as deforestation.
 
-The following examples show how to train ML and apply it to classify a
-single time series; they should not be taken as indication of which
-method performs better. The most important factor for achieving a good
-result is the quality of the training data
-\protect\hyperlink{ref-Maxwell2018}{{[}9{]}}. The examples should not be
-used to assess the general qualities of the models. Experience shows
-that classification quality depends on the training samples and on how
-well the model matches these samples.For examples of ML for classifying
-large areas, please see
-\href{https://e-sensing.github.io/sitsbook/classification-of-images-in-data-cubes-using-satellite-image-time-series.html}{Chapter
-6} and the papers by the authors
-\protect\hyperlink{ref-Ferreira2020a}{{[}35{]}}.
+The following examples show how to train machine learning methods and
+apply it to classify a single time series. We use the set
+\passthrough{\lstinline!samples\_matogrosso\_mod13q1!}, containing time
+series samples from Brazilian Mato Grosso state, obtained from the MODIS
+MOD13Q1 product. It has 1,892 samples and 9 classes (Cerrado,
+Fallow\_Cotton, Forest, Pasture, Soy\_Corn, Soy\_Cotton, Soy\_Fallow,
+Soy\_Millet, Soy\_Sunflower). Each time series comprehends 12 months (23
+data points) with 6 bands (``NDVI'', ``EVI'', ``BLUE'', ``RED'',
+``NIR'', ``MIR''). The samples are arranged along an agricultural year,
+starting in September and ending in August. The data set was used in the
+paper ``Big Earth observation time series analysis for monitoring
+Brazilian agriculture'' \protect\hyperlink{ref-Picoli2018}{{[}33{]}},
+and is available in the R package ``sitsdata'', which is downloadable
+from the website associated to the ``e-sensing'' project.
+
+The results should not be taken as indication of which method performs
+better. The most important factor for achieving a good result is the
+quality of the training data
+\protect\hyperlink{ref-Maxwell2018}{{[}10{]}}. Experience shows that
+classification quality depends on the training samples and on how well
+the model matches these samples. For examples of ML for classifying
+large areas, please see the ``Case Studies'' chapter in this book and
+also the papers by the authors
+\protect\hyperlink{ref-Ferreira2020a}{{[}3{]}},
+\protect\hyperlink{ref-Picoli2018}{{[}33{]}}--\protect\hyperlink{ref-Simoes2020}{{[}35{]}}.
 
 \hypertarget{visualizing-sample-patterns}{%
 \section*{Visualizing Sample
@@ -3248,61 +3214,54 @@ Patterns}\label{visualizing-sample-patterns}}
 
 One useful way of describing and understanding the samples is by
 plotting them. A direct way of doing so is using the
-\passthrough{\lstinline!plot!} function, as discussed in
-\href{https://e-sensing.github.io/sitsbook/acessing-time-series-information-in-sits.html}{Chapter
-3}. In the plot, the thick red line is the median value for each time
-instance and the yellow lines are the first and third interquartile
-ranges.
+\passthrough{\lstinline!plot!} function, as discussed in the ``Working
+with Time Series'' chapter. A useful alternative is to estimate a
+statistical approximation to an idealized pattern based on a generalised
+additive models (GAM). A GAM is a linear model in which the linear
+predictor depends linearly on a smooth function of the predictor
+variables
 
-\begin{lstlisting}[language=R]
-data("samples_matogrosso_mod13q1")
-# Select a subset of the samples to be plotted
-# Retrieve the set of samples for the Mato Grosso region 
-samples_matogrosso_mod13q1 %>% 
-    sits_select(bands = "NDVI") %>% 
-    dplyr::filter(label == "Forest") %>% 
-    plot()
-\end{lstlisting}
-
-\begin{figure}
-\includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-63-1} \caption{Visualisation of samples associated to class Forest in band NDVI}\label{fig:unnamed-chunk-63}
-\end{figure}
-
-An alternative to visualise the samples is to estimate a statistical
-approximation to an idealized pattern based on a generalised additive
-model (GAM). A GAM is a linear model in which the linear predictor
-depends linearly on a smooth function of the predictor variables \[
+\[
 y = \beta_{i} + f(x) + \epsilon, \epsilon \sim N(0, \sigma^2).
-\] The function \passthrough{\lstinline!sits\_patterns()!} uses a GAM to
+\]
+
+The function \passthrough{\lstinline!sits\_patterns()!} uses a GAM to
 predict a smooth, idealized approximation to the time series associated
 to the each label, for all bands. This function is based on the R
 package
 \passthrough{\lstinline!dtwSat!}\protect\hyperlink{ref-Maus2019}{{[}36{]}},
 which implements the TWDTW time series matching method described in
-\protect\hyperlink{ref-Maus2016}{{[}13{]}}. The resulting patterns can
+\protect\hyperlink{ref-Maus2016}{{[}14{]}}. The resulting patterns can
 be viewed using \passthrough{\lstinline!plot!}.
 
 \begin{lstlisting}[language=R]
-# Select a subset of the samples to be plotted
+# Estimate the patterns for each class and plot them
 samples_matogrosso_mod13q1 %>% 
     sits_patterns() %>% 
     plot()
 \end{lstlisting}
 
 \begin{figure}
-\includegraphics[width=0.8\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-64-1} \caption{Patterns for the samples for Mato Grosso}\label{fig:unnamed-chunk-64}
-\end{figure}
 
-The resulting plots provide some insights over the time series behaviour
-of each class. While the response of the ``Forest'' class is quite
-distinctive, there are similarities between the double-cropping classes
-(``Soy-Corn'', ``Soy-Millet'', ``Soy-Sunflower'' and ``Soy-Corn'') and
-between the ``Cerrado'' and ``Pasture'' classes. This could suggest that
-additional information, more bands, or higher-resolution data could be
-considered to provide a better basis for time series samples that can
-better distinguish the intended classes. Despite these limitations, the
-best machine learning algorithms can provide good performance even in
-the above case.
+{\centering \includegraphics[width=0.9\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-64-1} 
+
+}
+
+\caption{Patterns for the samples for Mato Grosso.}\label{fig:unnamed-chunk-64}
+\end{figure}
+\newpage
+
+The resulting patterns provide some insights over the time series
+behavior of each class. The response of the Forest class is quite
+distinctive. They also shows that it should be possible to separate
+between the single cropping classes and the double cropping ones. There
+are similarities between the double-cropping classes (Soy\_Corn,
+Soy\_Millet, Soy\_Sunflower and Soy\_Sunflower) and between the Cerrado
+and Pasture classes. The subtle differences between class signatures
+provide hints to possible ways by which machine leaning algorithms might
+distinguish between classes. One example is the difference between the
+middle-infrared response during the dry season (May to September) to
+distinguish between the Cerrado and Pasture classes.
 
 \hypertarget{common-interface-to-machine-learning-and-deep-learning-models}{%
 \section*{Common interface to machine learning and deep learning
@@ -3312,78 +3271,92 @@ deep learning models}
 
 The SITS package provides a common interface to all machine learning
 models, using the \passthrough{\lstinline!sits\_train()!} function. This
-function takes two mandatory parameters: the input data samples and the
-ML method (\passthrough{\lstinline!ml\_method!}), as shown below. After
-the model is estimated, it can be used to classify individual time
-series or full data cubes using
-\passthrough{\lstinline!sits\_classify()!}. In the examples that follow,
-we show how to apply each method for the classification of a single time
-series. Then, in
-\href{https://e-sensing.github.io/sitsbook/classification-of-images-in-data-cubes-using-satellite-image-time-series.html}{Chapter
-6} we disscuss how to classify data cubes.
+function takes two mandatory parameters: the training data
+(\passthrough{\lstinline!samples!}) and the ML algorithm
+(\passthrough{\lstinline!ml\_method!}). After the model is estimated, it
+can be used to classify individual time series or data cubes with
+\passthrough{\lstinline!sits\_classify()!}. In what follows, we show how
+to apply each method for the classification of a single time series.
+Then, in the ``Classification of Images in Data Cubes'' we discuss how
+to classify data cubes.
 
 Since \passthrough{\lstinline!sits!} is aimed at remote sensing users
-who are not machine learning experts, the\textasciitilde package
-provides a set of default values for all classification models. These
-settings have been chosen based on extensive testing by the authors.
-Nevertheless, users can control all parameters for each model. The
-package documentation describes in detail the tuning parameters for all
-models that are available in the respective functions. Thus, novice
-users can rely on the default values, while experienced ones can
-fine-tune model parameters to meet their needs.
+who are not machine learning experts, it provides a set of default
+values for all classification models. These settings have been chosen
+based on testing by the authors. Nevertheless, users can control all
+parameters for each model. Novice users can rely on the default values,
+while experienced ones can fine-tune model parameters to meet their
+needs. Model tuning is discussed at the end of this chapter.
 
-When a dataset of time series organised as a SITS tibble is taken as
-input to the classifier, the result is the same tibble with one
-additional column (``predicted''), which contains the information on
-what labels are have been assigned for each interval. The results can be
-shown in text format using the function
-\passthrough{\lstinline!sits\_show\_prediction()!} or graphically using
-\passthrough{\lstinline!plot()!}.
-
-For the machine learning examples, we use the data set
-``samples\_matogrosso\_mod13q1'', containing a sits tibble with time
-series samples from Brazilian Mato Grosso State (Amazon and Cerrado
-biomes), obtained from the MODIS MOD13Q1 product. The tibble with 1,892
-samples and 9 classes (``Cerrado'', ``Fallow\_Cotton'', ``Forest'',
-``Millet\_Cotton'', ``Pasture'',``Soy\_Corn'', ``Soy\_Cotton'',
-``Soy\_Fallow'', ``Soy\_Millet''). Each time series comprehends 12
-months (23 data points) with 6 bands (``NDVI'', ``EVI'', ``BLUE'',
-``RED'', ``NIR'', ``MIR''). The dataset was used in the paper ``Big
-Earth observation time series analysis for monitoring Brazilian
-agriculture'' \protect\hyperlink{ref-Picoli2018}{{[}32{]}}, and is
-available in the R package ``sitsdata'', which is downloadable from the
-website associated to the ``e-sensing'' project.
+When a set of time series organised as tibble is taken as input to the
+classifier, the result is the same tibble with one additional column
+(``predicted''), which contains the information on what labels are have
+been assigned for each interval. The results can be shown in text format
+using the function \passthrough{\lstinline!sits\_show\_prediction()!} or
+graphically using \passthrough{\lstinline!plot()!}.
 
 \hypertarget{random-forests}{%
 \section*{Random forests}\label{random-forests}}
 \addcontentsline{toc}{section}{Random forests}
 
-The random forest model uses the idea of \emph{decision trees} as its
-base model, with many refinements. When building the decision trees,
-each time a split in a tree is considered, a random sample of
-\passthrough{\lstinline!m!} features is chosen as split candidates from
-the full set of \passthrough{\lstinline!n!} features of the sample
-set\protect\hyperlink{ref-James2013}{{[}37{]}}. Each of these features
-is then tested, the one maximizing the decrease in a purity measure is
-used to build the trees. This criterion is used to identify relevant
-features and to perform variable selection. This decreases the
-correlation among trees and improves the prediction performance. The
-classification performance depends on the number of trees in the forest
-as well as the number of features randomly selected at each node. SITS
-provides a \passthrough{\lstinline!sits\_rfor!} function which is a
-front-end to the \passthrough{\lstinline!randomForest!}
+The random forests model uses \emph{decision trees} as its base model
+with refinements. When building the decision trees, each time a split in
+a tree is considered, a random sample of \passthrough{\lstinline!m!}
+features is chosen as split candidates from the full set of
+\passthrough{\lstinline!n!} features of the
+samples\protect\hyperlink{ref-James2013}{{[}37{]}}. Each of these
+features is then tested; the one maximizing the decrease in a purity
+measure is used to build the trees. This criterion is used to identify
+relevant features and to perform variable selection. This decreases the
+correlation among trees and improves prediction performance.
+Classification performance depends on the number of trees in the forest
+as well as the number of features randomly selected at each node.
+
+\begin{figure}
+
+{\centering \includegraphics[width=0.7\linewidth]{images/random_forest} 
+
+}
+
+\caption{Random forests algorithm (source: Venkata Jagannath in Wikipedia). Licence CC-BY-SA 4.0}\label{fig:unnamed-chunk-65}
+\end{figure}
+
+SITS provides \passthrough{\lstinline!sits\_rfor()!}, which uses the
+\passthrough{\lstinline!randomForest!}
 package\protect\hyperlink{ref-Wright2017}{{[}38{]}}; its main parameter
-is \passthrough{\lstinline!num\_trees!} (number of trees to grow). In
-practice, between 100 and 200 trees are sufficient to achieve a
-reasonable classification result.
+is \passthrough{\lstinline!num\_trees!}, which is the number of trees to
+grow with a default value 100. The model can be visualized using
+\passthrough{\lstinline!plot()!}.
 
 \begin{lstlisting}[language=R]
-# Retrieve the set of samples (provided by EMBRAPA) from the 
-# Mato Grosso region for train the Random Forest model.
+# Train the Mato Grosso samples with Random Forests model.
 rfor_model <- sits_train(
     samples = samples_matogrosso_mod13q1, 
     ml_method = sits_rfor(num_trees = 100)
 )
+# plot the most important variables of the model
+plot(rfor_model)
+\end{lstlisting}
+
+\begin{figure}
+
+{\centering \includegraphics[width=0.8\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-67-1} 
+
+}
+
+\caption{Most important variables in random forests model.}\label{fig:unnamed-chunk-67}
+\end{figure}
+
+The most important explanatory variables are the NIR (near infrared)
+band on date 17 (2007-05-25) and the MIR (middle infrared) band in date
+22 (2007-08-13). The NIR value at the end of May captures the growth of
+the second crop for double cropping classes. Values of the MIR band at
+the end of the period (late July to late August) capture bare soil
+signatures to distinguish between agricultural classes and natural ones.
+This corresponds to summer time when the ground is drier and crops have
+been harvested. \newpage
+
+\begin{lstlisting}[language=R]
 # retrieve a point to be classified
 point_mt_4bands <- sits_select(
     data = point_mt_6bands, 
@@ -3398,60 +3371,36 @@ plot(point_class, bands = c("NDVI", "EVI"))
 \end{lstlisting}
 
 \begin{figure}
-\includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-65-1} \caption{Classification of time series using random forests}\label{fig:unnamed-chunk-65}
+
+{\centering \includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-68-1} 
+
+}
+
+\caption{Classification of time series using random forests.}\label{fig:unnamed-chunk-68}
 \end{figure}
-
-\begin{lstlisting}[language=R]
-# show the results of the prediction
-sits_show_prediction(point_class)
-\end{lstlisting}
-
-\begin{lstlisting}
-#> # A tibble: 17 x 3
-#>    from       to         class   
-#>    <date>     <date>     <chr>   
-#>  1 2000-09-13 2001-08-29 Forest  
-#>  2 2001-09-14 2002-08-29 Forest  
-#>  3 2002-09-14 2003-08-29 Forest  
-#>  4 2003-09-14 2004-08-28 Pasture 
-#>  5 2004-09-13 2005-08-29 Pasture 
-#>  6 2005-09-14 2006-08-29 Pasture 
-#>  7 2006-09-14 2007-08-29 Pasture 
-#>  8 2007-09-14 2008-08-28 Pasture 
-#>  9 2008-09-13 2009-08-29 Pasture 
-#> 10 2009-09-14 2010-08-29 Soy_Corn
-#> 11 2010-09-14 2011-08-29 Soy_Corn
-#> 12 2011-09-14 2012-08-28 Soy_Corn
-#> 13 2012-09-13 2013-08-29 Soy_Corn
-#> 14 2013-09-14 2014-08-29 Soy_Corn
-#> 15 2014-09-14 2015-08-29 Soy_Corn
-#> 16 2015-09-14 2016-08-28 Soy_Corn
-#> 17 2016-09-13 2017-08-29 Soy_Corn
-\end{lstlisting}
 
 The result shows that the area started out as a forest in 2000, it was
 deforested from 2004 to 2005, used as pasture from 2006 to 2007, and for
-double-cropping agriculture from 2009 onwards.They are consistent with
+double-cropping agriculture from 2009 onwards. They are consistent with
 expert evaluation of the process of land use change in this region of
 Amazonia.
 
 Random forests are robust to outliers and able to deal with irrelevant
-inputs \protect\hyperlink{ref-Hastie2009}{{[}39{]}}. However, despite
-being robust, this approach tends to overemphasize some variables and
-thus rarely turns out to be the classifier with the smallest error. One
-reason is that the performance of random forests tends to stabilize
+inputs \protect\hyperlink{ref-Hastie2009}{{[}39{]}}. The method tends to
+overemphasize some variables because its performance tends to stabilize
 after a part of the trees are grown
-\protect\hyperlink{ref-Hastie2009}{{[}39{]}}. In general, random forests
-can be useful to provide a baseline to compare with more sophisticated
-methods.
+\protect\hyperlink{ref-Hastie2009}{{[}39{]}}. In cases where abrupt
+change takes place, such deforestation mapping, random forest (if
+properly trained) will emphasize the temporal instances and bands that
+capture such quick change.
 
 \hypertarget{support-vector-machines}{%
 \section*{Support Vector Machines}\label{support-vector-machines}}
 \addcontentsline{toc}{section}{Support Vector Machines}
 
 The support vector Machine (SVM) classifies is a generalization of a
-linear classifier which finds are an optimal separation hyperplane that
-minimizes misclassifications
+linear classifier which finds an optimal separation hyperplane that
+minimizes misclassification
 \protect\hyperlink{ref-Cortes1995}{{[}40{]}}. Since a set of samples
 with \(n\) features defines an n-dimensional feature space, hyperplanes
 are linear \({(n-1)}\)-dimensional boundaries that define linear
@@ -3461,18 +3410,18 @@ feature space, there will be an optimal solution defined by the
 that is farthest from the training
 observations\protect\hyperlink{ref-James2013}{{[}37{]}}. The maximal
 margin is computed as the the smallest distance from the observations to
-the hyperplane. However, in general the data is not linearly separable.
-In this case, the SVM classifier allows some samples to be on the wrong
-side of hyperplane. SVM attempts to minimize the number of wrong
-classified samples, based on an optimization parameter that defines the
-cost of misclassification.
+the hyperplane. The solution for the hyperplane coefficients depends
+only on the samples that define the maximum margin criteria, the
+so-called \emph{support vectors}.
 
-The fact that SVMs have misclassified samples actually turns out to be
-an advantage, since such behavior makes the result robust to outliers
-and focus on getting a correct result using most of the observations
-\protect\hyperlink{ref-James2013}{{[}37{]}}. The solution for the
-hyperplane coefficients depends only on the samples that violates the
-maximum margin criteria, the so-called \emph{support vectors}.
+\begin{figure}
+
+{\centering \includegraphics[width=0.5\linewidth]{images/svm_margin} 
+
+}
+
+\caption{Maximum-margin hyperplane and margins for an SVM trained with samples from two classes. Samples on the margin are called the support vectors. (source: Larhmam in Wikipedia - available as CC-BY-SA-4.0 ).}\label{fig:unnamed-chunk-69}
+\end{figure}
 
 For data that is not linearly separable, SVM includes kernel functions
 that map the original feature space into a higher dimensional space,
@@ -3484,7 +3433,7 @@ computational strategy to produce nonlinear boundaries in the input
 attribute space; thus, they improve training-class separation. SVM is
 one of the most widely used algorithms in machine learning applications
 and has been widely applied to classify remote sensing data
-\protect\hyperlink{ref-Mountrakis2011}{{[}25{]}}.
+\protect\hyperlink{ref-Mountrakis2011}{{[}26{]}}.
 
 In \passthrough{\lstinline!sits!}, SVM is implemented as a wrapper of
 \passthrough{\lstinline!e1071!} R package that uses the
@@ -3503,11 +3452,10 @@ non-linear transformation (default is \passthrough{\lstinline!radial!}),
 \passthrough{\lstinline!cost!} which measures the punishment for
 wrongly-classified samples (default is 10), and
 \passthrough{\lstinline!cross!} which sets the value of the k-fold cross
-validation (default is 10). .
+validation (default is 10).
 
 \begin{lstlisting}[language=R]
 # Train a machine learning model for the mato grosso dataset using SVM
-# The parameters are those of the "e1071:svm" method
 svm_model <- sits_train(
     samples = samples_matogrosso_mod13q1, 
     ml_method = sits_svm())
@@ -3521,8 +3469,20 @@ plot(point_class, bands = c("NDVI", "EVI"))
 \end{lstlisting}
 
 \begin{figure}
-\includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-67-1} \caption{Classification of time series using SVM}\label{fig:unnamed-chunk-67}
+
+{\centering \includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-71-1} 
+
+}
+
+\caption{Classification of time series using SVM.}\label{fig:unnamed-chunk-71}
 \end{figure}
+
+The SVM classifier is less stable and less robust to outliers than the
+random forests method. In this example, it tends to misclassify some of
+the data. In 2008, it is likely that the land cover was still
+``Pasture'' rather than ``Soy\_Millet'' as produced by the algorithm,
+while the ``Soy\_Cotton'' class in 2012 is also inconsistent with the
+previous and latter classification of ``Soy\_Corn''.
 
 \hypertarget{extreme-gradient-boosting}{%
 \section*{Extreme Gradient Boosting}\label{extreme-gradient-boosting}}
@@ -3543,7 +3503,7 @@ limited at the risk of overfitting.
 
 Gradient boosting is a variant of boosting methods where the cost
 function is minimized by gradient descent. Extreme gradient boosting
-\protect\hyperlink{ref-Chen2016}{{[}26{]}}, called XGBoost, is an
+\protect\hyperlink{ref-Chen2016}{{[}27{]}}, called XGBoost, is an
 efficient approximation to the gradient loss function. XGBoost is
 considered one of the best statistical learning algorithms available and
 has won many competitions; it is generally considered to be better than
@@ -3573,7 +3533,8 @@ instances to grow trees, thus preventing overfitting. The
 of boosting interactions; its default is 100, which has proven to be
 enough in most cases. In order to follow the convergence of the
 algorithm, users can turn the \passthrough{\lstinline!verbose!}
-parameter on.
+parameter on. In general, the results using the extreme gradient
+boosting algorithm are similar to the random forests method.
 
 \begin{lstlisting}[language=R]
 # Train a model for the mato grosso dataset using XGBOOST
@@ -3591,47 +3552,49 @@ plot(point_class, bands = c("NDVI", "EVI"))
 \end{lstlisting}
 
 \begin{figure}
-\includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-68-1} \caption{Classification of time series using XGBoost}\label{fig:unnamed-chunk-68}
+
+{\centering \includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-73-1} 
+
+}
+
+\caption{Classification of time series using XGBoost.}\label{fig:unnamed-chunk-73}
 \end{figure}
 
-In general, the results from the extreme gradient boosting model are
-similar to the Random Forest model. If desired, users can tune the
-hyperparameters need to perform using function
-\passthrough{\lstinline!sits\_kfold\_validate()!}. See
-\href{https://e-sensing.github.io/sitsbook/validation-and-accuracy-measurements-in-sits.html}{Chapter
-8} for more details.
-
-\hypertarget{deep-learning-using-multi-layer-perceptrons}{%
-\section*{Deep learning using multi-layer
-perceptrons}\label{deep-learning-using-multi-layer-perceptrons}}
-\addcontentsline{toc}{section}{Deep learning using multi-layer
+\hypertarget{deep-learning-using-multilayer-perceptrons}{%
+\section*{Deep learning using multilayer
+perceptrons}\label{deep-learning-using-multilayer-perceptrons}}
+\addcontentsline{toc}{section}{Deep learning using multilayer
 perceptrons}
 
 To support deep learning methods, \passthrough{\lstinline!sits!} uses
-the \passthrough{\lstinline!keras!} R package
-\protect\hyperlink{ref-Chollet2018}{{[}42{]}} as a backend. The first
-method is that of multi-layer perceptron (MLPs). These are the
-quintessential deep learning models. The goal of a multilayer perceptron
-is to approximate a function \(y = f(x)\) that maps an input \(x\) to a
-category \(y\). An MLP defines a mapping \(y = f(x;\theta)\) and learns
-the value of the parameters \(\theta\) that result in the best function
-approximation \protect\hyperlink{ref-Goodfellow2016}{{[}43{]}}. An MLP
-consists of types of nodes: an input layer, a set of hidden layers and
-an output layer. The input layer has the same dimension as the number of
-the features in the data set. A user-defined number of hidden layers
-attempt to approximate the best classification function. The output
-layer makes a decision about which class should be assigned to the
-input.
+the \passthrough{\lstinline!torch!} R package, which takes the Facebook
+\passthrough{\lstinline!torch!} C++ library as a back-end. Machine
+learning algorithms that use the R \passthrough{\lstinline!torch!}
+package are similar from those developed using
+\passthrough{\lstinline!PyTorch!}. Converting image time series
+algorithms developed in \passthrough{\lstinline!PyTorch!} to be using in
+\passthrough{\lstinline!sits!} is straightforward. Please see the
+chapter on ``Extensibility'' for guidance on how to include new deep
+learning algorithms in \passthrough{\lstinline!sits!}.
+
+The simples deep learning method available is that of multilayer
+perceptrons (MLPs), which are feedforward artificial neural networks. A
+MLP consists of types of nodes: an input layer, a set of hidden layers
+and an output layer. The input layer has the same dimension as the
+number of the features in the data set. A user-defined number of hidden
+layers attempt to approximate the best classification function. The
+output layer makes a decision about which class should be assigned to
+the input.
 
 In \passthrough{\lstinline!sits!}, users build MLP models using
-\passthrough{\lstinline!sits\_mlp()!}. Since there is no proven model
-for classification of satellite image time series, designing MLP models
-requires parameter customization. The most important decisions are the
-number of layers in the model and the number of neurons per layer. These
-values are set by the \passthrough{\lstinline!layers!} parameters, which
-is a list of integer values. The size of the list is the number of
-layers and each element of the list indicates the number of nodes per
-layer.
+\passthrough{\lstinline!sits\_mlp()!}. Since there is no established
+model for generic classification of satellite image time series,
+designing MLP models requires parameter customization. The most
+important decisions are the number of layers in the model and the number
+of neurons per layer. These values are set by the
+\passthrough{\lstinline!layers!} parameters, which is a list of integer
+values. The size of the list is the number of layers and each element of
+the list indicates the number of nodes per layer.
 
 The choice of the number of layers depends on the inherent separability
 of the data set to be classified. For data sets where the classes have
@@ -3645,43 +3608,44 @@ number of neurons per layer, before increasing the number of layers.
 MLP models also need to include the activation function. The activation
 function of a node defines the output of that node given an input or set
 of inputs. Following standard practices
-\protect\hyperlink{ref-Goodfellow2016}{{[}43{]}}, we use the ``relu''
-activation function.
+\protect\hyperlink{ref-Goodfellow2016}{{[}24{]}}, we use the
+\passthrough{\lstinline!relu!} activation function.
 
 Users can also define the optimization
 method(\passthrough{\lstinline!optimizer!}), which defines the gradient
 descent algorithm to be used. These methods aim to maximize an objective
 function by updating the parameters in the opposite direction of the
 gradient of the objective function
-\protect\hyperlink{ref-Ruder2016}{{[}44{]}}. Based on experience with
+\protect\hyperlink{ref-Ruder2016}{{[}42{]}}. Based on experience with
 image time series, we recommend that users start by using the default
 method provided by \passthrough{\lstinline!sits!}, which is the
-\passthrough{\lstinline!optimizer\_adamw!} method. Please refer to the
-\passthrough{\lstinline!torch!} package documentation for more
-information.
+\passthrough{\lstinline!optimizer\_adamw!} method from package
+\passthrough{\lstinline!torchopt!}. Please refer to the
+\passthrough{\lstinline!torchopt!} package for additional information.
 
 Another relevant parameter is the list of dropout rates
 (\passthrough{\lstinline!dropout!}). Dropout is a technique for randomly
 dropping units from the neural network during training
-\protect\hyperlink{ref-Srivastava2014}{{[}45{]}}. By randomly discarding
+\protect\hyperlink{ref-Srivastava2014}{{[}43{]}}. By randomly discarding
 some neurons, dropout reduces overfitting. Since the purpose of a
 cascade of neural nets is to improve learning as more data is acquired,
 discarding some neurons may seem a waste of resources. In practice,
 dropout prevents an early convergence to a local minimum
-\protect\hyperlink{ref-Goodfellow2016}{{[}43{]}}. We suggest users
+\protect\hyperlink{ref-Goodfellow2016}{{[}24{]}}. We suggest users
 experiment with different dropout rates, starting from small values
 (10-30\%) and increasing as required.
 
 The following example shows how to use
 \passthrough{\lstinline!sits\_mlp()!}. The default parameters for have
-been chosen based on \protect\hyperlink{ref-Wang2017}{{[}46{]}}, which
-proposes the use of multi-layer perceptrons as a baseline for time
-series classification. These parameters are: (a) Three layers with 512
-neurons each, specified by the parameter
-\passthrough{\lstinline!layers!}; (b) Using the ``relu'' activation
-function; (c) dropout rates of 10\%, 20\%, and 30\% for the layers; (d)
-the ``optimizer\_adam'' as optimizer (default value); (e) a number of
-training steps (\passthrough{\lstinline!epochs!}) of 100; (f) a
+been chosen based on a modified verion of
+\protect\hyperlink{ref-Wang2017}{{[}44{]}}, which proposes the use of
+multilayer perceptrons as a baseline for time series classification.
+These parameters are: (a) Three layers with 512 neurons each, specified
+by the parameter \passthrough{\lstinline!layers!}; (b) Using the
+``relu'' activation function; (c) dropout rates of 40\%, 30\%, and 20\%
+for the layers; (d) the ``optimizer\_adamw'' as optimizer (default
+value); (e) a number of training steps
+(\passthrough{\lstinline!epochs!}) of 100; (f) a
 \passthrough{\lstinline!batch\_size!} of 64, which indicates how many
 time series are used for input at a given steps; and (g) a validation
 percentage of 20\%, which means 20\% of the samples will be randomly set
@@ -3701,20 +3665,14 @@ amount of smoothing improves their detection power in case of noisy
 data.
 
 \begin{lstlisting}[language=R]
-# filter samples using a whittaker filter
-samples_filtered <- sits_filter(
-    data = samples_matogrosso_mod13q1,
-    filter = sits_whittaker()
-)
 # train a  model for the Mato Grosso data using an MLP model
 # this is an example of how to set parameters
 # first-time users should test default options first
-
 mlp_model <- sits_train(
-    samples = samples_filtered, 
+    samples = samples_matogrosso_mod13q1, 
     ml_method = sits_mlp(
         layers           = c(512, 512, 512),
-        dropout_rates    = c(0.10, 0.20, 0.30),
+        dropout_rates    = c(0.40, 0.30, 0.20),
         epochs           = 100,
         batch_size       = 64,
         verbose          = FALSE,
@@ -3725,9 +3683,18 @@ mlp_model <- sits_train(
 plot(mlp_model)
 \end{lstlisting}
 
-\includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-69-1}
+\begin{figure}
 
-Then, we classify a 16-year time series using the DL model
+{\centering \includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-75-1} 
+
+}
+
+\caption{Evolution of training accuracy of MLP model.}\label{fig:unnamed-chunk-75}
+\end{figure}
+\newpage
+
+Then, we classify a 16-year time series using the multilayer perceptron
+model.
 
 \begin{lstlisting}[language=R]
 # Classify using DL model and plot the result
@@ -3737,23 +3704,25 @@ point_mt_6bands %>%
     plot(bands = c("NDVI", "EVI"))
 \end{lstlisting}
 
-\includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-70-1}
+\begin{figure}
 
-The multi-layer perceptron model is able to capture more subtle changes
-than the random forests and XGBoost models. For example, the transition
-from Forest to Pasture as estimated by the model is not abrupt and takes
-more than one year. In 2004, the time series corresponds to that of a
-degraded forest. Since there are no samples for ``Forest Degradation'',
-the model assigns this series to a class that is neither ``Forest'' nor
-``Pasture'', which in our case is ``Cerrado''. This indicates that users
-should include samples of ``Forest Degradation'' to improve
-classification. Although the model mixes the ``Soy\_Corn'' and
-``Soy\_Millet'' classes, the distinction between their temporal
-signatures is quite subtle. Also in this case, this suggests the need to
-improve the number of samples. In this examples, the MLP model shows an
-increase in the sensitivity compared to previous models. We recommend
-that the users compare different configurations, since the MLP model is
-sensitive to changes in its parameters.
+{\centering \includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-76-1} 
+
+}
+
+\caption{Classification of time series using MLP.}\label{fig:unnamed-chunk-76}
+\end{figure}
+
+In theory, multilayer perceptron model is able to capture more subtle
+changes than the random forests and XGBoost models. In this specific
+case, the result is similar to the previous one. Although the model
+mixes the ``Soy\_Corn'' and ``Soy\_Millet'' classes, the distinction
+between their temporal signatures is quite subtle. Also in this case,
+this suggests the need to improve the number of samples. In this
+examples, the MLP model shows an increase in the sensitivity compared to
+previous models. We recommend that the users compare different
+configurations, since the MLP model is sensitive to changes in its
+parameters.
 
 \hypertarget{temporal-convolutional-neural-network-tempcnn}{%
 \section*{Temporal Convolutional Neural Network
@@ -3767,53 +3736,46 @@ input data. In the case of time series, a 1D CNN works by applying a
 moving window to the series. Using convolution filters is a way to
 incorporate temporal autocorrelation information in the classification.
 The result of the convolution is another time series.
-\protect\hyperlink{ref-Russwurm2017}{{[}47{]}} states that the use of
-1D-CNN for time series classification improves on the use of multi-layer
+\protect\hyperlink{ref-Russwurm2017}{{[}45{]}} states that the use of
+1D-CNN for time series classification improves on the use of multilayer
 perceptrons, since the classifier is able to represent temporal
 relationships. 1D-CNNs with a suitable convolution window make the
 classifier more robust to moderate noise, e.g.~intermittent presence of
 clouds.
 
 The Use of 1D CNNs for satellite image time series classification is
-proposed in \protect\hyperlink{ref-Pelletier2019}{{[}28{]}}. The
-``TempCNN'' architecture has three 1D convolutional layers (each with 64
-units), one dense layer of 256 units and a final softmax layer for
-classification (see figure). The kernel size of the convolution filters
-is set to 5. The authors use a combination of different methods to avoid
-overfitting and reduce the vanishing gradient effect, including dropout,
-regularization, and batch normalisation. In the tempCNN paper
-\protect\hyperlink{ref-Pelletier2019}{{[}28{]}}, the authors compare
-favourably the tempCNN model with the Recurrent Neural Network proposed
-by \protect\hyperlink{ref-Russwurm2018}{{[}48{]}} for land use
-classification. The figure below shows the architecture of the tempCNN
-model.
+proposed in \protect\hyperlink{ref-Pelletier2019}{{[}29{]}}. The TempCNN
+architecture has three 1D convolutional layers, and a final softmax
+layer for classification (see figure). The authors use a combination of
+different methods to avoid overfitting and reduce the vanishing gradient
+effect, including dropout, regularization, and batch normalisation. In
+the tempCNN paper \protect\hyperlink{ref-Pelletier2019}{{[}29{]}}, the
+authors compare favourably the tempCNN model with the Recurrent Neural
+Network proposed by \protect\hyperlink{ref-Russwurm2018}{{[}46{]}} for
+land use classification. The figure below shows the architecture of the
+tempCNN model.
 
 \begin{figure}
 
-{\centering \includegraphics[width=0.8\linewidth,height=0.8\textheight]{images/tempcnn} 
+{\centering \includegraphics[width=0.9\linewidth]{images/tempcnn} 
 
 }
 
-\caption{Structure of tempCNN architecture (source: Pelletier et al.(2019))}\label{fig:unnamed-chunk-71}
+\caption{Structure of tempCNN architecture (source: Pelletier et al.(2019)). Reproduction based on fair use doctrine.}\label{fig:unnamed-chunk-77}
 \end{figure}
 
-The function \passthrough{\lstinline!sits\_TempCNN()!} implements the
-model. The code has been derived from the Python source provided by the
-authors (\url{https://github.com/charlotte-pel/temporalCNN}). Most of
-the parameters corresponds to those chosen by
-\protect\hyperlink{ref-Pelletier2019}{{[}28{]}}. The parameter
-\passthrough{\lstinline!cnn\_layers!} controls the number of 1D-CNN
-layers and the size of the filters applied at each layer; the default
-values are three CNNs with 64 units. The parameter
+The function \passthrough{\lstinline!sits\_tempcnn()!} implements the
+model. The parameter \passthrough{\lstinline!cnn\_layers!} controls the
+number of 1D-CNN layers and the size of the filters applied at each
+layer; the default values are three CNNs with 128 units. The parameter
 \passthrough{\lstinline!cnn\_kernels!} indicates the size of the
-convolution kernels; the default values are kernels of size 5.
-Activation for all 1D-CNN layers uses the ``relu'' function. The dropout
-rates for each 1D-CNN layer are controlled individually by the parameter
-\passthrough{\lstinline!cnn\_dropout\_rates!}. Based on discussions with
-the author, the defaults in \passthrough{\lstinline!sits!} range from
-10\% to 50\%. The \passthrough{\lstinline!validation\_split!} controls
-the size of the test set, relative to the full data set. We recommend to
-set aside at least 20\% of the samples for validation.
+convolution kernels; the default are kernels of size 7. Activation for
+all 1D-CNN layers uses the ``relu'' function. The dropout rates for each
+1D-CNN layer are controlled individually by the parameter
+\passthrough{\lstinline!cnn\_dropout\_rates!}. The
+\passthrough{\lstinline!validation\_split!} controls the size of the
+test set, relative to the full data set. We recommend to set aside at
+least 20\% of the samples for validation.
 
 \begin{lstlisting}[language=R]
 library(torchopt)
@@ -3821,9 +3783,9 @@ library(torchopt)
 tempcnn_model <- sits_train(samples_matogrosso_mod13q1, 
                        sits_tempcnn(
                           optimizer            = torchopt::optim_adamw,
-                          cnn_layers           = c(64, 64, 64),
-                          cnn_kernels          = c(5, 5, 5),
-                          cnn_dropout_rates    = c(0.5, 0.5, 0.5),
+                          cnn_layers           = c(128, 128, 128),
+                          cnn_kernels          = c(7, 7, 7),
+                          cnn_dropout_rates    = c(0.2, 0.2, 0.2),
                           epochs               = 100,
                           batch_size           = 64,
                           validation_split     = 0.2,
@@ -3833,9 +3795,16 @@ tempcnn_model <- sits_train(samples_matogrosso_mod13q1,
 plot(tempcnn_model)
 \end{lstlisting}
 
-\includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-72-1}
+\begin{figure}
 
-Then, we classify a 16-year time series using the TempCNN model
+{\centering \includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-79-1} 
+
+}
+
+\caption{Training evolution of TempCNN model.}\label{fig:unnamed-chunk-79}
+\end{figure}
+
+Then, we classify a 16-year time series using the TempCNN model.
 
 \begin{lstlisting}[language=R]
 # Classify using TempCNN model and plot the result
@@ -3845,23 +3814,37 @@ class <- point_mt_6bands %>%
     plot(bands = c("NDVI", "EVI"))
 \end{lstlisting}
 
-\includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-73-1}
+\begin{figure}
 
-While the result of the TempCNN model using default parameters is
-similar to that of the MLP model, it has has the potential to better
-explore the time series data than the the MLP model. In our experience,
-TempCNN models are a reliable way for classifying image time
-series\protect\hyperlink{ref-Simoes2021}{{[}49{]}}. Recent work which
-compares different models also provides evidence of a satisfactory
-behavior\protect\hyperlink{ref-Russwurm2020}{{[}31{]}}.
+{\centering \includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-80-1} 
+
+}
+
+\caption{Classification of time series using TempCNN.}\label{fig:unnamed-chunk-80}
+\end{figure}
+
+The result shows and important difference from the previous ones. For
+2004, the TempCNN model indicates the ``Soy\_Cotton'' class as the most
+likely one. While this result is likely to be wrong, it shows that the
+time series for year 2004 is different from those of ``Forest'' and
+``Pasture'' classes. One possible explanation is that there was forest
+degradation in 2004, leading to a signature that is a mix of forest and
+bare soil. In this case, users could consider improving the training
+data by including samples that represent forest degradation. In our
+experience, TempCNN models are a reliable way for classifying image time
+series\protect\hyperlink{ref-Simoes2021}{{[}47{]}}. Recent work which
+compares different models also provides evidence of that TempCNN models
+have satisfactory behavior, especially in the case of crop
+classes\protect\hyperlink{ref-Russwurm2020}{{[}32{]}}.
 
 \hypertarget{residual-1d-cnn-networks-resnet}{%
-\section{Residual 1D CNN Networks
+\section*{Residual 1D CNN Networks
 (ResNet)}\label{residual-1d-cnn-networks-resnet}}
+\addcontentsline{toc}{section}{Residual 1D CNN Networks (ResNet)}
 
 The Residual Network (ResNet) is a 1D convolution neural network (CNN)
-proposed by \protect\hyperlink{ref-Wang2017}{{[}46{]}}, based on the
-idea proposed by \protect\hyperlink{ref-He2016}{{[}50{]}} for image
+proposed by \protect\hyperlink{ref-Wang2017}{{[}44{]}}, based on the
+idea proposed by \protect\hyperlink{ref-He2016}{{[}48{]}} for image
 recognition. The ResNet architecture is composed of 11 layers, with
 three blocks of three 1D CNN layers each (see figure below). Each block
 corresponds to a 1D CNN architecture. The output of each block is
@@ -3872,7 +3855,7 @@ so-called ``vanishing gradient problem''. This issue occurs in deep
 networks as he neural network's weights are updated based on the partial
 derivative of the error function. If the gradient is too small, the
 weights will not be updated, stopping the
-training\protect\hyperlink{ref-Hochreiter1998}{{[}51{]}}. Skip
+training\protect\hyperlink{ref-Hochreiter1998}{{[}49{]}}. Skip
 connections aim to avoid vanishing gradients from occurring, allowing
 deep networks to be trained.
 
@@ -3882,27 +3865,26 @@ deep networks to be trained.
 
 }
 
-\caption{Structure of ResNet architecture (source: Wang et al.(2017))}\label{fig:unnamed-chunk-74}
+\caption{Structure of ResNet architecture (source: Wang et al.(2017)). Reproduction based on fair use doctrine.}\label{fig:unnamed-chunk-81}
 \end{figure}
 
-In \passthrough{\lstinline!sits!}, the esidual Network is implemented
+In \passthrough{\lstinline!sits!}, the Residual Network is implemented
 using the \passthrough{\lstinline!sits\_resnet()!} function. The default
 parameters are those proposed by
-\protect\hyperlink{ref-Wang2017}{{[}46{]}}, and we also benefited from
-the code provided by \protect\hyperlink{ref-Fawaz2019}{{[}52{]}}. The
-first parameter is \passthrough{\lstinline!blocks!}, which controls the
-number of blocks and the size of filters in each block. By default, the
-model implements three blocks, the first with 64 filters and the others
-with 128 filters. Users can control the number of blocks and filter size
-by changing this parameter. The parameter
-\passthrough{\lstinline!kernels!} controls the size the of kernels of
-the three layers inside each block. We have found out that it is useful
-to experiment a bit with these kernel sizes in the case of satellite
-image time series. The default activation is ``relu'', which is
-recommended in the literature to reduce the problem of vanishing
-gradients. The default optimizer is the same as proposed in
-\protect\hyperlink{ref-Wang2017}{{[}46{]}} and
-\protect\hyperlink{ref-Fawaz2019}{{[}52{]}}.
+\protect\hyperlink{ref-Wang2017}{{[}44{]}}; we benefited from the code
+provided by \protect\hyperlink{ref-Fawaz2019}{{[}50{]}}. The first
+parameter is \passthrough{\lstinline!blocks!}, which controls the number
+of blocks and the size of filters in each block. By default, the model
+implements three blocks, the first with 64 filters and the others with
+128 filters. Users can control the number of blocks and filter size by
+changing this parameter. The parameter \passthrough{\lstinline!kernels!}
+controls the size the of kernels of the three layers inside each block.
+We have found out that it is useful to experiment a bit with these
+kernel sizes in the case of satellite image time series. The default
+activation is ``relu'', which is recommended in the literature to reduce
+the problem of vanishing gradients. The default optimizer is the same is
+\passthrough{\lstinline!optim\_adamw!}, available in package
+\passthrough{\lstinline!torchopt!}.
 
 \begin{lstlisting}[language=R]
 # train a machine learning model using ResNet
@@ -3918,20 +3900,36 @@ resnet_model <- sits_train(samples_matogrosso_mod13q1,
 plot(resnet_model)
 \end{lstlisting}
 
-\includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-75-1}
+\begin{figure}
 
-Then, we classify a 16-year time series using the ResNet model.
+{\centering \includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-82-1} 
+
+}
+
+\caption{Training evolution of ResNet model.}\label{fig:unnamed-chunk-82}
+\end{figure}
+\newpage
+
+Then, we classify a 16-year time series using the ResNet model. The
+behaviour of the ResNet model is similar to that of TempCNN, with more
+variability.
 
 \begin{lstlisting}[language=R]
 # Classify using DL model and plot the result
-point_mt_4bands <- sits_select(point_mt_6bands, 
-                               bands = c("NDVI", "EVI", "NIR", "MIR"))
-class.tb <- point_mt_4bands %>% 
-    sits_classify(resnet_model) %>% 
+class <- point_mt_6bands %>% 
+    sits_select(bands = c("NDVI", "EVI", "NIR", "MIR")) %>% 
+    sits_classify(tempcnn_model) %>% 
     plot(bands = c("NDVI", "EVI"))
 \end{lstlisting}
 
-\includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-76-1}
+\begin{figure}
+
+{\centering \includegraphics[width=0.7\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-83-1} 
+
+}
+
+\caption{Classification of time series using ResNet.}\label{fig:unnamed-chunk-83}
+\end{figure}
 
 \hypertarget{considerations-on-model-choice}{%
 \section*{Considerations on model
@@ -3941,21 +3939,21 @@ choice}\label{considerations-on-model-choice}}
 The development of machine learning methods for classification of
 satellite image time series is an ongoing task. There is a lot of recent
 work using methods such as convolutional neural networks
-\protect\hyperlink{ref-Fawaz2020}{{[}29{]}}, long short term memory
+\protect\hyperlink{ref-Fawaz2020}{{[}30{]}}, long short term memory
 convolutional networks
-(LSTM-FCN)\protect\hyperlink{ref-Karim2019}{{[}53{]}} and temporal
-self-attention \protect\hyperlink{ref-Garnot2020a}{{[}30{]}}. Given the
+(LSTM-FCN)\protect\hyperlink{ref-Karim2019}{{[}51{]}} and temporal
+self-attention \protect\hyperlink{ref-Garnot2020a}{{[}31{]}}. Given the
 rapid evolution of the field with new methods still being developed,
 there are few references that offer a comparison between different
 machine learning methods. Most works on the literature
-\protect\hyperlink{ref-Fawaz2019}{{[}52{]}} compare methods for generic
+\protect\hyperlink{ref-Fawaz2019}{{[}50{]}} compare methods for generic
 time series classification. Their insights are not directly applicable
 for satellite image time series data, which have different properties
 than the time series available in comparison archives such as the UCR
 dataset.
 
 In the specific case of satellite image time series,
-\protect\hyperlink{ref-Russwurm2020}{{[}31{]}} presents a comparative
+\protect\hyperlink{ref-Russwurm2020}{{[}32{]}} presents a comparative
 study between seven deep neural networks for classification of
 agricultural crops, using random forests (RF) as a baseline. The dataset
 is composed of Sentinel-2 images over Britanny, France. Their results
@@ -4044,7 +4042,7 @@ customised approach is depicted in the figure below.
 
 }
 
-\caption{Parallel processing in sits (source: Simoes et al.(2021)}\label{fig:unnamed-chunk-78}
+\caption{Parallel processing in sits (source: Simoes et al.(2021). Reproduction under fair use doctrine.}\label{fig:unnamed-chunk-85}
 \end{figure}
 
 This approach has many advantages. It works in any virtual machine that
@@ -4139,7 +4137,7 @@ probabilities to detect and correct outliers or misclassified pixels.
 
 Image classification post-processing has been defined as ``a refinement
 of the labelling in a classified image in order to enhance its
-classification accuracy'' \protect\hyperlink{ref-Huang2014}{{[}54{]}}.
+classification accuracy'' \protect\hyperlink{ref-Huang2014}{{[}52{]}}.
 In remote sensing image analysis, these procedures are used to combine
 pixel-based classification methods with a spatial post-processing method
 to remove outliers and misclassified pixels. For pixel-based
@@ -4154,7 +4152,7 @@ irrespective of the resolution. Also, there is a considerable degree of
 data variability in each class. These effects lead to outliers whose
 chance of misclassification is significant. To offset these problems,
 most post-processing methods use the ``smoothness assumption''
-\protect\hyperlink{ref-Schindler2012}{{[}55{]}}: nearby pixels tend to
+\protect\hyperlink{ref-Schindler2012}{{[}53{]}}: nearby pixels tend to
 have the same label. To put this assumption in practice, smoothing
 methods use the neighbourhood information to remove outliers and enhance
 consistency in the resulting product.
@@ -4407,7 +4405,7 @@ raster_probs <- sits_classify(raster_cube, ml_model = rfor_model,
 plot(raster_probs)
 \end{lstlisting}
 
-\includegraphics{sitsbook_files/figure-latex/unnamed-chunk-80-1.pdf} The
+\includegraphics{sitsbook_files/figure-latex/unnamed-chunk-87-1.pdf} The
 plots show the class probabilities, which can then be smoothed by a
 bayesian smoother.
 
@@ -4421,7 +4419,7 @@ plot(raster_probs_bayes)
 
 \begin{figure}
 \centering
-\includegraphics{sitsbook_files/figure-latex/unnamed-chunk-81-1.pdf}
+\includegraphics{sitsbook_files/figure-latex/unnamed-chunk-88-1.pdf}
 \caption{Probability values smoothed by bayesian method}
 \end{figure}
 
@@ -4433,11 +4431,11 @@ shown below.
 
 \begin{figure}
 
-{\centering \includegraphics[width=0.9\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-82-1} 
+{\centering \includegraphics[width=0.9\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-89-1} 
 
 }
 
-\caption{Classified image without smoothing}\label{fig:unnamed-chunk-82}
+\caption{Classified image without smoothing}\label{fig:unnamed-chunk-89}
 \end{figure}
 
 The resulting labelled map shows a number of likely misclassified pixels
@@ -4445,11 +4443,11 @@ which can be removed using the bayesian smoother.
 
 \begin{figure}
 
-{\centering \includegraphics[width=0.9\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-83-1} 
+{\centering \includegraphics[width=0.9\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-90-1} 
 
 }
 
-\caption{Classified image with Bayesian smoothing}\label{fig:unnamed-chunk-83}
+\caption{Classified image with Bayesian smoothing}\label{fig:unnamed-chunk-90}
 \end{figure}
 
 Comparing the two plots, it is apparent that the smoothing procedure has
@@ -4465,11 +4463,11 @@ being labeled ``Forest'' in the midst of pixels likely to be labeled
 ``Cerrado''), but would like to preserve the edges between areas.
 Because of its design, bilateral filter has proven to be a useful method
 for post-classification processing since it preserves edges while
-removing noisy pixels \protect\hyperlink{ref-Schindler2012}{{[}55{]}}.
+removing noisy pixels \protect\hyperlink{ref-Schindler2012}{{[}53{]}}.
 
 Bilateral smoothing combines proximity (combining pixels which are
 close) and similarity (comparing the values of the pixels)
-\protect\hyperlink{ref-Tomasi1998}{{[}56{]}}. If most of the pixels in a
+\protect\hyperlink{ref-Tomasi1998}{{[}54{]}}. If most of the pixels in a
 neighborhood have similar values, it is easy to identify outliers and
 noisy pixels. In contrast, there is a strong difference between the
 values of pixels in a if neighborhood, it is possible that the pixel is
@@ -4533,7 +4531,7 @@ distance between pixels also reduce the impact of neighbors. The achieve
 a satisfactory result, we need to balance the \(\sigma\) and \(\tau\).
 As a general rule, the values of \(\tau\) should range from 0.05 to
 0.50, while the values of \(\sigma\) should vary between 4 and
-16\protect\hyperlink{ref-Paris2007}{{[}57{]}}. The default values
+16\protect\hyperlink{ref-Paris2007}{{[}55{]}}. The default values
 adopted in \emph{sits} are \passthrough{\lstinline!tau = 0.1!} and
 \passthrough{\lstinline!sigma = 8!}. As the best values of \(\tau\) and
 \(\sigma\) depend on the variance of the noisy pixels, users are
@@ -4552,7 +4550,7 @@ plot(raster_probs_bil)
 
 \begin{figure}
 \centering
-\includegraphics{sitsbook_files/figure-latex/unnamed-chunk-84-1.pdf}
+\includegraphics{sitsbook_files/figure-latex/unnamed-chunk-91-1.pdf}
 \caption{Probability values for classified image smoothed by bilateral
 filter}
 \end{figure}
@@ -4561,18 +4559,18 @@ The impact on the classified image can be seen in the following example.
 
 \begin{figure}
 
-{\centering \includegraphics[width=0.9\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-85-1} 
+{\centering \includegraphics[width=0.9\linewidth]{sitsbook_files/figure-latex/unnamed-chunk-92-1} 
 
 }
 
-\caption{Classified image with bilateral smoothing}\label{fig:unnamed-chunk-85}
+\caption{Classified image with bilateral smoothing}\label{fig:unnamed-chunk-92}
 \end{figure}
 
 Bayesian smoothing tends to produce more homogeneous labeled images than
 bilateral smoothing. However, some spatial details and some edges are
 better preserved by the bilateral method. Choosing between the methods
 depends on user needs and requirements. In any case, as stated by
-\protect\hyperlink{ref-Schindler2012}{{[}55{]}}, smoothing improves the
+\protect\hyperlink{ref-Schindler2012}{{[}53{]}}, smoothing improves the
 quality of classified images and thus should be applied in most
 situations.
 
@@ -4605,11 +4603,11 @@ factors. When working in large areas, it is hard to obtain random
 stratified samples which would cover the different variations in land
 cover associated to the ecosystems of the study area. In general, all
 machine learning methods are prone to underspecification
-\protect\hyperlink{ref-DAmour2020}{{[}58{]}}. Therefore,
+\protect\hyperlink{ref-DAmour2020}{{[}56{]}}. Therefore,
 cross-validation should not be used as an accuracy measures, unless the
 samples have been carefully collected to represent the diversity of
 possible ocurrences of classes in the study area
-\protect\hyperlink{ref-Wadoux2021}{{[}59{]}}.
+\protect\hyperlink{ref-Wadoux2021}{{[}57{]}}.
 
 Cross-validation uses part of the available samples to fit the
 classification model, and a different part to test it. The so-called
@@ -4655,18 +4653,18 @@ val_rfor
 #> 
 #>           Reference
 #> Prediction Cerrado Pasture
-#>    Cerrado     397      15
-#>    Pasture       3     331
+#>    Cerrado     394      16
+#>    Pasture       6     330
 #>                                      
-#>           Accuracy : 0.9759          
-#>             95% CI : (0.9621, 0.9856)
+#>           Accuracy : 0.9705          
+#>             95% CI : (0.9557, 0.9814)
 #>                                      
-#>              Kappa : 0.9514          
+#>              Kappa : 0.9406          
 #>                                      
-#>  Prod Acc  Cerrado : 0.9925          
-#>  Prod Acc  Pasture : 0.9566          
-#>  User Acc  Cerrado : 0.9636          
-#>  User Acc  Pasture : 0.9910          
+#>  Prod Acc  Cerrado : 0.9850          
+#>  Prod Acc  Pasture : 0.9538          
+#>  User Acc  Cerrado : 0.9610          
+#>  User Acc  Pasture : 0.9821          
 #> 
 \end{lstlisting}
 
@@ -4753,7 +4751,7 @@ accuracy of 97\% and is the best-performing model.
 
 }
 
-\caption{Result of 5-fold cross validation of Mato Grosso dataset using TempCNN}\label{fig:unnamed-chunk-89}
+\caption{Result of 5-fold cross validation of Mato Grosso dataset using TempCNN}\label{fig:unnamed-chunk-96}
 \end{figure}
 
 \hypertarget{accuracy-assessment}{%
@@ -4786,10 +4784,10 @@ sits_accuracy_summary(acc_ts)
 \end{lstlisting}
 
 \begin{lstlisting}
-#> Overall Statistics                       
-#>  Accuracy : 1          
-#>    95% CI : (0.9951, 1)
-#>     Kappa : 1
+#> Overall Statistics                            
+#>  Accuracy : 0.9906          
+#>    95% CI : (0.9808, 0.9962)
+#>     Kappa : 0.9811
 \end{lstlisting}
 
 The detailed accuracy measures can be obtained by printing the accuracy
@@ -4805,18 +4803,18 @@ acc_ts
 #> 
 #>           Reference
 #> Prediction Cerrado Pasture
-#>    Cerrado     400       0
-#>    Pasture       0     346
-#>                                 
-#>           Accuracy : 1          
-#>             95% CI : (0.9951, 1)
-#>                                 
-#>              Kappa : 1          
-#>                                 
-#>  Prod Acc  Cerrado : 1          
-#>  Prod Acc  Pasture : 1          
-#>  User Acc  Cerrado : 1          
-#>  User Acc  Pasture : 1          
+#>    Cerrado     397       4
+#>    Pasture       3     342
+#>                                      
+#>           Accuracy : 0.9906          
+#>             95% CI : (0.9808, 0.9962)
+#>                                      
+#>              Kappa : 0.9811          
+#>                                      
+#>  Prod Acc  Cerrado : 0.9925          
+#>  Prod Acc  Pasture : 0.9884          
+#>  User Acc  Cerrado : 0.9900          
+#>  User Acc  Pasture : 0.9913          
 #> 
 \end{lstlisting}
 
@@ -4826,7 +4824,7 @@ acc_ts
 To measure the accuracy of classified images, the
 \passthrough{\lstinline!sits\_accuracy!} function uses an area-weighted
 technique, following the best practices proposed by
-\protect\hyperlink{ref-Olofsson2013}{{[}60{]}}. The need for
+\protect\hyperlink{ref-Olofsson2013}{{[}58{]}}. The need for
 area-weighted estimates arises from the fact the land use and land cover
 classes are not evenly distributed in space. In some applications (e.g.,
 deforestation) where the interest lies in assessing how much of the
@@ -4834,7 +4832,7 @@ image has changed, the area mapped as deforested is likely to be a small
 fraction of the total area. If users disregard the relative importance
 of small areas where change is taking place, the overall accuracy
 estimate will be inflated and unrealistic. For this reason,
-\protect\hyperlink{ref-Olofsson2013}{{[}60{]}} argue that ``mapped areas
+\protect\hyperlink{ref-Olofsson2013}{{[}58{]}} argue that ``mapped areas
 should be adjusted to eliminate bias attributable to map classification
 error and these error-adjusted area estimates should be accompanied by
 confidence intervals to quantify the sampling variability of the
@@ -4842,10 +4840,10 @@ estimated area''.
 
 With this motivation, when measuring accuracy of classified images, the
 function \passthrough{\lstinline!sits\_accuracy!} follows
-\protect\hyperlink{ref-Olofsson2013}{{[}60{]}} and
-\protect\hyperlink{ref-Olofsson2014}{{[}61{]}}. The following
+\protect\hyperlink{ref-Olofsson2013}{{[}58{]}} and
+\protect\hyperlink{ref-Olofsson2014}{{[}59{]}}. The following
 explanation is extracted from the paper of
-\protect\hyperlink{ref-Olofsson2013}{{[}60{]}}, and users should refer
+\protect\hyperlink{ref-Olofsson2013}{{[}58{]}}, and users should refer
 to this paper for further explanation.
 
 Given a classified image and a validation file, the first step is to
@@ -4866,7 +4864,7 @@ defined as a stratified estimator \[
 (omission error) while not considering the effect of false positives
 (commission error). The area estimates also allow producing an unbiased
 estimate of the user's and producer's accuracy for each class. Following
-\protect\hyperlink{ref-Olofsson2013}{{[}60{]}}, we can also estimate the
+\protect\hyperlink{ref-Olofsson2013}{{[}58{]}}, we can also estimate the
 95\% confidence interval for \(\hat{A_j}\).
 
 To use the \passthrough{\lstinline!sits\_accuracy!} function to produce
@@ -4932,7 +4930,7 @@ a limited number of ground truth points. As a result of a limited
 validation sample, the estimated confidence interval in area estimation
 is large. This indicates a questionable result. We recommend that users
 follow the procedures recommended by
-\protect\hyperlink{ref-Olofsson2014}{{[}61{]}} to estimate the number of
+\protect\hyperlink{ref-Olofsson2014}{{[}59{]}} to estimate the number of
 ground truth measures per class that are required to get a reliable
 estimate.
 
@@ -5116,17 +5114,17 @@ Compared with existing tools, sits has distinctive features:
 Considering the aims and design of \textbf{sits}, it is relevant to
 discuss how its design and implementation choices differ from other
 software for big EO data analytics, such as Google Earth Engine
-\protect\hyperlink{ref-Gorelick2017}{{[}62{]}}, Open Data Cube
-\protect\hyperlink{ref-Lewis2017}{{[}63{]}} and openEO
-\protect\hyperlink{ref-Schramm2021}{{[}64{]}}. In what follows, we
+\protect\hyperlink{ref-Gorelick2017}{{[}60{]}}, Open Data Cube
+\protect\hyperlink{ref-Lewis2017}{{[}61{]}} and openEO
+\protect\hyperlink{ref-Schramm2021}{{[}62{]}}. In what follows, we
 compare \textbf{sits} to each of these solutions.
 
-Google Earth Engine (GEE) \protect\hyperlink{ref-Gorelick2017}{{[}62{]}}
+Google Earth Engine (GEE) \protect\hyperlink{ref-Gorelick2017}{{[}60{]}}
 uses the Google distributed file system
-\protect\hyperlink{ref-Ghemawat2003}{{[}65{]}} and its map-reduce
-paradigm \protect\hyperlink{ref-Dean2008}{{[}66{]}}. By combining a
+\protect\hyperlink{ref-Ghemawat2003}{{[}63{]}} and its map-reduce
+paradigm \protect\hyperlink{ref-Dean2008}{{[}64{]}}. By combining a
 flexible API with an efficient back-end processing, GEE has become a
-widely used platform \protect\hyperlink{ref-Amani2020}{{[}67{]}}.
+widely used platform \protect\hyperlink{ref-Amani2020}{{[}65{]}}.
 However, GEE is restricted to the Google environment and does not
 provide direct support for deep learning. By contrast, \textbf{sits}
 aims to support different cloud environments and to allow advances in
@@ -5135,7 +5133,7 @@ machine learning algorithms.
 
 The Open Data Cube (ODC) is an important contribution to the EO
 community and has proven its usefulness in many domains
-\protect\hyperlink{ref-Giuliani2020}{{[}68{]}}. It reads subsets of
+\protect\hyperlink{ref-Giuliani2020}{{[}66{]}}. It reads subsets of
 image collections and makes them available to users as a Python
 \texttt{xarray} structure. ODC does not provide an API to work with
 \texttt{xarrays}, relying on the tools available in Python. This choice
@@ -5150,7 +5148,7 @@ programming tools. Thus, \textbf{sits} and ODC have different aims and
 will appeal to different classes of users.
 
 Designers of the openEO API
-\protect\hyperlink{ref-Schramm2021}{{[}64{]}} aim to support
+\protect\hyperlink{ref-Schramm2021}{{[}62{]}} aim to support
 applications that are both language-independent and server-independent.
 To achieve their goals, openEO designers use microservices based on REST
 protocols. The main abstraction of openEO is a \textit{process}, defined
@@ -5200,34 +5198,41 @@ vol. 238, p. 111558, 2020, doi:
 {Library},''} \emph{Data}, vol. 4, no. 3, pp. 1--16, 2019, doi:
 \href{https://doi.org/10.3390/data4030092}{10.3390/data4030092}.}
 
-\leavevmode\vadjust pre{\hypertarget{ref-Wickham2017}{}}%
+\leavevmode\vadjust pre{\hypertarget{ref-Ferreira2020a}{}}%
 \CSLLeftMargin{{[}3{]} }
+\CSLRightInline{K. R. Ferreira \emph{et al.}, {``Earth {Observation Data
+Cubes} for {Brazil}: {Requirements}, {Methodology} and {Products},''}
+\emph{Remote Sensing}, vol. 12, no. 24, p. 4033, 2020, doi:
+\href{https://doi.org/10.3390/rs12244033}{10.3390/rs12244033}.}
+
+\leavevmode\vadjust pre{\hypertarget{ref-Wickham2017}{}}%
+\CSLLeftMargin{{[}4{]} }
 \CSLRightInline{H. Wickham and G. Grolemund, \emph{R for {Data Science}:
 {Import}, {Tidy}, {Transform}, {Visualize}, and {Model Data}}. {O'Reilly
 Media, Inc.}, 2017.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Lambin2006}{}}%
-\CSLLeftMargin{{[}4{]} }
+\CSLLeftMargin{{[}5{]} }
 \CSLRightInline{E. F. Lambin and M. Linderman, {``Time series of remote
 sensing data for land change science,''} \emph{IEEE Transactions on
 Geoscience and Remote Sensing}, vol. 44, no. 7, pp. 1926--1928, 2006.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Atkinson2012}{}}%
-\CSLLeftMargin{{[}5{]} }
+\CSLLeftMargin{{[}6{]} }
 \CSLRightInline{P. M. Atkinson, C. Jeganathan, J. Dash, and C.
 Atzberger, {``Inter-comparison of four models for smoothing satellite
 sensor time-series data to estimate vegetation phenology,''}
 \emph{Remote Sensing of Environment}, vol. 123, pp. 400--417, 2012.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Zhou2016}{}}%
-\CSLLeftMargin{{[}6{]} }
+\CSLLeftMargin{{[}7{]} }
 \CSLRightInline{J. Zhou, L. Jia, M. Menenti, and B. Gorte, {``On the
 performance of remote sensing time series reconstruction methods: {A}
 spatial comparison,''} \emph{Remote Sensing of Environment}, vol. 187,
 pp. 367--384, 2016.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Chen2004}{}}%
-\CSLLeftMargin{{[}7{]} }
+\CSLLeftMargin{{[}8{]} }
 \CSLRightInline{J. Chen, Per. Jönsson, M. Tamura, Z. Gu, B. Matsushita,
 and L. Eklundh, {``A simple method for reconstructing a high-quality
 {NDVI} time-series data set based on the {Savitzky}\textendash{{Golay}}
@@ -5236,21 +5241,21 @@ filter,''} \emph{Remote Sensing of Environment}, vol. 91, no. 3, pp.
 \href{https://doi.org/10.1016/j.rse.2004.03.014}{10.1016/j.rse.2004.03.014}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Atzberger2011}{}}%
-\CSLLeftMargin{{[}8{]} }
+\CSLLeftMargin{{[}9{]} }
 \CSLRightInline{C. Atzberger and P. H. Eilers, {``Evaluating the
 effectiveness of smoothing algorithms in the absence of ground reference
 measurements,''} \emph{International Journal of Remote Sensing}, vol.
 32, no. 13, pp. 3689--3709, 2011.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Maxwell2018}{}}%
-\CSLLeftMargin{{[}9{]} }
+\CSLLeftMargin{{[}10{]} }
 \CSLRightInline{A. E. Maxwell, T. A. Warner, and F. Fang,
 {``Implementation of machine-learning classification in remote sensing:
 An applied review,''} \emph{International Journal of Remote Sensing},
 vol. 39, no. 9, pp. 2784--2817, 2018.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Frenay2014}{}}%
-\CSLLeftMargin{{[}10{]} }
+\CSLLeftMargin{{[}11{]} }
 \CSLRightInline{B. Frenay and M. Verleysen, {``Classification in the
 {Presence} of {Label Noise}: {A Survey},''} \emph{IEEE Transactions on
 Neural Networks and Learning Systems}, vol. 25, no. 5, pp. 845--869,
@@ -5258,14 +5263,14 @@ Neural Networks and Learning Systems}, vol. 25, no. 5, pp. 845--869,
 \href{https://doi.org/10.1109/TNNLS.2013.2292894}{10.1109/TNNLS.2013.2292894}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Keogh2003}{}}%
-\CSLLeftMargin{{[}11{]} }
+\CSLLeftMargin{{[}12{]} }
 \CSLRightInline{E. Keogh, J. Lin, and W. Truppel, {``Clustering of time
 series subsequences is meaningless: {Implications} for previous and
 future research,''} in \emph{Data {Mining}, 2003. {ICDM} 2003. {Third
 IEEE International Conference} on}, 2003, pp. 115--122.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Petitjean2012}{}}%
-\CSLLeftMargin{{[}12{]} }
+\CSLLeftMargin{{[}13{]} }
 \CSLRightInline{F. Petitjean, J. Inglada, and P. Gancarski, {``Satellite
 {Image Time Series Analysis Under Time Warping},''} \emph{IEEE
 Transactions on Geoscience and Remote Sensing}, vol. 50, no. 8, pp.
@@ -5273,7 +5278,7 @@ Transactions on Geoscience and Remote Sensing}, vol. 50, no. 8, pp.
 \href{https://doi.org/10.1109/TGRS.2011.2179050}{10.1109/TGRS.2011.2179050}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Maus2016}{}}%
-\CSLLeftMargin{{[}13{]} }
+\CSLLeftMargin{{[}14{]} }
 \CSLRightInline{V. Maus, G. Camara, R. Cartaxo, A. Sanchez, F. M. Ramos,
 and G. R. Queiroz, {``A {Time-Weighted Dynamic Time Warping Method} for
 {Land-Use} and {Land-Cover Mapping},''} \emph{IEEE Journal of Selected
@@ -5282,16 +5287,10 @@ pp. 3729--3739, 2016, doi:
 \href{https://doi.org/10.1109/JSTARS.2016.2517118}{10.1109/JSTARS.2016.2517118}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Ward1963}{}}%
-\CSLLeftMargin{{[}14{]} }
+\CSLLeftMargin{{[}15{]} }
 \CSLRightInline{J. H. Ward, {``Hierarchical grouping to optimize an
 objective function,''} \emph{Journal of the American statistical
 association}, vol. 58, no. 301, pp. 236--244, 1963.}
-
-\leavevmode\vadjust pre{\hypertarget{ref-Hennig2015}{}}%
-\CSLLeftMargin{{[}15{]} }
-\CSLRightInline{C. Hennig, {``Clustering strategy and method
-selection,''} in \emph{Handbook of cluster analysis}, C. Hennig, M.
-Meila, F. Murtagh, and R. Rocci, Eds. {CRC Press}, 2015.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Rand1971}{}}%
 \CSLLeftMargin{{[}16{]} }
@@ -5351,21 +5350,26 @@ Kegelmeyer, {``{SMOTE}: Synthetic minority over-sampling technique,''}
 321--332, 2012, doi:
 \href{https://doi.org/10.3233/SW-2012-0077}{10.3233/SW-2012-0077}.}
 
-\leavevmode\vadjust pre{\hypertarget{ref-Belgiu2016}{}}%
+\leavevmode\vadjust pre{\hypertarget{ref-Goodfellow2016}{}}%
 \CSLLeftMargin{{[}24{]} }
+\CSLRightInline{I. Goodfellow, Y. Bengio, and A. Courville, \emph{Deep
+{Learning}}. {MIT Press}, 2016.}
+
+\leavevmode\vadjust pre{\hypertarget{ref-Belgiu2016}{}}%
+\CSLLeftMargin{{[}25{]} }
 \CSLRightInline{M. Belgiu and L. Dragut, {``Random {Forest} in remote
 sensing: {A} review of applications and future directions,''}
 \emph{ISPRS Journal of Photogrammetry and Remote Sensing}, vol. 114, pp.
 24--31, 2016.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Mountrakis2011}{}}%
-\CSLLeftMargin{{[}25{]} }
+\CSLLeftMargin{{[}26{]} }
 \CSLRightInline{G. Mountrakis, J. Im, and C. Ogole, {``Support vector
 machines in remote sensing: {A} review,''} \emph{ISPRS Journal of
 Photogrammetry and Remote Sensing}, vol. 66, no. 3, pp. 247--259, 2011.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Chen2016}{}}%
-\CSLLeftMargin{{[}26{]} }
+\CSLLeftMargin{{[}27{]} }
 \CSLRightInline{T. Chen and C. Guestrin, {``{XGBoost}: {A Scalable Tree
 Boosting System},''} in \emph{Proceedings of the 22nd {ACM SIGKDD
 International Conference} on {Knowledge Discovery} and {Data Mining}},
@@ -5373,7 +5377,7 @@ International Conference} on {Knowledge Discovery} and {Data Mining}},
 \href{https://doi.org/10.1145/2939672.2939785}{10.1145/2939672.2939785}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Parente2019a}{}}%
-\CSLLeftMargin{{[}27{]} }
+\CSLLeftMargin{{[}28{]} }
 \CSLRightInline{L. Parente, E. Taquary, A. P. Silva, C. Souza, and L.
 Ferreira, {``Next {Generation Mapping}: {Combining Deep Learning},
 {Cloud Computing}, and {Big Remote Sensing Data},''} \emph{Remote
@@ -5381,20 +5385,20 @@ Sensing}, vol. 11, no. 23, p. 2881, 2019, doi:
 \href{https://doi.org/10.3390/rs11232881}{10.3390/rs11232881}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Pelletier2019}{}}%
-\CSLLeftMargin{{[}28{]} }
+\CSLLeftMargin{{[}29{]} }
 \CSLRightInline{C. Pelletier, G. I. Webb, and F. Petitjean, {``Temporal
 {Convolutional Neural Network} for the {Classification} of {Satellite
 Image Time Series},''} \emph{Remote Sensing}, vol. 11, no. 5, 2019.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Fawaz2020}{}}%
-\CSLLeftMargin{{[}29{]} }
+\CSLLeftMargin{{[}30{]} }
 \CSLRightInline{H. Fawaz \emph{et al.}, {``{InceptionTime}: {Finding
 AlexNet} for time series classification,''} \emph{Data Mining and
 Knowledge Discovery}, vol. 34, no. 6, pp. 1936--1962, 2020, doi:
 \href{https://doi.org/10.1007/s10618-020-00710-y}{10.1007/s10618-020-00710-y}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Garnot2020a}{}}%
-\CSLLeftMargin{{[}30{]} }
+\CSLLeftMargin{{[}31{]} }
 \CSLRightInline{V. Garnot, L. Landrieu, S. Giordano, and N. Chehata,
 {``Satellite {Image Time Series Classification With Pixel-Set Encoders}
 and {Temporal Self-Attention},''} in \emph{2020 {IEEE}/{CVF Conference}
@@ -5403,13 +5407,13 @@ on {Computer Vision} and {Pattern Recognition} ({CVPR})}, 2020, pp.
 \href{https://doi.org/10.1109/CVPR42600.2020.01234}{10.1109/CVPR42600.2020.01234}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Russwurm2020}{}}%
-\CSLLeftMargin{{[}31{]} }
+\CSLLeftMargin{{[}32{]} }
 \CSLRightInline{M. Rußwurm, C. Pelletier, M. Zollner, S. Lefèvre, and M.
 Körner, {``{BreizhCrops}: {A Time Series Dataset} for {Crop Type
 Mapping},''} 2020.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Picoli2018}{}}%
-\CSLLeftMargin{{[}32{]} }
+\CSLLeftMargin{{[}33{]} }
 \CSLRightInline{M. Picoli \emph{et al.}, {``Big earth observation time
 series analysis for monitoring {Brazilian} agriculture,''} \emph{ISPRS
 journal of photogrammetry and remote sensing}, vol. 145, pp. 328--339,
@@ -5417,7 +5421,7 @@ journal of photogrammetry and remote sensing}, vol. 145, pp. 328--339,
 \href{https://doi.org/10.1016/j.isprsjprs.2018.08.007}{10.1016/j.isprsjprs.2018.08.007}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Picoli2020a}{}}%
-\CSLLeftMargin{{[}33{]} }
+\CSLLeftMargin{{[}34{]} }
 \CSLRightInline{M. C. A. Picoli \emph{et al.}, {``{CBERS} data cube: A
 powerful technology for mapping and monitoring {Brazilian} biomes.''} in
 \emph{{ISPRS Annals} of the {Photogrammetry}, {Remote Sensing} and
@@ -5426,18 +5430,11 @@ doi:
 \href{https://doi.org/10.5194/isprs-annals-V-3-2020-533-2020}{10.5194/isprs-annals-V-3-2020-533-2020}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Simoes2020}{}}%
-\CSLLeftMargin{{[}34{]} }
+\CSLLeftMargin{{[}35{]} }
 \CSLRightInline{R. Simoes \emph{et al.}, {``Land use and cover maps for
 {Mato Grosso State} in {Brazil} from 2001 to 2017,''} \emph{Scientific
 Data}, vol. 7, no. 1, p. 34, 2020, doi:
 \href{https://doi.org/10.1038/s41597-020-0371-4}{10.1038/s41597-020-0371-4}.}
-
-\leavevmode\vadjust pre{\hypertarget{ref-Ferreira2020a}{}}%
-\CSLLeftMargin{{[}35{]} }
-\CSLRightInline{K. R. Ferreira \emph{et al.}, {``Earth {Observation Data
-Cubes} for {Brazil}: {Requirements}, {Methodology} and {Products},''}
-\emph{Remote Sensing}, vol. 12, no. 24, p. 4033, 2020, doi:
-\href{https://doi.org/10.3390/rs12244033}{10.3390/rs12244033}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Maus2019}{}}%
 \CSLLeftMargin{{[}36{]} }
@@ -5477,36 +5474,26 @@ National Academy of Sciences}, 2017, doi:
 support vector machines,''} \emph{ACM transactions on intelligent
 systems and technology (TIST)}, vol. 2, no. 3, p. 27, 2011.}
 
-\leavevmode\vadjust pre{\hypertarget{ref-Chollet2018}{}}%
-\CSLLeftMargin{{[}42{]} }
-\CSLRightInline{F. Chollet and J. J. Allaire, \emph{Deep {Learning} with
-{R}}. {Manning Publications Co.}, 2018.}
-
-\leavevmode\vadjust pre{\hypertarget{ref-Goodfellow2016}{}}%
-\CSLLeftMargin{{[}43{]} }
-\CSLRightInline{I. Goodfellow, Y. Bengio, and A. Courville, \emph{Deep
-{Learning}}. {MIT Press}, 2016.}
-
 \leavevmode\vadjust pre{\hypertarget{ref-Ruder2016}{}}%
-\CSLLeftMargin{{[}44{]} }
+\CSLLeftMargin{{[}42{]} }
 \CSLRightInline{S. Ruder, {``An overview of gradient descent
 optimization algorithms,''} \emph{CoRR}, vol. abs/1609.04747, 2016.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Srivastava2014}{}}%
-\CSLLeftMargin{{[}45{]} }
+\CSLLeftMargin{{[}43{]} }
 \CSLRightInline{N. Srivastava, G. Hinton, A. Krizhevsky, I. Sutskever,
 and R. Salakhutdinov, {``Dropout: {A} simple way to prevent neural
 networks from overfitting,''} \emph{The Journal of Machine Learning
 Research}, vol. 15, no. 1, pp. 1929--1958, 2014.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Wang2017}{}}%
-\CSLLeftMargin{{[}46{]} }
+\CSLLeftMargin{{[}44{]} }
 \CSLRightInline{Z. Wang, W. Yan, and T. Oates, {``Time {Series
 Classification} from {Scratch} with {Deep Neural Networks}: {A Strong
 Baseline},''} 2017.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Russwurm2017}{}}%
-\CSLLeftMargin{{[}47{]} }
+\CSLLeftMargin{{[}45{]} }
 \CSLRightInline{M. Rußwurm and M. Korner, {``Temporal vegetation
 modelling using long short-term memory networks for crop identification
 from medium-resolution multi-spectral satellite images,''} in
@@ -5514,20 +5501,20 @@ from medium-resolution multi-spectral satellite images,''} in
 {Pattern Recognition Workshops}}, 2017, pp. 11--19.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Russwurm2018}{}}%
-\CSLLeftMargin{{[}48{]} }
+\CSLLeftMargin{{[}46{]} }
 \CSLRightInline{M. Russwurm and M. Korner, {``Multi-temporal land cover
 classification with sequential recurrent encoders,''} \emph{ISPRS
 International Journal of Geo-Information}, vol. 7, no. 4, p. 129, 2018.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Simoes2021}{}}%
-\CSLLeftMargin{{[}49{]} }
+\CSLLeftMargin{{[}47{]} }
 \CSLRightInline{R. Simoes \emph{et al.}, {``Satellite {Image Time Series
 Analysis} for {Big Earth Observation Data},''} \emph{Remote Sensing},
 vol. 13, no. 13, p. 2428, 2021, doi:
 \href{https://doi.org/10.3390/rs13132428}{10.3390/rs13132428}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-He2016}{}}%
-\CSLLeftMargin{{[}50{]} }
+\CSLLeftMargin{{[}48{]} }
 \CSLRightInline{K. He, X. Zhang, S. Ren, and J. Sun, {``Deep {Residual
 Learning} for {Image Recognition},''} in \emph{2016 {IEEE Conference} on
 {Computer Vision} and {Pattern Recognition} ({CVPR})}, 2016, pp.
@@ -5535,7 +5522,7 @@ Learning} for {Image Recognition},''} in \emph{2016 {IEEE Conference} on
 \href{https://doi.org/10.1109/CVPR.2016.90}{10.1109/CVPR.2016.90}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Hochreiter1998}{}}%
-\CSLLeftMargin{{[}51{]} }
+\CSLLeftMargin{{[}49{]} }
 \CSLRightInline{S. Hochreiter, {``The vanishing gradient problem during
 learning recurrent neural nets and problem solutions,''}
 \emph{International Journal of Uncertainty, Fuzziness and
@@ -5543,35 +5530,35 @@ Knowledge-Based Systems}, vol. 6, no. 2, pp. 107--116, 1998, doi:
 \href{https://doi.org/10.1142/S0218488598000094}{10.1142/S0218488598000094}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Fawaz2019}{}}%
-\CSLLeftMargin{{[}52{]} }
+\CSLLeftMargin{{[}50{]} }
 \CSLRightInline{H. I. Fawaz, G. Forestier, J. Weber, L. Idoumghar, and
 P.-A. Muller, {``Deep learning for time series classification: A
 review,''} \emph{Data Mining and Knowledge Discovery}, vol. 33, no. 4,
 pp. 917--963, 2019.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Karim2019}{}}%
-\CSLLeftMargin{{[}53{]} }
+\CSLLeftMargin{{[}51{]} }
 \CSLRightInline{F. Karim, S. Majumdar, H. Darabi, and S. Harford,
 {``Multivariate {LSTM-FCNs} for time series classification,''}
 \emph{Neural Networks}, vol. 116, pp. 237--245, 2019, doi:
 \href{https://doi.org/10.1016/j.neunet.2019.04.014}{10.1016/j.neunet.2019.04.014}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Huang2014}{}}%
-\CSLLeftMargin{{[}54{]} }
+\CSLLeftMargin{{[}52{]} }
 \CSLRightInline{X. Huang, Q. Lu, L. Zhang, and A. Plaza, {``New
 postprocessing methods for remote sensing image classification: {A}
 systematic study,''} \emph{IEEE Transactions on Geoscience and Remote
 Sensing}, vol. 52, no. 11, pp. 7140--7159, 2014.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Schindler2012}{}}%
-\CSLLeftMargin{{[}55{]} }
+\CSLLeftMargin{{[}53{]} }
 \CSLRightInline{K. Schindler, {``An overview and comparison of smooth
 labeling methods for land-cover classification,''} \emph{IEEE
 transactions on geoscience and remote sensing}, vol. 50, no. 11, pp.
 4534--4545, 2012.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Tomasi1998}{}}%
-\CSLLeftMargin{{[}56{]} }
+\CSLLeftMargin{{[}54{]} }
 \CSLRightInline{C. Tomasi and R. Manduchi, {``Bilateral filtering for
 gray and color images,''} in \emph{Sixth {International Conference} on
 {Computer Vision} ({IEEE Cat}. {No}.{98CH36271})}, 1998, pp. 839--846,
@@ -5579,20 +5566,20 @@ doi:
 \href{https://doi.org/10.1109/ICCV.1998.710815}{10.1109/ICCV.1998.710815}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Paris2007}{}}%
-\CSLLeftMargin{{[}57{]} }
+\CSLLeftMargin{{[}55{]} }
 \CSLRightInline{S. Paris, P. Kornprobst, J. Tumblin, and F. Durand, {``A
 gentle introduction to bilateral filtering and its applications,''} in
 \emph{{ACM SIGGRAPH} 2007 courses}, 2007, pp. 1--es, doi:
 \href{https://doi.org/10.1145/1281500.1281602}{10.1145/1281500.1281602}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-DAmour2020}{}}%
-\CSLLeftMargin{{[}58{]} }
+\CSLLeftMargin{{[}56{]} }
 \CSLRightInline{A. D'Amour \emph{et al.}, {``Underspecification
 {Presents Challenges} for {Credibility} in {Modern Machine Learning},''}
 \emph{arXiv:2011.03395 {[}cs, stat{]}}, 2020.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Wadoux2021}{}}%
-\CSLLeftMargin{{[}59{]} }
+\CSLLeftMargin{{[}57{]} }
 \CSLRightInline{A. M. J.-C. Wadoux, G. B. M. Heuvelink, S. de Bruin, and
 D. J. Brus, {``Spatial cross-validation is not the right way to evaluate
 map accuracy,''} \emph{Ecological Modelling}, vol. 457, p. 109692, 2021,
@@ -5600,7 +5587,7 @@ doi:
 \href{https://doi.org/10.1016/j.ecolmodel.2021.109692}{10.1016/j.ecolmodel.2021.109692}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Olofsson2013}{}}%
-\CSLLeftMargin{{[}60{]} }
+\CSLLeftMargin{{[}58{]} }
 \CSLRightInline{P. Olofsson, G. M. Foody, S. V. Stehman, and C. E.
 Woodcock, {``Making better use of accuracy data in land change studies:
 {Estimating} accuracy and area and quantifying uncertainty using
@@ -5609,28 +5596,28 @@ stratified estimation,''} \emph{Remote Sensing of Environment}, vol.
 \href{https://doi.org/10.1016/j.rse.2012.10.031}{10.1016/j.rse.2012.10.031}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Olofsson2014}{}}%
-\CSLLeftMargin{{[}61{]} }
+\CSLLeftMargin{{[}59{]} }
 \CSLRightInline{P. Olofsson, G. M. Foody, M. Herold, S. V. Stehman, C.
 E. Woodcock, and M. A. Wulder, {``Good practices for estimating area and
 assessing accuracy of land change,''} \emph{Remote Sensing of
 Environment}, vol. 148, pp. 42--57, 2014.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Gorelick2017}{}}%
-\CSLLeftMargin{{[}62{]} }
+\CSLLeftMargin{{[}60{]} }
 \CSLRightInline{N. Gorelick, M. Hancher, M. Dixon, S. Ilyushchenko, D.
 Thau, and R. Moore, {``Google {Earth Engine}: {Planetary-scale}
 geospatial analysis for everyone,''} \emph{Remote Sensing of
 Environment}, vol. 202, pp. 18--27, 2017.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Lewis2017}{}}%
-\CSLLeftMargin{{[}63{]} }
+\CSLLeftMargin{{[}61{]} }
 \CSLRightInline{A. Lewis \emph{et al.}, {``The {Australian Geoscience
 Data Cube} \textemdash{} {Foundations} and lessons learned,''}
 \emph{Remote Sensing of Environment}, vol. 202, pp. 276--292, 2017, doi:
 \href{https://doi.org/10.1016/j.rse.2017.03.015}{10.1016/j.rse.2017.03.015}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Schramm2021}{}}%
-\CSLLeftMargin{{[}64{]} }
+\CSLLeftMargin{{[}62{]} }
 \CSLRightInline{M. Schramm \emph{et al.}, {``The {openEO
 API}\textendash{{Harmonising}} the {Use} of {Earth Observation Cloud
 Services Using Virtual Data Cube Functionalities},''} \emph{Remote
@@ -5638,21 +5625,21 @@ Sensing}, vol. 13, no. 6, p. 1125, 2021, doi:
 \href{https://doi.org/10.3390/rs13061125}{10.3390/rs13061125}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Ghemawat2003}{}}%
-\CSLLeftMargin{{[}65{]} }
+\CSLLeftMargin{{[}63{]} }
 \CSLRightInline{S. Ghemawat, H. Gobioff, and S.-T. Leung, {``The
 {Google} file system,''} in \emph{Proceedings of the nineteenth {ACM}
 symposium on {Operating} systems principles}, 2003, pp. 29--43, doi:
 \href{https://doi.org/10.1145/945445.945450}{10.1145/945445.945450}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Dean2008}{}}%
-\CSLLeftMargin{{[}66{]} }
+\CSLLeftMargin{{[}64{]} }
 \CSLRightInline{J. Dean and S. Ghemawat, {``{MapReduce}: Simplified data
 processing on large clusters,''} \emph{Communications of the ACM}, vol.
 51, no. 1, pp. 107--113, 2008, doi:
 \href{https://doi.org/10.1145/1327452.1327492}{10.1145/1327452.1327492}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Amani2020}{}}%
-\CSLLeftMargin{{[}67{]} }
+\CSLLeftMargin{{[}65{]} }
 \CSLRightInline{M. Amani \emph{et al.}, {``Google {Earth Engine Cloud
 Computing Platform} for {Remote Sensing Big Data Applications}: {A
 Comprehensive Review},''} \emph{IEEE Journal of Selected Topics in
@@ -5661,7 +5648,7 @@ Applied Earth Observations and Remote Sensing}, vol. 13, pp. 5326--5350,
 \href{https://doi.org/10.1109/JSTARS.2020.3021052}{10.1109/JSTARS.2020.3021052}.}
 
 \leavevmode\vadjust pre{\hypertarget{ref-Giuliani2020}{}}%
-\CSLLeftMargin{{[}68{]} }
+\CSLLeftMargin{{[}66{]} }
 \CSLRightInline{G. Giuliani, B. Chatenoux, T. Piller, F. Moser, and P.
 Lacroix, {``Data {Cube} on {Demand} ({DCoD}): {Generating} an earth
 observation {Data Cube} anywhere in the world,''} \emph{International
