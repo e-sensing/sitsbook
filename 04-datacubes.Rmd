@@ -8,7 +8,7 @@ library(sits)
 
 ## Analysis-ready data image collections{-}
 
-Collections of Earth observation analysis-ready data (ARD) are available in cloud services such as Amazon Web Service, Brazil Data Cube, Digital Earth Africa, and Microsoft's Planetary Computer. These collections which have been processed to improve multidate comparability.  Radiance measures at the top of the atmosphere have been converted to ground reflectance measures.  In general, timelines of the images of an ARD image collection are different. Images still contain cloudy or missing pixels; bands for the images in the collection may have different resolutions. Figure 9 shows an example of the Landsat ARD image collection. 
+Collections of Earth observation analysis-ready data (ARD) are available in cloud services such as Amazon Web Service, Brazil Data Cube, Digital Earth Africa, Swiss Data Cube, and Microsoft's Planetary Computer. These collections which have been processed to improve multidate comparability.  Radiance measures at the top of the atmosphere have been converted to ground reflectance measures.  In general, timelines of the images of an ARD image collection are different. Images still contain cloudy or missing pixels; bands for the images in the collection may have different resolutions. Figure 9 shows an example of the Landsat ARD image collection. 
 
 ```{r ardtile, echo = FALSE, out.width="70%", fig.align="center", fig.cap="ARD image collection (source: USGS). Reproduction based on fair use doctrine."}
 knitr::include_graphics("images/usgs_ard_tile.png")
@@ -20,7 +20,7 @@ ARD image collections are organized in spatial partitions. Sentinel-2/2A images 
 knitr::include_graphics("images/s2_mgrs_grid.png")
 ```
 
-The Landsat 5/7/8/9 satellites use the Worldwide Reference System (WRS-2), which breaks the coverage of Landsat satellites into images identified by path and row.  The path is the descending orbit of the satellite; the WRS-2 system has 233 paths per orbit and each path is divided in 119 rows,where each row refers to ta latitudinal center line of a frame of imagery. Images in WRS-2 are geometrically corrected to the UTM projection. 
+The Landsat 4/5/7/8/9 satellites use the Worldwide Reference System (WRS-2), which breaks the coverage of Landsat satellites into images identified by path and row.  The path is the descending orbit of the satellite; the WRS-2 system has 233 paths per orbit and each path is divided in 119 rows,where each row refers to ta latitudinal center line of a frame of imagery. Images in WRS-2 are geometrically corrected to the UTM projection. 
 
 ```{r mgrs, echo = FALSE, out.width="70%", fig.align="center", fig.cap="WRS-2 tiling system used by Landsat-5/7/8/9 images (source: INPE and ESRI). Reproduction based on fair use doctrine."}
 knitr::include_graphics("images/landsat_wrs_grid.png")
@@ -28,12 +28,12 @@ knitr::include_graphics("images/landsat_wrs_grid.png")
 
 ## ARD image collections handled by sits{-}
 
-As of version 1.0.0, `sits` supports access to the following ARD image collections:
+As of version 1.1.0, `sits` supports access to the following ARD image collections:
 
 1. Amazon Web Services (AWS): Open data Sentinel-2/2A level 2A collections for the Earth's land surface. 
 2. Brazil Data Cube (BDC): Open data collections of Sentinel-2/2A, Landsat-8, CBERS-4/4A, and MODIS images for Brazil. These collections organized as regular data cubes. 
 3. Digital Earth Africa (DEA): Open data collections of Sentinel-2/2A and Landsat-8 for Africa.
-4. Microsoft Planetary Computer (MPC): Open data collections of Sentinel-2/2A and Landsat-4//5/7/8/9 for the Earth's land areas. 
+4. Microsoft Planetary Computer (MPC): Open data collections of Sentinel-2/2A and Landsat-4/5/7/8/9 for the Earth's land areas. 
 5. USGS: Landsat-4/5/7/8/9 collections available in AWS, which require payment to access. 
 6. Swiss Data Cube (SDC): Open data collection of Sentinel-2/2A and Landsat-8 images for Switzerland. 
 
@@ -76,7 +76,7 @@ The `sits_cube()` function produces a tibble with metadata about the desired ima
 
 ## Assessing Amazon Web Services{-}
 
-AWS holds are two kinds of collections: *open-data* and *requester-pays*. Open data collections can be accessed without cost. Requester-pays collections require payment associated to an AWS account. Currently, `sits` supports collections `SENTINEL-S2-L2A` (requester-pays) and `SENTINEL-S2-L2A-COGS` (open-data). Both collections include all Sentinel-2/2A bands.  The bands in 10m resolution are `B02`, `B03`, `B04`, and `B08`. The  20m bands are `B05`, `B06`, `B07`, `B8A`, `B11`, and `B12`. Bands `B01` and `B09` are available at 60m resolution. A `CLOUD` band is also available. The example below shows how to access one tile of the open data "SENTINEL-S2-L2A-COGS" collection.  The `tiles` parameter allows selection of desired area according to the MGRS reference system. 
+AWS holds are two kinds of collections: *open-data* and *requester-pays*. Open data collections can be accessed without cost. Requester-pays collections require payment to an AWS account. Currently, `sits` supports collections `SENTINEL-S2-L2A` (requester-pays) and `SENTINEL-S2-L2A-COGS` (open-data). Both collections include all Sentinel-2/2A bands.  The bands in 10m resolution are `B02`, `B03`, `B04`, and `B08`. The  20m bands are `B05`, `B06`, `B07`, `B8A`, `B11`, and `B12`. Bands `B01` and `B09` are available at 60m resolution. A `CLOUD` band is also available. The example below shows how to access one tile of the open data `SENTINEL-S2-L2A-COGS` collection.  The `tiles` parameter allows selection of desired area according to the MGRS reference system. 
 
 ```{r, tidy="styler"}
 # create a data cube covering an area in the Brazilian Amazon
@@ -172,7 +172,7 @@ Sys.setenv(
 )
 ```
 
-In the example below, the data cube is defined as one tile ("022024") of "CB4_64_16D_STK-1" collection which holds CBERS AWFI images at 16 days resolution.
+In the example below, the data cube is defined as one tile ("022024") of `CB4_64_16D_STK-1` collection which holds CBERS AWFI images at 16 days resolution.
 
 ```{r, tidy="styler", eval = FALSE}
 # define a tile from the CBERS-4/4A AWFI collection
@@ -278,7 +278,7 @@ s2_cube %>%
     plot(red = "B12", green = "B8A", blue = "B05", date = "2018-07-03")
 ```
 
-Because of different acquisition orbits of the Sentinel-2 and Sentinel-2A satellites, the two tiles also have different timelines. Tile `20LKP` has 12 instances and tile `20LLP` has 24 instances for the chosen period. The function  `sits_regularize()` builds a data cube with a regular timeline and with a best estimate of a valid pixel for each interval. The `period` parameter controls the temporal interval between two images. Values of `period` use the ISO8601 time period specification, which defines time intervalsas `P[n]Y[n]M[n]D`, where Y stands for years, "M" for months and "D" for days. Thus, `P1M` stands for a one-month period, `P15D` for a fifteen-day period. When joining different images to get the best image for a period, `sits_regularize()` uses an aggregation method which organizes the images for the chosen interval in order of increasing cloud cover, and selects the first cloud-free pixel in the sequence. 
+Because of different acquisition orbits of the Sentinel-2 and Sentinel-2A satellites, the two tiles also have different timelines. Tile `20LKP` has 12 instances and tile `20LLP` has 24 instances for the chosen period. The function  `sits_regularize()` builds a data cube with a regular timeline and a best estimate of a valid pixel for each interval. The `period` parameter sets the time interval between two images. Values of `period` use the ISO8601 time period specification, which defines time intervals as `P[n]Y[n]M[n]D`, where Y stands for years, "M" for months and "D" for days. Thus, `P1M` stands for a one-month period, `P15D` for a fifteen-day period. When joining different images to get the best image for a period, `sits_regularize()` uses an aggregation method which organizes the images for the chosen interval in order of increasing cloud cover, and selects the first cloud-free pixel in the sequence. 
 
 \newpage
 
