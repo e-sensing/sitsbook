@@ -1,0 +1,1902 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Using self-organizing maps for sample quality control | sits: Satellite Image Time Series Analysis on Earth Observation Data Cubes" />
+<meta property="og:type" content="book" />
+<meta property="og:image" content="/images/cover_sits_book.png" />
+<meta property="og:description" content="This book presents sits, an open-source R package for satellite image time series analysis. The package supports the application of machine learning techniques for classifying image time series obtained from Earth observation data cubes." />
+
+
+<meta name="author" content="Gilberto Camara" />
+<meta name="author" content="Rolf Simoes" />
+<meta name="author" content="Felipe Souza" />
+<meta name="author" content="Charlotte Peletier" />
+<meta name="author" content="Alber Sanchez" />
+<meta name="author" content="Pedro R. Andrade" />
+<meta name="author" content="Karine Ferreira" />
+<meta name="author" content="Gilberto Queiroz" />
+
+<meta name="date" content="2022-07-15" />
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  TeX: { equationNumbers: { autoNumber: "AMS" } }
+});
+</script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<meta name="description" content="This book presents sits, an open-source R package for satellite image time series analysis. The package supports the application of machine learning techniques for classifying image time series obtained from Earth observation data cubes.">
+
+<title>Using self-organizing maps for sample quality control | sits: Satellite Image Time Series Analysis on Earth Observation Data Cubes</title>
+
+<script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="libs/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
+<script src="libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="libs/navigation-1.1/tabsets.js"></script>
+<script src="libs/kePrint-0.0.1/kePrint.js"></script>
+<link href="libs/lightable-0.0.1/lightable.css" rel="stylesheet" />
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+
+
+<style type="text/css">
+/* Used with Pandoc 2.11+ new --citeproc when CSL is used */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}
+</style>
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+/* show arrow before summary tag as in bootstrap
+TODO: remove if boostrap in updated in html_document (rmarkdown#1485) */
+details > summary {
+  display: list-item;
+  cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container-fluid main-container">
+
+
+<div class="row">
+<div class="col-sm-12">
+<div id="TOC">
+<ul>
+<li class="has-sub"><a href="index.html#preface">Preface</a>
+<ul>
+<li><a href="who-this-book-is-for.html#who-this-book-is-for">Who this book is for</a></li>
+<li><a href="main-reference-for-sits.html#main-reference-for-sits">Main reference for sits</a></li>
+</ul></li>
+<li class="has-sub"><a href="setup.html#setup">Setup</a>
+<ul>
+<li><a href="support-for-gdal-and-proj.html#support-for-gdal-and-proj">Support for GDAL and PROJ</a></li>
+<li><a href="installing-the-sits-package.html#installing-the-sits-package">Installing the <code>sits</code> package</a></li>
+</ul></li>
+<li class="has-sub"><a href="acknowledgements.html#acknowledgements">Acknowledgements</a>
+<ul>
+<li><a href="funding-sources.html#funding-sources">Funding Sources</a></li>
+<li><a href="community-contributions.html#community-contributions">Community Contributions</a></li>
+<li><a href="reproducible-papers-used-in-building-sits.html#reproducible-papers-used-in-building-sits">Reproducible papers used in building sits</a></li>
+<li><a href="publications-using-sits.html#publications-using-sits">Publications using sits</a></li>
+</ul></li>
+<li class="has-sub"><a href="1-introduction-to-sits.html#introduction-to-sits"><span class="toc-section-number">1</span> Introduction to SITS</a>
+<ul>
+<li><a href="how-sits-works.html#how-sits-works">How <code>sits</code> works</a></li>
+<li><a href="creating-a-data-cube.html#creating-a-data-cube">Creating a Data Cube</a></li>
+<li><a href="the-time-series-table.html#the-time-series-table">The time series table</a></li>
+<li><a href="training-a-machine-learning-model.html#training-a-machine-learning-model">Training a machine learning model</a></li>
+<li><a href="data-cube-classification.html#data-cube-classification">Data cube classification</a></li>
+<li><a href="spatial-smoothing.html#spatial-smoothing">Spatial smoothing</a></li>
+<li><a href="labelling-a-probability-data-cube.html#labelling-a-probability-data-cube">Labelling a probability data cube</a></li>
+<li><a href="final-remarks.html#final-remarks">Final remarks</a></li>
+</ul></li>
+<li class="has-sub"><a href="2-earth-observation-data-cubes.html#earth-observation-data-cubes"><span class="toc-section-number">2</span> Earth observation data cubes</a>
+<ul>
+<li><a href="analysis-ready-data-image-collections.html#analysis-ready-data-image-collections">Analysis-ready data image collections</a></li>
+<li><a href="ard-image-collections-handled-by-sits.html#ard-image-collections-handled-by-sits">ARD image collections handled by sits</a></li>
+<li><a href="regular-image-data-cubes.html#regular-image-data-cubes">Regular image data cubes</a></li>
+<li><a href="creating-data-cubes.html#creating-data-cubes">Creating data cubes</a></li>
+<li><a href="assessing-amazon-web-services.html#assessing-amazon-web-services">Assessing Amazon Web Services</a></li>
+<li><a href="assessing-microsofts-planetary-computer.html#assessing-microsofts-planetary-computer">Assessing Microsoft’s Planetary Computer</a></li>
+<li><a href="assessing-digital-earth-africa.html#assessing-digital-earth-africa">Assessing Digital Earth Africa</a></li>
+<li><a href="assessing-the-brazil-data-cube.html#assessing-the-brazil-data-cube">Assessing the Brazil Data Cube</a></li>
+<li><a href="defining-a-data-cube-using-ard-local-files.html#defining-a-data-cube-using-ard-local-files">Defining a data cube using ARD local files</a></li>
+<li><a href="defining-a-data-cube-using-classified-images.html#defining-a-data-cube-using-classified-images">Defining a data cube using classified images</a></li>
+<li><a href="regularizing-data-cubes.html#regularizing-data-cubes">Regularizing data cubes</a></li>
+<li><a href="mathematical-operations-on-regular-data-cubes.html#mathematical-operations-on-regular-data-cubes">Mathematical operations on regular data cubes</a></li>
+</ul></li>
+<li class="has-sub"><a href="3-working-with-time-series.html#working-with-time-series"><span class="toc-section-number">3</span> Working with time series</a>
+<ul>
+<li><a href="data-structures-for-satellite-time-series.html#data-structures-for-satellite-time-series">Data structures for satellite time series</a></li>
+<li><a href="utilities-for-handling-time-series.html#utilities-for-handling-time-series">Utilities for handling time series</a></li>
+<li><a href="time-series-visualisation.html#time-series-visualisation">Time series visualisation</a></li>
+<li><a href="obtaining-time-series-data-from-data-cubes.html#obtaining-time-series-data-from-data-cubes">Obtaining time series data from data cubes</a></li>
+<li class="has-sub"><a href="filtering-techniques-for-time-series.html#filtering-techniques-for-time-series">Filtering techniques for time series</a>
+<ul>
+<li><a href="filtering-techniques-for-time-series.html#savitzkygolay-filter">Savitzky–Golay filter</a></li>
+<li><a href="filtering-techniques-for-time-series.html#whittaker-filter">Whittaker filter</a></li>
+</ul></li>
+</ul></li>
+<li class="has-sub"><a href="4-improving-the-quality-of-training-samples.html#improving-the-quality-of-training-samples"><span class="toc-section-number">4</span> Improving the Quality of Training Samples</a>
+<ul>
+<li><a href="introduction.html#introduction">Introduction</a></li>
+<li><a href="hierachical-clustering-for-sample-quality-control.html#hierachical-clustering-for-sample-quality-control">Hierachical clustering for sample quality control</a></li>
+<li class="has-sub"><a href="using-self-organizing-maps-for-sample-quality-control.html#using-self-organizing-maps-for-sample-quality-control">Using self-organizing maps for sample quality control</a>
+<ul>
+<li><a href="using-self-organizing-maps-for-sample-quality-control.html#som-based-quality-assessment-creating-the-som-map">SOM-based quality assessment: creating the SOM map</a></li>
+<li><a href="using-self-organizing-maps-for-sample-quality-control.html#som-based-quality-assessment-measuring-confusion-between-labels">SOM-based quality assessment: measuring confusion between labels</a></li>
+<li><a href="using-self-organizing-maps-for-sample-quality-control.html#som-based-quality-assessment-part-3-using-probabilities-to-detect-noisy-samples">SOM-based quality assessment part 3: using probabilities to detect noisy samples</a></li>
+</ul></li>
+<li><a href="reducing-sample-imbalance.html#reducing-sample-imbalance">Reducing sample imbalance</a></li>
+<li><a href="conclusion.html#conclusion">Conclusion</a></li>
+</ul></li>
+<li class="has-sub"><a href="5-machine-learning-for-data-cubes-using-the-sits-package.html#machine-learning-for-data-cubes-using-the-sits-package"><span class="toc-section-number">5</span> Machine Learning for Data Cubes using the SITS package</a>
+<ul>
+<li><a href="machine-learning-classification.html#machine-learning-classification">Machine learning classification</a></li>
+<li><a href="visualizing-sample-patterns.html#visualizing-sample-patterns">Visualizing Sample Patterns</a></li>
+<li><a href="common-interface-to-machine-learning-and-deep-learning-models.html#common-interface-to-machine-learning-and-deep-learning-models">Common interface to machine learning and deep learning models</a></li>
+<li><a href="random-forests.html#random-forests">Random forests</a></li>
+<li><a href="support-vector-machines.html#support-vector-machines">Support Vector Machines</a></li>
+<li><a href="extreme-gradient-boosting.html#extreme-gradient-boosting">Extreme Gradient Boosting</a></li>
+<li><a href="deep-learning-using-multilayer-perceptrons.html#deep-learning-using-multilayer-perceptrons">Deep learning using multilayer perceptrons</a></li>
+<li><a href="temporal-convolutional-neural-network-tempcnn.html#temporal-convolutional-neural-network-tempcnn">Temporal Convolutional Neural Network (TempCNN)</a></li>
+<li><a href="residual-1d-cnn-networks-resnet.html#residual-1d-cnn-networks-resnet">Residual 1D CNN Networks (ResNet)</a></li>
+<li><a href="attention-based-models.html#attention-based-models">Attention-based models</a></li>
+<li><a href="model-tuning.html#model-tuning">Model tuning</a></li>
+<li><a href="considerations-on-model-choice.html#considerations-on-model-choice">Considerations on model choice</a></li>
+</ul></li>
+<li class="has-sub"><a href="classification-of-images-in-data-cubes-using-satellite-image-time-series.html#classification-of-images-in-data-cubes-using-satellite-image-time-series">Classification of Images in Data Cubes using Satellite Image Time Series</a>
+<ul>
+<li><a href="training-the-classification-model.html#training-the-classification-model">Training the classification model</a></li>
+<li><a href="building-the-data-cube.html#building-the-data-cube">Building the data cube</a></li>
+<li><a href="classification-using-parallel-processing.html#classification-using-parallel-processing">Classification using parallel processing</a></li>
+<li class="has-sub"><a href="post-classification-smoothing.html#post-classification-smoothing">Post-classification smoothing</a>
+<ul>
+<li><a href="post-classification-smoothing.html#bayesian-smoothing">Bayesian smoothing</a></li>
+</ul></li>
+<li class="has-sub"><a href="bilateral-smoothing.html#bilateral-smoothing">Bilateral smoothing</a>
+<ul>
+<li><a href="bilateral-smoothing.html#how-parallel-processing-works-in-sits"><span class="toc-section-number">5.0.1</span> How parallel processing works in <code class="unnumbered">sits</code></a></li>
+<li><a href="bilateral-smoothing.html#processing-time-estimates">Processing time estimates</a></li>
+</ul></li>
+</ul></li>
+<li class="has-sub"><a href="6-validation-and-accuracy-measurements-in-sits.html#validation-and-accuracy-measurements-in-sits"><span class="toc-section-number">6</span> Validation and accuracy measurements in SITS</a>
+<ul>
+<li><a href="6.1-case-study-used-in-this-chapter.html#case-study-used-in-this-chapter"><span class="toc-section-number">6.1</span> Case study used in this Chapter</a></li>
+<li><a href="6.2-validation-techniques.html#validation-techniques"><span class="toc-section-number">6.2</span> Validation techniques</a></li>
+<li><a href="6.3-comparing-different-machine-learning-methods-using-k-fold-validation.html#comparing-different-machine-learning-methods-using-k-fold-validation"><span class="toc-section-number">6.3</span> Comparing different machine learning methods using k-fold validation</a></li>
+<li class="has-sub"><a href="6.4-accuracy-assessment.html#accuracy-assessment"><span class="toc-section-number">6.4</span> Accuracy assessment</a>
+<ul>
+<li><a href="6.4-accuracy-assessment.html#time-series"><span class="toc-section-number">6.4.1</span> Time series</a></li>
+<li><a href="6.4-accuracy-assessment.html#classified-images"><span class="toc-section-number">6.4.2</span> Classified images</a></li>
+</ul></li>
+</ul></li>
+<li><a href="uncertainty-and-active-learning.html#uncertainty-and-active-learning">Uncertainty and active learning</a></li>
+<li class="has-sub"><a href="7-design-and-extensibility-considerations.html#design-and-extensibility-considerations"><span class="toc-section-number">7</span> Design and extensibility considerations</a>
+<ul>
+<li><a href="7.1-design-decisions.html#design-decisions"><span class="toc-section-number">7.1</span> Design decisions</a></li>
+</ul></li>
+<li class="has-sub"><a href="technical-annex.html#technical-annex">Technical Annex</a>
+<ul>
+<li class="has-sub"><a href="7.2-bayesian-smoothing-1.html#bayesian-smoothing-1"><span class="toc-section-number">7.2</span> Bayesian smoothing</a>
+<ul>
+<li><a href="7.2-bayesian-smoothing-1.html#derivation-of-bayesian-parameters-for-spatiotemporal-smoothing"><span class="toc-section-number">7.2.1</span> Derivation of bayesian parameters for spatiotemporal smoothing</a></li>
+</ul></li>
+<li><a href="7.3-bilateral-smoothing-1.html#bilateral-smoothing-1"><span class="toc-section-number">7.3</span> Bilateral smoothing</a></li>
+</ul></li>
+</ul>
+</div>
+</div>
+</div>
+<div class="row">
+<div class="col-sm-12">
+<div id="using-self-organizing-maps-for-sample-quality-control" class="section level2 unnumbered">
+<h2>Using self-organizing maps for sample quality control</h2>
+<p><a href="https://www.kaggle.com/esensing/using-som-for-sample-quality-control-in-sits" target="_blank"><img src="https://kaggle.com/static/images/open-in-kaggle.svg"></a></p>
+<p>As an alternative for hierarchical clustering for quality control of training samples, SITS provides a clustering technique based on self-organizing maps (SOM). SOM is a dimensionality reduction technique <span class="citation"><a href="#ref-Kohonen1990" role="doc-biblioref">[17]</a></span>, where high-dimensional data is mapped into a two dimensional map, keeping the topological relations between data patterns. As the shown in the Figure below, the SOM 2D map is composed by units called . Each neuron has a weight vector, with the same dimension as the training samples. At the start, neurons are assigned a small random value and then trained by competitive learning. The algorithm computes the distances of each member of the training set to all neurons and finds the neuron closest to the input, called the best matching unit.</p>
+<div class="figure" style="text-align: center">
+<img src="images/som_structure.png" alt="SOM 2D map creation (source: Santos et al.(2021). Reproduction under fair use doctrine." width="90%" height="90%" />
+<p class="caption">
+SOM 2D map creation (source: Santos et al.(2021). Reproduction under fair use doctrine.
+</p>
+</div>
+<p>The input data for quality assessment is a set of training samples, which are high-dimensional data sets such as a time series with 25 instances of 4 spectral bands has 100 dimensions. When projecting a high-dimensional data set into a 2D SOM map, the units of the map (called <em>neurons</em>) compete for each sample. Each time series will be mapped to one of the neurons. Since the number of neurons is smaller than the number of classes, each neuron will be associated to many time series. The resulting 2D map will be a set of clusters. Given that SOM preserves the topological structure of neighborhoods in multiple dimensions, clusters that contain training samples of a given class will usually be neighbors in 2D space. The neighbors of each neuron of a SOM map provide information on intraclass and interclass variability which is used to detect noisy samples. The methodology of using SOM for sample quality assessment (see Figure below) is discussed in detail in the reference paper <span class="citation"><a href="#ref-Santos2021a" role="doc-biblioref">[18]</a></span>.</p>
+<div class="figure" style="text-align: center">
+<img src="images/methodology_bayes_som.png" alt="Using SOM for class noise reduction (source: Santos et al.(2021). Reproduction under fair use doctrine." width="90%" height="90%" />
+<p class="caption">
+Using SOM for class noise reduction (source: Santos et al.(2021). Reproduction under fair use doctrine.
+</p>
+</div>
+<p>As an example, we take a time series dataset from the Cerrado region of Brazil, the second largest biome in South America with an area of more than 2 million km2. This set ranges from 2000 to 2017 and includes 50,160 land use and cover samples divided into 12 classes(“Dense_Woodland”, “Dunes”, “Fallow_Cotton”, “Millet_Cotton”, “Pasture”, “Rocky_Savanna”, “Savanna”, “Savanna_Parkland”, “Silviculture”, “Soy_Corn”, “Soy_Cotton”, “Soy_Fallow”). Each time series covers 12 months (23 data points) from MOD13Q1 product, and has 4 bands (“EVI”, “NDVI”, “MIR”, and “NIR”). We use bands “NDVI” and “EVI” for faster processing.</p>
+<div class="sourceCode" id="cb49"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb49-1"><a href="using-self-organizing-maps-for-sample-quality-control.html#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="co"># take only the NDVI and EVI bands</span></span>
+<span id="cb49-2"><a href="using-self-organizing-maps-for-sample-quality-control.html#cb49-2" aria-hidden="true" tabindex="-1"></a>samples_cerrado_mod13q1_2bands <span class="ot">&lt;-</span> <span class="fu">sits_select</span>(</span>
+<span id="cb49-3"><a href="using-self-organizing-maps-for-sample-quality-control.html#cb49-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> samples_cerrado_mod13q1,</span>
+<span id="cb49-4"><a href="using-self-organizing-maps-for-sample-quality-control.html#cb49-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">bands =</span> <span class="fu">c</span>(<span class="st">&quot;NDVI&quot;</span>, <span class="st">&quot;EVI&quot;</span>)</span>
+<span id="cb49-5"><a href="using-self-organizing-maps-for-sample-quality-control.html#cb49-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb49-6"><a href="using-self-organizing-maps-for-sample-quality-control.html#cb49-6" aria-hidden="true" tabindex="-1"></a><span class="co"># show the summary of the samples</span></span>
+<span id="cb49-7"><a href="using-self-organizing-maps-for-sample-quality-control.html#cb49-7" aria-hidden="true" tabindex="-1"></a><span class="fu">sits_labels_summary</span>(</span>
+<span id="cb49-8"><a href="using-self-organizing-maps-for-sample-quality-control.html#cb49-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> samples_cerrado_mod13q1_2bands</span>
+<span id="cb49-9"><a href="using-self-organizing-maps-for-sample-quality-control.html#cb49-9" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
+<div class="kable-table">
+<table>
+<thead>
+<tr>
+<th style="text-align:left;">
+label
+</th>
+<th style="text-align:right;">
+count
+</th>
+<th style="text-align:right;">
+prop
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Dense_Woodland
+</td>
+<td style="text-align:right;">
+9966
+</td>
+<td style="text-align:right;">
+0.199
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Dunes
+</td>
+<td style="text-align:right;">
+550
+</td>
+<td style="text-align:right;">
+0.011
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Fallow_Cotton
+</td>
+<td style="text-align:right;">
+630
+</td>
+<td style="text-align:right;">
+0.013
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Millet_Cotton
+</td>
+<td style="text-align:right;">
+316
+</td>
+<td style="text-align:right;">
+0.006
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Pasture
+</td>
+<td style="text-align:right;">
+7206
+</td>
+<td style="text-align:right;">
+0.144
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Rocky_Savanna
+</td>
+<td style="text-align:right;">
+8005
+</td>
+<td style="text-align:right;">
+0.160
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Savanna
+</td>
+<td style="text-align:right;">
+9172
+</td>
+<td style="text-align:right;">
+0.183
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Savanna_Parkland
+</td>
+<td style="text-align:right;">
+2699
+</td>
+<td style="text-align:right;">
+0.054
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Silviculture
+</td>
+<td style="text-align:right;">
+423
+</td>
+<td style="text-align:right;">
+0.008
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Soy_Corn
+</td>
+<td style="text-align:right;">
+4971
+</td>
+<td style="text-align:right;">
+0.099
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Soy_Cotton
+</td>
+<td style="text-align:right;">
+4124
+</td>
+<td style="text-align:right;">
+0.082
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Soy_Fallow
+</td>
+<td style="text-align:right;">
+2098
+</td>
+<td style="text-align:right;">
+0.042
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="som-based-quality-assessment-creating-the-som-map" class="section level3 unnumbered">
+<h3>SOM-based quality assessment: creating the SOM map</h3>
+<p>To perform the SOM-based quality assessment, the first step is to run <code>sits_som_map()</code> which uses the <code>kohonen</code> R package <span class="citation"><a href="#ref-Wehrens2018" role="doc-biblioref">[19]</a></span> to compute a SOM grid, controlled by five parameters. The grid size is given by <code>grid_xdim</code> and <code>grid_ydim</code>. The starting learning rate is <code>alpha</code>, which decreases during the interactions. To measure separation between samples, use <code>distance</code> (either “sumofsquares” or “euclidean”). The number of iterations is set by <code>rlen</code>. For more details, please consult <code>?kohonen::supersom</code>.</p>
+<div class="sourceCode" id="cb50"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb50-1"><a href="using-self-organizing-maps-for-sample-quality-control.html#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="co"># clustering time series using SOM</span></span>
+<span id="cb50-2"><a href="using-self-organizing-maps-for-sample-quality-control.html#cb50-2" aria-hidden="true" tabindex="-1"></a>som_cluster <span class="ot">&lt;-</span> <span class="fu">sits_som_map</span>(samples_cerrado_mod13q1_2bands,</span>
+<span id="cb50-3"><a href="using-self-organizing-maps-for-sample-quality-control.html#cb50-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">grid_xdim =</span> <span class="dv">15</span>,</span>
+<span id="cb50-4"><a href="using-self-organizing-maps-for-sample-quality-control.html#cb50-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">grid_ydim =</span> <span class="dv">15</span>,</span>
+<span id="cb50-5"><a href="using-self-organizing-maps-for-sample-quality-control.html#cb50-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">alpha =</span> <span class="fl">1.0</span>,</span>
+<span id="cb50-6"><a href="using-self-organizing-maps-for-sample-quality-control.html#cb50-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">distance =</span> <span class="st">&quot;euclidean&quot;</span>,</span>
+<span id="cb50-7"><a href="using-self-organizing-maps-for-sample-quality-control.html#cb50-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">rlen =</span> <span class="dv">20</span></span>
+<span id="cb50-8"><a href="using-self-organizing-maps-for-sample-quality-control.html#cb50-8" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb50-9"><a href="using-self-organizing-maps-for-sample-quality-control.html#cb50-9" aria-hidden="true" tabindex="-1"></a><span class="co"># plot the som map</span></span>
+<span id="cb50-10"><a href="using-self-organizing-maps-for-sample-quality-control.html#cb50-10" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(som_cluster)</span></code></pre></div>
+<div class="figure">
+<img src="sitsbook_files/figure-html/unnamed-chunk-50-1.png" alt="SOM map for the Cerrado samples" width="2100" />
+<p class="caption">
+SOM map for the Cerrado samples
+</p>
+</div>
+<p>The output of the <code>sits_som_map()</code> is a list with 3 elements: (a) the original set of time series with two additional columns for each time series: <code>id_sample</code> (the original id of each sample) and <code>id_neuron</code> (the id of the neuron to which it belongs); (b) a tibble with information on the neurons. For each neuron, it gives the prior and posterior probabilities of all labels which occur in the samples assigned to it; and (c) the SOM grid. To plot the SOM grid, use <code>plot()</code>. The neurons are labelled using majority voting.</p>
+<p>The SOM grid shows that most classes are associated to neurons close to each other. The are exceptions. Some “Pasture” neurons are far from the main cluster, because the transition between areas of open savanna and pasture is not always well defined and depends on climate and latitude. Also, the neurons associated to “Soy_Fallow” are dispersed in the map; this indicates possible problems in distinguishing this class from the other agricultural classes. Thus, the SOM grid provides a measures of sample quality.</p>
+</div>
+<div id="som-based-quality-assessment-measuring-confusion-between-labels" class="section level3 unnumbered">
+<h3>SOM-based quality assessment: measuring confusion between labels</h3>
+<p>The second step in SOM-based quality assessment is understanding the confusion between labels. The function <code>sits_som_evaluate_cluster()</code> groups neurons by their majority label and produces a tibble. For each label, the tibble show the percentage of samples with a different label that have been mapped to a neuron whose majority is that label.</p>
+<div class="sourceCode" id="cb51"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb51-1"><a href="using-self-organizing-maps-for-sample-quality-control.html#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="co"># produce a tibble with a summary of the mixed labels</span></span>
+<span id="cb51-2"><a href="using-self-organizing-maps-for-sample-quality-control.html#cb51-2" aria-hidden="true" tabindex="-1"></a>som_eval <span class="ot">&lt;-</span> <span class="fu">sits_som_evaluate_cluster</span>(som_cluster)</span>
+<span id="cb51-3"><a href="using-self-organizing-maps-for-sample-quality-control.html#cb51-3" aria-hidden="true" tabindex="-1"></a><span class="co"># show the result</span></span>
+<span id="cb51-4"><a href="using-self-organizing-maps-for-sample-quality-control.html#cb51-4" aria-hidden="true" tabindex="-1"></a>som_eval</span></code></pre></div>
+<div class="kable-table">
+<table>
+<thead>
+<tr>
+<th style="text-align:right;">
+id_cluster
+</th>
+<th style="text-align:left;">
+cluster
+</th>
+<th style="text-align:left;">
+class
+</th>
+<th style="text-align:right;">
+mixture_percentage
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+Dense_Woodland
+</td>
+<td style="text-align:left;">
+Dense_Woodland
+</td>
+<td style="text-align:right;">
+80.967
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+Dense_Woodland
+</td>
+<td style="text-align:left;">
+Millet_Cotton
+</td>
+<td style="text-align:right;">
+0.009
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+Dense_Woodland
+</td>
+<td style="text-align:left;">
+Pasture
+</td>
+<td style="text-align:right;">
+6.141
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+Dense_Woodland
+</td>
+<td style="text-align:left;">
+Rocky_Savanna
+</td>
+<td style="text-align:right;">
+7.160
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+Dense_Woodland
+</td>
+<td style="text-align:left;">
+Savanna
+</td>
+<td style="text-align:right;">
+4.033
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+Dense_Woodland
+</td>
+<td style="text-align:left;">
+Silviculture
+</td>
+<td style="text-align:right;">
+1.629
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+Dense_Woodland
+</td>
+<td style="text-align:left;">
+Soy_Corn
+</td>
+<td style="text-align:right;">
+0.026
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+Dense_Woodland
+</td>
+<td style="text-align:left;">
+Soy_Cotton
+</td>
+<td style="text-align:right;">
+0.026
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:left;">
+Dense_Woodland
+</td>
+<td style="text-align:left;">
+Soy_Fallow
+</td>
+<td style="text-align:right;">
+0.009
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+2
+</td>
+<td style="text-align:left;">
+Dunes
+</td>
+<td style="text-align:left;">
+Dunes
+</td>
+<td style="text-align:right;">
+100.000
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:left;">
+Fallow_Cotton
+</td>
+<td style="text-align:left;">
+Fallow_Cotton
+</td>
+<td style="text-align:right;">
+62.883
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:left;">
+Fallow_Cotton
+</td>
+<td style="text-align:left;">
+Millet_Cotton
+</td>
+<td style="text-align:right;">
+10.276
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:left;">
+Fallow_Cotton
+</td>
+<td style="text-align:left;">
+Pasture
+</td>
+<td style="text-align:right;">
+12.270
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:left;">
+Fallow_Cotton
+</td>
+<td style="text-align:left;">
+Savanna
+</td>
+<td style="text-align:right;">
+0.153
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:left;">
+Fallow_Cotton
+</td>
+<td style="text-align:left;">
+Soy_Corn
+</td>
+<td style="text-align:right;">
+1.687
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:left;">
+Fallow_Cotton
+</td>
+<td style="text-align:left;">
+Soy_Cotton
+</td>
+<td style="text-align:right;">
+8.129
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:left;">
+Fallow_Cotton
+</td>
+<td style="text-align:left;">
+Soy_Fallow
+</td>
+<td style="text-align:right;">
+4.601
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:left;">
+Millet_Cotton
+</td>
+<td style="text-align:left;">
+Fallow_Cotton
+</td>
+<td style="text-align:right;">
+25.728
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:left;">
+Millet_Cotton
+</td>
+<td style="text-align:left;">
+Millet_Cotton
+</td>
+<td style="text-align:right;">
+44.175
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+4
+</td>
+<td style="text-align:left;">
+Millet_Cotton
+</td>
+<td style="text-align:left;">
+Soy_Cotton
+</td>
+<td style="text-align:right;">
+30.097
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:left;">
+Pasture
+</td>
+<td style="text-align:left;">
+Dense_Woodland
+</td>
+<td style="text-align:right;">
+0.760
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:left;">
+Pasture
+</td>
+<td style="text-align:left;">
+Fallow_Cotton
+</td>
+<td style="text-align:right;">
+0.248
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:left;">
+Pasture
+</td>
+<td style="text-align:left;">
+Millet_Cotton
+</td>
+<td style="text-align:right;">
+0.015
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:left;">
+Pasture
+</td>
+<td style="text-align:left;">
+Pasture
+</td>
+<td style="text-align:right;">
+84.420
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:left;">
+Pasture
+</td>
+<td style="text-align:left;">
+Rocky_Savanna
+</td>
+<td style="text-align:right;">
+3.274
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:left;">
+Pasture
+</td>
+<td style="text-align:left;">
+Savanna
+</td>
+<td style="text-align:right;">
+9.179
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:left;">
+Pasture
+</td>
+<td style="text-align:left;">
+Savanna_Parkland
+</td>
+<td style="text-align:right;">
+0.117
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:left;">
+Pasture
+</td>
+<td style="text-align:left;">
+Soy_Corn
+</td>
+<td style="text-align:right;">
+0.760
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:left;">
+Pasture
+</td>
+<td style="text-align:left;">
+Soy_Cotton
+</td>
+<td style="text-align:right;">
+0.044
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:left;">
+Pasture
+</td>
+<td style="text-align:left;">
+Soy_Fallow
+</td>
+<td style="text-align:right;">
+1.184
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+6
+</td>
+<td style="text-align:left;">
+Rocky_Savanna
+</td>
+<td style="text-align:left;">
+Dense_Woodland
+</td>
+<td style="text-align:right;">
+1.044
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+6
+</td>
+<td style="text-align:left;">
+Rocky_Savanna
+</td>
+<td style="text-align:left;">
+Fallow_Cotton
+</td>
+<td style="text-align:right;">
+0.078
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+6
+</td>
+<td style="text-align:left;">
+Rocky_Savanna
+</td>
+<td style="text-align:left;">
+Pasture
+</td>
+<td style="text-align:right;">
+3.446
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+6
+</td>
+<td style="text-align:left;">
+Rocky_Savanna
+</td>
+<td style="text-align:left;">
+Rocky_Savanna
+</td>
+<td style="text-align:right;">
+87.102
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+6
+</td>
+<td style="text-align:left;">
+Rocky_Savanna
+</td>
+<td style="text-align:left;">
+Savanna
+</td>
+<td style="text-align:right;">
+0.940
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+6
+</td>
+<td style="text-align:left;">
+Rocky_Savanna
+</td>
+<td style="text-align:left;">
+Savanna_Parkland
+</td>
+<td style="text-align:right;">
+7.324
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+6
+</td>
+<td style="text-align:left;">
+Rocky_Savanna
+</td>
+<td style="text-align:left;">
+Silviculture
+</td>
+<td style="text-align:right;">
+0.013
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+6
+</td>
+<td style="text-align:left;">
+Rocky_Savanna
+</td>
+<td style="text-align:left;">
+Soy_Corn
+</td>
+<td style="text-align:right;">
+0.013
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+6
+</td>
+<td style="text-align:left;">
+Rocky_Savanna
+</td>
+<td style="text-align:left;">
+Soy_Fallow
+</td>
+<td style="text-align:right;">
+0.039
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+7
+</td>
+<td style="text-align:left;">
+Savanna
+</td>
+<td style="text-align:left;">
+Dense_Woodland
+</td>
+<td style="text-align:right;">
+4.916
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+7
+</td>
+<td style="text-align:left;">
+Savanna
+</td>
+<td style="text-align:left;">
+Fallow_Cotton
+</td>
+<td style="text-align:right;">
+0.034
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+7
+</td>
+<td style="text-align:left;">
+Savanna
+</td>
+<td style="text-align:left;">
+Pasture
+</td>
+<td style="text-align:right;">
+3.342
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+7
+</td>
+<td style="text-align:left;">
+Savanna
+</td>
+<td style="text-align:left;">
+Rocky_Savanna
+</td>
+<td style="text-align:right;">
+0.748
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+7
+</td>
+<td style="text-align:left;">
+Savanna
+</td>
+<td style="text-align:left;">
+Savanna
+</td>
+<td style="text-align:right;">
+90.315
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+7
+</td>
+<td style="text-align:left;">
+Savanna
+</td>
+<td style="text-align:left;">
+Savanna_Parkland
+</td>
+<td style="text-align:right;">
+0.272
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+7
+</td>
+<td style="text-align:left;">
+Savanna
+</td>
+<td style="text-align:left;">
+Silviculture
+</td>
+<td style="text-align:right;">
+0.091
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+7
+</td>
+<td style="text-align:left;">
+Savanna
+</td>
+<td style="text-align:left;">
+Soy_Corn
+</td>
+<td style="text-align:right;">
+0.204
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+7
+</td>
+<td style="text-align:left;">
+Savanna
+</td>
+<td style="text-align:left;">
+Soy_Fallow
+</td>
+<td style="text-align:right;">
+0.079
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+8
+</td>
+<td style="text-align:left;">
+Savanna_Parkland
+</td>
+<td style="text-align:left;">
+Dense_Woodland
+</td>
+<td style="text-align:right;">
+0.042
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+8
+</td>
+<td style="text-align:left;">
+Savanna_Parkland
+</td>
+<td style="text-align:left;">
+Fallow_Cotton
+</td>
+<td style="text-align:right;">
+0.085
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+8
+</td>
+<td style="text-align:left;">
+Savanna_Parkland
+</td>
+<td style="text-align:left;">
+Pasture
+</td>
+<td style="text-align:right;">
+0.169
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+8
+</td>
+<td style="text-align:left;">
+Savanna_Parkland
+</td>
+<td style="text-align:left;">
+Rocky_Savanna
+</td>
+<td style="text-align:right;">
+9.233
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+8
+</td>
+<td style="text-align:left;">
+Savanna_Parkland
+</td>
+<td style="text-align:left;">
+Savanna
+</td>
+<td style="text-align:right;">
+1.228
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+8
+</td>
+<td style="text-align:left;">
+Savanna_Parkland
+</td>
+<td style="text-align:left;">
+Savanna_Parkland
+</td>
+<td style="text-align:right;">
+89.199
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+8
+</td>
+<td style="text-align:left;">
+Savanna_Parkland
+</td>
+<td style="text-align:left;">
+Soy_Corn
+</td>
+<td style="text-align:right;">
+0.042
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+9
+</td>
+<td style="text-align:left;">
+Silviculture
+</td>
+<td style="text-align:left;">
+Dense_Woodland
+</td>
+<td style="text-align:right;">
+29.345
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+9
+</td>
+<td style="text-align:left;">
+Silviculture
+</td>
+<td style="text-align:left;">
+Pasture
+</td>
+<td style="text-align:right;">
+4.558
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+9
+</td>
+<td style="text-align:left;">
+Silviculture
+</td>
+<td style="text-align:left;">
+Rocky_Savanna
+</td>
+<td style="text-align:right;">
+0.855
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+9
+</td>
+<td style="text-align:left;">
+Silviculture
+</td>
+<td style="text-align:left;">
+Savanna
+</td>
+<td style="text-align:right;">
+0.570
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+9
+</td>
+<td style="text-align:left;">
+Silviculture
+</td>
+<td style="text-align:left;">
+Silviculture
+</td>
+<td style="text-align:right;">
+64.672
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+10
+</td>
+<td style="text-align:left;">
+Soy_Corn
+</td>
+<td style="text-align:left;">
+Dense_Woodland
+</td>
+<td style="text-align:right;">
+0.019
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+10
+</td>
+<td style="text-align:left;">
+Soy_Corn
+</td>
+<td style="text-align:left;">
+Fallow_Cotton
+</td>
+<td style="text-align:right;">
+0.175
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+10
+</td>
+<td style="text-align:left;">
+Soy_Corn
+</td>
+<td style="text-align:left;">
+Millet_Cotton
+</td>
+<td style="text-align:right;">
+0.078
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+10
+</td>
+<td style="text-align:left;">
+Soy_Corn
+</td>
+<td style="text-align:left;">
+Pasture
+</td>
+<td style="text-align:right;">
+0.741
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+10
+</td>
+<td style="text-align:left;">
+Soy_Corn
+</td>
+<td style="text-align:left;">
+Savanna
+</td>
+<td style="text-align:right;">
+0.058
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+10
+</td>
+<td style="text-align:left;">
+Soy_Corn
+</td>
+<td style="text-align:left;">
+Soy_Corn
+</td>
+<td style="text-align:right;">
+86.296
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+10
+</td>
+<td style="text-align:left;">
+Soy_Corn
+</td>
+<td style="text-align:left;">
+Soy_Cotton
+</td>
+<td style="text-align:right;">
+4.717
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+10
+</td>
+<td style="text-align:left;">
+Soy_Corn
+</td>
+<td style="text-align:left;">
+Soy_Fallow
+</td>
+<td style="text-align:right;">
+7.914
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+11
+</td>
+<td style="text-align:left;">
+Soy_Cotton
+</td>
+<td style="text-align:left;">
+Fallow_Cotton
+</td>
+<td style="text-align:right;">
+1.031
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+11
+</td>
+<td style="text-align:left;">
+Soy_Cotton
+</td>
+<td style="text-align:left;">
+Millet_Cotton
+</td>
+<td style="text-align:right;">
+2.798
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+11
+</td>
+<td style="text-align:left;">
+Soy_Cotton
+</td>
+<td style="text-align:left;">
+Soy_Corn
+</td>
+<td style="text-align:right;">
+4.124
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+11
+</td>
+<td style="text-align:left;">
+Soy_Cotton
+</td>
+<td style="text-align:left;">
+Soy_Cotton
+</td>
+<td style="text-align:right;">
+92.047
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+12
+</td>
+<td style="text-align:left;">
+Soy_Fallow
+</td>
+<td style="text-align:left;">
+Fallow_Cotton
+</td>
+<td style="text-align:right;">
+4.344
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+12
+</td>
+<td style="text-align:left;">
+Soy_Fallow
+</td>
+<td style="text-align:left;">
+Millet_Cotton
+</td>
+<td style="text-align:right;">
+1.876
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+12
+</td>
+<td style="text-align:left;">
+Soy_Fallow
+</td>
+<td style="text-align:left;">
+Pasture
+</td>
+<td style="text-align:right;">
+1.382
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+12
+</td>
+<td style="text-align:left;">
+Soy_Fallow
+</td>
+<td style="text-align:left;">
+Savanna
+</td>
+<td style="text-align:right;">
+0.049
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+12
+</td>
+<td style="text-align:left;">
+Soy_Fallow
+</td>
+<td style="text-align:left;">
+Soy_Corn
+</td>
+<td style="text-align:right;">
+14.314
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+12
+</td>
+<td style="text-align:left;">
+Soy_Fallow
+</td>
+<td style="text-align:left;">
+Soy_Cotton
+</td>
+<td style="text-align:right;">
+0.543
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+12
+</td>
+<td style="text-align:left;">
+Soy_Fallow
+</td>
+<td style="text-align:left;">
+Soy_Fallow
+</td>
+<td style="text-align:right;">
+77.493
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>As seen above, almost all labels are associated to clusters where there are some samples with a different label. Such confusion between labels arises because visual labeling of samples is subjective and can be biased. In many cases, interpreters use high-resolution data to identify samples. However, the actual images to be classified are captured by satellites with lower resolution. In our case study, a MOD13Q1 image has pixels with 250 x 250 meter resolution. Therefore, the correspondence between labelled locations in high-resolution images and mid to low-resolution images is not direct. Therefore, the SOM-based analysis is useful to select only homogeneous pixels.</p>
+<p>The confusion by class can be visualised in a bar plot using <code>plot()</code>, as shown below. The bar plot shows some confusion between the classes associated to the natural vegetation typical of the Brazilian Cerrado (“Savanna”, “Savanna_Parkland”, “Rocky_Savanna”). This mixture is due to the large variability of the natural vegetation of the Cerrado biome, which makes it difficult to draw sharp boundaries between each label. Some confusion is also visible between the agricultural classes. The “Millet_Cotton” class is a particularly difficult one, since many of the samples assigned to this class are confused with “Soy_Cotton” and “Fallow_Cotton”.</p>
+<div class="sourceCode" id="cb52"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb52-1"><a href="using-self-organizing-maps-for-sample-quality-control.html#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="co"># plot the confusion between clusters</span></span>
+<span id="cb52-2"><a href="using-self-organizing-maps-for-sample-quality-control.html#cb52-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(som_eval)</span></code></pre></div>
+<div class="figure" style="text-align: center">
+<img src="sitsbook_files/figure-html/unnamed-chunk-52-1.png" alt="Confusion between classes as measured by SOM." width="90%" />
+<p class="caption">
+Confusion between classes as measured by SOM.
+</p>
+</div>
+</div>
+<div id="som-based-quality-assessment-part-3-using-probabilities-to-detect-noisy-samples" class="section level3 unnumbered">
+<h3>SOM-based quality assessment part 3: using probabilities to detect noisy samples</h3>
+<p>The third step in the quality assessment uses the discrete probability distribution associated to each neuron, which is included in the <code>labelled_neurons</code> tibble produced by <code>sits_som_map()</code>. More homogeneous neurons (those with a single class of high probability) are assumed to be composed of good quality samples. Heterogeneous neurons (those with two or more classes with significant probability) are likely to contain noisy samples. The algorithm computes two values for each sample:</p>
+<ul>
+<li><em>prior probability</em>: the probability that the label assigned to the sample is correct, considering only the samples contained in the same neuron. For example, if a neuron has 20 samples, of which 15 are labeled as “Pasture” and 5 as “Forest”, all samples labeled “Forest” are assigned a prior probability of 25%. This is an indication that the “Forest” samples in this neuron may not be of good quality.</li>
+<li><em>posterior probability</em>: the probability that the label assigned to the sample is correct, considering the neighboring neurons. Take the case of the above-mentioned neuron whose samples labeled “Pasture” have a prior probability of 75%. <em>What happens if all the neighboring samples have “Forest” as a majority label?</em> To answer this question, we use Bayesian inference to estimate if these samples are noisy based on the neighboring neurons <span class="citation"><a href="#ref-Santos2021" role="doc-biblioref">[20]</a></span>.</li>
+</ul>
+<p>To identify noisy samples, we take the result of the <code>sits_som_map()</code> function as the first argument to the function <code>sits_som_clean_samples()</code>. This function finds out which samples are noisy, those that are clean, and some that need to be further examined by the user. It requires the <code>prior_threshold</code> and <code>posterior_threshold</code> parameters according to the following rules:</p>
+<ul>
+<li>If the prior probability of a sample is less than <code>prior_threshold</code>, the sample is assumed to be noisy and tagged as “remove”;</li>
+<li>If the prior probability is greater or equal to <code>prior_threshold</code> and the posterior probability calculated by Bayesian inference is greater or equal to <code>posterior_threshold</code>, the sample is assumed not to be noisy and thus is tagged as “clean”;</li>
+<li>If the prior probability is greater or equal to <code>prior_threshold</code> and the posterior probability is less than <code>posterior_threshold</code>, we have a situation the sample is part of the majority level of those assigned to its neuron, but its label is not consistent with most of its neighbors. This is an anomalous condition and is tagged as “analyze”. Users are encouraged to inspect such samples to find out whether they are in fact noisy or not.</li>
+</ul>
+<p>The default value for both <code>prior_threshold</code> and <code>posterior_threshold</code> is 60%. The <code>sits_som_clean_samples()</code> has an additional parameter (<code>keep</code>) which indicates which samples should be kept in the set based on their prior and posterior probabilities. The default for <code>keep</code> is <code>c("clean", "analyze")</code>. As a result of the cleaning, about 900 samples have been considered to be noisy and thus removed.</p>
+<div class="sourceCode" id="cb53"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb53-1"><a href="using-self-organizing-maps-for-sample-quality-control.html#cb53-1" aria-hidden="true" tabindex="-1"></a>new_samples <span class="ot">&lt;-</span> <span class="fu">sits_som_clean_samples</span>(</span>
+<span id="cb53-2"><a href="using-self-organizing-maps-for-sample-quality-control.html#cb53-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">som_map =</span> som_cluster,</span>
+<span id="cb53-3"><a href="using-self-organizing-maps-for-sample-quality-control.html#cb53-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">prior_threshold =</span> <span class="fl">0.6</span>,</span>
+<span id="cb53-4"><a href="using-self-organizing-maps-for-sample-quality-control.html#cb53-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">posterior_threshold =</span> <span class="fl">0.6</span>,</span>
+<span id="cb53-5"><a href="using-self-organizing-maps-for-sample-quality-control.html#cb53-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">keep =</span> <span class="fu">c</span>(<span class="st">&quot;clean&quot;</span>, <span class="st">&quot;analyze&quot;</span>)</span>
+<span id="cb53-6"><a href="using-self-organizing-maps-for-sample-quality-control.html#cb53-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb53-7"><a href="using-self-organizing-maps-for-sample-quality-control.html#cb53-7" aria-hidden="true" tabindex="-1"></a><span class="co"># print the new sample distribution</span></span>
+<span id="cb53-8"><a href="using-self-organizing-maps-for-sample-quality-control.html#cb53-8" aria-hidden="true" tabindex="-1"></a><span class="fu">sits_labels_summary</span>(new_samples)</span></code></pre></div>
+<div class="kable-table">
+<table>
+<thead>
+<tr>
+<th style="text-align:left;">
+label
+</th>
+<th style="text-align:right;">
+count
+</th>
+<th style="text-align:right;">
+prop
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Dense_Woodland
+</td>
+<td style="text-align:right;">
+8214
+</td>
+<td style="text-align:right;">
+0.207
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Dunes
+</td>
+<td style="text-align:right;">
+550
+</td>
+<td style="text-align:right;">
+0.014
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Fallow_Cotton
+</td>
+<td style="text-align:right;">
+345
+</td>
+<td style="text-align:right;">
+0.009
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Pasture
+</td>
+<td style="text-align:right;">
+5353
+</td>
+<td style="text-align:right;">
+0.135
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Rocky_Savanna
+</td>
+<td style="text-align:right;">
+6289
+</td>
+<td style="text-align:right;">
+0.159
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Savanna
+</td>
+<td style="text-align:right;">
+7901
+</td>
+<td style="text-align:right;">
+0.199
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Savanna_Parkland
+</td>
+<td style="text-align:right;">
+2106
+</td>
+<td style="text-align:right;">
+0.053
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Silviculture
+</td>
+<td style="text-align:right;">
+85
+</td>
+<td style="text-align:right;">
+0.002
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Soy_Corn
+</td>
+<td style="text-align:right;">
+4191
+</td>
+<td style="text-align:right;">
+0.106
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Soy_Cotton
+</td>
+<td style="text-align:right;">
+3489
+</td>
+<td style="text-align:right;">
+0.088
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Soy_Fallow
+</td>
+<td style="text-align:right;">
+1139
+</td>
+<td style="text-align:right;">
+0.029
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>All samples of the class which had the highest confusion with others(“Millet_Cotton”) have been removed. Most samples of class “Silviculture” (planted forests) have also been removed, since in the SOM map they have been confused with natural forests and woodlands. Further analysis includes calculating the SOM map and confusion matrix for the new set, as shown in the following example.</p>
+<div class="sourceCode" id="cb54"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb54-1"><a href="using-self-organizing-maps-for-sample-quality-control.html#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="co"># evaluate the misture in the SOM clusters of new samples</span></span>
+<span id="cb54-2"><a href="using-self-organizing-maps-for-sample-quality-control.html#cb54-2" aria-hidden="true" tabindex="-1"></a>new_cluster <span class="ot">&lt;-</span> <span class="fu">sits_som_map</span>(</span>
+<span id="cb54-3"><a href="using-self-organizing-maps-for-sample-quality-control.html#cb54-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> new_samples,</span>
+<span id="cb54-4"><a href="using-self-organizing-maps-for-sample-quality-control.html#cb54-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">grid_xdim =</span> <span class="dv">15</span>,</span>
+<span id="cb54-5"><a href="using-self-organizing-maps-for-sample-quality-control.html#cb54-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">grid_ydim =</span> <span class="dv">15</span>,</span>
+<span id="cb54-6"><a href="using-self-organizing-maps-for-sample-quality-control.html#cb54-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">alpha =</span> <span class="fl">1.0</span>,</span>
+<span id="cb54-7"><a href="using-self-organizing-maps-for-sample-quality-control.html#cb54-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">distance =</span> <span class="st">&quot;euclidean&quot;</span>,</span>
+<span id="cb54-8"><a href="using-self-organizing-maps-for-sample-quality-control.html#cb54-8" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
+<div class="sourceCode" id="cb55"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb55-1"><a href="using-self-organizing-maps-for-sample-quality-control.html#cb55-1" aria-hidden="true" tabindex="-1"></a>new_cluster_mixture <span class="ot">&lt;-</span> <span class="fu">sits_som_evaluate_cluster</span>(new_cluster)</span>
+<span id="cb55-2"><a href="using-self-organizing-maps-for-sample-quality-control.html#cb55-2" aria-hidden="true" tabindex="-1"></a><span class="co"># plot the mixture information.</span></span>
+<span id="cb55-3"><a href="using-self-organizing-maps-for-sample-quality-control.html#cb55-3" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(new_cluster_mixture)</span></code></pre></div>
+<div class="figure" style="text-align: center">
+<img src="sitsbook_files/figure-html/unnamed-chunk-55-1.png" alt="Cluster confusion plot for samples cleaned by SOM" width="90%" />
+<p class="caption">
+Cluster confusion plot for samples cleaned by SOM
+</p>
+</div>
+<p>As expected, the new confusion map shows a significant improvement over the previous one. This result should be interpreted carefully, since it may be due to different effects. The most direct interpretation is that “Millet_Cotton” and “Silviculture” cannot be easily separated from the other classes, given the current attributes (a time series of “NDVI” and “EVI” indices from MODIS images). In such situations, users should consider improving the number of samples from the less represented classes, including more MODIS bands, or working with higher resolution satellites. In general, results of the SOM method should be interpreted based on the users’ understanding of the ecosystems and agricultural practices of the study region.</p>
+<p>A further comparison between the original and clean samples is to run a 5-fold validation on the original and on the cleaned sample sets using <code>sits_kfold_validate()</code> and a random forests model. The SOM procedure improves the validation results from 95% on the original data set to 99% in the cleaned one. This improvement should not be interpreted as providing better fit for the final map accuracy. A 5-fold validation procedure only measures how well the machine learning model fits the samples; it is not an accuracy assessment of classification results. The result indicates that the resulting training set after the SOM sample removal procedure is more internally consistent than the original one. For more details on accuracy measures, please see chapter on “Validation and Accuracy Measures”.</p>
+<div class="sourceCode" id="cb56"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb56-1"><a href="using-self-organizing-maps-for-sample-quality-control.html#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="co"># run a k-fold validation</span></span>
+<span id="cb56-2"><a href="using-self-organizing-maps-for-sample-quality-control.html#cb56-2" aria-hidden="true" tabindex="-1"></a>assess_orig <span class="ot">&lt;-</span> <span class="fu">sits_kfold_validate</span>(</span>
+<span id="cb56-3"><a href="using-self-organizing-maps-for-sample-quality-control.html#cb56-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">samples =</span> samples_cerrado_mod13q1_2bands,</span>
+<span id="cb56-4"><a href="using-self-organizing-maps-for-sample-quality-control.html#cb56-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">folds =</span> <span class="dv">5</span>,</span>
+<span id="cb56-5"><a href="using-self-organizing-maps-for-sample-quality-control.html#cb56-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">ml_method =</span> <span class="fu">sits_rfor</span>()</span>
+<span id="cb56-6"><a href="using-self-organizing-maps-for-sample-quality-control.html#cb56-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb56-7"><a href="using-self-organizing-maps-for-sample-quality-control.html#cb56-7" aria-hidden="true" tabindex="-1"></a><span class="co"># print summary</span></span>
+<span id="cb56-8"><a href="using-self-organizing-maps-for-sample-quality-control.html#cb56-8" aria-hidden="true" tabindex="-1"></a><span class="fu">sits_accuracy_summary</span>(assess_orig)</span></code></pre></div>
+<pre class="sourceCode"><code>#&gt; Overall Statistics                          
+#&gt;  Accuracy : 0.945         
+#&gt;    95% CI : (0.943, 0.947)
+#&gt;     Kappa : 0.936</code></pre>
+<div class="sourceCode" id="cb58"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb58-1"><a href="using-self-organizing-maps-for-sample-quality-control.html#cb58-1" aria-hidden="true" tabindex="-1"></a>assess_new <span class="ot">&lt;-</span> <span class="fu">sits_kfold_validate</span>(</span>
+<span id="cb58-2"><a href="using-self-organizing-maps-for-sample-quality-control.html#cb58-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">samples =</span> new_samples,</span>
+<span id="cb58-3"><a href="using-self-organizing-maps-for-sample-quality-control.html#cb58-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">folds =</span> <span class="dv">5</span>,</span>
+<span id="cb58-4"><a href="using-self-organizing-maps-for-sample-quality-control.html#cb58-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">ml_method =</span> <span class="fu">sits_rfor</span>()</span>
+<span id="cb58-5"><a href="using-self-organizing-maps-for-sample-quality-control.html#cb58-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb58-6"><a href="using-self-organizing-maps-for-sample-quality-control.html#cb58-6" aria-hidden="true" tabindex="-1"></a><span class="co"># print summary</span></span>
+<span id="cb58-7"><a href="using-self-organizing-maps-for-sample-quality-control.html#cb58-7" aria-hidden="true" tabindex="-1"></a><span class="fu">sits_accuracy_summary</span>(assess_new)</span></code></pre></div>
+<pre class="sourceCode"><code>#&gt; Overall Statistics                         
+#&gt;  Accuracy : 0.991        
+#&gt;    95% CI : (0.99, 0.992)
+#&gt;     Kappa : 0.989</code></pre>
+<p>The SOM-based analysis discards samples which can be confused with samples of other classes. After removing noisy samples or uncertain classes, the data set obtains a better validation score since there is less confusion between classes. Users should analyse the results with care. Not all discarded samples are low quality ones. Confusion between samples of different classes can result from inconsistent labeling or from the lack of capacity of satellite data to distinguish between chosen classes. When many samples are discarded, as in the current example, it is advisable to revise the whole classification schema. The aim of selecting training data should always be to match the reality in the ground to the power of remote sensing data to identify differences. No analysis procedure can replace actual user experience and knowledge of the study region.</p>
+</div>
+</div>
+<h3>References</h3>
+<div id="refs" class="references csl-bib-body">
+<div id="ref-Kohonen1990" class="csl-entry">
+<div class="csl-left-margin">[17] </div><div class="csl-right-inline">T. Kohonen, <span>“The self-organizing map,”</span> <em>Proceedings of the IEEE</em>, vol. 78, no. 9, pp. 1464–1480, 1990, doi: <a href="https://doi.org/10.1109/5.58325">10.1109/5.58325</a>.</div>
+</div>
+<div id="ref-Santos2021a" class="csl-entry">
+<div class="csl-left-margin">[18] </div><div class="csl-right-inline">L. A. Santos, K. R. Ferreira, G. Camara, M. C. A. Picoli, and R. E. Simoes, <span>“Quality control and class noise reduction of satellite image time series,”</span> <em>ISPRS Journal of Photogrammetry and Remote Sensing</em>, vol. 177, pp. 75–88, 2021, doi: <a href="https://doi.org/10.1016/j.isprsjprs.2021.04.014">10.1016/j.isprsjprs.2021.04.014</a>.</div>
+</div>
+<div id="ref-Wehrens2018" class="csl-entry">
+<div class="csl-left-margin">[19] </div><div class="csl-right-inline">R. Wehrens and J. Kruisselbrink, <span>“Flexible <span>Self-Organizing Maps</span> in kohonen 3.0,”</span> <em>Journal of Statistical Software</em>, vol. 87, no. 1, pp. 1–18, 2018, doi: <a href="https://doi.org/10.18637/jss.v087.i07">10.18637/jss.v087.i07</a>.</div>
+</div>
+<div id="ref-Santos2021" class="csl-entry">
+<div class="csl-left-margin">[20] </div><div class="csl-right-inline">L. A. Santos, K. Ferreira, M. Picoli, G. Camara, R. Zurita-Milla, and E.-W. Augustijn, <span>“Identifying <span>Spatiotemporal Patterns</span> in <span>Land Use</span> and <span>Cover Samples</span> from <span>Satellite Image Time Series</span>,”</span> <em>Remote Sensing</em>, vol. 13, no. 5, p. 974, 2021, doi: <a href="https://doi.org/10.3390/rs13050974">10.3390/rs13050974</a>.</div>
+</div>
+</div>
+<p style="text-align: center;">
+<a href="hierachical-clustering-for-sample-quality-control.html"><button class="btn btn-default">Previous</button></a>
+<a href="reducing-sample-imbalance.html"><button class="btn btn-default">Next</button></a>
+</p>
+</div>
+</div>
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+$(document).ready(function () {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+});
+
+</script>
+
+</body>
+</html>

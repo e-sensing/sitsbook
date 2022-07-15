@@ -17,9 +17,8 @@ bookdown::render_book(
 
 # 
 bookdown::render_book(
-    output_format = rmarkdown::github_document(
-        toc = TRUE,
-        df_print = "kable"
+    output_format = bookdown::bs4_book(
+        df_print = "tibble"
     )
 )
 

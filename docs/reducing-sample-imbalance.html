@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Reducing sample imbalance | sits: Satellite Image Time Series Analysis on Earth Observation Data Cubes" />
+<meta property="og:type" content="book" />
+<meta property="og:image" content="/images/cover_sits_book.png" />
+<meta property="og:description" content="This book presents sits, an open-source R package for satellite image time series analysis. The package supports the application of machine learning techniques for classifying image time series obtained from Earth observation data cubes." />
+
+
+<meta name="author" content="Gilberto Camara" />
+<meta name="author" content="Rolf Simoes" />
+<meta name="author" content="Felipe Souza" />
+<meta name="author" content="Charlotte Peletier" />
+<meta name="author" content="Alber Sanchez" />
+<meta name="author" content="Pedro R. Andrade" />
+<meta name="author" content="Karine Ferreira" />
+<meta name="author" content="Gilberto Queiroz" />
+
+<meta name="date" content="2022-07-15" />
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  TeX: { equationNumbers: { autoNumber: "AMS" } }
+});
+</script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<meta name="description" content="This book presents sits, an open-source R package for satellite image time series analysis. The package supports the application of machine learning techniques for classifying image time series obtained from Earth observation data cubes.">
+
+<title>Reducing sample imbalance | sits: Satellite Image Time Series Analysis on Earth Observation Data Cubes</title>
+
+<script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="libs/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
+<script src="libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="libs/navigation-1.1/tabsets.js"></script>
+<script src="libs/kePrint-0.0.1/kePrint.js"></script>
+<link href="libs/lightable-0.0.1/lightable.css" rel="stylesheet" />
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+
+
+<style type="text/css">
+/* Used with Pandoc 2.11+ new --citeproc when CSL is used */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}
+</style>
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+/* show arrow before summary tag as in bootstrap
+TODO: remove if boostrap in updated in html_document (rmarkdown#1485) */
+details > summary {
+  display: list-item;
+  cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container-fluid main-container">
+
+
+<div class="row">
+<div class="col-sm-12">
+<div id="TOC">
+<ul>
+<li class="has-sub"><a href="index.html#preface">Preface</a>
+<ul>
+<li><a href="who-this-book-is-for.html#who-this-book-is-for">Who this book is for</a></li>
+<li><a href="main-reference-for-sits.html#main-reference-for-sits">Main reference for sits</a></li>
+</ul></li>
+<li class="has-sub"><a href="setup.html#setup">Setup</a>
+<ul>
+<li><a href="support-for-gdal-and-proj.html#support-for-gdal-and-proj">Support for GDAL and PROJ</a></li>
+<li><a href="installing-the-sits-package.html#installing-the-sits-package">Installing the <code>sits</code> package</a></li>
+</ul></li>
+<li class="has-sub"><a href="acknowledgements.html#acknowledgements">Acknowledgements</a>
+<ul>
+<li><a href="funding-sources.html#funding-sources">Funding Sources</a></li>
+<li><a href="community-contributions.html#community-contributions">Community Contributions</a></li>
+<li><a href="reproducible-papers-used-in-building-sits.html#reproducible-papers-used-in-building-sits">Reproducible papers used in building sits</a></li>
+<li><a href="publications-using-sits.html#publications-using-sits">Publications using sits</a></li>
+</ul></li>
+<li class="has-sub"><a href="1-introduction-to-sits.html#introduction-to-sits"><span class="toc-section-number">1</span> Introduction to SITS</a>
+<ul>
+<li><a href="how-sits-works.html#how-sits-works">How <code>sits</code> works</a></li>
+<li><a href="creating-a-data-cube.html#creating-a-data-cube">Creating a Data Cube</a></li>
+<li><a href="the-time-series-table.html#the-time-series-table">The time series table</a></li>
+<li><a href="training-a-machine-learning-model.html#training-a-machine-learning-model">Training a machine learning model</a></li>
+<li><a href="data-cube-classification.html#data-cube-classification">Data cube classification</a></li>
+<li><a href="spatial-smoothing.html#spatial-smoothing">Spatial smoothing</a></li>
+<li><a href="labelling-a-probability-data-cube.html#labelling-a-probability-data-cube">Labelling a probability data cube</a></li>
+<li><a href="final-remarks.html#final-remarks">Final remarks</a></li>
+</ul></li>
+<li class="has-sub"><a href="2-earth-observation-data-cubes.html#earth-observation-data-cubes"><span class="toc-section-number">2</span> Earth observation data cubes</a>
+<ul>
+<li><a href="analysis-ready-data-image-collections.html#analysis-ready-data-image-collections">Analysis-ready data image collections</a></li>
+<li><a href="ard-image-collections-handled-by-sits.html#ard-image-collections-handled-by-sits">ARD image collections handled by sits</a></li>
+<li><a href="regular-image-data-cubes.html#regular-image-data-cubes">Regular image data cubes</a></li>
+<li><a href="creating-data-cubes.html#creating-data-cubes">Creating data cubes</a></li>
+<li><a href="assessing-amazon-web-services.html#assessing-amazon-web-services">Assessing Amazon Web Services</a></li>
+<li><a href="assessing-microsofts-planetary-computer.html#assessing-microsofts-planetary-computer">Assessing Microsoft’s Planetary Computer</a></li>
+<li><a href="assessing-digital-earth-africa.html#assessing-digital-earth-africa">Assessing Digital Earth Africa</a></li>
+<li><a href="assessing-the-brazil-data-cube.html#assessing-the-brazil-data-cube">Assessing the Brazil Data Cube</a></li>
+<li><a href="defining-a-data-cube-using-ard-local-files.html#defining-a-data-cube-using-ard-local-files">Defining a data cube using ARD local files</a></li>
+<li><a href="defining-a-data-cube-using-classified-images.html#defining-a-data-cube-using-classified-images">Defining a data cube using classified images</a></li>
+<li><a href="regularizing-data-cubes.html#regularizing-data-cubes">Regularizing data cubes</a></li>
+<li><a href="mathematical-operations-on-regular-data-cubes.html#mathematical-operations-on-regular-data-cubes">Mathematical operations on regular data cubes</a></li>
+</ul></li>
+<li class="has-sub"><a href="3-working-with-time-series.html#working-with-time-series"><span class="toc-section-number">3</span> Working with time series</a>
+<ul>
+<li><a href="data-structures-for-satellite-time-series.html#data-structures-for-satellite-time-series">Data structures for satellite time series</a></li>
+<li><a href="utilities-for-handling-time-series.html#utilities-for-handling-time-series">Utilities for handling time series</a></li>
+<li><a href="time-series-visualisation.html#time-series-visualisation">Time series visualisation</a></li>
+<li><a href="obtaining-time-series-data-from-data-cubes.html#obtaining-time-series-data-from-data-cubes">Obtaining time series data from data cubes</a></li>
+<li class="has-sub"><a href="filtering-techniques-for-time-series.html#filtering-techniques-for-time-series">Filtering techniques for time series</a>
+<ul>
+<li><a href="filtering-techniques-for-time-series.html#savitzkygolay-filter">Savitzky–Golay filter</a></li>
+<li><a href="filtering-techniques-for-time-series.html#whittaker-filter">Whittaker filter</a></li>
+</ul></li>
+</ul></li>
+<li class="has-sub"><a href="4-improving-the-quality-of-training-samples.html#improving-the-quality-of-training-samples"><span class="toc-section-number">4</span> Improving the Quality of Training Samples</a>
+<ul>
+<li><a href="introduction.html#introduction">Introduction</a></li>
+<li><a href="hierachical-clustering-for-sample-quality-control.html#hierachical-clustering-for-sample-quality-control">Hierachical clustering for sample quality control</a></li>
+<li class="has-sub"><a href="using-self-organizing-maps-for-sample-quality-control.html#using-self-organizing-maps-for-sample-quality-control">Using self-organizing maps for sample quality control</a>
+<ul>
+<li><a href="using-self-organizing-maps-for-sample-quality-control.html#som-based-quality-assessment-creating-the-som-map">SOM-based quality assessment: creating the SOM map</a></li>
+<li><a href="using-self-organizing-maps-for-sample-quality-control.html#som-based-quality-assessment-measuring-confusion-between-labels">SOM-based quality assessment: measuring confusion between labels</a></li>
+<li><a href="using-self-organizing-maps-for-sample-quality-control.html#som-based-quality-assessment-part-3-using-probabilities-to-detect-noisy-samples">SOM-based quality assessment part 3: using probabilities to detect noisy samples</a></li>
+</ul></li>
+<li><a href="reducing-sample-imbalance.html#reducing-sample-imbalance">Reducing sample imbalance</a></li>
+<li><a href="conclusion.html#conclusion">Conclusion</a></li>
+</ul></li>
+<li class="has-sub"><a href="5-machine-learning-for-data-cubes-using-the-sits-package.html#machine-learning-for-data-cubes-using-the-sits-package"><span class="toc-section-number">5</span> Machine Learning for Data Cubes using the SITS package</a>
+<ul>
+<li><a href="machine-learning-classification.html#machine-learning-classification">Machine learning classification</a></li>
+<li><a href="visualizing-sample-patterns.html#visualizing-sample-patterns">Visualizing Sample Patterns</a></li>
+<li><a href="common-interface-to-machine-learning-and-deep-learning-models.html#common-interface-to-machine-learning-and-deep-learning-models">Common interface to machine learning and deep learning models</a></li>
+<li><a href="random-forests.html#random-forests">Random forests</a></li>
+<li><a href="support-vector-machines.html#support-vector-machines">Support Vector Machines</a></li>
+<li><a href="extreme-gradient-boosting.html#extreme-gradient-boosting">Extreme Gradient Boosting</a></li>
+<li><a href="deep-learning-using-multilayer-perceptrons.html#deep-learning-using-multilayer-perceptrons">Deep learning using multilayer perceptrons</a></li>
+<li><a href="temporal-convolutional-neural-network-tempcnn.html#temporal-convolutional-neural-network-tempcnn">Temporal Convolutional Neural Network (TempCNN)</a></li>
+<li><a href="residual-1d-cnn-networks-resnet.html#residual-1d-cnn-networks-resnet">Residual 1D CNN Networks (ResNet)</a></li>
+<li><a href="attention-based-models.html#attention-based-models">Attention-based models</a></li>
+<li><a href="model-tuning.html#model-tuning">Model tuning</a></li>
+<li><a href="considerations-on-model-choice.html#considerations-on-model-choice">Considerations on model choice</a></li>
+</ul></li>
+<li class="has-sub"><a href="classification-of-images-in-data-cubes-using-satellite-image-time-series.html#classification-of-images-in-data-cubes-using-satellite-image-time-series">Classification of Images in Data Cubes using Satellite Image Time Series</a>
+<ul>
+<li><a href="training-the-classification-model.html#training-the-classification-model">Training the classification model</a></li>
+<li><a href="building-the-data-cube.html#building-the-data-cube">Building the data cube</a></li>
+<li><a href="classification-using-parallel-processing.html#classification-using-parallel-processing">Classification using parallel processing</a></li>
+<li class="has-sub"><a href="post-classification-smoothing.html#post-classification-smoothing">Post-classification smoothing</a>
+<ul>
+<li><a href="post-classification-smoothing.html#bayesian-smoothing">Bayesian smoothing</a></li>
+</ul></li>
+<li class="has-sub"><a href="bilateral-smoothing.html#bilateral-smoothing">Bilateral smoothing</a>
+<ul>
+<li><a href="bilateral-smoothing.html#how-parallel-processing-works-in-sits"><span class="toc-section-number">5.0.1</span> How parallel processing works in <code class="unnumbered">sits</code></a></li>
+<li><a href="bilateral-smoothing.html#processing-time-estimates">Processing time estimates</a></li>
+</ul></li>
+</ul></li>
+<li class="has-sub"><a href="6-validation-and-accuracy-measurements-in-sits.html#validation-and-accuracy-measurements-in-sits"><span class="toc-section-number">6</span> Validation and accuracy measurements in SITS</a>
+<ul>
+<li><a href="6.1-case-study-used-in-this-chapter.html#case-study-used-in-this-chapter"><span class="toc-section-number">6.1</span> Case study used in this Chapter</a></li>
+<li><a href="6.2-validation-techniques.html#validation-techniques"><span class="toc-section-number">6.2</span> Validation techniques</a></li>
+<li><a href="6.3-comparing-different-machine-learning-methods-using-k-fold-validation.html#comparing-different-machine-learning-methods-using-k-fold-validation"><span class="toc-section-number">6.3</span> Comparing different machine learning methods using k-fold validation</a></li>
+<li class="has-sub"><a href="6.4-accuracy-assessment.html#accuracy-assessment"><span class="toc-section-number">6.4</span> Accuracy assessment</a>
+<ul>
+<li><a href="6.4-accuracy-assessment.html#time-series"><span class="toc-section-number">6.4.1</span> Time series</a></li>
+<li><a href="6.4-accuracy-assessment.html#classified-images"><span class="toc-section-number">6.4.2</span> Classified images</a></li>
+</ul></li>
+</ul></li>
+<li><a href="uncertainty-and-active-learning.html#uncertainty-and-active-learning">Uncertainty and active learning</a></li>
+<li class="has-sub"><a href="7-design-and-extensibility-considerations.html#design-and-extensibility-considerations"><span class="toc-section-number">7</span> Design and extensibility considerations</a>
+<ul>
+<li><a href="7.1-design-decisions.html#design-decisions"><span class="toc-section-number">7.1</span> Design decisions</a></li>
+</ul></li>
+<li class="has-sub"><a href="technical-annex.html#technical-annex">Technical Annex</a>
+<ul>
+<li class="has-sub"><a href="7.2-bayesian-smoothing-1.html#bayesian-smoothing-1"><span class="toc-section-number">7.2</span> Bayesian smoothing</a>
+<ul>
+<li><a href="7.2-bayesian-smoothing-1.html#derivation-of-bayesian-parameters-for-spatiotemporal-smoothing"><span class="toc-section-number">7.2.1</span> Derivation of bayesian parameters for spatiotemporal smoothing</a></li>
+</ul></li>
+<li><a href="7.3-bilateral-smoothing-1.html#bilateral-smoothing-1"><span class="toc-section-number">7.3</span> Bilateral smoothing</a></li>
+</ul></li>
+</ul>
+</div>
+</div>
+</div>
+<div class="row">
+<div class="col-sm-12">
+<div id="reducing-sample-imbalance" class="section level2 unnumbered">
+<h2>Reducing sample imbalance</h2>
+<p>Many training samples for Earth observation data analysis are imbalanced. This situation arises when the distribution of samples associated to each class is uneven. One example is the Cerrado data set used in this chapter. The three most frequent classes (“Dense Woodland”, “Savanna” and “Pasture”) include 53% of all samples, while the three least frequent classes (“Millet-Cotton”, “Silviculture”, and “Dunes”) comprise only 2.5% of the data set. Sample imbalance is an undesirable property of a training set. Since machine learning algorithms tend to be more accurate for classes with many samples. The instances belonging to the minority group are misclassified more often than those belonging to the majority group. Thus, reducing sample imbalance can have a positive effect on classification accuracy<span class="citation"><a href="#ref-Johnson2019" role="doc-biblioref">[21]</a></span>.</p>
+<p>The function <code>sits_reduce_imbalance()</code> deals with class imbalance; it oversamples minority classes and undersamples majority ones. Oversampling requires generation of synthetic samples. The package uses the SMOTE method that estimates new samples by considering the cluster formed by the nearest neighbors of each minority class. SMOTE takes two samples from this cluster and produces a new one by a random interpolation between them <span class="citation"><a href="#ref-Chawla2002" role="doc-biblioref">[22]</a></span>.</p>
+<p>To perform undersampling for the majority classes, <code>sits_reduce_imbalance()</code> builds a SOM map, based on the required number of samples to be selected. Each dimension of the SOM is set to <code>ceiling(sqrt(new_number_samples/4))</code> to allow a reasonable number of neurons to group similar samples. After calculating the SOM map, the algorithm extracts four samples per neuron to generate a reduced set of samples that approximates the variation of the original one.</p>
+<p>The <code>sits_reduce_imbalance()</code> algorithm has two parameters: <code>n_samples_over</code> and <code>n_samples_under</code>. The first parameter ensures that all classes with samples less than its value are oversampled. The second parameter controls undersampling; all classes with more samples than its value are undersampled. The following example shows the use of <code>sits_reduce_imbalance()</code> in the Cerrado data set used in this chapter. We generate a balanced data set where all classes have between 1000 and 1500 samples. We use <code>sits_som_evaluate_cluster()</code> to estimate the confusion between classes of the balanced data set.</p>
+<div class="sourceCode" id="cb60"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb60-1"><a href="reducing-sample-imbalance.html#cb60-1" aria-hidden="true" tabindex="-1"></a><span class="co"># reducing imbalances in the Cerrado data set</span></span>
+<span id="cb60-2"><a href="reducing-sample-imbalance.html#cb60-2" aria-hidden="true" tabindex="-1"></a>balanced_samples <span class="ot">&lt;-</span> <span class="fu">sits_reduce_imbalance</span>(</span>
+<span id="cb60-3"><a href="reducing-sample-imbalance.html#cb60-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">samples =</span> samples_cerrado_mod13q1_2bands,</span>
+<span id="cb60-4"><a href="reducing-sample-imbalance.html#cb60-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">n_samples_over =</span> <span class="dv">1000</span>,</span>
+<span id="cb60-5"><a href="reducing-sample-imbalance.html#cb60-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">n_samples_under =</span> <span class="dv">1500</span>,</span>
+<span id="cb60-6"><a href="reducing-sample-imbalance.html#cb60-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">multicores =</span> <span class="dv">4</span></span>
+<span id="cb60-7"><a href="reducing-sample-imbalance.html#cb60-7" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
+<div class="sourceCode" id="cb61"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb61-1"><a href="reducing-sample-imbalance.html#cb61-1" aria-hidden="true" tabindex="-1"></a><span class="co"># print the balanced samples</span></span>
+<span id="cb61-2"><a href="reducing-sample-imbalance.html#cb61-2" aria-hidden="true" tabindex="-1"></a><span class="co"># some classes have more than 1500 samples due to the SOM map</span></span>
+<span id="cb61-3"><a href="reducing-sample-imbalance.html#cb61-3" aria-hidden="true" tabindex="-1"></a><span class="co"># each class has betwen 10% and 6% of the full set</span></span>
+<span id="cb61-4"><a href="reducing-sample-imbalance.html#cb61-4" aria-hidden="true" tabindex="-1"></a><span class="fu">sits_labels_summary</span>(balanced_samples)</span></code></pre></div>
+<div class="kable-table">
+<table>
+<thead>
+<tr>
+<th style="text-align:left;">
+label
+</th>
+<th style="text-align:right;">
+count
+</th>
+<th style="text-align:right;">
+prop
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Dense_Woodland
+</td>
+<td style="text-align:right;">
+1600
+</td>
+<td style="text-align:right;">
+0.097
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Dunes
+</td>
+<td style="text-align:right;">
+1000
+</td>
+<td style="text-align:right;">
+0.060
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Fallow_Cotton
+</td>
+<td style="text-align:right;">
+1000
+</td>
+<td style="text-align:right;">
+0.060
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Millet_Cotton
+</td>
+<td style="text-align:right;">
+1000
+</td>
+<td style="text-align:right;">
+0.060
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Pasture
+</td>
+<td style="text-align:right;">
+1600
+</td>
+<td style="text-align:right;">
+0.097
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Rocky_Savanna
+</td>
+<td style="text-align:right;">
+1476
+</td>
+<td style="text-align:right;">
+0.089
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Savanna
+</td>
+<td style="text-align:right;">
+1600
+</td>
+<td style="text-align:right;">
+0.097
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Savanna_Parkland
+</td>
+<td style="text-align:right;">
+1584
+</td>
+<td style="text-align:right;">
+0.096
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Silviculture
+</td>
+<td style="text-align:right;">
+1000
+</td>
+<td style="text-align:right;">
+0.060
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Soy_Corn
+</td>
+<td style="text-align:right;">
+1584
+</td>
+<td style="text-align:right;">
+0.096
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Soy_Cotton
+</td>
+<td style="text-align:right;">
+1572
+</td>
+<td style="text-align:right;">
+0.095
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Soy_Fallow
+</td>
+<td style="text-align:right;">
+1524
+</td>
+<td style="text-align:right;">
+0.092
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sourceCode" id="cb62"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb62-1"><a href="reducing-sample-imbalance.html#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="co"># clustering time series using SOM</span></span>
+<span id="cb62-2"><a href="reducing-sample-imbalance.html#cb62-2" aria-hidden="true" tabindex="-1"></a>som_cluster_bal <span class="ot">&lt;-</span> <span class="fu">sits_som_map</span>(</span>
+<span id="cb62-3"><a href="reducing-sample-imbalance.html#cb62-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> balanced_samples,</span>
+<span id="cb62-4"><a href="reducing-sample-imbalance.html#cb62-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">grid_xdim =</span> <span class="dv">10</span>,</span>
+<span id="cb62-5"><a href="reducing-sample-imbalance.html#cb62-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">grid_ydim =</span> <span class="dv">10</span>,</span>
+<span id="cb62-6"><a href="reducing-sample-imbalance.html#cb62-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">alpha =</span> <span class="fl">1.0</span>,</span>
+<span id="cb62-7"><a href="reducing-sample-imbalance.html#cb62-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">distance =</span> <span class="st">&quot;euclidean&quot;</span>,</span>
+<span id="cb62-8"><a href="reducing-sample-imbalance.html#cb62-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">rlen =</span> <span class="dv">20</span></span>
+<span id="cb62-9"><a href="reducing-sample-imbalance.html#cb62-9" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
+<div class="sourceCode" id="cb63"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb63-1"><a href="reducing-sample-imbalance.html#cb63-1" aria-hidden="true" tabindex="-1"></a><span class="co"># produce a tibble with a summary of the mixed labels</span></span>
+<span id="cb63-2"><a href="reducing-sample-imbalance.html#cb63-2" aria-hidden="true" tabindex="-1"></a>som_eval <span class="ot">&lt;-</span> <span class="fu">sits_som_evaluate_cluster</span>(som_cluster_bal)</span></code></pre></div>
+<div class="sourceCode" id="cb64"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb64-1"><a href="reducing-sample-imbalance.html#cb64-1" aria-hidden="true" tabindex="-1"></a><span class="co"># show the result</span></span>
+<span id="cb64-2"><a href="reducing-sample-imbalance.html#cb64-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(som_eval)</span></code></pre></div>
+<div class="figure" style="text-align: center">
+<img src="sitsbook_files/figure-html/unnamed-chunk-62-1.png" alt="Confusion by cluster for the balanced data set" width="90%" />
+<p class="caption">
+Confusion by cluster for the balanced data set
+</p>
+</div>
+<p>As shown in the Figure, the balanced data set shows less confusion per class than the unbalanced one. In this case, many of the classes which were confused with other in the original confusion map are now better represented. Reducing class imbalance should be tried as an alternative to reducing the number of samples of the classes using SOM. In general, users should try to balance their training data for better performance.</p>
+</div>
+<h3>References</h3>
+<div id="refs" class="references csl-bib-body">
+<div id="ref-Johnson2019" class="csl-entry">
+<div class="csl-left-margin">[21] </div><div class="csl-right-inline">J. M. Johnson and T. M. Khoshgoftaar, <span>“Survey on deep learning with class imbalance,”</span> <em>Journal of Big Data</em>, vol. 6, no. 1, p. 27, 2019, doi: <a href="https://doi.org/10.1186/s40537-019-0192-5">10.1186/s40537-019-0192-5</a>.</div>
+</div>
+<div id="ref-Chawla2002" class="csl-entry">
+<div class="csl-left-margin">[22] </div><div class="csl-right-inline">N. V. Chawla, K. W. Bowyer, L. O. Hall, and W. P. Kegelmeyer, <span>“<span>SMOTE</span>: Synthetic minority over-sampling technique,”</span> <em>Journal of Artificial Intelligence Research</em>, vol. 16, no. 1, pp. 321–357, 2002.</div>
+</div>
+</div>
+<p style="text-align: center;">
+<a href="using-self-organizing-maps-for-sample-quality-control.html"><button class="btn btn-default">Previous</button></a>
+<a href="conclusion.html"><button class="btn btn-default">Next</button></a>
+</p>
+</div>
+</div>
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+$(document).ready(function () {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+});
+
+</script>
+
+</body>
+</html>

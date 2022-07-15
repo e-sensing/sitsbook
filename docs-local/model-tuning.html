@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="Model tuning | sits: Satellite Image Time Series Analysis on Earth Observation Data Cubes" />
+<meta property="og:type" content="book" />
+<meta property="og:image" content="/images/cover_sits_book.png" />
+<meta property="og:description" content="This book presents sits, an open-source R package for satellite image time series analysis. The package supports the application of machine learning techniques for classifying image time series obtained from Earth observation data cubes." />
+
+
+<meta name="author" content="Gilberto Camara" />
+<meta name="author" content="Rolf Simoes" />
+<meta name="author" content="Felipe Souza" />
+<meta name="author" content="Charlotte Peletier" />
+<meta name="author" content="Alber Sanchez" />
+<meta name="author" content="Pedro R. Andrade" />
+<meta name="author" content="Karine Ferreira" />
+<meta name="author" content="Gilberto Queiroz" />
+
+<meta name="date" content="2022-07-15" />
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  TeX: { equationNumbers: { autoNumber: "AMS" } }
+});
+</script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<meta name="description" content="This book presents sits, an open-source R package for satellite image time series analysis. The package supports the application of machine learning techniques for classifying image time series obtained from Earth observation data cubes.">
+
+<title>Model tuning | sits: Satellite Image Time Series Analysis on Earth Observation Data Cubes</title>
+
+<script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="libs/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
+<script src="libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="libs/navigation-1.1/tabsets.js"></script>
+<script src="libs/kePrint-0.0.1/kePrint.js"></script>
+<link href="libs/lightable-0.0.1/lightable.css" rel="stylesheet" />
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+
+
+<style type="text/css">
+/* Used with Pandoc 2.11+ new --citeproc when CSL is used */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}
+</style>
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+/* show arrow before summary tag as in bootstrap
+TODO: remove if boostrap in updated in html_document (rmarkdown#1485) */
+details > summary {
+  display: list-item;
+  cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container-fluid main-container">
+
+
+<div class="row">
+<div class="col-sm-12">
+<div id="TOC">
+<ul>
+<li class="has-sub"><a href="index.html#preface">Preface</a>
+<ul>
+<li><a href="who-this-book-is-for.html#who-this-book-is-for">Who this book is for</a></li>
+<li><a href="main-reference-for-sits.html#main-reference-for-sits">Main reference for sits</a></li>
+</ul></li>
+<li class="has-sub"><a href="setup.html#setup">Setup</a>
+<ul>
+<li><a href="support-for-gdal-and-proj.html#support-for-gdal-and-proj">Support for GDAL and PROJ</a></li>
+<li><a href="installing-the-sits-package.html#installing-the-sits-package">Installing the <code>sits</code> package</a></li>
+</ul></li>
+<li class="has-sub"><a href="acknowledgements.html#acknowledgements">Acknowledgements</a>
+<ul>
+<li><a href="funding-sources.html#funding-sources">Funding Sources</a></li>
+<li><a href="community-contributions.html#community-contributions">Community Contributions</a></li>
+<li><a href="reproducible-papers-used-in-building-sits.html#reproducible-papers-used-in-building-sits">Reproducible papers used in building sits</a></li>
+<li><a href="publications-using-sits.html#publications-using-sits">Publications using sits</a></li>
+</ul></li>
+<li class="has-sub"><a href="1-introduction-to-sits.html#introduction-to-sits"><span class="toc-section-number">1</span> Introduction to SITS</a>
+<ul>
+<li><a href="how-sits-works.html#how-sits-works">How <code>sits</code> works</a></li>
+<li><a href="creating-a-data-cube.html#creating-a-data-cube">Creating a Data Cube</a></li>
+<li><a href="the-time-series-table.html#the-time-series-table">The time series table</a></li>
+<li><a href="training-a-machine-learning-model.html#training-a-machine-learning-model">Training a machine learning model</a></li>
+<li><a href="data-cube-classification.html#data-cube-classification">Data cube classification</a></li>
+<li><a href="spatial-smoothing.html#spatial-smoothing">Spatial smoothing</a></li>
+<li><a href="labelling-a-probability-data-cube.html#labelling-a-probability-data-cube">Labelling a probability data cube</a></li>
+<li><a href="final-remarks.html#final-remarks">Final remarks</a></li>
+</ul></li>
+<li class="has-sub"><a href="2-earth-observation-data-cubes.html#earth-observation-data-cubes"><span class="toc-section-number">2</span> Earth observation data cubes</a>
+<ul>
+<li><a href="analysis-ready-data-image-collections.html#analysis-ready-data-image-collections">Analysis-ready data image collections</a></li>
+<li><a href="ard-image-collections-handled-by-sits.html#ard-image-collections-handled-by-sits">ARD image collections handled by sits</a></li>
+<li><a href="regular-image-data-cubes.html#regular-image-data-cubes">Regular image data cubes</a></li>
+<li><a href="creating-data-cubes.html#creating-data-cubes">Creating data cubes</a></li>
+<li><a href="assessing-amazon-web-services.html#assessing-amazon-web-services">Assessing Amazon Web Services</a></li>
+<li><a href="assessing-microsofts-planetary-computer.html#assessing-microsofts-planetary-computer">Assessing Microsoft’s Planetary Computer</a></li>
+<li><a href="assessing-digital-earth-africa.html#assessing-digital-earth-africa">Assessing Digital Earth Africa</a></li>
+<li><a href="assessing-the-brazil-data-cube.html#assessing-the-brazil-data-cube">Assessing the Brazil Data Cube</a></li>
+<li><a href="defining-a-data-cube-using-ard-local-files.html#defining-a-data-cube-using-ard-local-files">Defining a data cube using ARD local files</a></li>
+<li><a href="defining-a-data-cube-using-classified-images.html#defining-a-data-cube-using-classified-images">Defining a data cube using classified images</a></li>
+<li><a href="regularizing-data-cubes.html#regularizing-data-cubes">Regularizing data cubes</a></li>
+<li><a href="mathematical-operations-on-regular-data-cubes.html#mathematical-operations-on-regular-data-cubes">Mathematical operations on regular data cubes</a></li>
+</ul></li>
+<li class="has-sub"><a href="3-working-with-time-series.html#working-with-time-series"><span class="toc-section-number">3</span> Working with time series</a>
+<ul>
+<li><a href="data-structures-for-satellite-time-series.html#data-structures-for-satellite-time-series">Data structures for satellite time series</a></li>
+<li><a href="utilities-for-handling-time-series.html#utilities-for-handling-time-series">Utilities for handling time series</a></li>
+<li><a href="time-series-visualisation.html#time-series-visualisation">Time series visualisation</a></li>
+<li><a href="obtaining-time-series-data-from-data-cubes.html#obtaining-time-series-data-from-data-cubes">Obtaining time series data from data cubes</a></li>
+<li class="has-sub"><a href="filtering-techniques-for-time-series.html#filtering-techniques-for-time-series">Filtering techniques for time series</a>
+<ul>
+<li><a href="filtering-techniques-for-time-series.html#savitzkygolay-filter">Savitzky–Golay filter</a></li>
+<li><a href="filtering-techniques-for-time-series.html#whittaker-filter">Whittaker filter</a></li>
+</ul></li>
+</ul></li>
+<li class="has-sub"><a href="4-improving-the-quality-of-training-samples.html#improving-the-quality-of-training-samples"><span class="toc-section-number">4</span> Improving the Quality of Training Samples</a>
+<ul>
+<li><a href="introduction.html#introduction">Introduction</a></li>
+<li><a href="hierachical-clustering-for-sample-quality-control.html#hierachical-clustering-for-sample-quality-control">Hierachical clustering for sample quality control</a></li>
+<li class="has-sub"><a href="using-self-organizing-maps-for-sample-quality-control.html#using-self-organizing-maps-for-sample-quality-control">Using self-organizing maps for sample quality control</a>
+<ul>
+<li><a href="using-self-organizing-maps-for-sample-quality-control.html#som-based-quality-assessment-creating-the-som-map">SOM-based quality assessment: creating the SOM map</a></li>
+<li><a href="using-self-organizing-maps-for-sample-quality-control.html#som-based-quality-assessment-measuring-confusion-between-labels">SOM-based quality assessment: measuring confusion between labels</a></li>
+<li><a href="using-self-organizing-maps-for-sample-quality-control.html#som-based-quality-assessment-part-3-using-probabilities-to-detect-noisy-samples">SOM-based quality assessment part 3: using probabilities to detect noisy samples</a></li>
+</ul></li>
+<li><a href="reducing-sample-imbalance.html#reducing-sample-imbalance">Reducing sample imbalance</a></li>
+<li><a href="conclusion.html#conclusion">Conclusion</a></li>
+</ul></li>
+<li class="has-sub"><a href="5-machine-learning-for-data-cubes-using-the-sits-package.html#machine-learning-for-data-cubes-using-the-sits-package"><span class="toc-section-number">5</span> Machine Learning for Data Cubes using the SITS package</a>
+<ul>
+<li><a href="machine-learning-classification.html#machine-learning-classification">Machine learning classification</a></li>
+<li><a href="visualizing-sample-patterns.html#visualizing-sample-patterns">Visualizing Sample Patterns</a></li>
+<li><a href="common-interface-to-machine-learning-and-deep-learning-models.html#common-interface-to-machine-learning-and-deep-learning-models">Common interface to machine learning and deep learning models</a></li>
+<li><a href="random-forests.html#random-forests">Random forests</a></li>
+<li><a href="support-vector-machines.html#support-vector-machines">Support Vector Machines</a></li>
+<li><a href="extreme-gradient-boosting.html#extreme-gradient-boosting">Extreme Gradient Boosting</a></li>
+<li><a href="deep-learning-using-multilayer-perceptrons.html#deep-learning-using-multilayer-perceptrons">Deep learning using multilayer perceptrons</a></li>
+<li><a href="temporal-convolutional-neural-network-tempcnn.html#temporal-convolutional-neural-network-tempcnn">Temporal Convolutional Neural Network (TempCNN)</a></li>
+<li><a href="residual-1d-cnn-networks-resnet.html#residual-1d-cnn-networks-resnet">Residual 1D CNN Networks (ResNet)</a></li>
+<li><a href="attention-based-models.html#attention-based-models">Attention-based models</a></li>
+<li><a href="model-tuning.html#model-tuning">Model tuning</a></li>
+<li><a href="considerations-on-model-choice.html#considerations-on-model-choice">Considerations on model choice</a></li>
+</ul></li>
+<li class="has-sub"><a href="classification-of-images-in-data-cubes-using-satellite-image-time-series.html#classification-of-images-in-data-cubes-using-satellite-image-time-series">Classification of Images in Data Cubes using Satellite Image Time Series</a>
+<ul>
+<li><a href="training-the-classification-model.html#training-the-classification-model">Training the classification model</a></li>
+<li><a href="building-the-data-cube.html#building-the-data-cube">Building the data cube</a></li>
+<li><a href="classification-using-parallel-processing.html#classification-using-parallel-processing">Classification using parallel processing</a></li>
+<li class="has-sub"><a href="post-classification-smoothing.html#post-classification-smoothing">Post-classification smoothing</a>
+<ul>
+<li><a href="post-classification-smoothing.html#bayesian-smoothing">Bayesian smoothing</a></li>
+</ul></li>
+<li class="has-sub"><a href="bilateral-smoothing.html#bilateral-smoothing">Bilateral smoothing</a>
+<ul>
+<li><a href="bilateral-smoothing.html#how-parallel-processing-works-in-sits"><span class="toc-section-number">5.0.1</span> How parallel processing works in <code class="unnumbered">sits</code></a></li>
+<li><a href="bilateral-smoothing.html#processing-time-estimates">Processing time estimates</a></li>
+</ul></li>
+</ul></li>
+<li class="has-sub"><a href="6-validation-and-accuracy-measurements-in-sits.html#validation-and-accuracy-measurements-in-sits"><span class="toc-section-number">6</span> Validation and accuracy measurements in SITS</a>
+<ul>
+<li><a href="6.1-case-study-used-in-this-chapter.html#case-study-used-in-this-chapter"><span class="toc-section-number">6.1</span> Case study used in this Chapter</a></li>
+<li><a href="6.2-validation-techniques.html#validation-techniques"><span class="toc-section-number">6.2</span> Validation techniques</a></li>
+<li><a href="6.3-comparing-different-machine-learning-methods-using-k-fold-validation.html#comparing-different-machine-learning-methods-using-k-fold-validation"><span class="toc-section-number">6.3</span> Comparing different machine learning methods using k-fold validation</a></li>
+<li class="has-sub"><a href="6.4-accuracy-assessment.html#accuracy-assessment"><span class="toc-section-number">6.4</span> Accuracy assessment</a>
+<ul>
+<li><a href="6.4-accuracy-assessment.html#time-series"><span class="toc-section-number">6.4.1</span> Time series</a></li>
+<li><a href="6.4-accuracy-assessment.html#classified-images"><span class="toc-section-number">6.4.2</span> Classified images</a></li>
+</ul></li>
+</ul></li>
+<li><a href="uncertainty-and-active-learning.html#uncertainty-and-active-learning">Uncertainty and active learning</a></li>
+<li class="has-sub"><a href="7-design-and-extensibility-considerations.html#design-and-extensibility-considerations"><span class="toc-section-number">7</span> Design and extensibility considerations</a>
+<ul>
+<li><a href="7.1-design-decisions.html#design-decisions"><span class="toc-section-number">7.1</span> Design decisions</a></li>
+</ul></li>
+<li class="has-sub"><a href="technical-annex.html#technical-annex">Technical Annex</a>
+<ul>
+<li class="has-sub"><a href="7.2-bayesian-smoothing-1.html#bayesian-smoothing-1"><span class="toc-section-number">7.2</span> Bayesian smoothing</a>
+<ul>
+<li><a href="7.2-bayesian-smoothing-1.html#derivation-of-bayesian-parameters-for-spatiotemporal-smoothing"><span class="toc-section-number">7.2.1</span> Derivation of bayesian parameters for spatiotemporal smoothing</a></li>
+</ul></li>
+<li><a href="7.3-bilateral-smoothing-1.html#bilateral-smoothing-1"><span class="toc-section-number">7.3</span> Bilateral smoothing</a></li>
+</ul></li>
+</ul>
+</div>
+</div>
+</div>
+<div class="row">
+<div class="col-sm-12">
+<div id="model-tuning" class="section level2 unnumbered">
+<h2>Model tuning</h2>
+<p>Model tuning is an important step in machine learning classification, to enable a better fir of the method to the training data. Learning algorithms have a set of internal configuration called <em>hyperparameters</em>, which control the convergence of the algorithm and minimize the classification error. In practice, an unsuitable choice of hyperparameters can have a detrimental effect on the quality of the results.</p>
+<p>Deep learning algorithms try to find the optimal point that represents the best value of the prediction function that, given an input <span class="math inline">\(X\)</span> of data points, predicts the result <span class="math inline">\(Y\)</span>. In our case, <span class="math inline">\(X\)</span> is a multidimensional time series and <span class="math inline">\(Y\)</span> is a vector of probabilities for the possible output classes. For complex situations, the best prediction function is time consuming to estimate. For this reason, deep learning methods rely on gradient descent methods to speed up predictions and converge faster than an exhaustive search <span class="citation"><a href="#ref-Bengio2012" role="doc-biblioref">[55]</a></span>. All gradient descent methods use an optimization algorithm that is adjusted with hyperparameters such as the learning rate and regularization rate <span class="citation"><a href="#ref-Schmidt2021" role="doc-biblioref">[56]</a></span>. The learning rate controls the numerical step of the gradient descent function and the regularization rate controls model overfitting. Adjusting these values to an optimal setting requires the use of model tuning methods.</p>
+<p>To reduce the learning curve, <code>sits</code> provides default values for all machine learning and deep learning methods described above. These defaults ensure a reasonable baseline performance. More experienced users may want to refine model hyperparameters, especially for more complex models such as <code>sits_lighttae()</code> or <code>sits_tempcnn()</code>. To that end, the package provides the <code>sits_tuning()</code> function.</p>
+<p>The simplest approach to model tuning is would be to run a grid search; this involves defining a range for each hyperparameter and then testing all possible combinations. This approach leads to a combinational explosion and thus is not recommended. Instead, Bergstra and Bengio <span class="citation"><a href="#ref-Bergstra2012" role="doc-biblioref">[57]</a></span> propose to use randomly chosen trials. In their paper, the authors show that random trials are more efficient than grid search trials, allowing the selection of adequate hyperparameters at a fraction of the computational cost. The <code>sits_tuning()</code> function follows Bergstra and Bengio <span class="citation"><a href="#ref-Bergstra2012" role="doc-biblioref">[57]</a></span> and uses a random search on the chosen hyperparameters.</p>
+<p>Since gradient descent plays a key role in deep learning model fitting, developing optimizers is an important topic of research <span class="citation"><a href="#ref-Bottou2018" role="doc-biblioref">[58]</a></span>. A large number of optimizers have been proposed in the literature, and recent results are reviewed by Schmidt et al [Schmidt2021]. For general deep learning applications, the <em>Adam</em> optimizer <span class="citation"><a href="#ref-Kingma2017" role="doc-biblioref">[59]</a></span> provides a good baseline and reliable performance. For this reason, <em>Adam</em> is the default optimizer in the R <code>torch</code> package. However, experiments with image time series show that other optimizers may have better performance for the specific problem of land use classification. For this reason, the authors developed a separate R package, called <code>torchopt</code> that includes a number of recently proposed optimizers, including <em>Adamw</em> <span class="citation"><a href="#ref-Loshchilov2019" role="doc-biblioref">[60]</a></span>, <em>Madgrad</em> <span class="citation"><a href="#ref-Defazio2021" role="doc-biblioref">[61]</a></span> and <em>Yogi</em> <span class="citation"><a href="#ref-Zaheer2018" role="doc-biblioref">[62]</a></span>. Based on our experiments, we have selected <em>Adamw</em> as the default optimizer for deep learning methods. Using the <code>sits_tuning()</code> function allows testing these and other optimizers available in <code>torch</code> and <code>torch_opt</code> packages.</p>
+<p>The <code>sits_tuning()</code> function takes the following parameters:</p>
+<ol style="list-style-type: decimal">
+<li><code>samples</code> - Training data set to be used by the model.</li>
+<li><code>samples_validation</code> (optional) - If available, this data set contains time series to be used for validation. If missing, the next parameter will be used.</li>
+<li><code>validation_split</code> - If <code>samples_validation</code> is not used, this parameter defines the proportion of time series in the training data set to be used for validation (default is 20%).</li>
+<li><code>ml_method()</code> - Deep learning method (either <code>sits_mlp()</code>, <code>sits_tempcnn()</code>, <code>sits_resnet()</code>, <code>sits_tae()</code> or <code>sits_lighttae()</code>)</li>
+<li><code>params</code> - defines the optimizer and its hyperparameters by calling the <code>sits_tuning_hparams()</code> function, as shown in the example below.</li>
+<li><code>trials</code> - number of trials to run the random search.</li>
+<li><code>multicores</code> - number of cores to be used for the procedure.</li>
+<li><code>progress</code> - show progress bar?</li>
+</ol>
+<p>The <code>sits_tuning_hparams()</code> function inside <code>sits_tuning()</code> allows users to define optimizers and their hyperparameters including <code>lr</code> (learning rate), <code>eps</code> (controls numerical stability) and <code>weight_decay</code> (controls overfitting). The default values for <code>eps</code> and <code>weight_decay</code> in all <code>sits</code> deep learning functions are 1.0e-08 and 1.0e-06, respectively. The default <code>lr</code> for <code>sits_lighttae()</code> and <code>sits_tempcnn()</code> is 0.005, and for <code>sits_tae()</code> and <code>sits_resnet()</code> is 0.001. Users have different ways to randomize the hyperparameters, including: <code>choice()</code> (a list of options), <code>uniform</code> (a uniform distribution), <code>randint</code> (random integers from a uniform distribution), <code>normal(mean, sd)</code> (normal distribution), <code>beta(shape1, shape2)</code>(beta distribution). These options allow extensive combination of hyperparameters.</p>
+<p>In the example, the <code>sits_tuning()</code> function finds good hyperparameters to train the <code>sits_lighttae()</code> method for the Mato Grosso data set. It tests 100 combinations of learning rate and weight decay for the <em>Adamw</em> optimizer. To randomize the learning rate, it uses a beta distribution with parameters 0.35 and 10, which allows for variation between about 0.2 and 1.0e-00; for the weight decay, the beta distribution with parameters 0.1 and 2 generates values roughly between 1 and 1.0e-24.</p>
+<div class="sourceCode" id="cb80"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb80-1"><a href="model-tuning.html#cb80-1" aria-hidden="true" tabindex="-1"></a>tuned <span class="ot">&lt;-</span> <span class="fu">sits_tuning</span>(</span>
+<span id="cb80-2"><a href="model-tuning.html#cb80-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">samples =</span> samples_matogrosso_mod13q1,</span>
+<span id="cb80-3"><a href="model-tuning.html#cb80-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">ml_method =</span> <span class="fu">sits_lighttae</span>(),</span>
+<span id="cb80-4"><a href="model-tuning.html#cb80-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">params =</span> <span class="fu">sits_tuning_hparams</span>(</span>
+<span id="cb80-5"><a href="model-tuning.html#cb80-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">optimizer =</span> torchopt<span class="sc">::</span>optim_adamw,</span>
+<span id="cb80-6"><a href="model-tuning.html#cb80-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">opt_hparams =</span> <span class="fu">list</span>(</span>
+<span id="cb80-7"><a href="model-tuning.html#cb80-7" aria-hidden="true" tabindex="-1"></a>      <span class="at">lr =</span> <span class="fu">beta</span>(<span class="fl">0.35</span>, <span class="dv">10</span>),</span>
+<span id="cb80-8"><a href="model-tuning.html#cb80-8" aria-hidden="true" tabindex="-1"></a>      <span class="at">weight_decay =</span> <span class="fu">beta</span>(<span class="fl">0.1</span>, <span class="dv">2</span>)</span>
+<span id="cb80-9"><a href="model-tuning.html#cb80-9" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb80-10"><a href="model-tuning.html#cb80-10" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb80-11"><a href="model-tuning.html#cb80-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">trials =</span> <span class="dv">100</span>,</span>
+<span id="cb80-12"><a href="model-tuning.html#cb80-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">multicores =</span> <span class="dv">6</span>,</span>
+<span id="cb80-13"><a href="model-tuning.html#cb80-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">progress =</span> <span class="cn">FALSE</span></span>
+<span id="cb80-14"><a href="model-tuning.html#cb80-14" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
+<p>The result is a tibble with different values of accuracy, kappa, decision matrix, and hyperparameters. The 10 best results obtain accuracy values between 0.976 and 0.958, as shown below. The best result is obtained by a learning rate of 0.0011 and an weight decay of 2.14e-05,</p>
+<div class="sourceCode" id="cb81"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb81-1"><a href="model-tuning.html#cb81-1" aria-hidden="true" tabindex="-1"></a><span class="co"># obtain accuracy, kappa, lr and weight decay for the 10 best results</span></span>
+<span id="cb81-2"><a href="model-tuning.html#cb81-2" aria-hidden="true" tabindex="-1"></a><span class="co"># hyperparameters are organized as a list</span></span>
+<span id="cb81-3"><a href="model-tuning.html#cb81-3" aria-hidden="true" tabindex="-1"></a>hparams_10 <span class="ot">&lt;-</span> tuned[<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>, ]<span class="sc">$</span>opt_hparams</span>
+<span id="cb81-4"><a href="model-tuning.html#cb81-4" aria-hidden="true" tabindex="-1"></a><span class="co"># extract learning rate and weight decay from the list</span></span>
+<span id="cb81-5"><a href="model-tuning.html#cb81-5" aria-hidden="true" tabindex="-1"></a>lr_10 <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_dbl</span>(hparams_10, <span class="cf">function</span>(h) h<span class="sc">$</span>lr)</span>
+<span id="cb81-6"><a href="model-tuning.html#cb81-6" aria-hidden="true" tabindex="-1"></a>wd_10 <span class="ot">&lt;-</span> purrr<span class="sc">::</span><span class="fu">map_dbl</span>(hparams_10, <span class="cf">function</span>(h) h<span class="sc">$</span>weight_decay)</span>
+<span id="cb81-7"><a href="model-tuning.html#cb81-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb81-8"><a href="model-tuning.html#cb81-8" aria-hidden="true" tabindex="-1"></a><span class="co"># create a tibble to display the results</span></span>
+<span id="cb81-9"><a href="model-tuning.html#cb81-9" aria-hidden="true" tabindex="-1"></a>best_10 <span class="ot">&lt;-</span> tibble<span class="sc">::</span><span class="fu">tibble</span>(</span>
+<span id="cb81-10"><a href="model-tuning.html#cb81-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">accuracy =</span> tuned[<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>, ]<span class="sc">$</span>accuracy,</span>
+<span id="cb81-11"><a href="model-tuning.html#cb81-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">kappa =</span> tuned[<span class="dv">1</span><span class="sc">:</span><span class="dv">10</span>, ]<span class="sc">$</span>kappa,</span>
+<span id="cb81-12"><a href="model-tuning.html#cb81-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">lr =</span> lr_10,</span>
+<span id="cb81-13"><a href="model-tuning.html#cb81-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">weight_decay =</span> wd_10</span>
+<span id="cb81-14"><a href="model-tuning.html#cb81-14" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb81-15"><a href="model-tuning.html#cb81-15" aria-hidden="true" tabindex="-1"></a><span class="co"># print the best combination of hyperparameters</span></span>
+<span id="cb81-16"><a href="model-tuning.html#cb81-16" aria-hidden="true" tabindex="-1"></a>best_10</span></code></pre></div>
+<div class="kable-table">
+<table>
+<thead>
+<tr>
+<th style="text-align:right;">
+accuracy
+</th>
+<th style="text-align:right;">
+kappa
+</th>
+<th style="text-align:right;">
+lr
+</th>
+<th style="text-align:right;">
+weight_decay
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right;">
+0.976
+</td>
+<td style="text-align:right;">
+0.972
+</td>
+<td style="text-align:right;">
+0.001
+</td>
+<td style="text-align:right;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+0.971
+</td>
+<td style="text-align:right;">
+0.965
+</td>
+<td style="text-align:right;">
+0.001
+</td>
+<td style="text-align:right;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+0.968
+</td>
+<td style="text-align:right;">
+0.962
+</td>
+<td style="text-align:right;">
+0.000
+</td>
+<td style="text-align:right;">
+0.027
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+0.966
+</td>
+<td style="text-align:right;">
+0.959
+</td>
+<td style="text-align:right;">
+0.000
+</td>
+<td style="text-align:right;">
+0.015
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+0.963
+</td>
+<td style="text-align:right;">
+0.956
+</td>
+<td style="text-align:right;">
+0.000
+</td>
+<td style="text-align:right;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+0.960
+</td>
+<td style="text-align:right;">
+0.953
+</td>
+<td style="text-align:right;">
+0.000
+</td>
+<td style="text-align:right;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+0.960
+</td>
+<td style="text-align:right;">
+0.953
+</td>
+<td style="text-align:right;">
+0.000
+</td>
+<td style="text-align:right;">
+0.003
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+0.958
+</td>
+<td style="text-align:right;">
+0.950
+</td>
+<td style="text-align:right;">
+0.001
+</td>
+<td style="text-align:right;">
+0.014
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+0.958
+</td>
+<td style="text-align:right;">
+0.949
+</td>
+<td style="text-align:right;">
+0.001
+</td>
+<td style="text-align:right;">
+0.000
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+0.958
+</td>
+<td style="text-align:right;">
+0.950
+</td>
+<td style="text-align:right;">
+0.000
+</td>
+<td style="text-align:right;">
+0.109
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>For large data sets, the tuning process is time consuming. Despite this cost, it is recommended for achieving the best performance. In general, tuning hyperparameters for models such as <code>sits_tempcnn()</code> and <code>sits_lighttae()</code> will result in a slight performance improvement over the default parameters on overall accuracy. The performance gain will be stronger in the less well represented classes, where significant gains in producer’s and user’s accuracies are possible. In cases where one wants to detect change in less frequent classes, tuning can make a difference in the results.</p>
+</div>
+<h3>References</h3>
+<div id="refs" class="references csl-bib-body">
+<div id="ref-Bengio2012" class="csl-entry">
+<div class="csl-left-margin">[55] </div><div class="csl-right-inline">Y. Bengio, <span>“Practical recommendations for gradient-based training of deep architectures,”</span> <em>arXiv:1206.5533 [cs]</em>, 2012.</div>
+</div>
+<div id="ref-Schmidt2021" class="csl-entry">
+<div class="csl-left-margin">[56] </div><div class="csl-right-inline">R. M. Schmidt, F. Schneider, and P. Hennig, <span>“Descending through a <span>Crowded Valley</span> - <span>Benchmarking Deep Learning Optimizers</span>,”</span> in <em>Proceedings of the 38th <span>International Conference</span> on <span>Machine Learning</span></em>, 2021, pp. 9367–9376.</div>
+</div>
+<div id="ref-Bergstra2012" class="csl-entry">
+<div class="csl-left-margin">[57] </div><div class="csl-right-inline">J. Bergstra and Y. Bengio, <span>“Random <span>Search</span> for <span>Hyper-Parameter Optimization</span>,”</span> <em>Journal of Machine Learning Research</em>, vol. 13, no. 10, pp. 281–305, 2012.</div>
+</div>
+<div id="ref-Bottou2018" class="csl-entry">
+<div class="csl-left-margin">[58] </div><div class="csl-right-inline">L. Bottou, F. E. Curtis, and J. Nocedal, <span>“Optimization <span>Methods</span> for <span>Large-Scale Machine Learning</span>,”</span> <em>SIAM Review</em>, vol. 60, no. 2, pp. 223–311, 2018, doi: <a href="https://doi.org/10.1137/16M1080173">10.1137/16M1080173</a>.</div>
+</div>
+<div id="ref-Kingma2017" class="csl-entry">
+<div class="csl-left-margin">[59] </div><div class="csl-right-inline">D. P. Kingma and J. Ba, <span>“Adam: <span>A Method</span> for <span>Stochastic Optimization</span>.”</span> <span>arXiv</span>, 2017, doi: <a href="https://doi.org/10.48550/arXiv.1412.6980">10.48550/arXiv.1412.6980</a>.</div>
+</div>
+<div id="ref-Loshchilov2019" class="csl-entry">
+<div class="csl-left-margin">[60] </div><div class="csl-right-inline">I. Loshchilov and F. Hutter, <span>“Decoupled <span>Weight Decay Regularization</span>,”</span> <em>arXiv:1711.05101 [cs, math]</em>, 2019.</div>
+</div>
+<div id="ref-Defazio2021" class="csl-entry">
+<div class="csl-left-margin">[61] </div><div class="csl-right-inline">A. Defazio and S. Jelassi, <span>“Adaptivity without <span>Compromise</span>: <span>A Momentumized</span>, <span>Adaptive</span>, <span>Dual Averaged Gradient Method</span> for <span>Stochastic Optimization</span>.”</span> <span>arXiv</span>, 2021, doi: <a href="https://doi.org/10.48550/arXiv.2101.11075">10.48550/arXiv.2101.11075</a>.</div>
+</div>
+<div id="ref-Zaheer2018" class="csl-entry">
+<div class="csl-left-margin">[62] </div><div class="csl-right-inline">M. Zaheer, S. Reddi, D. Sachan, S. Kale, and S. Kumar, <span>“Adaptive <span>Methods</span> for <span>Nonconvex Optimization</span>,”</span> in <em>Advances in <span>Neural Information Processing Systems</span></em>, 2018, vol. 31.</div>
+</div>
+</div>
+<p style="text-align: center;">
+<a href="attention-based-models.html"><button class="btn btn-default">Previous</button></a>
+<a href="considerations-on-model-choice.html"><button class="btn btn-default">Next</button></a>
+</p>
+</div>
+</div>
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+$(document).ready(function () {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+});
+
+</script>
+
+</body>
+</html>

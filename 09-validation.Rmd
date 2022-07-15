@@ -1,17 +1,49 @@
-# Validation and accuracy measurements in SITS
+# Validation and accuracy measurements in SITS{-}
 
----
 
-This chapter presents the validation and accuracy measures available in the SITS package.
-
----
 
 ```{r, include = FALSE}
 source("common.R")
 dir.create("./tempdir/chp9")
 ```
 
-## Validation techniques
+## Case study used in this Chapter{-}
+
+To present a realistic example of how to do validation and accuracy assessment in`sits`, we present an example resulting from a large-scale classification of the Cerrado biome in Brazil using Landsat-8 images, described in the paper by Simoes et al.[@Simoes2021]. The Cerrado is covered by 51 Landsat-8 tiles available in the Brazil Data Cube (BDC). Each Landsat tile in the BDC covers a 3&deg; $\times$ 2&deg; grid in Albers equal area projection with an area of 73,920 km$^2$, and a size of 11,204 $\times$ 7324 pixels. The~one-year classification period ranges from September 2017 to August 2018, following the agricultural calendar. The~temporal interval is 16 days, resulting in 24 images per tile. We use seven spectral bands plus two vegetation indexes (NDVI and EVI) and the cloud cover information. The total input data size is about 8 TB. In the paper, a data set of 48,850 samples was used to train a convolutional neural network model using the TempCNN method. All available attributes in the BDC Landsat-8 data cube (two vegetation indices and seven spectral bands) were used for training and classification. 
+
+The training data set used for classification of the Cerrado biome is available in the package `sitsdata`, and can be accessed as follows.
+
+```{r}
+library(sitsdata)
+data("samples_cerrado_lc8")
+# show labels 
+sits_labels_summary(samples_cerrado_lc8)
+
+```
+Since the dataset is big and highly imbalanced, we will use only the indexes "NDVI", "EVI" and the short-wave infrared band "B7" to illustrate the validation techniques. We will also use the function `sits_reduce_imbalance()` to reduce the size and produce a more balanced sample dataset.
+
+```{r, tidy = "styler"}
+# select only NDVI, EVI and B7
+samples_cerrado_3bands <- sits_select(
+    data = samples_cerrado_lc8,
+    bands = c("NDVI", "EVI", "B7")
+)
+# join classes "Cerrado" and "Open Cerrado"
+# reduce imbalance in the data set
+# maximum number of samples per class will be 1500 
+# minimum number of samples per class will be 500
+samples_cerrado_3bands_bal <- sits_reduce_imbalance(
+    samples = samples_cerrado_3bands,
+    n_samples_over = 500,
+    n_samples_under = 1500,
+    multicores = 4
+)
+# show new sample distribution
+sits_labels_summary(samples_cerrado_3bands_bal)
+```
+
+
+## Validation techniques{-}
 
 Validation is a process undertaken on models to estimate some error associated with them, and hence has been used widely in different scientific disciplines. When we talk about validation, we are interested in estimating the prediction error associated to some model. For this purpose, we concentrate on the *cross-validation* approach, probably the most used validation technique [@Hastie2009].
 
@@ -21,84 +53,110 @@ Cross-validation uses part of the available samples to fit the classification mo
 
 A natural question that arises is: *how good is this estimation?* According to @Hastie2009, there is a bias-variance trade-off in choice of $k$. If $k$ is set to the number of samples, we obtain the so-called *leave-one-out* validation, the estimator gives a low bias for the true expected error, but produces a high variance expectation. This can be computational expensive as it requires the same number of fitting process as the number of samples. On the other hand, if we choose ${k=2}$, we get a high biased expected prediction error estimation that overestimates the true prediction error, but has a low variance. The recommended choices of $k$ are $5$ or $10$.
 
-`sits_kfold_validate()` gives support the k-fold validation in `sits`. The following code gives an example on how to proceed a k-fold cross-validation in the package. It perform a five-fold validation using SVM classification model as a default classifier. We can see in the output text the corresponding confusion matrix and the accuracy statistics (overall and by class).
+`sits_kfold_validate()` gives support the k-fold validation in `sits`. The following code gives an example on how to proceed a k-fold cross-validation in the package. It perform a five-fold validation using SVM classification model as a default classifier. We can see in the output text the corresponding confusion matrix and the accuracy statistics (overall and by class). In the examples below, we use multiprocessing to speed up the results.
 
-```{r}
+```{r, echo = FALSE}
+set.seed(290356)
+```
+
+
+```{r, tidy = "styler"}
 # perform a five fold validation for the "cerrado_2classes" data set
-# Random Forest machine learning method using default parameters
-val_rfor <- sits_kfold_validate(cerrado_2classes, 
-                                     folds = 5, 
-                                     ml_method = sits_rfor())
+# random forests machine learning method using default parameters
+val_rfor <- sits_kfold_validate(
+    samples = samples_cerrado_3bands_bal, 
+    folds = 5, 
+    ml_method = sits_rfor(),
+    multicores = 5
+)
 # print the validation statistics
 val_rfor
 ```
 
-## Comparing different machine learning methods using k-fold validation
+## Comparing different machine learning methods using k-fold validation{-}
 
-One useful function in SITS is the capacity to compare different validation methods and store them in an XLS file for further analysis. The following example shows how to do this, using the Mato Grosso data set. We take five models: random forests(`sits_rfor()`), support vector machines (`sits_svm()`), extreme gradient boosting (`sits_xgboost()`), multi-layer perceptron (`sits_mlp()`) and temporal convolutional neural network (`sits_tempcnn()`). For simplicity, we use the default parameters provided by sits. After computing the confusion matrix and the statistics for each model, we store the result in a list. When the calculation is finished, the function `sits_to_xlsx` writes all of the results in an Excel-compatible spreadsheet.
+One useful function in SITS is the capacity to compare different validation methods and store them in an XLS file for further analysis. The following example shows how to do this, using the Cerrado data set. We take the models: random forests(`sits_rfor()`), extreme gradient boosting (`sits_xgboost()`), temporal CNN (`sits_tempcnn()`), and lightweight temporal attention encoder (`sits_lighttae())`.  After computing the confusion matrix and the statistics for each model, we also store the result in a list. When the calculation is finished, the function `sits_to_xlsx` writes all of the results in an Excel-compatible spreadsheet. We also show the overall accuracy. 
 
 
-```{r, eval = FALSE}
-# Retrieve the set of samples for the Mato Grosso region (provided by EMBRAPA)
-data("samples_matogrosso_mod13q1")
+```{r, tidy = "styler", eval = FALSE}
+# Compare different models for the Cerrado data set
 # create a list to store the results
 results <- list()
-
-# SVM model
-conf_svm <- sits_kfold_validate(
-    samples_matogrosso_mod13q1,
-    ml_method = sits_svm())
-# Give a name to the SVM model
-conf_svm$name <- "svm"
-# store the result
-results[[length(results) + 1]] <- conf_svm
-
-# Random Forest
-conf_rfor <- sits_kfold_validate(
-    samples_matogrosso_mod13q1,
-    folds = 5,
-    multicores = 2,
-    ml_method = sits_rfor())
-# Give a name to the results 
-conf_rfor$name <- "rfor"
-# store the results in a list
-results[[length(results) + 1]] <- conf_rfor
+# Give a name to the results of the random forest model (see above)
+val_rfor$name <- "rfor"
+# store the rfor results in a list
+results[[length(results) + 1]] <- val_rfor
 
 ## Extreme Gradient Boosting
-conf_xgb <- sits_kfold_validate(
-    samples_matogrosso_mod13q1,
-    ml_method = sits_xgboost())
+val_xgb <- sits_kfold_validate(
+    samples = samples_cerrado_3bands_bal,
+    ml_method = sits_xgboost(),
+    folds = 5,
+    multicores = 5
+)
 
 # Give a name to the SVM model
-conf_xgb$name <- "xgboost"
+val_xgb$name <- "xgboost"
 # store the results in a list
-results[[length(results) + 1]] <- conf_xgb
-
-# Multi-layer perceptron
-conf_mlp <- sits_kfold_validate(
-    samples_matogrosso_mod13q1,
-    ml_method = sits_mlp())
-
-# Give a name to the SVM model
-conf_mlp$name <- "MLP"
-# store the results in a list
-results[[length(results) + 1]] <- conf_mlp
+results[[length(results) + 1]] <- val_xgb
 
 # Temporal CNN
-conf_tcnn <- sits_kfold_validate(
-    samples_matogrosso_mod13q1,
-    ml_method = sits_tempcnn())
+val_tcnn <- sits_kfold_validate(
+    samples = samples_cerrado_3bands_bal,
+    ml_method = sits_tempcnn(
+        optimizer = torchopt::optim_adamw,
+        opt_hparams = list(lr = 0.001)
+    ),
+    folds = 5,
+    multicores = 5
+)
 
-# Give a name to the SVM model
-conf_tcnn$name <- "TempCNN"
+# Give a name to the result
+val_tcnn$name <- "TempCNN"
 # store the results in a list
-results[[length(results) + 1]] <- conf_tcnn
+results[[length(results) + 1]] <- val_tcnn
 
-xlsx_file <- paste0(getwd(),"/model_comparison.xlsx")
+# Light TAE
+val_ltae <- sits_kfold_validate(
+    samples = samples_cerrado_3bands_bal,
+    ml_method = sits_lighttae(
+        optimizer = torchopt::optim_adamw,
+        opt_hparams = list(lr = 0.001)
+    ),
+    folds = 5,
+    multicores = 5
+)
+
+# Give a name to the result
+val_ltae$name <- "LightTAE"
+# store the results in a list
+results[[length(results) + 1]] <- val_ltae
+
 # Save to an XLS file
+xlsx_file <- paste0(getwd(),"/model_comparison.xlsx")
+
 sits_to_xlsx(results, file = xlsx_file)
 ```
-The resulting Excel file can be opened with R or using spreadsheet programs. The figure below shows a printout of what is read by Excel. As shown below, each sheet corresponds to the output of one model. For simplicity, we show only the result of TempCNN, that has an overall accuracy of 97% and is the best-performing model. 
+We now print the overall accuracy for each model.
+
+```{r, eval = FALSE, echo = TRUE}
+model_acc <- tibble::tibble(
+    "Random Forest" = val_rfor$overall[["Accuracy"]],
+    "XGBoost"       = val_xgb$overall[["Accuracy"]],
+    "TempCNN"       = val_tcnn$overall[["Accuracy"]],
+    "LightTAE"      = val_ltae$overall[["Accuracy"]]
+)
+options(digits = 3)
+model_acc
+```
+
+```{r, eval = TRUE, echo = FALSE}
+model_acc <- readRDS(file = "./etc/model_acc.rds")
+options(digits = 3)
+model_acc
+```
+
+The resulting Excel file can be opened with R or using spreadsheet programs. The figure below shows a printout of what is read by Excel. As shown below, each sheet corresponds to the output of one model. For simplicity, we show only the result of LightTAE, that has an overall accuracy of 97% and is the best-performing model. 
 
 ```{r, echo = FALSE, fig.align="center", out.width = "90%", out.height = "90%", fig.cap= "Result of 5-fold cross validation of Mato Grosso dataset using TempCNN"}
 

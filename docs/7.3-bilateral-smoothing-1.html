@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta property="og:title" content="7.3 Bilateral smoothing | sits: Satellite Image Time Series Analysis on Earth Observation Data Cubes" />
+<meta property="og:type" content="book" />
+<meta property="og:image" content="/images/cover_sits_book.png" />
+<meta property="og:description" content="This book presents sits, an open-source R package for satellite image time series analysis. The package supports the application of machine learning techniques for classifying image time series obtained from Earth observation data cubes." />
+
+
+<meta name="author" content="Gilberto Camara" />
+<meta name="author" content="Rolf Simoes" />
+<meta name="author" content="Felipe Souza" />
+<meta name="author" content="Charlotte Peletier" />
+<meta name="author" content="Alber Sanchez" />
+<meta name="author" content="Pedro R. Andrade" />
+<meta name="author" content="Karine Ferreira" />
+<meta name="author" content="Gilberto Queiroz" />
+
+<meta name="date" content="2022-07-15" />
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  TeX: { equationNumbers: { autoNumber: "AMS" } }
+});
+</script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<meta name="description" content="This book presents sits, an open-source R package for satellite image time series analysis. The package supports the application of machine learning techniques for classifying image time series obtained from Earth observation data cubes.">
+
+<title>7.3 Bilateral smoothing | sits: Satellite Image Time Series Analysis on Earth Observation Data Cubes</title>
+
+<script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="libs/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
+<script src="libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="libs/navigation-1.1/tabsets.js"></script>
+<script src="libs/kePrint-0.0.1/kePrint.js"></script>
+<link href="libs/lightable-0.0.1/lightable.css" rel="stylesheet" />
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+
+
+<style type="text/css">
+/* Used with Pandoc 2.11+ new --citeproc when CSL is used */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}
+</style>
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+/* show arrow before summary tag as in bootstrap
+TODO: remove if boostrap in updated in html_document (rmarkdown#1485) */
+details > summary {
+  display: list-item;
+  cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container-fluid main-container">
+
+
+<div class="row">
+<div class="col-sm-12">
+<div id="TOC">
+<ul>
+<li class="has-sub"><a href="index.html#preface">Preface</a>
+<ul>
+<li><a href="who-this-book-is-for.html#who-this-book-is-for">Who this book is for</a></li>
+<li><a href="main-reference-for-sits.html#main-reference-for-sits">Main reference for sits</a></li>
+</ul></li>
+<li class="has-sub"><a href="setup.html#setup">Setup</a>
+<ul>
+<li><a href="support-for-gdal-and-proj.html#support-for-gdal-and-proj">Support for GDAL and PROJ</a></li>
+<li><a href="installing-the-sits-package.html#installing-the-sits-package">Installing the <code>sits</code> package</a></li>
+</ul></li>
+<li class="has-sub"><a href="acknowledgements.html#acknowledgements">Acknowledgements</a>
+<ul>
+<li><a href="funding-sources.html#funding-sources">Funding Sources</a></li>
+<li><a href="community-contributions.html#community-contributions">Community Contributions</a></li>
+<li><a href="reproducible-papers-used-in-building-sits.html#reproducible-papers-used-in-building-sits">Reproducible papers used in building sits</a></li>
+<li><a href="publications-using-sits.html#publications-using-sits">Publications using sits</a></li>
+</ul></li>
+<li class="has-sub"><a href="1-introduction-to-sits.html#introduction-to-sits"><span class="toc-section-number">1</span> Introduction to SITS</a>
+<ul>
+<li><a href="how-sits-works.html#how-sits-works">How <code>sits</code> works</a></li>
+<li><a href="creating-a-data-cube.html#creating-a-data-cube">Creating a Data Cube</a></li>
+<li><a href="the-time-series-table.html#the-time-series-table">The time series table</a></li>
+<li><a href="training-a-machine-learning-model.html#training-a-machine-learning-model">Training a machine learning model</a></li>
+<li><a href="data-cube-classification.html#data-cube-classification">Data cube classification</a></li>
+<li><a href="spatial-smoothing.html#spatial-smoothing">Spatial smoothing</a></li>
+<li><a href="labelling-a-probability-data-cube.html#labelling-a-probability-data-cube">Labelling a probability data cube</a></li>
+<li><a href="final-remarks.html#final-remarks">Final remarks</a></li>
+</ul></li>
+<li class="has-sub"><a href="2-earth-observation-data-cubes.html#earth-observation-data-cubes"><span class="toc-section-number">2</span> Earth observation data cubes</a>
+<ul>
+<li><a href="analysis-ready-data-image-collections.html#analysis-ready-data-image-collections">Analysis-ready data image collections</a></li>
+<li><a href="ard-image-collections-handled-by-sits.html#ard-image-collections-handled-by-sits">ARD image collections handled by sits</a></li>
+<li><a href="regular-image-data-cubes.html#regular-image-data-cubes">Regular image data cubes</a></li>
+<li><a href="creating-data-cubes.html#creating-data-cubes">Creating data cubes</a></li>
+<li><a href="assessing-amazon-web-services.html#assessing-amazon-web-services">Assessing Amazon Web Services</a></li>
+<li><a href="assessing-microsofts-planetary-computer.html#assessing-microsofts-planetary-computer">Assessing Microsoft’s Planetary Computer</a></li>
+<li><a href="assessing-digital-earth-africa.html#assessing-digital-earth-africa">Assessing Digital Earth Africa</a></li>
+<li><a href="assessing-the-brazil-data-cube.html#assessing-the-brazil-data-cube">Assessing the Brazil Data Cube</a></li>
+<li><a href="defining-a-data-cube-using-ard-local-files.html#defining-a-data-cube-using-ard-local-files">Defining a data cube using ARD local files</a></li>
+<li><a href="defining-a-data-cube-using-classified-images.html#defining-a-data-cube-using-classified-images">Defining a data cube using classified images</a></li>
+<li><a href="regularizing-data-cubes.html#regularizing-data-cubes">Regularizing data cubes</a></li>
+<li><a href="mathematical-operations-on-regular-data-cubes.html#mathematical-operations-on-regular-data-cubes">Mathematical operations on regular data cubes</a></li>
+</ul></li>
+<li class="has-sub"><a href="3-working-with-time-series.html#working-with-time-series"><span class="toc-section-number">3</span> Working with time series</a>
+<ul>
+<li><a href="data-structures-for-satellite-time-series.html#data-structures-for-satellite-time-series">Data structures for satellite time series</a></li>
+<li><a href="utilities-for-handling-time-series.html#utilities-for-handling-time-series">Utilities for handling time series</a></li>
+<li><a href="time-series-visualisation.html#time-series-visualisation">Time series visualisation</a></li>
+<li><a href="obtaining-time-series-data-from-data-cubes.html#obtaining-time-series-data-from-data-cubes">Obtaining time series data from data cubes</a></li>
+<li class="has-sub"><a href="filtering-techniques-for-time-series.html#filtering-techniques-for-time-series">Filtering techniques for time series</a>
+<ul>
+<li><a href="filtering-techniques-for-time-series.html#savitzkygolay-filter">Savitzky–Golay filter</a></li>
+<li><a href="filtering-techniques-for-time-series.html#whittaker-filter">Whittaker filter</a></li>
+</ul></li>
+</ul></li>
+<li class="has-sub"><a href="4-improving-the-quality-of-training-samples.html#improving-the-quality-of-training-samples"><span class="toc-section-number">4</span> Improving the Quality of Training Samples</a>
+<ul>
+<li><a href="introduction.html#introduction">Introduction</a></li>
+<li><a href="hierachical-clustering-for-sample-quality-control.html#hierachical-clustering-for-sample-quality-control">Hierachical clustering for sample quality control</a></li>
+<li class="has-sub"><a href="using-self-organizing-maps-for-sample-quality-control.html#using-self-organizing-maps-for-sample-quality-control">Using self-organizing maps for sample quality control</a>
+<ul>
+<li><a href="using-self-organizing-maps-for-sample-quality-control.html#som-based-quality-assessment-creating-the-som-map">SOM-based quality assessment: creating the SOM map</a></li>
+<li><a href="using-self-organizing-maps-for-sample-quality-control.html#som-based-quality-assessment-measuring-confusion-between-labels">SOM-based quality assessment: measuring confusion between labels</a></li>
+<li><a href="using-self-organizing-maps-for-sample-quality-control.html#som-based-quality-assessment-part-3-using-probabilities-to-detect-noisy-samples">SOM-based quality assessment part 3: using probabilities to detect noisy samples</a></li>
+</ul></li>
+<li><a href="reducing-sample-imbalance.html#reducing-sample-imbalance">Reducing sample imbalance</a></li>
+<li><a href="conclusion.html#conclusion">Conclusion</a></li>
+</ul></li>
+<li class="has-sub"><a href="5-machine-learning-for-data-cubes-using-the-sits-package.html#machine-learning-for-data-cubes-using-the-sits-package"><span class="toc-section-number">5</span> Machine Learning for Data Cubes using the SITS package</a>
+<ul>
+<li><a href="machine-learning-classification.html#machine-learning-classification">Machine learning classification</a></li>
+<li><a href="visualizing-sample-patterns.html#visualizing-sample-patterns">Visualizing Sample Patterns</a></li>
+<li><a href="common-interface-to-machine-learning-and-deep-learning-models.html#common-interface-to-machine-learning-and-deep-learning-models">Common interface to machine learning and deep learning models</a></li>
+<li><a href="random-forests.html#random-forests">Random forests</a></li>
+<li><a href="support-vector-machines.html#support-vector-machines">Support Vector Machines</a></li>
+<li><a href="extreme-gradient-boosting.html#extreme-gradient-boosting">Extreme Gradient Boosting</a></li>
+<li><a href="deep-learning-using-multilayer-perceptrons.html#deep-learning-using-multilayer-perceptrons">Deep learning using multilayer perceptrons</a></li>
+<li><a href="temporal-convolutional-neural-network-tempcnn.html#temporal-convolutional-neural-network-tempcnn">Temporal Convolutional Neural Network (TempCNN)</a></li>
+<li><a href="residual-1d-cnn-networks-resnet.html#residual-1d-cnn-networks-resnet">Residual 1D CNN Networks (ResNet)</a></li>
+<li><a href="attention-based-models.html#attention-based-models">Attention-based models</a></li>
+<li><a href="model-tuning.html#model-tuning">Model tuning</a></li>
+<li><a href="considerations-on-model-choice.html#considerations-on-model-choice">Considerations on model choice</a></li>
+</ul></li>
+<li class="has-sub"><a href="classification-of-images-in-data-cubes-using-satellite-image-time-series.html#classification-of-images-in-data-cubes-using-satellite-image-time-series">Classification of Images in Data Cubes using Satellite Image Time Series</a>
+<ul>
+<li><a href="training-the-classification-model.html#training-the-classification-model">Training the classification model</a></li>
+<li><a href="building-the-data-cube.html#building-the-data-cube">Building the data cube</a></li>
+<li><a href="classification-using-parallel-processing.html#classification-using-parallel-processing">Classification using parallel processing</a></li>
+<li class="has-sub"><a href="post-classification-smoothing.html#post-classification-smoothing">Post-classification smoothing</a>
+<ul>
+<li><a href="post-classification-smoothing.html#bayesian-smoothing">Bayesian smoothing</a></li>
+</ul></li>
+<li class="has-sub"><a href="bilateral-smoothing.html#bilateral-smoothing">Bilateral smoothing</a>
+<ul>
+<li><a href="bilateral-smoothing.html#how-parallel-processing-works-in-sits"><span class="toc-section-number">5.0.1</span> How parallel processing works in <code class="unnumbered">sits</code></a></li>
+<li><a href="bilateral-smoothing.html#processing-time-estimates">Processing time estimates</a></li>
+</ul></li>
+</ul></li>
+<li class="has-sub"><a href="6-validation-and-accuracy-measurements-in-sits.html#validation-and-accuracy-measurements-in-sits"><span class="toc-section-number">6</span> Validation and accuracy measurements in SITS</a>
+<ul>
+<li><a href="6.1-case-study-used-in-this-chapter.html#case-study-used-in-this-chapter"><span class="toc-section-number">6.1</span> Case study used in this Chapter</a></li>
+<li><a href="6.2-validation-techniques.html#validation-techniques"><span class="toc-section-number">6.2</span> Validation techniques</a></li>
+<li><a href="6.3-comparing-different-machine-learning-methods-using-k-fold-validation.html#comparing-different-machine-learning-methods-using-k-fold-validation"><span class="toc-section-number">6.3</span> Comparing different machine learning methods using k-fold validation</a></li>
+<li class="has-sub"><a href="6.4-accuracy-assessment.html#accuracy-assessment"><span class="toc-section-number">6.4</span> Accuracy assessment</a>
+<ul>
+<li><a href="6.4-accuracy-assessment.html#time-series"><span class="toc-section-number">6.4.1</span> Time series</a></li>
+<li><a href="6.4-accuracy-assessment.html#classified-images"><span class="toc-section-number">6.4.2</span> Classified images</a></li>
+</ul></li>
+</ul></li>
+<li><a href="uncertainty-and-active-learning.html#uncertainty-and-active-learning">Uncertainty and active learning</a></li>
+<li class="has-sub"><a href="7-design-and-extensibility-considerations.html#design-and-extensibility-considerations"><span class="toc-section-number">7</span> Design and extensibility considerations</a>
+<ul>
+<li><a href="7.1-design-decisions.html#design-decisions"><span class="toc-section-number">7.1</span> Design decisions</a></li>
+</ul></li>
+<li class="has-sub"><a href="technical-annex.html#technical-annex">Technical Annex</a>
+<ul>
+<li class="has-sub"><a href="7.2-bayesian-smoothing-1.html#bayesian-smoothing-1"><span class="toc-section-number">7.2</span> Bayesian smoothing</a>
+<ul>
+<li><a href="7.2-bayesian-smoothing-1.html#derivation-of-bayesian-parameters-for-spatiotemporal-smoothing"><span class="toc-section-number">7.2.1</span> Derivation of bayesian parameters for spatiotemporal smoothing</a></li>
+</ul></li>
+<li><a href="7.3-bilateral-smoothing-1.html#bilateral-smoothing-1"><span class="toc-section-number">7.3</span> Bilateral smoothing</a></li>
+</ul></li>
+</ul>
+</div>
+</div>
+</div>
+<div class="row">
+<div class="col-sm-12">
+<div id="bilateral-smoothing-1" class="section level2" number="7.3">
+<h2><span class="header-section-number">7.3</span> Bilateral smoothing</h2>
+<p>Bilateral smoothing combines proximity (combining pixels which are close) and similarity (comparing the values of the pixels) <span class="citation"><a href="#ref-Tomasi1998" role="doc-biblioref">[65]</a></span>. If most of the pixels in a neighborhood have similar values, it is easy to identify outliers and noisy pixels. In contrast, there is a strong difference between the values of pixels in a if neighborhood, it is possible that the pixel is located in a class boundary. Bilateral filtering combines domain filtering with range filtering. In domain filtering, the weights used to combine pixels decrease with distance. In range filtering, the weights are computed considering value similarity.</p>
+<p>The combination of domain and range filtering is mathematically expressed as:</p>
+<p><span class="math display">\[
+S(x_i) = \frac{1}{W_{i}} \sum_{x_k \in \theta} I(x_k)\mathcal{N}_{\tau}(\|I(x_k) - I(x_i)\|)\mathcal{N}_{\sigma}(\|x_k - x_i\|),
+\]</span>
+where</p>
+<ul>
+<li><span class="math inline">\(S(x_i)\)</span> is the smoothed value of pixel <span class="math inline">\(i\)</span>;</li>
+<li><span class="math inline">\(I\)</span> is the original probability image to be filtered;</li>
+<li><span class="math inline">\(I(x_i)\)</span> is the value of pixel <span class="math inline">\(i\)</span>;</li>
+<li><span class="math inline">\(\theta\)</span> is the neighborhood centered in <span class="math inline">\(x_i\)</span>;</li>
+<li><span class="math inline">\(x_k\)</span> is a pixel <span class="math inline">\(k\)</span> which belongs to neighborhood <span class="math inline">\(\theta\)</span>;</li>
+<li><span class="math inline">\(I(x_k)\)</span> is the value of a pixel <span class="math inline">\(k\)</span> in the neighborhood of pixel <span class="math inline">\(i\)</span>;</li>
+<li><span class="math inline">\(\|I(x_k) - I(x_i)\|\)</span> is the absolute difference between the values of the pixel <span class="math inline">\(k\)</span> and pixel <span class="math inline">\(i\)</span>;</li>
+<li><span class="math inline">\(\|x_k - x_i\|\)</span> is the distance between pixel <span class="math inline">\(k\)</span> and pixel <span class="math inline">\(i\)</span>;</li>
+<li><span class="math inline">\(\mathcal{N}_{\tau}\)</span> is the Gaussian range kernel for smoothing differences in intensities;</li>
+<li><span class="math inline">\(\mathcal{N}_{\sigma}\)</span>is the Gaussian spatial kernel for smoothing differences based on proximity.</li>
+<li><span class="math inline">\(\tau\)</span> is the variance of the Gaussian range kernel;</li>
+<li><span class="math inline">\(\sigma\)</span> is the variance of the Gaussian spatial kernel.</li>
+</ul>
+<p>The normalization term to be applied to compute the smoothed values of pixel <span class="math inline">\(i\)</span> is defined as</p>
+<p><span class="math display">\[
+W_{i} = \sum_{x_k \in \theta}{\mathcal{N}_{\tau}(\|I(x_k) - I(x_i)\|)\mathcal{N}_{\sigma}(\|x_k - x_i\|)}
+\]</span></p>
+
+<div id="refs" class="references csl-bib-body">
+<div class="csl-entry">
+<div class="csl-left-margin">[1] </div><div class="csl-right-inline">C. E. Woodcock, T. R. Loveland, M. Herold, and M. E. Bauer, <span>“Transitioning from change detection to monitoring with remote sensing: <span>A</span> paradigm shift,”</span> <em>Remote Sensing of Environment</em>, vol. 238, p. 111558, 2020, doi: <a href="https://doi.org/10.1016/j.rse.2019.111558">10.1016/j.rse.2019.111558</a>.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[2] </div><div class="csl-right-inline">M. Appel and E. Pebesma, <span>“On-<span>Demand Processing</span> of <span>Data Cubes</span> from <span>Satellite Image Collections</span> with the gdalcubes <span>Library</span>,”</span> <em>Data</em>, vol. 4, no. 3, pp. 1–16, 2019, doi: <a href="https://doi.org/10.3390/data4030092">10.3390/data4030092</a>.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[3] </div><div class="csl-right-inline">K. R. Ferreira <em>et al.</em>, <span>“Earth <span>Observation Data Cubes</span> for <span>Brazil</span>: <span>Requirements</span>, <span>Methodology</span> and <span>Products</span>,”</span> <em>Remote Sensing</em>, vol. 12, no. 24, p. 4033, 2020, doi: <a href="https://doi.org/10.3390/rs12244033">10.3390/rs12244033</a>.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[4] </div><div class="csl-right-inline">H. Wickham and G. Grolemund, <em>R for <span>Data Science</span>: <span>Import</span>, <span>Tidy</span>, <span>Transform</span>, <span>Visualize</span>, and <span>Model Data</span></em>. <span>O’Reilly Media, Inc.</span>, 2017.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[5] </div><div class="csl-right-inline">E. F. Lambin and M. Linderman, <span>“Time series of remote sensing data for land change science,”</span> <em>IEEE Transactions on Geoscience and Remote Sensing</em>, vol. 44, no. 7, pp. 1926–1928, 2006.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[6] </div><div class="csl-right-inline">P. M. Atkinson, C. Jeganathan, J. Dash, and C. Atzberger, <span>“Inter-comparison of four models for smoothing satellite sensor time-series data to estimate vegetation phenology,”</span> <em>Remote Sensing of Environment</em>, vol. 123, pp. 400–417, 2012.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[7] </div><div class="csl-right-inline">J. Zhou, L. Jia, M. Menenti, and B. Gorte, <span>“On the performance of remote sensing time series reconstruction methods: <span>A</span> spatial comparison,”</span> <em>Remote Sensing of Environment</em>, vol. 187, pp. 367–384, 2016.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[8] </div><div class="csl-right-inline">J. Chen, Per. Jönsson, M. Tamura, Z. Gu, B. Matsushita, and L. Eklundh, <span>“A simple method for reconstructing a high-quality <span>NDVI</span> time-series data set based on the <span>Savitzky</span> filter,”</span> <em>Remote Sensing of Environment</em>, vol. 91, no. 3, pp. 332–344, 2004, doi: <a href="https://doi.org/10.1016/j.rse.2004.03.014">10.1016/j.rse.2004.03.014</a>.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[9] </div><div class="csl-right-inline">C. Atzberger and P. H. Eilers, <span>“Evaluating the effectiveness of smoothing algorithms in the absence of ground reference measurements,”</span> <em>International Journal of Remote Sensing</em>, vol. 32, no. 13, pp. 3689–3709, 2011.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[10] </div><div class="csl-right-inline">A. E. Maxwell, T. A. Warner, and F. Fang, <span>“Implementation of machine-learning classification in remote sensing: An applied review,”</span> <em>International Journal of Remote Sensing</em>, vol. 39, no. 9, pp. 2784–2817, 2018.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[11] </div><div class="csl-right-inline">B. Frenay and M. Verleysen, <span>“Classification in the <span>Presence</span> of <span>Label Noise</span>: <span>A Survey</span>,”</span> <em>IEEE Transactions on Neural Networks and Learning Systems</em>, vol. 25, no. 5, pp. 845–869, 2014, doi: <a href="https://doi.org/10.1109/TNNLS.2013.2292894">10.1109/TNNLS.2013.2292894</a>.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[12] </div><div class="csl-right-inline">E. Keogh, J. Lin, and W. Truppel, <span>“Clustering of time series subsequences is meaningless: <span>Implications</span> for previous and future research,”</span> in <em>Data <span>Mining</span>, 2003. <span>ICDM</span> 2003. <span>Third IEEE International Conference</span> on</em>, 2003, pp. 115–122.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[13] </div><div class="csl-right-inline">F. Petitjean, J. Inglada, and P. Gancarski, <span>“Satellite <span>Image Time Series Analysis Under Time Warping</span>,”</span> <em>IEEE Transactions on Geoscience and Remote Sensing</em>, vol. 50, no. 8, pp. 3081–3095, 2012, doi: <a href="https://doi.org/10.1109/TGRS.2011.2179050">10.1109/TGRS.2011.2179050</a>.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[14] </div><div class="csl-right-inline">V. Maus, G. Camara, R. Cartaxo, A. Sanchez, F. M. Ramos, and G. R. Queiroz, <span>“A <span>Time-Weighted Dynamic Time Warping Method</span> for <span>Land-Use</span> and <span>Land-Cover Mapping</span>,”</span> <em>IEEE Journal of Selected Topics in Applied Earth Observations and Remote Sensing</em>, vol. 9, no. 8, pp. 3729–3739, 2016, doi: <a href="https://doi.org/10.1109/JSTARS.2016.2517118">10.1109/JSTARS.2016.2517118</a>.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[15] </div><div class="csl-right-inline">J. H. Ward, <span>“Hierarchical grouping to optimize an objective function,”</span> <em>Journal of the American statistical association</em>, vol. 58, no. 301, pp. 236–244, 1963.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[16] </div><div class="csl-right-inline">W. M. Rand, <span>“Objective <span>Criteria</span> for the <span>Evaluation</span> of <span>Clustering Methods</span>,”</span> <em>Journal of the American Statistical Association</em>, vol. 66, no. 336, pp. 846–850, 1971, doi: <a href="https://doi.org/10.1080/01621459.1971.10482356">10.1080/01621459.1971.10482356</a>.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[17] </div><div class="csl-right-inline">T. Kohonen, <span>“The self-organizing map,”</span> <em>Proceedings of the IEEE</em>, vol. 78, no. 9, pp. 1464–1480, 1990, doi: <a href="https://doi.org/10.1109/5.58325">10.1109/5.58325</a>.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[18] </div><div class="csl-right-inline">L. A. Santos, K. R. Ferreira, G. Camara, M. C. A. Picoli, and R. E. Simoes, <span>“Quality control and class noise reduction of satellite image time series,”</span> <em>ISPRS Journal of Photogrammetry and Remote Sensing</em>, vol. 177, pp. 75–88, 2021, doi: <a href="https://doi.org/10.1016/j.isprsjprs.2021.04.014">10.1016/j.isprsjprs.2021.04.014</a>.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[19] </div><div class="csl-right-inline">R. Wehrens and J. Kruisselbrink, <span>“Flexible <span>Self-Organizing Maps</span> in kohonen 3.0,”</span> <em>Journal of Statistical Software</em>, vol. 87, no. 1, pp. 1–18, 2018, doi: <a href="https://doi.org/10.18637/jss.v087.i07">10.18637/jss.v087.i07</a>.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[20] </div><div class="csl-right-inline">L. A. Santos, K. Ferreira, M. Picoli, G. Camara, R. Zurita-Milla, and E.-W. Augustijn, <span>“Identifying <span>Spatiotemporal Patterns</span> in <span>Land Use</span> and <span>Cover Samples</span> from <span>Satellite Image Time Series</span>,”</span> <em>Remote Sensing</em>, vol. 13, no. 5, p. 974, 2021, doi: <a href="https://doi.org/10.3390/rs13050974">10.3390/rs13050974</a>.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[21] </div><div class="csl-right-inline">J. M. Johnson and T. M. Khoshgoftaar, <span>“Survey on deep learning with class imbalance,”</span> <em>Journal of Big Data</em>, vol. 6, no. 1, p. 27, 2019, doi: <a href="https://doi.org/10.1186/s40537-019-0192-5">10.1186/s40537-019-0192-5</a>.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[22] </div><div class="csl-right-inline">N. V. Chawla, K. W. Bowyer, L. O. Hall, and W. P. Kegelmeyer, <span>“<span>SMOTE</span>: Synthetic minority over-sampling technique,”</span> <em>Journal of Artificial Intelligence Research</em>, vol. 16, no. 1, pp. 321–357, 2002.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[23] </div><div class="csl-right-inline">K. Janowicz, S. Scheider, T. Pehle, and G. Hart, <span>“Geospatial semantics and linked spatiotemporal data <span>Past</span>, present, and future,”</span> <em>Semantic Web</em>, vol. 3, no. 4, pp. 321–332, 2012, doi: <a href="https://doi.org/10.3233/SW-2012-0077">10.3233/SW-2012-0077</a>.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[24] </div><div class="csl-right-inline">I. Goodfellow, Y. Bengio, and A. Courville, <em>Deep <span>Learning</span></em>. <span>MIT Press</span>, 2016.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[25] </div><div class="csl-right-inline">M. Belgiu and L. Dragut, <span>“Random <span>Forest</span> in remote sensing: <span>A</span> review of applications and future directions,”</span> <em>ISPRS Journal of Photogrammetry and Remote Sensing</em>, vol. 114, pp. 24–31, 2016.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[26] </div><div class="csl-right-inline">G. Mountrakis, J. Im, and C. Ogole, <span>“Support vector machines in remote sensing: <span>A</span> review,”</span> <em>ISPRS Journal of Photogrammetry and Remote Sensing</em>, vol. 66, no. 3, pp. 247–259, 2011.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[27] </div><div class="csl-right-inline">T. Chen and C. Guestrin, <span>“<span>XGBoost</span>: <span>A Scalable Tree Boosting System</span>,”</span> in <em>Proceedings of the 22nd <span>ACM SIGKDD International Conference</span> on <span>Knowledge Discovery</span> and <span>Data Mining</span></em>, 2016, pp. 785–794, doi: <a href="https://doi.org/10.1145/2939672.2939785">10.1145/2939672.2939785</a>.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[28] </div><div class="csl-right-inline">L. Parente, E. Taquary, A. P. Silva, C. Souza, and L. Ferreira, <span>“Next <span>Generation Mapping</span>: <span>Combining Deep Learning</span>, <span>Cloud Computing</span>, and <span>Big Remote Sensing Data</span>,”</span> <em>Remote Sensing</em>, vol. 11, no. 23, p. 2881, 2019, doi: <a href="https://doi.org/10.3390/rs11232881">10.3390/rs11232881</a>.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[29] </div><div class="csl-right-inline">C. Pelletier, G. I. Webb, and F. Petitjean, <span>“Temporal <span>Convolutional Neural Network</span> for the <span>Classification</span> of <span>Satellite Image Time Series</span>,”</span> <em>Remote Sensing</em>, vol. 11, no. 5, 2019.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[30] </div><div class="csl-right-inline">H. Fawaz <em>et al.</em>, <span>“<span>InceptionTime</span>: <span>Finding AlexNet</span> for time series classification,”</span> <em>Data Mining and Knowledge Discovery</em>, vol. 34, no. 6, pp. 1936–1962, 2020, doi: <a href="https://doi.org/10.1007/s10618-020-00710-y">10.1007/s10618-020-00710-y</a>.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[31] </div><div class="csl-right-inline">V. Garnot, L. Landrieu, S. Giordano, and N. Chehata, <span>“Satellite <span>Image Time Series Classification With Pixel-Set Encoders</span> and <span>Temporal Self-Attention</span>,”</span> in <em>2020 <span>IEEE</span>/<span>CVF Conference</span> on <span>Computer Vision</span> and <span>Pattern Recognition</span> (<span>CVPR</span>)</em>, 2020, pp. 12322–12331, doi: <a href="https://doi.org/10.1109/CVPR42600.2020.01234">10.1109/CVPR42600.2020.01234</a>.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[32] </div><div class="csl-right-inline">M. Rußwurm, C. Pelletier, M. Zollner, S. Lefèvre, and M. Körner, <span>“<span>BreizhCrops</span>: <span>A Time Series Dataset</span> for <span>Crop Type Mapping</span>,”</span> 2020.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[33] </div><div class="csl-right-inline">M. Picoli <em>et al.</em>, <span>“Big earth observation time series analysis for monitoring <span>Brazilian</span> agriculture,”</span> <em>ISPRS journal of photogrammetry and remote sensing</em>, vol. 145, pp. 328–339, 2018, doi: <a href="https://doi.org/10.1016/j.isprsjprs.2018.08.007">10.1016/j.isprsjprs.2018.08.007</a>.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[34] </div><div class="csl-right-inline">M. C. A. Picoli <em>et al.</em>, <span>“<span>CBERS</span> data cube: A powerful technology for mapping and monitoring <span>Brazilian</span> biomes.”</span> in <em><span>ISPRS Annals</span> of the <span>Photogrammetry</span>, <span>Remote Sensing</span> and <span>Spatial Information Sciences</span></em>, 2020, vol. V–3–2020, pp. 533–539, doi: <a href="https://doi.org/10.5194/isprs-annals-V-3-2020-533-2020">10.5194/isprs-annals-V-3-2020-533-2020</a>.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[35] </div><div class="csl-right-inline">R. Simoes <em>et al.</em>, <span>“Land use and cover maps for <span>Mato Grosso State</span> in <span>Brazil</span> from 2001 to 2017,”</span> <em>Scientific Data</em>, vol. 7, no. 1, p. 34, 2020, doi: <a href="https://doi.org/10.1038/s41597-020-0371-4">10.1038/s41597-020-0371-4</a>.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[36] </div><div class="csl-right-inline">V. Maus, G. Câmara, M. Appel, and E. Pebesma, <span>“<span class="nocase">dtwSat</span>: <span>Time-Weighted Dynamic Time Warping</span> for <span>Satellite Image Time Series Analysis</span> in <span>R</span>,”</span> <em>Journal of Statistical Software</em>, vol. 88, no. 5, pp. 1–31, 2019, doi: <a href="https://doi.org/10.18637/jss.v088.i05">10.18637/jss.v088.i05</a>.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[37] </div><div class="csl-right-inline">G. James, D. Witten, T. Hastie, and R. Tibshirani, <em>An <span>Introduction</span> to <span>Statistical Learning</span>: With <span>Applications</span> in <span>R</span></em>. <span>New York, EUA</span>: <span>Springer</span>, 2013.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[38] </div><div class="csl-right-inline">J. S. Wright <em>et al.</em>, <span>“Rainforest-initiated wet season onset over the southern <span>Amazon</span>,”</span> <em>Proceedings of the National Academy of Sciences</em>, 2017, doi: <a href="https://doi.org/10.1073/pnas.1621516114">10.1073/pnas.1621516114</a>.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[39] </div><div class="csl-right-inline">T. Hastie, R. Tibshirani, and J. Friedman, <em>The <span>Elements</span> of <span>Statistical Learning</span>. <span>Data Mining</span>, <span>Inference</span>, and <span>Prediction</span></em>. <span>New York</span>: <span>Springer</span>, 2009.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[40] </div><div class="csl-right-inline">C. Cortes and V. Vapnik, <span>“Support-vector networks,”</span> <em>Machine learning</em>, vol. 20, no. 3, pp. 273–297, 1995.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[41] </div><div class="csl-right-inline">C.-C. Chang and C.-J. Lin, <span>“<span>LIBSVM</span>: A library for support vector machines,”</span> <em>ACM transactions on intelligent systems and technology (TIST)</em>, vol. 2, no. 3, p. 27, 2011.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[42] </div><div class="csl-right-inline">S. Ruder, <span>“An overview of gradient descent optimization algorithms,”</span> <em>CoRR</em>, vol. abs/1609.04747, 2016.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[43] </div><div class="csl-right-inline">N. Srivastava, G. Hinton, A. Krizhevsky, I. Sutskever, and R. Salakhutdinov, <span>“Dropout: <span>A</span> simple way to prevent neural networks from overfitting,”</span> <em>The Journal of Machine Learning Research</em>, vol. 15, no. 1, pp. 1929–1958, 2014.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[44] </div><div class="csl-right-inline">Z. Wang, W. Yan, and T. Oates, <span>“Time <span>Series Classification</span> from <span>Scratch</span> with <span>Deep Neural Networks</span>: <span>A Strong Baseline</span>,”</span> 2017.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[45] </div><div class="csl-right-inline">M. Rußwurm and M. Korner, <span>“Temporal vegetation modelling using long short-term memory networks for crop identification from medium-resolution multi-spectral satellite images,”</span> in <em>Proceedings of the <span>IEEE Conference</span> on <span>Computer Vision</span> and <span>Pattern Recognition Workshops</span></em>, 2017, pp. 11–19.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[46] </div><div class="csl-right-inline">M. Russwurm and M. Korner, <span>“Multi-temporal land cover classification with sequential recurrent encoders,”</span> <em>ISPRS International Journal of Geo-Information</em>, vol. 7, no. 4, p. 129, 2018.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[47] </div><div class="csl-right-inline">R. Simoes <em>et al.</em>, <span>“Satellite <span>Image Time Series Analysis</span> for <span>Big Earth Observation Data</span>,”</span> <em>Remote Sensing</em>, vol. 13, no. 13, p. 2428, 2021, doi: <a href="https://doi.org/10.3390/rs13132428">10.3390/rs13132428</a>.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[48] </div><div class="csl-right-inline">K. He, X. Zhang, S. Ren, and J. Sun, <span>“Deep <span>Residual Learning</span> for <span>Image Recognition</span>,”</span> in <em>2016 <span>IEEE Conference</span> on <span>Computer Vision</span> and <span>Pattern Recognition</span> (<span>CVPR</span>)</em>, 2016, pp. 770–778, doi: <a href="https://doi.org/10.1109/CVPR.2016.90">10.1109/CVPR.2016.90</a>.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[49] </div><div class="csl-right-inline">S. Hochreiter, <span>“The vanishing gradient problem during learning recurrent neural nets and problem solutions,”</span> <em>International Journal of Uncertainty, Fuzziness and Knowledge-Based Systems</em>, vol. 6, no. 2, pp. 107–116, 1998, doi: <a href="https://doi.org/10.1142/S0218488598000094">10.1142/S0218488598000094</a>.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[50] </div><div class="csl-right-inline">H. I. Fawaz, G. Forestier, J. Weber, L. Idoumghar, and P.-A. Muller, <span>“Deep learning for time series classification: A review,”</span> <em>Data Mining and Knowledge Discovery</em>, vol. 33, no. 4, pp. 917–963, 2019.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[51] </div><div class="csl-right-inline">A. Vaswani <em>et al.</em>, <span>“Attention is <span>All</span> you <span>Need</span>,”</span> in <em>Advances in <span>Neural Information Processing Systems</span></em>, 2017, vol. 30.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[52] </div><div class="csl-right-inline">J. Devlin, M.-W. Chang, K. Lee, and K. Toutanova, <span>“<span>BERT</span>: <span class="nocase">Pre-training</span> of <span>Deep Bidirectional Transformers</span> for <span>Language Understanding</span>.”</span> <span>arXiv</span>, 2019, doi: <a href="https://doi.org/10.48550/arXiv.1810.04805">10.48550/arXiv.1810.04805</a>.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[53] </div><div class="csl-right-inline">T. B. Brown <em>et al.</em>, <span>“Language <span>Models</span> are <span>Few-Shot Learners</span>.”</span> <span>arXiv</span>, 2020, doi: <a href="https://doi.org/10.48550/arXiv.2005.14165">10.48550/arXiv.2005.14165</a>.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[54] </div><div class="csl-right-inline">V. S. F. Garnot and L. Landrieu, <span>“Lightweight <span class="nocase">Temporal Self-attention</span> for <span>Classifying Satellite Images Time Series</span>,”</span> in <em>Advanced <span>Analytics</span> and <span>Learning</span> on <span>Temporal Data</span></em>, 2020, pp. 171–181, doi: <a href="https://doi.org/10.1007/978-3-030-65742-0_12">10.1007/978-3-030-65742-0_12</a>.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[55] </div><div class="csl-right-inline">Y. Bengio, <span>“Practical recommendations for gradient-based training of deep architectures,”</span> <em>arXiv:1206.5533 [cs]</em>, 2012.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[56] </div><div class="csl-right-inline">R. M. Schmidt, F. Schneider, and P. Hennig, <span>“Descending through a <span>Crowded Valley</span> - <span>Benchmarking Deep Learning Optimizers</span>,”</span> in <em>Proceedings of the 38th <span>International Conference</span> on <span>Machine Learning</span></em>, 2021, pp. 9367–9376.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[57] </div><div class="csl-right-inline">J. Bergstra and Y. Bengio, <span>“Random <span>Search</span> for <span>Hyper-Parameter Optimization</span>,”</span> <em>Journal of Machine Learning Research</em>, vol. 13, no. 10, pp. 281–305, 2012.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[58] </div><div class="csl-right-inline">L. Bottou, F. E. Curtis, and J. Nocedal, <span>“Optimization <span>Methods</span> for <span>Large-Scale Machine Learning</span>,”</span> <em>SIAM Review</em>, vol. 60, no. 2, pp. 223–311, 2018, doi: <a href="https://doi.org/10.1137/16M1080173">10.1137/16M1080173</a>.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[59] </div><div class="csl-right-inline">D. P. Kingma and J. Ba, <span>“Adam: <span>A Method</span> for <span>Stochastic Optimization</span>.”</span> <span>arXiv</span>, 2017, doi: <a href="https://doi.org/10.48550/arXiv.1412.6980">10.48550/arXiv.1412.6980</a>.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[60] </div><div class="csl-right-inline">I. Loshchilov and F. Hutter, <span>“Decoupled <span>Weight Decay Regularization</span>,”</span> <em>arXiv:1711.05101 [cs, math]</em>, 2019.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[61] </div><div class="csl-right-inline">A. Defazio and S. Jelassi, <span>“Adaptivity without <span>Compromise</span>: <span>A Momentumized</span>, <span>Adaptive</span>, <span>Dual Averaged Gradient Method</span> for <span>Stochastic Optimization</span>.”</span> <span>arXiv</span>, 2021, doi: <a href="https://doi.org/10.48550/arXiv.2101.11075">10.48550/arXiv.2101.11075</a>.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[62] </div><div class="csl-right-inline">M. Zaheer, S. Reddi, D. Sachan, S. Kale, and S. Kumar, <span>“Adaptive <span>Methods</span> for <span>Nonconvex Optimization</span>,”</span> in <em>Advances in <span>Neural Information Processing Systems</span></em>, 2018, vol. 31.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[63] </div><div class="csl-right-inline">X. Huang, Q. Lu, L. Zhang, and A. Plaza, <span>“New postprocessing methods for remote sensing image classification: <span>A</span> systematic study,”</span> <em>IEEE Transactions on Geoscience and Remote Sensing</em>, vol. 52, no. 11, pp. 7140–7159, 2014.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[64] </div><div class="csl-right-inline">K. Schindler, <span>“An overview and comparison of smooth labeling methods for land-cover classification,”</span> <em>IEEE transactions on geoscience and remote sensing</em>, vol. 50, no. 11, pp. 4534–4545, 2012.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[65] </div><div class="csl-right-inline">C. Tomasi and R. Manduchi, <span>“Bilateral filtering for gray and color images,”</span> in <em>Sixth <span>International Conference</span> on <span>Computer Vision</span> (<span>IEEE Cat</span>. <span>No</span>.<span>98CH36271</span>)</em>, 1998, pp. 839–846, doi: <a href="https://doi.org/10.1109/ICCV.1998.710815">10.1109/ICCV.1998.710815</a>.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[66] </div><div class="csl-right-inline">S. Paris, P. Kornprobst, J. Tumblin, and F. Durand, <span>“A gentle introduction to bilateral filtering and its applications,”</span> in <em><span>ACM SIGGRAPH</span> 2007 courses</em>, 2007, pp. 1–es, doi: <a href="https://doi.org/10.1145/1281500.1281602">10.1145/1281500.1281602</a>.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[67] </div><div class="csl-right-inline">A. D’Amour <em>et al.</em>, <span>“Underspecification <span>Presents Challenges</span> for <span>Credibility</span> in <span>Modern Machine Learning</span>,”</span> <em>arXiv:2011.03395 [cs, stat]</em>, 2020.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[68] </div><div class="csl-right-inline">A. M. J.-C. Wadoux, G. B. M. Heuvelink, S. de Bruin, and D. J. Brus, <span>“Spatial cross-validation is not the right way to evaluate map accuracy,”</span> <em>Ecological Modelling</em>, vol. 457, p. 109692, 2021, doi: <a href="https://doi.org/10.1016/j.ecolmodel.2021.109692">10.1016/j.ecolmodel.2021.109692</a>.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[69] </div><div class="csl-right-inline">P. Olofsson, G. M. Foody, S. V. Stehman, and C. E. Woodcock, <span>“Making better use of accuracy data in land change studies: <span>Estimating</span> accuracy and area and quantifying uncertainty using stratified estimation,”</span> <em>Remote Sensing of Environment</em>, vol. 129, pp. 122–131, 2013, doi: <a href="https://doi.org/10.1016/j.rse.2012.10.031">10.1016/j.rse.2012.10.031</a>.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[70] </div><div class="csl-right-inline">P. Olofsson, G. M. Foody, M. Herold, S. V. Stehman, C. E. Woodcock, and M. A. Wulder, <span>“Good practices for estimating area and assessing accuracy of land change,”</span> <em>Remote Sensing of Environment</em>, vol. 148, pp. 42–57, 2014.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[71] </div><div class="csl-right-inline">N. Gorelick, M. Hancher, M. Dixon, S. Ilyushchenko, D. Thau, and R. Moore, <span>“Google <span>Earth Engine</span>: <span class="nocase">Planetary-scale</span> geospatial analysis for everyone,”</span> <em>Remote Sensing of Environment</em>, vol. 202, pp. 18–27, 2017.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[72] </div><div class="csl-right-inline">A. Lewis <em>et al.</em>, <span>“The <span>Australian Geoscience Data Cube</span> <span>Foundations</span> and lessons learned,”</span> <em>Remote Sensing of Environment</em>, vol. 202, pp. 276–292, 2017, doi: <a href="https://doi.org/10.1016/j.rse.2017.03.015">10.1016/j.rse.2017.03.015</a>.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[73] </div><div class="csl-right-inline">M. Schramm <em>et al.</em>, <span>“The <span class="nocase">openEO API</span> the <span>Use</span> of <span>Earth Observation Cloud Services Using Virtual Data Cube Functionalities</span>,”</span> <em>Remote Sensing</em>, vol. 13, no. 6, p. 1125, 2021, doi: <a href="https://doi.org/10.3390/rs13061125">10.3390/rs13061125</a>.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[74] </div><div class="csl-right-inline">S. Ghemawat, H. Gobioff, and S.-T. Leung, <span>“The <span>Google</span> file system,”</span> in <em>Proceedings of the nineteenth <span>ACM</span> symposium on <span>Operating</span> systems principles</em>, 2003, pp. 29–43, doi: <a href="https://doi.org/10.1145/945445.945450">10.1145/945445.945450</a>.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[75] </div><div class="csl-right-inline">J. Dean and S. Ghemawat, <span>“<span>MapReduce</span>: Simplified data processing on large clusters,”</span> <em>Communications of the ACM</em>, vol. 51, no. 1, pp. 107–113, 2008, doi: <a href="https://doi.org/10.1145/1327452.1327492">10.1145/1327452.1327492</a>.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[76] </div><div class="csl-right-inline">M. Amani <em>et al.</em>, <span>“Google <span>Earth Engine Cloud Computing Platform</span> for <span>Remote Sensing Big Data Applications</span>: <span>A Comprehensive Review</span>,”</span> <em>IEEE Journal of Selected Topics in Applied Earth Observations and Remote Sensing</em>, vol. 13, pp. 5326–5350, 2020, doi: <a href="https://doi.org/10.1109/JSTARS.2020.3021052">10.1109/JSTARS.2020.3021052</a>.</div>
+</div>
+<div class="csl-entry">
+<div class="csl-left-margin">[77] </div><div class="csl-right-inline">G. Giuliani, B. Chatenoux, T. Piller, F. Moser, and P. Lacroix, <span>“Data <span>Cube</span> on <span>Demand</span> (<span>DCoD</span>): <span>Generating</span> an earth observation <span>Data Cube</span> anywhere in the world,”</span> <em>International Journal of Applied Earth Observation and Geoinformation</em>, vol. 87, p. 102035, 2020, doi: <a href="https://doi.org/10.1016/j.jag.2019.102035">10.1016/j.jag.2019.102035</a>.</div>
+</div>
+</div>
+</div>
+<!-- </div> -->
+<h3>References</h3>
+<div id="refs" class="references csl-bib-body">
+<div id="ref-Tomasi1998" class="csl-entry">
+<div class="csl-left-margin">[65] </div><div class="csl-right-inline">C. Tomasi and R. Manduchi, <span>“Bilateral filtering for gray and color images,”</span> in <em>Sixth <span>International Conference</span> on <span>Computer Vision</span> (<span>IEEE Cat</span>. <span>No</span>.<span>98CH36271</span>)</em>, 1998, pp. 839–846, doi: <a href="https://doi.org/10.1109/ICCV.1998.710815">10.1109/ICCV.1998.710815</a>.</div>
+</div>
+</div>
+<p style="text-align: center;">
+<a href="7.2-bayesian-smoothing-1.html"><button class="btn btn-default">Previous</button></a>
+</p>
+</div>
+</div>
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+$(document).ready(function () {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+});
+
+</script>
+
+</body>
+</html>
