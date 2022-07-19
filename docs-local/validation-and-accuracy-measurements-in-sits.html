@@ -87,6 +87,7 @@
 <li><a class="" href="uncertainty-and-active-learning.html">Uncertainty and active learning</a></li>
 <li><a class="" href="design-and-extensibility-considerations.html">Design and extensibility considerations</a></li>
 <li><a class="" href="technical-annex.html">Technical Annex</a></li>
+<li><a class="" href="references.html">References</a></li>
 </ul>
 
         <div class="book-extra">
@@ -100,363 +101,135 @@
 <div id="case-study-used-in-this-chapter" class="section level2 unnumbered">
 <h2>Case study used in this Chapter<a class="anchor" aria-label="anchor" href="#case-study-used-in-this-chapter"><i class="fas fa-link"></i></a>
 </h2>
-<p>To present a realistic example of how to do validation and accuracy assessment in<code>sits</code>, we present an example resulting from a large-scale classification of the Cerrado biome in Brazil using Landsat-8 images, described in the paper by Simoes et al.<span class="citation"><a href="technical-annex.html#ref-Simoes2021" role="doc-biblioref">[48]</a></span>. The Cerrado is covered by 51 Landsat-8 tiles available in the Brazil Data Cube (BDC). Each Landsat tile in the BDC covers a 3° <span class="math inline">\(\times\)</span> 2° grid in Albers equal area projection with an area of 73,920 km<span class="math inline">\(^2\)</span>, and a size of 11,204 <span class="math inline">\(\times\)</span> 7324 pixels. The~one-year classification period ranges from September 2017 to August 2018, following the agricultural calendar. The~temporal interval is 16 days, resulting in 24 images per tile. We use seven spectral bands plus two vegetation indexes (NDVI and EVI) and the cloud cover information. The total input data size is about 8 TB. In the paper, a data set of 48,850 samples was used to train a convolutional neural network model using the TempCNN method. All available attributes in the BDC Landsat-8 data cube (two vegetation indices and seven spectral bands) were used for training and classification.</p>
+<p>To present a realistic example of how to do validation and accuracy assessment in<code>sits</code>, we present an example resulting from a large-scale classification of the Cerrado biome in Brazil using Landsat-8 images, described in the paper by Simoes et al.<span class="citation"><a href="references.html#ref-Simoes2021" role="doc-biblioref">[48]</a></span>. The Cerrado is covered by 51 Landsat-8 tiles available in the Brazil Data Cube (BDC). Each Landsat tile in the BDC covers a 3° <span class="math inline">\(\times\)</span> 2° grid in Albers equal area projection with an area of 73,920 km<span class="math inline">\(^2\)</span>, and a size of 11,204 <span class="math inline">\(\times\)</span> 7324 pixels. The~one-year classification period ranges from September 2017 to August 2018, following the agricultural calendar. The~temporal interval is 16 days, resulting in 24 images per tile. We use seven spectral bands plus two vegetation indexes (NDVI and EVI) and the cloud cover information. The total input data size is about 8 TB. In the paper, a data set of 48,850 samples was used to train a convolutional neural network model using the TempCNN method. All available attributes in the BDC Landsat-8 data cube (two vegetation indices and seven spectral bands) were used for training and classification.</p>
 <p>The training data set used for classification of the Cerrado biome is available in the package <code>sitsdata</code>, and can be accessed as follows.</p>
-<div class="sourceCode" id="cb105"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/e-sensing/sitsdata/">sitsdata</a></span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html">data</a></span><span class="op">(</span><span class="st">"samples_cerrado_lc8"</span><span class="op">)</span></span>
-<span><span class="co"># show labels</span></span>
-<span><span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_labels_summary.html">sits_labels_summary</a></span><span class="op">(</span><span class="va">samples_cerrado_lc8</span><span class="op">)</span></span></code></pre></div>
-<div class="kable-table">
-<div class="inline-table"><table class="table table-sm">
-<thead><tr>
-<th style="text-align:left;">
-label
-</th>
-<th style="text-align:right;">
-count
-</th>
-<th style="text-align:right;">
-prop
-</th>
-</tr></thead>
-<tbody>
-<tr>
-<td style="text-align:left;">
-Annual_Crop
-</td>
-<td style="text-align:right;">
-6887
-</td>
-<td style="text-align:right;">
-0.141
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Cerradao
-</td>
-<td style="text-align:right;">
-4211
-</td>
-<td style="text-align:right;">
-0.086
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Cerrado
-</td>
-<td style="text-align:right;">
-16251
-</td>
-<td style="text-align:right;">
-0.333
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Nat_NonVeg
-</td>
-<td style="text-align:right;">
-38
-</td>
-<td style="text-align:right;">
-0.001
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Open_Cerrado
-</td>
-<td style="text-align:right;">
-5658
-</td>
-<td style="text-align:right;">
-0.116
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Pasture
-</td>
-<td style="text-align:right;">
-12894
-</td>
-<td style="text-align:right;">
-0.264
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Perennial_Crop
-</td>
-<td style="text-align:right;">
-68
-</td>
-<td style="text-align:right;">
-0.001
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Silviculture
-</td>
-<td style="text-align:right;">
-805
-</td>
-<td style="text-align:right;">
-0.016
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Sugarcane
-</td>
-<td style="text-align:right;">
-1775
-</td>
-<td style="text-align:right;">
-0.036
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Water
-</td>
-<td style="text-align:right;">
-263
-</td>
-<td style="text-align:right;">
-0.005
-</td>
-</tr>
-</tbody>
-</table></div>
-</div>
+<div class="sourceCode" id="cb108"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/e-sensing/sitsdata/">sitsdata</a></span><span class="op">)</span>
+<span class="fu"><a href="https://rdrr.io/r/utils/data.html">data</a></span><span class="op">(</span><span class="st">"samples_cerrado_lc8"</span><span class="op">)</span>
+<span class="co"># show labels</span>
+<span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_labels_summary.html">sits_labels_summary</a></span><span class="op">(</span><span class="va">samples_cerrado_lc8</span><span class="op">)</span></code></pre></div>
+<pre class="sourceCode"><code>#&gt; # A tibble: 10 × 3
+#&gt;    label          count     prop
+#&gt;    &lt;chr&gt;          &lt;int&gt;    &lt;dbl&gt;
+#&gt;  1 Annual_Crop     6887 0.141   
+#&gt;  2 Cerradao        4211 0.0862  
+#&gt;  3 Cerrado        16251 0.333   
+#&gt;  4 Nat_NonVeg        38 0.000778
+#&gt;  5 Open_Cerrado    5658 0.116   
+#&gt;  6 Pasture        12894 0.264   
+#&gt;  7 Perennial_Crop    68 0.00139 
+#&gt;  8 Silviculture     805 0.0165  
+#&gt;  9 Sugarcane       1775 0.0363  
+#&gt; 10 Water            263 0.00538</code></pre>
 <p>Since the dataset is big and highly imbalanced, we will use only the indexes “NDVI”, “EVI” and the short-wave infrared band “B7” to illustrate the validation techniques. We will also use the function <code><a href="https://rdrr.io/pkg/sits/man/sits_reduce_imbalance.html">sits_reduce_imbalance()</a></code> to reduce the size and produce a more balanced sample dataset.</p>
-<div class="sourceCode" id="cb106"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># select only NDVI, EVI and B7</span></span>
-<span><span class="va">samples_cerrado_3bands</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_select.html">sits_select</a></span><span class="op">(</span></span>
-<span>  data <span class="op">=</span> <span class="va">samples_cerrado_lc8</span>,</span>
-<span>  bands <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"NDVI"</span>, <span class="st">"EVI"</span>, <span class="st">"B7"</span><span class="op">)</span></span>
-<span><span class="op">)</span></span>
-<span><span class="co"># join classes "Cerrado" and "Open Cerrado"</span></span>
-<span><span class="co"># reduce imbalance in the data set</span></span>
-<span><span class="co"># maximum number of samples per class will be 1500</span></span>
-<span><span class="co"># minimum number of samples per class will be 500</span></span>
-<span><span class="va">samples_cerrado_3bands_bal</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_reduce_imbalance.html">sits_reduce_imbalance</a></span><span class="op">(</span></span>
-<span>  samples <span class="op">=</span> <span class="va">samples_cerrado_3bands</span>,</span>
-<span>  n_samples_over <span class="op">=</span> <span class="fl">500</span>,</span>
-<span>  n_samples_under <span class="op">=</span> <span class="fl">1500</span>,</span>
-<span>  multicores <span class="op">=</span> <span class="fl">4</span></span>
-<span><span class="op">)</span></span>
-<span><span class="co"># show new sample distribution</span></span>
-<span><span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_labels_summary.html">sits_labels_summary</a></span><span class="op">(</span><span class="va">samples_cerrado_3bands_bal</span><span class="op">)</span></span></code></pre></div>
-<div class="kable-table">
-<div class="inline-table"><table class="table table-sm">
-<thead><tr>
-<th style="text-align:left;">
-label
-</th>
-<th style="text-align:right;">
-count
-</th>
-<th style="text-align:right;">
-prop
-</th>
-</tr></thead>
-<tbody>
-<tr>
-<td style="text-align:left;">
-Annual_Crop
-</td>
-<td style="text-align:right;">
-1600
-</td>
-<td style="text-align:right;">
-0.136
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Cerradao
-</td>
-<td style="text-align:right;">
-1560
-</td>
-<td style="text-align:right;">
-0.132
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Cerrado
-</td>
-<td style="text-align:right;">
-1600
-</td>
-<td style="text-align:right;">
-0.136
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Nat_NonVeg
-</td>
-<td style="text-align:right;">
-500
-</td>
-<td style="text-align:right;">
-0.042
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Open_Cerrado
-</td>
-<td style="text-align:right;">
-1596
-</td>
-<td style="text-align:right;">
-0.135
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Pasture
-</td>
-<td style="text-align:right;">
-1600
-</td>
-<td style="text-align:right;">
-0.136
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Perennial_Crop
-</td>
-<td style="text-align:right;">
-500
-</td>
-<td style="text-align:right;">
-0.042
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Silviculture
-</td>
-<td style="text-align:right;">
-805
-</td>
-<td style="text-align:right;">
-0.068
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Sugarcane
-</td>
-<td style="text-align:right;">
-1536
-</td>
-<td style="text-align:right;">
-0.130
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Water
-</td>
-<td style="text-align:right;">
-500
-</td>
-<td style="text-align:right;">
-0.042
-</td>
-</tr>
-</tbody>
-</table></div>
-</div>
+<div class="sourceCode" id="cb110"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="co"># select only NDVI, EVI and B7</span>
+<span class="va">samples_cerrado_3bands</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_select.html">sits_select</a></span><span class="op">(</span>
+  data <span class="op">=</span> <span class="va">samples_cerrado_lc8</span>,
+  bands <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"NDVI"</span>, <span class="st">"EVI"</span>, <span class="st">"B7"</span><span class="op">)</span>
+<span class="op">)</span>
+<span class="co"># join classes "Cerrado" and "Open Cerrado"</span>
+<span class="co"># reduce imbalance in the data set</span>
+<span class="co"># maximum number of samples per class will be 1500</span>
+<span class="co"># minimum number of samples per class will be 500</span>
+<span class="va">samples_cerrado_3bands_bal</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_reduce_imbalance.html">sits_reduce_imbalance</a></span><span class="op">(</span>
+  samples <span class="op">=</span> <span class="va">samples_cerrado_3bands</span>,
+  n_samples_over <span class="op">=</span> <span class="fl">500</span>,
+  n_samples_under <span class="op">=</span> <span class="fl">1500</span>,
+  multicores <span class="op">=</span> <span class="fl">4</span>
+<span class="op">)</span>
+<span class="co"># show new sample distribution</span>
+<span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_labels_summary.html">sits_labels_summary</a></span><span class="op">(</span><span class="va">samples_cerrado_3bands_bal</span><span class="op">)</span></code></pre></div>
+<pre class="sourceCode"><code>#&gt; # A tibble: 10 × 3
+#&gt;    label          count   prop
+#&gt;    &lt;chr&gt;          &lt;int&gt;  &lt;dbl&gt;
+#&gt;  1 Annual_Crop     1600 0.135 
+#&gt;  2 Cerradao        1580 0.134 
+#&gt;  3 Cerrado         1600 0.135 
+#&gt;  4 Nat_NonVeg       500 0.0423
+#&gt;  5 Open_Cerrado    1600 0.135 
+#&gt;  6 Pasture         1600 0.135 
+#&gt;  7 Perennial_Crop   500 0.0423
+#&gt;  8 Silviculture     805 0.0681
+#&gt;  9 Sugarcane       1532 0.130 
+#&gt; 10 Water            500 0.0423</code></pre>
 </div>
 <div id="validation-techniques" class="section level2 unnumbered">
 <h2>Validation techniques<a class="anchor" aria-label="anchor" href="#validation-techniques"><i class="fas fa-link"></i></a>
 </h2>
-<p>Validation is a process undertaken on models to estimate some error associated with them, and hence has been used widely in different scientific disciplines. When we talk about validation, we are interested in estimating the prediction error associated to some model. For this purpose, we concentrate on the <em>cross-validation</em> approach, probably the most used validation technique <span class="citation"><a href="technical-annex.html#ref-Hastie2009" role="doc-biblioref">[39]</a></span>.</p>
-<p>Notice that validation techniques are not a replacement of accuracy measures, which are described below. Validation methods are based on the training samples. In general, these samples will be biased due to many factors. When working in large areas, it is hard to obtain random stratified samples which would cover the different variations in land cover associated to the ecosystems of the study area. In general, all machine learning methods are prone to underspecification <span class="citation"><a href="technical-annex.html#ref-DAmour2020" role="doc-biblioref">[68]</a></span>. Therefore, cross-validation should not be used as an accuracy measures, unless the samples have been carefully collected to represent the diversity of possible ocurrences of classes in the study area <span class="citation"><a href="technical-annex.html#ref-Wadoux2021" role="doc-biblioref">[69]</a></span>.</p>
+<p>Validation is a process undertaken on models to estimate some error associated with them, and hence has been used widely in different scientific disciplines. When we talk about validation, we are interested in estimating the prediction error associated to some model. For this purpose, we concentrate on the <em>cross-validation</em> approach, probably the most used validation technique <span class="citation"><a href="references.html#ref-Hastie2009" role="doc-biblioref">[39]</a></span>.</p>
+<p>Notice that validation techniques are not a replacement of accuracy measures, which are described below. Validation methods are based on the training samples. In general, these samples will be biased due to many factors. When working in large areas, it is hard to obtain random stratified samples which would cover the different variations in land cover associated to the ecosystems of the study area. In general, all machine learning methods are prone to underspecification <span class="citation"><a href="references.html#ref-DAmour2020" role="doc-biblioref">[68]</a></span>. Therefore, cross-validation should not be used as an accuracy measures, unless the samples have been carefully collected to represent the diversity of possible ocurrences of classes in the study area <span class="citation"><a href="references.html#ref-Wadoux2021" role="doc-biblioref">[69]</a></span>.</p>
 <p>Cross-validation uses part of the available samples to fit the classification model, and a different part to test it. The so-called <em>k-fold</em> validation, we split the data into <span class="math inline">\(k\)</span> partitions with approximately the same size and proceed by fitting the model and testing it <span class="math inline">\(k\)</span> times. At each step, we take one distinct partition for test and the remaining <span class="math inline">\({k-1}\)</span> for training the model, and calculate its prediction error for classifying the test partition. A simple average gives us an estimation of the expected prediction error.</p>
-<p>A natural question that arises is: <em>how good is this estimation?</em> According to <span class="citation"><a href="technical-annex.html#ref-Hastie2009" role="doc-biblioref">[39]</a></span>, there is a bias-variance trade-off in choice of <span class="math inline">\(k\)</span>. If <span class="math inline">\(k\)</span> is set to the number of samples, we obtain the so-called <em>leave-one-out</em> validation, the estimator gives a low bias for the true expected error, but produces a high variance expectation. This can be computational expensive as it requires the same number of fitting process as the number of samples. On the other hand, if we choose <span class="math inline">\({k=2}\)</span>, we get a high biased expected prediction error estimation that overestimates the true prediction error, but has a low variance. The recommended choices of <span class="math inline">\(k\)</span> are <span class="math inline">\(5\)</span> or <span class="math inline">\(10\)</span>.</p>
-<p><code><a href="https://rdrr.io/pkg/sits/man/sits_kfold_validate.html">sits_kfold_validate()</a></code> gives support the k-fold validation in <code>sits</code>. The following code gives an example on how to proceed a k-fold cross-validation in the package. It perform a five-fold validation using SVM classification model as a default classifier. We can see in the output text the corresponding confusion matrix and the accuracy statistics (overall and by class). In the examples below, we use multiprocessing to speed up the results.</p>
-<div class="sourceCode" id="cb107"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># perform a five fold validation for the "cerrado_2classes" data set</span></span>
-<span><span class="co"># random forests machine learning method using default parameters</span></span>
-<span><span class="va">val_rfor</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_kfold_validate.html">sits_kfold_validate</a></span><span class="op">(</span></span>
-<span>  samples <span class="op">=</span> <span class="va">samples_cerrado_3bands_bal</span>,</span>
-<span>  folds <span class="op">=</span> <span class="fl">5</span>,</span>
-<span>  ml_method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_rfor.html">sits_rfor</a></span><span class="op">(</span><span class="op">)</span>,</span>
-<span>  multicores <span class="op">=</span> <span class="fl">5</span></span>
-<span><span class="op">)</span></span>
-<span><span class="co"># print the validation statistics</span></span>
-<span><span class="va">val_rfor</span></span></code></pre></div>
+<p>A natural question that arises is: <em>how good is this estimation?</em> According to <span class="citation"><a href="references.html#ref-Hastie2009" role="doc-biblioref">[39]</a></span>, there is a bias-variance trade-off in choice of <span class="math inline">\(k\)</span>. If <span class="math inline">\(k\)</span> is set to the number of samples, we obtain the so-called <em>leave-one-out</em> validation, the estimator gives a low bias for the true expected error, but produces a high variance expectation. This can be computational expensive as it requires the same number of fitting process as the number of samples. On the other hand, if we choose <span class="math inline">\({k=2}\)</span>, we get a high biased expected prediction error estimation that overestimates the true prediction error, but has a low variance. The recommended choices of <span class="math inline">\(k\)</span> are <span class="math inline">\(5\)</span> or <span class="math inline">\(10\)</span>.</p>
+<p><code><a href="https://rdrr.io/pkg/sits/man/sits_kfold_validate.html">sits_kfold_validate()</a></code> supports k-fold validation in <code>sits</code>. The following code does a five-fold validation using random forests. The result is the confusion matrix and the accuracy statistics (overall and by class). In the examples below, we use multiprocessing to speed up the results.</p>
+<div class="sourceCode" id="cb112"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="co"># perform a five fold validation for the "cerrado_2classes" data set</span>
+<span class="co"># random forests machine learning method using default parameters</span>
+<span class="va">val_rfor</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_kfold_validate.html">sits_kfold_validate</a></span><span class="op">(</span>
+  samples <span class="op">=</span> <span class="va">samples_cerrado_3bands_bal</span>,
+  folds <span class="op">=</span> <span class="fl">5</span>,
+  ml_method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_rfor.html">sits_rfor</a></span><span class="op">(</span><span class="op">)</span>,
+  multicores <span class="op">=</span> <span class="fl">5</span>
+<span class="op">)</span>
+<span class="co"># print the validation statistics</span>
+<span class="va">val_rfor</span></code></pre></div>
 <pre class="sourceCode"><code>#&gt; Confusion Matrix and Statistics
 #&gt; 
 #&gt;                 Reference
 #&gt; Prediction       Annual_Crop Cerradao Cerrado
-#&gt;   Annual_Crop           1433        2       4
-#&gt;   Cerradao                 7     1404     137
-#&gt;   Cerrado                 10       90    1125
-#&gt;   Open_Cerrado            14       11     205
-#&gt;   Pasture                 76        3     101
-#&gt;   Sugarcane               52        4      19
-#&gt;   Nat_NonVeg               3        0       0
-#&gt;   Perennial_Crop           2       13       8
+#&gt;   Annual_Crop           1433        1       5
+#&gt;   Cerradao                 5     1430     144
+#&gt;   Cerrado                 11       93    1115
+#&gt;   Open_Cerrado            17        8     195
+#&gt;   Pasture                 67        9     109
+#&gt;   Sugarcane               60        7      24
+#&gt;   Nat_NonVeg               1        0       1
+#&gt;   Perennial_Crop           3        6       5
 #&gt;   Water                    0        1       0
-#&gt;   Silviculture             3       32       1
+#&gt;   Silviculture             3       25       2
 #&gt;                 Reference
 #&gt; Prediction       Open_Cerrado Pasture Sugarcane
-#&gt;   Annual_Crop               8      55        39
-#&gt;   Cerradao                  1      13        11
-#&gt;   Cerrado                 152      95        20
-#&gt;   Open_Cerrado           1347      94        16
-#&gt;   Pasture                  69    1309        33
-#&gt;   Sugarcane                15      29      1409
-#&gt;   Nat_NonVeg                0       1         1
-#&gt;   Perennial_Crop            1       4         2
+#&gt;   Annual_Crop               5      47        51
+#&gt;   Cerradao                  6      11         7
+#&gt;   Cerrado                 161     104        29
+#&gt;   Open_Cerrado           1358      87         9
+#&gt;   Pasture                  51    1303        37
+#&gt;   Sugarcane                16      36      1393
+#&gt;   Nat_NonVeg                0       1         0
+#&gt;   Perennial_Crop            0       8         3
 #&gt;   Water                     2       0         0
-#&gt;   Silviculture              1       0         5
+#&gt;   Silviculture              1       3         3
 #&gt;                 Reference
 #&gt; Prediction       Nat_NonVeg Perennial_Crop Water
-#&gt;   Annual_Crop             0              0     0
-#&gt;   Cerradao                0             28     0
-#&gt;   Cerrado                 0             12     0
+#&gt;   Annual_Crop             1              0     0
+#&gt;   Cerradao                0             38     0
+#&gt;   Cerrado                 0             10     0
 #&gt;   Open_Cerrado            0              0     0
-#&gt;   Pasture                 0              7     0
-#&gt;   Sugarcane               2              0     0
-#&gt;   Nat_NonVeg            497              0     3
-#&gt;   Perennial_Crop          0            449     0
-#&gt;   Water                   1              0   497
-#&gt;   Silviculture            0              4     0
+#&gt;   Pasture                 0              9     0
+#&gt;   Sugarcane               2              1     1
+#&gt;   Nat_NonVeg            497              0     4
+#&gt;   Perennial_Crop          0            437     0
+#&gt;   Water                   0              0   495
+#&gt;   Silviculture            0              5     0
 #&gt;                 Reference
 #&gt; Prediction       Silviculture
-#&gt;   Annual_Crop               3
-#&gt;   Cerradao                111
-#&gt;   Cerrado                  61
-#&gt;   Open_Cerrado             20
-#&gt;   Pasture                  14
-#&gt;   Sugarcane                25
+#&gt;   Annual_Crop               2
+#&gt;   Cerradao                113
+#&gt;   Cerrado                  53
+#&gt;   Open_Cerrado             21
+#&gt;   Pasture                  13
+#&gt;   Sugarcane                29
 #&gt;   Nat_NonVeg                0
 #&gt;   Perennial_Crop            4
 #&gt;   Water                     0
-#&gt;   Silviculture            567
+#&gt;   Silviculture            570
 #&gt; 
 #&gt; Overall Statistics
 #&gt;                           
-#&gt;  Accuracy : 0.851         
-#&gt;    95% CI : (0.844, 0.857)
+#&gt;  Accuracy : 0.849         
+#&gt;    95% CI : (0.842, 0.855)
 #&gt;                           
-#&gt;     Kappa : 0.831         
+#&gt;     Kappa : 0.828         
 #&gt; 
 #&gt; Statistics by Class:
 #&gt; 
@@ -465,201 +238,172 @@ Water
 #&gt; Specificity                            0.989
 #&gt; User Acc (Pos Pred Value)              0.928
 #&gt; Neg Pred Value                         0.984
-#&gt; F1                                     0.912
+#&gt; F1                                     0.911
 #&gt;                           Class: Cerradao
-#&gt; Prod Acc (Sensitivity)              0.900
-#&gt; Specificity                         0.970
-#&gt; User Acc (Pos Pred Value)           0.820
+#&gt; Prod Acc (Sensitivity)              0.905
+#&gt; Specificity                         0.968
+#&gt; User Acc (Pos Pred Value)           0.815
 #&gt; Neg Pred Value                      0.985
 #&gt; F1                                  0.858
 #&gt;                           Class: Cerrado
-#&gt; Prod Acc (Sensitivity)             0.703
-#&gt; Specificity                        0.957
-#&gt; User Acc (Pos Pred Value)          0.719
-#&gt; Neg Pred Value                     0.954
-#&gt; F1                                 0.711
+#&gt; Prod Acc (Sensitivity)             0.697
+#&gt; Specificity                        0.955
+#&gt; User Acc (Pos Pred Value)          0.707
+#&gt; Neg Pred Value                     0.953
+#&gt; F1                                 0.702
 #&gt;                           Class: Open_Cerrado
-#&gt; Prod Acc (Sensitivity)                  0.844
-#&gt; Specificity                             0.965
-#&gt; User Acc (Pos Pred Value)               0.789
-#&gt; Neg Pred Value                          0.975
-#&gt; F1                                      0.816
+#&gt; Prod Acc (Sensitivity)                  0.849
+#&gt; Specificity                             0.967
+#&gt; User Acc (Pos Pred Value)               0.801
+#&gt; Neg Pred Value                          0.976
+#&gt; F1                                      0.824
 #&gt;                           Class: Pasture
-#&gt; Prod Acc (Sensitivity)             0.818
-#&gt; Specificity                        0.970
-#&gt; User Acc (Pos Pred Value)          0.812
+#&gt; Prod Acc (Sensitivity)             0.814
+#&gt; Specificity                        0.971
+#&gt; User Acc (Pos Pred Value)          0.815
 #&gt; Neg Pred Value                     0.971
 #&gt; F1                                 0.815
 #&gt;                           Class: Sugarcane
-#&gt; Prod Acc (Sensitivity)               0.917
-#&gt; Specificity                          0.986
-#&gt; User Acc (Pos Pred Value)            0.906
-#&gt; Neg Pred Value                       0.988
-#&gt; F1                                   0.912
+#&gt; Prod Acc (Sensitivity)               0.909
+#&gt; Specificity                          0.983
+#&gt; User Acc (Pos Pred Value)            0.888
+#&gt; Neg Pred Value                       0.986
+#&gt; F1                                   0.898
 #&gt;                           Class: Nat_NonVeg
 #&gt; Prod Acc (Sensitivity)                0.994
 #&gt; Specificity                           0.999
-#&gt; User Acc (Pos Pred Value)             0.984
+#&gt; User Acc (Pos Pred Value)             0.986
 #&gt; Neg Pred Value                        1.000
-#&gt; F1                                    0.989
+#&gt; F1                                    0.990
 #&gt;                           Class: Perennial_Crop
-#&gt; Prod Acc (Sensitivity)                    0.898
+#&gt; Prod Acc (Sensitivity)                    0.874
 #&gt; Specificity                               0.997
-#&gt; User Acc (Pos Pred Value)                 0.930
-#&gt; Neg Pred Value                            0.995
-#&gt; F1                                        0.914
+#&gt; User Acc (Pos Pred Value)                 0.938
+#&gt; Neg Pred Value                            0.994
+#&gt; F1                                        0.905
 #&gt;                           Class: Water
-#&gt; Prod Acc (Sensitivity)           0.994
+#&gt; Prod Acc (Sensitivity)           0.990
 #&gt; Specificity                      1.000
-#&gt; User Acc (Pos Pred Value)        0.992
+#&gt; User Acc (Pos Pred Value)        0.994
 #&gt; Neg Pred Value                   1.000
-#&gt; F1                               0.993
+#&gt; F1                               0.992
 #&gt;                           Class: Silviculture
-#&gt; Prod Acc (Sensitivity)                  0.704
+#&gt; Prod Acc (Sensitivity)                  0.708
 #&gt; Specificity                             0.996
-#&gt; User Acc (Pos Pred Value)               0.925
+#&gt; User Acc (Pos Pred Value)               0.931
 #&gt; Neg Pred Value                          0.979
-#&gt; F1                                      0.800</code></pre>
+#&gt; F1                                      0.805</code></pre>
 </div>
 <div id="comparing-different-machine-learning-methods-using-k-fold-validation" class="section level2 unnumbered">
 <h2>Comparing different machine learning methods using k-fold validation<a class="anchor" aria-label="anchor" href="#comparing-different-machine-learning-methods-using-k-fold-validation"><i class="fas fa-link"></i></a>
 </h2>
-<p>One useful function in SITS is the capacity to compare different validation methods and store them in an XLS file for further analysis. The following example shows how to do this, using the Cerrado data set. We take the models: random forests(<code><a href="https://rdrr.io/pkg/sits/man/sits_rfor.html">sits_rfor()</a></code>), extreme gradient boosting (<code><a href="https://rdrr.io/pkg/sits/man/sits_xgboost.html">sits_xgboost()</a></code>), temporal CNN (<code><a href="https://rdrr.io/pkg/sits/man/sits_tempcnn.html">sits_tempcnn()</a></code>), and lightweight temporal attention encoder (<code>sits_lighttae())</code>. After computing the confusion matrix and the statistics for each model, we also store the result in a list. When the calculation is finished, the function <code>sits_to_xlsx</code> writes all of the results in an Excel-compatible spreadsheet. We also show the overall accuracy.</p>
-<div class="sourceCode" id="cb109"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Compare different models for the Cerrado data set</span></span>
-<span><span class="co"># create a list to store the results</span></span>
-<span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co"># Give a name to the results of the random forest model (see above)</span></span>
-<span><span class="va">val_rfor</span><span class="op">$</span><span class="va">name</span> <span class="op">&lt;-</span> <span class="st">"rfor"</span></span>
-<span><span class="co"># store the rfor results in a list</span></span>
-<span><span class="va">results</span><span class="op">[[</span><span class="fu"><a href="https://rdrr.io/r/base/length.html">length</a></span><span class="op">(</span><span class="va">results</span><span class="op">)</span> <span class="op">+</span> <span class="fl">1</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">val_rfor</span></span>
-<span></span>
-<span><span class="co">## Extreme Gradient Boosting</span></span>
-<span><span class="va">val_xgb</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_kfold_validate.html">sits_kfold_validate</a></span><span class="op">(</span></span>
-<span>  samples <span class="op">=</span> <span class="va">samples_cerrado_3bands_bal</span>,</span>
-<span>  ml_method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_xgboost.html">sits_xgboost</a></span><span class="op">(</span><span class="op">)</span>,</span>
-<span>  folds <span class="op">=</span> <span class="fl">5</span>,</span>
-<span>  multicores <span class="op">=</span> <span class="fl">5</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Give a name to the SVM model</span></span>
-<span><span class="va">val_xgb</span><span class="op">$</span><span class="va">name</span> <span class="op">&lt;-</span> <span class="st">"xgboost"</span></span>
-<span><span class="co"># store the results in a list</span></span>
-<span><span class="va">results</span><span class="op">[[</span><span class="fu"><a href="https://rdrr.io/r/base/length.html">length</a></span><span class="op">(</span><span class="va">results</span><span class="op">)</span> <span class="op">+</span> <span class="fl">1</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">val_xgb</span></span>
-<span></span>
-<span><span class="co"># Temporal CNN</span></span>
-<span><span class="va">val_tcnn</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_kfold_validate.html">sits_kfold_validate</a></span><span class="op">(</span></span>
-<span>  samples <span class="op">=</span> <span class="va">samples_cerrado_3bands_bal</span>,</span>
-<span>  ml_method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_tempcnn.html">sits_tempcnn</a></span><span class="op">(</span></span>
-<span>    optimizer <span class="op">=</span> <span class="fu">torchopt</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/pkg/torchopt/man/optim_adamw.html">optim_adamw</a></span>,</span>
-<span>    opt_hparams <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>lr <span class="op">=</span> <span class="fl">0.001</span><span class="op">)</span></span>
-<span>  <span class="op">)</span>,</span>
-<span>  folds <span class="op">=</span> <span class="fl">5</span>,</span>
-<span>  multicores <span class="op">=</span> <span class="fl">5</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Give a name to the result</span></span>
-<span><span class="va">val_tcnn</span><span class="op">$</span><span class="va">name</span> <span class="op">&lt;-</span> <span class="st">"TempCNN"</span></span>
-<span><span class="co"># store the results in a list</span></span>
-<span><span class="va">results</span><span class="op">[[</span><span class="fu"><a href="https://rdrr.io/r/base/length.html">length</a></span><span class="op">(</span><span class="va">results</span><span class="op">)</span> <span class="op">+</span> <span class="fl">1</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">val_tcnn</span></span>
-<span></span>
-<span><span class="co"># Light TAE</span></span>
-<span><span class="va">val_ltae</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_kfold_validate.html">sits_kfold_validate</a></span><span class="op">(</span></span>
-<span>  samples <span class="op">=</span> <span class="va">samples_cerrado_3bands_bal</span>,</span>
-<span>  ml_method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_lighttae.html">sits_lighttae</a></span><span class="op">(</span></span>
-<span>    optimizer <span class="op">=</span> <span class="fu">torchopt</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/pkg/torchopt/man/optim_adamw.html">optim_adamw</a></span>,</span>
-<span>    opt_hparams <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>lr <span class="op">=</span> <span class="fl">0.001</span><span class="op">)</span></span>
-<span>  <span class="op">)</span>,</span>
-<span>  folds <span class="op">=</span> <span class="fl">5</span>,</span>
-<span>  multicores <span class="op">=</span> <span class="fl">5</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Give a name to the result</span></span>
-<span><span class="va">val_ltae</span><span class="op">$</span><span class="va">name</span> <span class="op">&lt;-</span> <span class="st">"LightTAE"</span></span>
-<span><span class="co"># store the results in a list</span></span>
-<span><span class="va">results</span><span class="op">[[</span><span class="fu"><a href="https://rdrr.io/r/base/length.html">length</a></span><span class="op">(</span><span class="va">results</span><span class="op">)</span> <span class="op">+</span> <span class="fl">1</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">val_ltae</span></span>
-<span></span>
-<span><span class="co"># Save to an XLS file</span></span>
-<span><span class="va">xlsx_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/getwd.html">getwd</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"/model_comparison.xlsx"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_to_xlsx.html">sits_to_xlsx</a></span><span class="op">(</span><span class="va">results</span>, file <span class="op">=</span> <span class="va">xlsx_file</span><span class="op">)</span></span></code></pre></div>
+<p>One useful function in SITS is the capacity to compare different validation methods and store them in an XLS file for further analysis. The following example shows how to do this, using the Cerrado data set. We take the models: random forests(<code><a href="https://rdrr.io/pkg/sits/man/sits_rfor.html">sits_rfor()</a></code>), extreme gradient boosting (<code><a href="https://rdrr.io/pkg/sits/man/sits_xgboost.html">sits_xgboost()</a></code>), temporal CNN (<code><a href="https://rdrr.io/pkg/sits/man/sits_tempcnn.html">sits_tempcnn()</a></code>), and lightweight temporal attention encoder (<code>sits_lighttae())</code>. After computing the confusion matrix and the statistics for each model, we also store the result in a list. When the calculation is finished, the function <code><a href="https://rdrr.io/pkg/sits/man/sits_to_xlsx.html">sits_to_xlsx()</a></code> writes all of the results in an Excel-compatible spreadsheet. We also show the overall accuracy.</p>
+<div class="sourceCode" id="cb114"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="co"># Compare different models for the Cerrado data set</span>
+<span class="co"># create a list to store the results</span>
+<span class="va">results</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span><span class="op">)</span>
+<span class="co"># Give a name to the results of the random forest model (see above)</span>
+<span class="va">val_rfor</span><span class="op">$</span><span class="va">name</span> <span class="op">&lt;-</span> <span class="st">"rfor"</span>
+<span class="co"># store the rfor results in a list</span>
+<span class="va">results</span><span class="op">[[</span><span class="fu"><a href="https://rdrr.io/r/base/length.html">length</a></span><span class="op">(</span><span class="va">results</span><span class="op">)</span> <span class="op">+</span> <span class="fl">1</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">val_rfor</span>
+
+<span class="co">## Extreme Gradient Boosting</span>
+<span class="va">val_xgb</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_kfold_validate.html">sits_kfold_validate</a></span><span class="op">(</span>
+  samples <span class="op">=</span> <span class="va">samples_cerrado_3bands_bal</span>,
+  ml_method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_xgboost.html">sits_xgboost</a></span><span class="op">(</span><span class="op">)</span>,
+  folds <span class="op">=</span> <span class="fl">5</span>,
+  multicores <span class="op">=</span> <span class="fl">5</span>
+<span class="op">)</span>
+
+<span class="co"># Give a name to the SVM model</span>
+<span class="va">val_xgb</span><span class="op">$</span><span class="va">name</span> <span class="op">&lt;-</span> <span class="st">"xgboost"</span>
+<span class="co"># store the results in a list</span>
+<span class="va">results</span><span class="op">[[</span><span class="fu"><a href="https://rdrr.io/r/base/length.html">length</a></span><span class="op">(</span><span class="va">results</span><span class="op">)</span> <span class="op">+</span> <span class="fl">1</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">val_xgb</span>
+
+<span class="co"># Temporal CNN</span>
+<span class="va">val_tcnn</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_kfold_validate.html">sits_kfold_validate</a></span><span class="op">(</span>
+  samples <span class="op">=</span> <span class="va">samples_cerrado_3bands_bal</span>,
+  ml_method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_tempcnn.html">sits_tempcnn</a></span><span class="op">(</span>
+    optimizer <span class="op">=</span> <span class="fu">torchopt</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/pkg/torchopt/man/optim_adamw.html">optim_adamw</a></span>,
+    opt_hparams <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>lr <span class="op">=</span> <span class="fl">0.001</span><span class="op">)</span>
+  <span class="op">)</span>,
+  folds <span class="op">=</span> <span class="fl">5</span>,
+  multicores <span class="op">=</span> <span class="fl">5</span>
+<span class="op">)</span>
+
+<span class="co"># Give a name to the result</span>
+<span class="va">val_tcnn</span><span class="op">$</span><span class="va">name</span> <span class="op">&lt;-</span> <span class="st">"TempCNN"</span>
+<span class="co"># store the results in a list</span>
+<span class="va">results</span><span class="op">[[</span><span class="fu"><a href="https://rdrr.io/r/base/length.html">length</a></span><span class="op">(</span><span class="va">results</span><span class="op">)</span> <span class="op">+</span> <span class="fl">1</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">val_tcnn</span>
+
+<span class="co"># Light TAE</span>
+<span class="va">val_ltae</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_kfold_validate.html">sits_kfold_validate</a></span><span class="op">(</span>
+  samples <span class="op">=</span> <span class="va">samples_cerrado_3bands_bal</span>,
+  ml_method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_lighttae.html">sits_lighttae</a></span><span class="op">(</span>
+    optimizer <span class="op">=</span> <span class="fu">torchopt</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/pkg/torchopt/man/optim_adamw.html">optim_adamw</a></span>,
+    opt_hparams <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>lr <span class="op">=</span> <span class="fl">0.001</span><span class="op">)</span>
+  <span class="op">)</span>,
+  folds <span class="op">=</span> <span class="fl">5</span>,
+  multicores <span class="op">=</span> <span class="fl">5</span>
+<span class="op">)</span>
+
+<span class="co"># Give a name to the result</span>
+<span class="va">val_ltae</span><span class="op">$</span><span class="va">name</span> <span class="op">&lt;-</span> <span class="st">"LightTAE"</span>
+<span class="co"># store the results in a list</span>
+<span class="va">results</span><span class="op">[[</span><span class="fu"><a href="https://rdrr.io/r/base/length.html">length</a></span><span class="op">(</span><span class="va">results</span><span class="op">)</span> <span class="op">+</span> <span class="fl">1</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">val_ltae</span>
+
+<span class="co"># Save to an XLS file</span>
+<span class="va">xlsx_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html">paste0</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/getwd.html">getwd</a></span><span class="op">(</span><span class="op">)</span>, <span class="st">"/model_comparison.xlsx"</span><span class="op">)</span>
+
+<span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_to_xlsx.html">sits_to_xlsx</a></span><span class="op">(</span><span class="va">results</span>, file <span class="op">=</span> <span class="va">xlsx_file</span><span class="op">)</span></code></pre></div>
 <p>We now print the overall accuracy for each model.</p>
-<div class="sourceCode" id="cb110"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">model_acc</span> <span class="op">&lt;-</span> <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/tibble.html">tibble</a></span><span class="op">(</span></span>
-<span>  <span class="st">"Random Forest"</span> <span class="op">=</span> <span class="va">val_rfor</span><span class="op">$</span><span class="va">overall</span><span class="op">[[</span><span class="st">"Accuracy"</span><span class="op">]</span><span class="op">]</span>,</span>
-<span>  <span class="st">"XGBoost"</span>       <span class="op">=</span> <span class="va">val_xgb</span><span class="op">$</span><span class="va">overall</span><span class="op">[[</span><span class="st">"Accuracy"</span><span class="op">]</span><span class="op">]</span>,</span>
-<span>  <span class="st">"TempCNN"</span>       <span class="op">=</span> <span class="va">val_tcnn</span><span class="op">$</span><span class="va">overall</span><span class="op">[[</span><span class="st">"Accuracy"</span><span class="op">]</span><span class="op">]</span>,</span>
-<span>  <span class="st">"LightTAE"</span>      <span class="op">=</span> <span class="va">val_ltae</span><span class="op">$</span><span class="va">overall</span><span class="op">[[</span><span class="st">"Accuracy"</span><span class="op">]</span><span class="op">]</span></span>
-<span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/options.html">options</a></span><span class="op">(</span>digits <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
-<span><span class="va">model_acc</span></span></code></pre></div>
-<div class="kable-table">
-<div class="inline-table"><table class="table table-sm">
-<thead><tr>
-<th style="text-align:right;">
-Random Forest
-</th>
-<th style="text-align:right;">
-XGBoost
-</th>
-<th style="text-align:right;">
-TempCNN
-</th>
-<th style="text-align:right;">
-LightTAE
-</th>
-</tr></thead>
-<tbody><tr>
-<td style="text-align:right;">
-0.855
-</td>
-<td style="text-align:right;">
-0.86
-</td>
-<td style="text-align:right;">
-0.861
-</td>
-<td style="text-align:right;">
-0.867
-</td>
-</tr></tbody>
-</table></div>
-</div>
+<div class="sourceCode" id="cb115"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">model_acc</span> <span class="op">&lt;-</span> <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/tibble.html">tibble</a></span><span class="op">(</span>
+  <span class="st">"Random Forest"</span> <span class="op">=</span> <span class="va">val_rfor</span><span class="op">$</span><span class="va">overall</span><span class="op">[[</span><span class="st">"Accuracy"</span><span class="op">]</span><span class="op">]</span>,
+  <span class="st">"XGBoost"</span>       <span class="op">=</span> <span class="va">val_xgb</span><span class="op">$</span><span class="va">overall</span><span class="op">[[</span><span class="st">"Accuracy"</span><span class="op">]</span><span class="op">]</span>,
+  <span class="st">"TempCNN"</span>       <span class="op">=</span> <span class="va">val_tcnn</span><span class="op">$</span><span class="va">overall</span><span class="op">[[</span><span class="st">"Accuracy"</span><span class="op">]</span><span class="op">]</span>,
+  <span class="st">"LightTAE"</span>      <span class="op">=</span> <span class="va">val_ltae</span><span class="op">$</span><span class="va">overall</span><span class="op">[[</span><span class="st">"Accuracy"</span><span class="op">]</span><span class="op">]</span>
+<span class="op">)</span>
+<span class="fu"><a href="https://rdrr.io/r/base/options.html">options</a></span><span class="op">(</span>digits <span class="op">=</span> <span class="fl">3</span><span class="op">)</span>
+<span class="va">model_acc</span></code></pre></div>
+<pre class="sourceCode"><code>#&gt; # A tibble: 1 × 4
+#&gt;   `Random Forest` XGBoost TempCNN LightTAE
+#&gt;             &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;    &lt;dbl&gt;
+#&gt; 1           0.855   0.860   0.861    0.867</code></pre>
 <p>The resulting Excel file can be opened with R or using spreadsheet programs. The figure below shows a printout of what is read by Excel. As shown below, each sheet corresponds to the output of one model. For simplicity, we show only the result of LightTAE, that has an overall accuracy of 97% and is the best-performing model.</p>
 <div class="figure" style="text-align: center">
-<img src="images/k_fold_validation_xlsx.png" alt="Result of 5-fold cross validation of Mato Grosso dataset using TempCNN" width="90%" height="90%"><p class="caption">
-Result of 5-fold cross validation of Mato Grosso dataset using TempCNN
+<span style="display:block;" id="fig:unnamed-chunk-112"></span>
+<img src="images/k_fold_validation_xlsx.png" alt="Result of 5-fold cross validation of Mato Grosso dataset using LightTAE" width="90%" height="90%"><p class="caption">
+Figure 65: Result of 5-fold cross validation of Mato Grosso dataset using LightTAE
 </p>
 </div>
 </div>
-<div id="accuracy-assessment" class="section level2" number="0.1">
-<h2>
-<span class="header-section-number">0.1</span> Accuracy assessment<a class="anchor" aria-label="anchor" href="#accuracy-assessment"><i class="fas fa-link"></i></a>
+<div id="accuracy-assessment" class="section level2 unnumbered">
+<h2>Accuracy assessment<a class="anchor" aria-label="anchor" href="#accuracy-assessment"><i class="fas fa-link"></i></a>
 </h2>
-<div id="time-series" class="section level3" number="0.1.1">
-<h3>
-<span class="header-section-number">0.1.1</span> Time series<a class="anchor" aria-label="anchor" href="#time-series"><i class="fas fa-link"></i></a>
+<div id="time-series" class="section level3 unnumbered">
+<h3>Time series<a class="anchor" aria-label="anchor" href="#time-series"><i class="fas fa-link"></i></a>
 </h3>
 <p>Users can perform accuracy assessment in <em>sits</em> both in time series datasets or in classified images using the <code>sits_accuracy</code> function. In the case of time series, the input is a sits tibble which has been classified by a sits model. The input tibble needs to contain valid labels in its “label” column. These labels are compared to the results of the prediction to the reference values. This function calculates the confusion matrix and then the resulting statistics using the R package “caret”.</p>
-<div class="sourceCode" id="cb111"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># read a tibble with 400 time series of Cerrado and 346 of Pasture</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html">data</a></span><span class="op">(</span><span class="va">cerrado_2classes</span><span class="op">)</span></span>
-<span><span class="co"># create a model for classification of time series</span></span>
-<span><span class="va">svm_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_train.html">sits_train</a></span><span class="op">(</span><span class="va">cerrado_2classes</span>, <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_svm.html">sits_svm</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co"># classify the time series</span></span>
-<span><span class="va">predicted</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_classify.html">sits_classify</a></span><span class="op">(</span><span class="va">cerrado_2classes</span>, <span class="va">svm_model</span><span class="op">)</span></span>
-<span><span class="co"># calculate the classification accuracy</span></span>
-<span><span class="va">acc_ts</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_accuracy.html">sits_accuracy</a></span><span class="op">(</span><span class="va">predicted</span><span class="op">)</span></span>
-<span><span class="co"># print the accuracy statistics summary</span></span>
-<span><span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_accuracy_summary.html">sits_accuracy_summary</a></span><span class="op">(</span><span class="va">acc_ts</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb117"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="co"># read a tibble with 400 time series of Cerrado and 346 of Pasture</span>
+<span class="fu"><a href="https://rdrr.io/r/utils/data.html">data</a></span><span class="op">(</span><span class="va">cerrado_2classes</span><span class="op">)</span>
+<span class="co"># create a model for classification of time series</span>
+<span class="va">svm_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_train.html">sits_train</a></span><span class="op">(</span><span class="va">cerrado_2classes</span>, <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_svm.html">sits_svm</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span>
+<span class="co"># classify the time series</span>
+<span class="va">predicted</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_classify.html">sits_classify</a></span><span class="op">(</span><span class="va">cerrado_2classes</span>, <span class="va">svm_model</span><span class="op">)</span>
+<span class="co"># calculate the classification accuracy</span>
+<span class="va">acc_ts</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_accuracy.html">sits_accuracy</a></span><span class="op">(</span><span class="va">predicted</span><span class="op">)</span>
+<span class="co"># print the accuracy statistics summary</span>
+<span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_accuracy_summary.html">sits_accuracy_summary</a></span><span class="op">(</span><span class="va">acc_ts</span><span class="op">)</span></code></pre></div>
 <pre class="sourceCode"><code>#&gt; Overall Statistics                          
 #&gt;  Accuracy : 0.991         
 #&gt;    95% CI : (0.981, 0.996)
 #&gt;     Kappa : 0.981</code></pre>
 <p>The detailed accuracy measures can be obtained by printing the accuracy object.</p>
-<div class="sourceCode" id="cb113"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># print the accuracy statistics</span></span>
-<span><span class="va">acc_ts</span></span></code></pre></div>
+<div class="sourceCode" id="cb119"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="co"># print the accuracy statistics</span>
+<span class="va">acc_ts</span></code></pre></div>
 <pre class="sourceCode"><code>#&gt; Confusion Matrix and Statistics
 #&gt; 
 #&gt;           Reference
@@ -678,12 +422,11 @@ Result of 5-fold cross validation of Mato Grosso dataset using TempCNN
 #&gt;  User Acc  Pasture : 0.991         
 #&gt; </code></pre>
 </div>
-<div id="classified-images" class="section level3" number="0.1.2">
-<h3>
-<span class="header-section-number">0.1.2</span> Classified images<a class="anchor" aria-label="anchor" href="#classified-images"><i class="fas fa-link"></i></a>
+<div id="classified-images" class="section level3 unnumbered">
+<h3>Classified images<a class="anchor" aria-label="anchor" href="#classified-images"><i class="fas fa-link"></i></a>
 </h3>
-<p>To measure the accuracy of classified images, the <code>sits_accuracy</code> function uses an area-weighted technique, following the best practices proposed by <span class="citation"><a href="technical-annex.html#ref-Olofsson2013" role="doc-biblioref">[70]</a></span>. The need for area-weighted estimates arises from the fact the land use and land cover classes are not evenly distributed in space. In some applications (e.g., deforestation) where the interest lies in assessing how much of the image has changed, the area mapped as deforested is likely to be a small fraction of the total area. If users disregard the relative importance of small areas where change is taking place, the overall accuracy estimate will be inflated and unrealistic. For this reason, <span class="citation"><a href="technical-annex.html#ref-Olofsson2013" role="doc-biblioref">[70]</a></span> argue that “mapped areas should be adjusted to eliminate bias attributable to map classification error and these error-adjusted area estimates should be accompanied by confidence intervals to quantify the sampling variability of the estimated area”.</p>
-<p>With this motivation, when measuring accuracy of classified images, the function <code>sits_accuracy</code> follows <span class="citation"><a href="technical-annex.html#ref-Olofsson2013" role="doc-biblioref">[70]</a></span> and <span class="citation"><a href="technical-annex.html#ref-Olofsson2014" role="doc-biblioref">[71]</a></span>. The following explanation is extracted from the paper of <span class="citation"><a href="technical-annex.html#ref-Olofsson2013" role="doc-biblioref">[70]</a></span>, and users should refer to this paper for further explanation.</p>
+<p>To measure the accuracy of classified images, the <code>sits_accuracy</code> function uses an area-weighted technique, following the best practices proposed by <span class="citation"><a href="references.html#ref-Olofsson2013" role="doc-biblioref">[70]</a></span>. The need for area-weighted estimates arises from the fact the land use and land cover classes are not evenly distributed in space. In some applications (e.g., deforestation) where the interest lies in assessing how much of the image has changed, the area mapped as deforested is likely to be a small fraction of the total area. If users disregard the relative importance of small areas where change is taking place, the overall accuracy estimate will be inflated and unrealistic. For this reason, <span class="citation"><a href="references.html#ref-Olofsson2013" role="doc-biblioref">[70]</a></span> argue that “mapped areas should be adjusted to eliminate bias attributable to map classification error and these error-adjusted area estimates should be accompanied by confidence intervals to quantify the sampling variability of the estimated area”.</p>
+<p>With this motivation, when measuring accuracy of classified images, the function <code><a href="https://rdrr.io/pkg/sits/man/sits_accuracy.html">sits_accuracy()</a></code> follows <span class="citation"><a href="references.html#ref-Olofsson2013" role="doc-biblioref">[70]</a></span> and <span class="citation"><a href="references.html#ref-Olofsson2014" role="doc-biblioref">[71]</a></span>. The following explanation is extracted from the paper of <span class="citation"><a href="references.html#ref-Olofsson2013" role="doc-biblioref">[70]</a></span>, and users should refer to this paper for further explanation.</p>
 <p>Given a classified image and a validation file, the first step is to calculate the confusion matrix in the traditional way, i.e., by identifying the commission and omission errors. Then we calculate the unbiased estimator of the proportion of area in cell <span class="math inline">\(i,j\)</span> of the error matrix</p>
 <p><span class="math display">\[
 \hat{p_{i,j}} = W_i\frac{n_{i,j}}{n_i}
@@ -692,35 +435,36 @@ where the total area of the map is <span class="math inline">\(A_{tot}\)</span>,
 <span class="math display">\[
 \hat{A_j} = A_{tot}\sum_{i=1}^KW_i\frac{n_{i,j}}{n_i}
 \]</span>
-This unbiased area estimator includes the effect of false negatives (omission error) while not considering the effect of false positives (commission error). The area estimates also allow producing an unbiased estimate of the user’s and producer’s accuracy for each class. Following <span class="citation"><a href="technical-annex.html#ref-Olofsson2013" role="doc-biblioref">[70]</a></span>, we can also estimate the 95% confidence interval for <span class="math inline">\(\hat{A_j}\)</span>.</p>
-<p>To use the <code>sits_accuracy</code> function to produce the adjusted area estimates, users have to provide the classified image together with a csv file containing a set of well selected labeled points. The csv file should have the same format as the one used to obtain samples, as discussed earlier. The labelled points should be based on a random stratified sample. All areas associated to each class should contribute to the test data used for accuracy asseesment.</p>
+This unbiased area estimator includes the effect of false negatives (omission error) while not considering the effect of false positives (commission error). The area estimates also allow producing an unbiased estimate of the user’s and producer’s accuracy for each class. Following <span class="citation"><a href="references.html#ref-Olofsson2013" role="doc-biblioref">[70]</a></span>, we can also estimate the 95% confidence interval for <span class="math inline">\(\hat{A_j}\)</span>.</p>
+<p>To use the <code><a href="https://rdrr.io/pkg/sits/man/sits_accuracy.html">sits_accuracy()</a></code> function to produce the adjusted area estimates, users have to provide the classified image together with a csv file containing a set of well selected labeled points. The csv file should have the same format as the one used to obtain samples, as discussed earlier. The labelled points should be based on a random stratified sample. All areas associated to each class should contribute to the test data used for accuracy asseesment.</p>
 <p>In what follows, we show a simple example of using the accuracy function to estimate the quality of the classification</p>
-<div class="sourceCode" id="cb115"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># select a sample with 2 bands (NDVI and EVI)</span></span>
-<span><span class="va">samples_modis_ndvi</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_select.html">sits_select</a></span><span class="op">(</span><span class="va">samples_modis_4bands</span>, bands <span class="op">=</span> <span class="st">"NDVI"</span><span class="op">)</span></span>
-<span><span class="co"># build an extreme gradient boosting model</span></span>
-<span><span class="va">xgb_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_train.html">sits_train</a></span><span class="op">(</span><span class="va">samples_modis_ndvi</span>, ml_method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_xgboost.html">sits_xgboost</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co"># create a data cube based on files</span></span>
-<span><span class="va">data_dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html">system.file</a></span><span class="op">(</span><span class="st">"extdata/raster/mod13q1"</span>, package <span class="op">=</span> <span class="st">"sits"</span><span class="op">)</span></span>
-<span><span class="va">cube</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_cube.html">sits_cube</a></span><span class="op">(</span></span>
-<span>  source     <span class="op">=</span> <span class="st">"BDC"</span>,</span>
-<span>  collection <span class="op">=</span> <span class="st">"MOD13Q1-6"</span>,</span>
-<span>  name       <span class="op">=</span> <span class="st">"Sinop"</span>,</span>
-<span>  data_dir   <span class="op">=</span> <span class="va">data_dir</span>,</span>
-<span>  parse_info <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"X1"</span>, <span class="st">"X2"</span>, <span class="st">"tile"</span>, <span class="st">"band"</span>, <span class="st">"date"</span><span class="op">)</span></span>
-<span><span class="op">)</span></span>
-<span><span class="co"># classify the data cube with xgb model</span></span>
-<span><span class="va">probs_cube</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_classify.html">sits_classify</a></span><span class="op">(</span><span class="va">cube</span>, <span class="va">xgb_model</span><span class="op">)</span></span>
-<span><span class="co"># label the classification</span></span>
-<span><span class="va">label_cube</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_label_classification.html">sits_label_classification</a></span><span class="op">(</span><span class="va">probs_cube</span>, output_dir <span class="op">=</span> <span class="st">"./tempdir/chp9"</span><span class="op">)</span></span>
-<span><span class="co"># get ground truth points</span></span>
-<span><span class="va">ground_truth</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html">system.file</a></span><span class="op">(</span><span class="st">"extdata/samples/samples_sinop_crop.csv"</span>,</span>
-<span>  package <span class="op">=</span> <span class="st">"sits"</span></span>
-<span><span class="op">)</span></span>
-<span><span class="co"># calculate accuracy according to Olofsson's method</span></span>
-<span><span class="va">area_acc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_accuracy.html">sits_accuracy</a></span><span class="op">(</span><span class="va">label_cube</span>, validation_csv <span class="op">=</span> <span class="va">ground_truth</span><span class="op">)</span></span>
-<span><span class="co"># print the area estimated accuracy</span></span>
-<span><span class="va">area_acc</span></span></code></pre></div>
+<div class="sourceCode" id="cb121"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="co"># select a sample with 2 bands (NDVI and EVI)</span>
+<span class="va">samples_modis_ndvi</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_select.html">sits_select</a></span><span class="op">(</span><span class="va">samples_modis_4bands</span>, bands <span class="op">=</span> <span class="st">"NDVI"</span><span class="op">)</span>
+<span class="co"># build an extreme gradient boosting model</span>
+<span class="va">xgb_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_train.html">sits_train</a></span><span class="op">(</span><span class="va">samples_modis_ndvi</span>, ml_method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_xgboost.html">sits_xgboost</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span>
+<span class="co"># create a data cube based on files</span>
+<span class="va">data_dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html">system.file</a></span><span class="op">(</span><span class="st">"extdata/raster/mod13q1"</span>, package <span class="op">=</span> <span class="st">"sits"</span><span class="op">)</span>
+<span class="va">cube</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_cube.html">sits_cube</a></span><span class="op">(</span>
+  source <span class="op">=</span> <span class="st">"BDC"</span>,
+  collection <span class="op">=</span> <span class="st">"MOD13Q1-6"</span>,
+  name <span class="op">=</span> <span class="st">"Sinop"</span>,
+  data_dir <span class="op">=</span> <span class="va">data_dir</span>,
+  parse_info <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"X1"</span>, <span class="st">"X2"</span>, <span class="st">"tile"</span>, <span class="st">"band"</span>, <span class="st">"date"</span><span class="op">)</span>,
+  delim <span class="op">=</span> <span class="st">"_"</span>
+<span class="op">)</span>
+<span class="co"># classify the data cube with xgb model</span>
+<span class="va">probs_cube</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_classify.html">sits_classify</a></span><span class="op">(</span><span class="va">cube</span>, <span class="va">xgb_model</span><span class="op">)</span>
+<span class="co"># label the classification</span>
+<span class="va">label_cube</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_label_classification.html">sits_label_classification</a></span><span class="op">(</span><span class="va">probs_cube</span>, output_dir <span class="op">=</span> <span class="st">"./tempdir/chp9"</span><span class="op">)</span>
+<span class="co"># get ground truth points</span>
+<span class="va">ground_truth</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html">system.file</a></span><span class="op">(</span><span class="st">"extdata/samples/samples_sinop_crop.csv"</span>,
+  package <span class="op">=</span> <span class="st">"sits"</span>
+<span class="op">)</span>
+<span class="co"># calculate accuracy according to Olofsson's method</span>
+<span class="va">area_acc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_accuracy.html">sits_accuracy</a></span><span class="op">(</span><span class="va">label_cube</span>, validation_csv <span class="op">=</span> <span class="va">ground_truth</span><span class="op">)</span>
+<span class="co"># print the area estimated accuracy</span>
+<span class="va">area_acc</span></code></pre></div>
 <pre class="sourceCode"><code>#&gt; Area Weigthed Statistics
 #&gt; Overall Accuracy = 0.81
 #&gt; 
@@ -733,16 +477,16 @@ This unbiased area estimator includes the effect of false negatives (omission er
 #&gt; 
 #&gt; Mapped Area x Estimated Area (ha)
 #&gt;          Mapped Area (ha) Error-Adjusted Area (ha)
-#&gt; Cerrado             42363                    58576
-#&gt; Forest              81066                    48639
-#&gt; Pasture             21927                    17542
-#&gt; Soy_Corn            50928                    71526
+#&gt; Cerrado             41236                    57640
+#&gt; Forest              82021                    49212
+#&gt; Pasture             22883                    18306
+#&gt; Soy_Corn            50144                    71125
 #&gt;          Conf Interval (ha)
-#&gt; Cerrado               31778
-#&gt; Forest                38920
-#&gt; Pasture                8596
-#&gt; Soy_Corn              32920</code></pre>
-<p>This is an illustrative example to express the situation where there is a limited number of ground truth points. As a result of a limited validation sample, the estimated confidence interval in area estimation is large. This indicates a questionable result. We recommend that users follow the procedures recommended by <span class="citation"><a href="technical-annex.html#ref-Olofsson2014" role="doc-biblioref">[71]</a></span> to estimate the number of ground truth measures per class that are required to get a reliable estimate.</p>
+#&gt; Cerrado               32152
+#&gt; Forest                39378
+#&gt; Pasture                8970
+#&gt; Soy_Corn              33380</code></pre>
+<p>This is an illustrative example to express the situation where there is a limited number of ground truth points. As a result of a limited validation sample, the estimated confidence interval in area estimation is large. This indicates a questionable result. We recommend that users follow the procedures recommended by <span class="citation"><a href="references.html#ref-Olofsson2014" role="doc-biblioref">[71]</a></span> to estimate the number of ground truth measures per class that are required to get a reliable estimate.</p>
 
 </div>
 </div>
@@ -758,9 +502,9 @@ This unbiased area estimator includes the effect of false negatives (omission er
 <li><a class="nav-link" href="#validation-techniques">Validation techniques</a></li>
 <li><a class="nav-link" href="#comparing-different-machine-learning-methods-using-k-fold-validation">Comparing different machine learning methods using k-fold validation</a></li>
 <li>
-<a class="nav-link" href="#accuracy-assessment"><span class="header-section-number">0.1</span> Accuracy assessment</a><ul class="nav navbar-nav">
-<li><a class="nav-link" href="#time-series"><span class="header-section-number">0.1.1</span> Time series</a></li>
-<li><a class="nav-link" href="#classified-images"><span class="header-section-number">0.1.2</span> Classified images</a></li>
+<a class="nav-link" href="#accuracy-assessment">Accuracy assessment</a><ul class="nav navbar-nav">
+<li><a class="nav-link" href="#time-series">Time series</a></li>
+<li><a class="nav-link" href="#classified-images">Classified images</a></li>
 </ul>
 </li>
 </ul>
@@ -779,7 +523,7 @@ This unbiased area estimator includes the effect of false negatives (omission er
 <footer class="bg-primary text-light mt-5"><div class="container"><div class="row">
 
   <div class="col-12 col-md-6 mt-3">
-    <p>"<strong><strong>sits</strong>: Satellite Image Time Series Analysis on Earth Observation Data Cubes</strong>" was written by Gilberto Camara, Rolf Simoes, Felipe Souza, Charlotte Peletier, Alber Sanchez, Pedro R. Andrade, Karine Ferreira, Gilberto Queiroz. It was last built on 2022-07-15.</p>
+    <p>"<strong><strong>sits</strong>: Satellite Image Time Series Analysis on Earth Observation Data Cubes</strong>" was written by Gilberto Camara, Rolf Simoes, Felipe Souza, Charlotte Peletier, Alber Sanchez, Pedro R. Andrade, Karine Ferreira, Gilberto Queiroz. It was last built on 2022-07-19.</p>
   </div>
 
   <div class="col-12 col-md-6 mt-3">

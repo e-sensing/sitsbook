@@ -313,6 +313,7 @@ kableExtra::kbl(sits_api,
     kableExtra::column_spec(column = 1, monospace = TRUE, color =  "RawSienna")
 ```
 
+
 ```{r api, echo = FALSE, out.width = "100%", out.height = "100%", fig.align="center", fig.cap="Main functions of the SITS API (source: authors)."}
 
 knitr::include_graphics("images/sits_api.png") 
@@ -335,13 +336,12 @@ To build a data cube from local files, users need to provide information about t
 (c) `data_dir`, the local directory where the image files are stored; 
 (d) `parse_info`, stating how file names store information on tile, band and date. In this case, local images stored as `TERRA_MODIS_012010_EVI_2014-07-28.tif`. 
 
-```{r, out.width = "70%", tidy="styler", fig.align = 'center', fig.cap="Color composite image MOIDS cube for 2013-09-14 (red = EVI, green = NDVI, blue = EVI).", strip.white = FALSE}
-data_dir <- system.file("extdata/sinop", package = "sitsdata")
+```{r, out.width = "80%", tidy="styler", fig.align = 'center', fig.cap="Color composite image MODIS cube for 2013-09-14 (red = EVI, green = NDVI, blue = EVI)."}
 # create a data cube object based on the information about the files
 sinop <- sits_cube(
   source = "BDC", 
   collection  = "MOD13Q1-6",
-  data_dir = data_dir,  
+  data_dir = system.file("extdata/sinop", package = "sitsdata"),  
   parse_info = c("X1", "X2", "tile", "band", "date")
 )
 # plot a color composite  for the first date (2013-09-14)
@@ -378,7 +378,7 @@ The data structure associated to the time series is a table that contains data a
 
 It is useful to plot the dispersion of the time series. In what follows, for brevity we will select only one label ("Forest") and one index ("NDVI"). The resulting plot shows all of the time series associated to the label and attribute, highlighting the median and the first and third quartiles.
 
-```{r, out.width = "70%", tidy="styler", fig.align = 'center', fig.cap="Joint plot of all samples in band NDVI for class Forest.", strip.white = FALSE}
+```{r, out.width = "80%", tidy="styler", fig.align = 'center', fig.cap="Joint plot of all samples in band NDVI for class Forest.", strip.white = FALSE}
 samples_forest <- dplyr::filter(
     samples_matogrosso_mod13q1, 
     label == "Forest"
@@ -415,7 +415,7 @@ plot(rf_model)
 
 After training the machine learning model, the next step is to classify the data cube using `sits_classify()`. This function produces a set of raster probability maps, one for each class. For each of these maps, the value of a pixel is proportional to the the probability that it belongs to the class. This function has two mandatoty parameters: `data`, the data cube or time series tibble to be classified; and `ml_model`, the trained ML model. Optional parameters include: (a) `multicores`, number of cores to be used; (b) `memsize`, RAM used in the classification; (c) `output_dir`, the directory where the classified files will be written. Details of the classification process are available in "Classification of Images in Data Cubes".
 
-```{r, out.width = "70%", tidy="styler", fig.align = 'center', fig.cap = "Probability map for class Forest."}
+```{r, out.width = "80%", tidy="styler", fig.align = 'center', fig.cap = "Probability map for class Forest."}
 
 # classify the raster image
 sinop_probs <- sits_classify(
@@ -435,7 +435,7 @@ After classification has been completed, we plot the probability maps for class 
 
 When working with big EO data, there is much variability in each class. As a result, some pixels will be misclassified. These errors are more likely to occur in transition areas between classes. To offset these problems,  the `sits_smooth()` function takes a probability cube as input and  uses the class probabilities of each pixel's neighborhood to reduce labeling uncertainty. We then plot the smoothed probability map for class "Forest" to compare with the previous plot.
 
-```{r, out.width = "70%",  tidy="styler", fig.align = 'center', fig.cap = "Smoothed probability map for class Forest."}
+```{r, out.width = "80%",  tidy="styler", fig.align = 'center', fig.cap = "Smoothed probability map for class Forest."}
 # perform spatial smoothing
 sinop_bayes <- sits_smooth(
     cube = sinop_probs,
@@ -451,7 +451,7 @@ plot(sinop_bayes, labels = c("Forest"))
 After removing outliers using local smoothing, one can obtain the labeled classification map using the function `sits_label_classification()`. This function assigns each pixel to the class with highest probability.
 \newpage
 
-```{r, out.width = "90%", tidy="styler", fig.cap = "Classification map for Sinop", fig.align="center"}
+```{r, out.width = "100%", tidy="styler", fig.cap = "Classification map for Sinop", fig.align="center"}
 
 # label the probability file 
 sinop_map <- sits_label_classification(
@@ -575,10 +575,10 @@ AWS holds are two kinds of collections: *open-data* and *requester-pays*. Open d
 s2_20LKP_cube <- sits_cube(
     source = "AWS",
     collection = "SENTINEL-S2-L2A-COGS",
-    start_date = "2018-07-12",
-    end_date = "2019-07-28",
     tiles = "20LKP",
-    bands = c("B04", "B08", "B11", "CLOUD")
+    bands = c("B04", "B08", "B11", "CLOUD"),
+    start_date = "2018-07-12",
+    end_date = "2019-07-28"
 )
 ```
 
@@ -587,15 +587,16 @@ s2_20LKP_cube <- sits_cube(
 
 Microsoft's Planetary Computer (MPC) hosts two open data collections: `SENTINEL-2-L2A` and `LANDSAT-C2-L2`. The first collection contains SENTINEL-2/2A ARD images, with the same bands and resolutions as those available in AWS (see above). The example below shows how to access the `SENTINEL-2-L2A` collection. 
 
-```{r, tidy="styler",  out.width="60%", fig.align="center", fig.cap= "Sentinel-2 image in an area of the state of Rondonia, Brazil"}
+```{r, tidy="styler",  out.width="90%", fig.align="center", fig.cap= "Sentinel-2 image in an area of the state of Rondonia, Brazil"}
 # create a data cube covering an area in the Brazilian Amazon
 s2_20LKP_cube_MPC <- sits_cube(
       source = "MPC",
       collection = "SENTINEL-2-L2A",
       tiles = "20LKP",
+      bands = c("B05", "B8A", "B11", "CLOUD"),
       start_date = "2019-07-01",
-      end_date = "2019-07-28",
-      bands = c("B05", "B8A", "B11", "CLOUD")
+      end_date = "2019-07-28"
+      
 )
 # plot a color composite of one date of the cube
 plot(s2_20LKP_cube_MPC, red = "B11", blue = "B05", green = "B8A", 
@@ -606,7 +607,7 @@ The `LANDSAT-C2-L2` collection provides access to data from Landsat-4, 5, 7, 8, 
 
 \newpage
 
-```{r, tidy="styler", out.width="65%", fig.align="center", fig.cap= "Landsat-8 image in an area of the city of Brasilia, Brazil"}
+```{r, tidy="styler", out.width="80%", fig.align="center", fig.cap= "Landsat-8 image in an area of the city of Brasilia, Brazil"}
 # Read a shapefile thar covers the city of Brasilia
 shp_file <- system.file("extdata/shapefiles/df_bsb/df_bsb.shp", 
                         package = "sits")
@@ -615,10 +616,10 @@ sf_bsb <- sf::read_sf(shp_file)
 s2_L8_cube_MPC <- sits_cube(
         source = "MPC",
         collection = "LANDSAT-C2-L2",
+        bands = c("BLUE", "NIR08", "SWIR16", "CLOUD"),
         roi = sf_bsb,
         start_date = "2019-06-01",
-        end_date = "2019-10-01",
-        bands = c("BLUE", "NIR08", "SWIR16", "CLOUD")
+        end_date = "2019-10-01"
 )
 # Plot the second tile that covers Brasilia
 plot(s2_L8_cube_MPC[2,], red = "SWIR16", green = "NIR08", blue = "BLUE", 
@@ -629,13 +630,13 @@ plot(s2_L8_cube_MPC[2,], red = "SWIR16", green = "NIR08", blue = "BLUE",
 ## Assessing Digital Earth Africa{-}
 
 Digital Earth Africa (DEAFRICA) is a cloud service that provides open access Earth Observation data for the African continent. The ARD image collections available in `sits` are `S2_L2A` (Sentinel-2 level 2A) and `LS8_SR` (Landsat-8). Since the STAC interface for DEAFRICA does not implement the concept of tiles, users users need to specify their area of interest using the `roi` parameter. The requested `roi` produces a cube that contains three MGRS tiles ("35HLD", "35HKD", and "35HLC") covering part of South Africa. 
-```{r, tidy="styler", out.width="60%", fig.align="center", fig.cap="Sentinel-2 image in an area over South Africa"}
+```{r, tidy="styler", out.width="90%", fig.align="center", fig.cap="Sentinel-2 image in an area over South Africa"}
 dea_cube <- sits_cube(
     source = "DEAFRICA",
     collection = "S2_L2A",
-    bands = c("B05", "B8A", "B11"),
     roi = c(lon_min = 24.97, lat_min = -34.30,
             lon_max = 25.87, lat_max = -32.63),
+    bands = c("B05", "B8A", "B11"),
     start_date = "2019-09-01",
     end_date = "2019-10-01"
 )
@@ -649,7 +650,7 @@ dea_cube %>%
 
 The [Brazil Data Cube](http://brazildatacube.org/) (BDC) is built by Brazil’s National Institute for Space Research (INPE). The BDC uses three hierarchical grids based on the Albers Equal Area projection and SIRGAS 2000 datum. The three grids are generated taking -54$^\circ$ longitude as the central reference and defining tiles of $6\times4$, $3\times2$ and $1.5\times1$ degrees. The large grid is composed by tiles of $672\times440$ km^2^ and is used for CBERS-4 AWFI collections at 64 meter resolution; each CBERS-4 AWFI tile contains images of $10,504\times6,865$ pixels. The medium grid is used for Landsat-8 OLI collections at 30 meter resolution; tiles have an extension of $336\times220$ km^2^ and each image has $11,204\times7,324$ pixels. The small grid covers $168\times110$ km^2^ and is used for Sentinel-2 MSI collections at 10m resolutions; each image has $16,806\times10,986$ pixels. The data cubes in the BDC are regularly spaced in time and cloud-corrected [@Ferreira2020a]. 
 
-```{r, echo = FALSE, out.width="70%", fig.align="center", fig.cap="Hierarchical BDC tiling system showing overlayed on Brazilian Biomes (a), illustrating that one large tile (b) contains four medium tiles (c) and that medium tile contains four small tiles. Source: Ferreira et al.(2020). Reproduction under fair use doctrine."}
+```{r, echo = FALSE, out.width="80%", fig.align="center", fig.cap="Hierarchical BDC tiling system showing overlayed on Brazilian Biomes (a), illustrating that one large tile (b) contains four medium tiles (c) and that medium tile contains four small tiles. Source: Ferreira et al.(2020). Reproduction under fair use doctrine."}
 
 knitr::include_graphics("images/bdc_grid.png")
 ```
@@ -670,8 +671,8 @@ In the example below, the data cube is defined as one tile ("022024") of `CB4_64
 cbers_tile <- sits_cube(
     source = "BDC",
     collection = "CB4_64_16D_STK-1",
-    bands = c("B13", "B14", "B15", "B16", "CLOUD"),
     tiles = "022024",
+    bands = c("B13", "B14", "B15", "B16", "CLOUD"),
     start_date = "2018-09-01",
     end_date = "2019-08-28"
 )
@@ -705,7 +706,7 @@ data_dir <- system.file("extdata/CBERS", package = "sitsdata")
 list.files(data_dir)[1]
 ```
 
-```{r, tidy="styler", out.width="60%", fig.align="center", fig.cap="CBERS-4 NDVI in an area over Brazil"}
+```{r, tidy="styler", out.width="90%", fig.align="center", fig.cap="CBERS-4 NDVI in an area over Brazil"}
 # create a data cube from local files
 cbers_cube <- sits_cube(
     source = "BDC",
@@ -731,17 +732,17 @@ It is also possible to create local cubes based on results that have been produc
 
 The following code creates a results cube based on the classification of deforestation in Brazil.  This classified cube was obtained by a large data cube of Sentinel-2 images, covering the state of Rondonia, Brazil comprising 40 tiles, 10 spectral bands, and covering the period from 2020-06-01 to 2021-09-11. Samples of four classes were trained by a random forest classifier. 
 
-```{r, tidy="styler", out.width="80%", fig.align="center", fig.cap="Classified data cube for year 2020/2021 in Rondonia, Brazil"}
+```{r, tidy="styler", out.width="90%", fig.align="center", fig.cap="Classified data cube for year 2020/2021 in Rondonia, Brazil"}
 # Create a cube based on a classified image 
 data_dir <- system.file("extdata/Rondonia", package = "sitsdata")
 # file is named "SENTINEL-2_MSI_20LLP_2020-06-04_2021-08-26_class_v1.tif" 
 Rondonia_class_cube <- sits_cube(
     source = "AWS",
     collection = "SENTINEL-S2-L2A-COGS",
-    data_dir = data_dir,
     bands = "class",
     labels = c("Burned_Area", "Cleared_Area", 
                "Highly_Degraded", "Forest"),
+    data_dir = data_dir,
     parse_info = c("X1", "X2", "tile", "start_date", "end_date", 
                    "band", "version")
 )
@@ -753,15 +754,15 @@ plot(Rondonia_class_cube)
 
 Analysis-ready data (ARD) collections available in AWS, MSPC, USGS and DEAFRICA are not regular in space and time. Bands may have different resolutions, images may not cover the entire tile, and time intervals are not regular. For this reason, subsets of these collection need to be converted to regular data cubes before further processing and data analysis. This is done in *sits* by the function `sits_regularize()`, which uses the  *gdalcubes* package [@Appel2019]. In the following example, the user has created an irregular data cube from the Sentinel-2 collection available in Microsoft's Planetary Computer (MSPC) for tiles `20LKP` and `20LLP` in the state of Rondonia, Brazil. As described earlier in this chapter, because of the way ARD image collections are built, some of the images have invalid pixels, as shown below.  We first build an irregular data cube using `sits_cube()`.
 
-```{r, tidy="styler", out.width="60%", fig.align="center", fig.cap="Sentinel-2 tile 20LLP for date 2018-07-03"}
+```{r, tidy="styler", out.width="90%", fig.align="center", fig.cap="Sentinel-2 tile 20LLP for date 2018-07-03"}
 # creating an irregular data cube from MSPC
 s2_cube <- sits_cube(
     source = "MPC",
     collection = "SENTINEL-2-L2A",
     tiles = c("20LKP", "20LLP"),
+    bands = c("B05", "B8A", "B12", "CLOUD"),
     start_date = as.Date("2018-07-01"),
-    end_date = as.Date("2018-08-31"),
-    bands = c("B05", "B8A", "B12", "CLOUD")
+    end_date = as.Date("2018-08-31")
 )
 # plot the first image of the irregular cube
 s2_cube %>% 
@@ -773,7 +774,7 @@ Because of different acquisition orbits of the Sentinel-2 and Sentinel-2A satell
 
 \newpage
 
-```{r, tidy="styler", message=FALSE, results='hide', out.width="60%", fig.align="center", fig.cap="Regularized image for tile Sentinel-2 tile 20LLP"}
+```{r, tidy="styler", message=FALSE, results='hide', out.width="90%", fig.align="center", fig.cap="Regularized image for tile Sentinel-2 tile 20LLP"}
 # regularize the cube to 15 day intervals
 reg_cube <- sits_regularize(
           cube       = s2_cube,
@@ -796,7 +797,7 @@ After obtaining a regular data cube, users can perform data analysis and classif
 
 Many analysis operations on remote sensing require operations on one or multiple bands. These operations include thresholding, decision trees, and band ratios. Given a regular data cube, these operations can be performed using `sits_apply()`. Users specify the mathematical operation as function of the bands available on the cube. The function then performs the operation for all tiles and all temporal intervals. The flexibility of `sits_apply()` allows users to perform different types of mathematical operations in data cubes in a simple and efficient fashion.  The example below shows the computation of the normalized burn ratio (NBR) as the difference between the near infrared and the short wave infrared band, here calculated using the `B8A` and `B12` bands.
 
-```{r, tidy="styler", out.width="60%", fig.align="center", fig.cap="NBR ratio for a regular data cube built using Sentinel-2 tiles and 20LKP and 20LLP"}
+```{r, tidy="styler", out.width="90%", fig.align="center", fig.cap="NBR ratio for a regular data cube built using Sentinel-2 tiles and 20LKP and 20LLP"}
 # calculate the normalized burn ratio 
 reg_cube_NBR <- sits_apply(reg_cube,
     NBR = (B8A - B12)/(B8A + B12),
@@ -899,8 +900,7 @@ sample_latlong <- tibble::tibble(
     latitude  = -11.50566 
 )
 series <- sits_get_data(cube    = raster_cube,
-                        samples = sample_latlong
-)
+                        samples = sample_latlong)
 plot(series)
 ```
 
@@ -944,9 +944,10 @@ sf_shape <- sf::st_read(shp_file)
 modis_cube <- sits_cube(
     source      = "BDC",
     collection  = "MOD13Q1-6",
-    roi         = sf_shape,
     bands       = c("NDVI", "EVI"),
-    start_date  = "2020-06-01", end_date    = "2021-08-29"
+    roi         = sf_shape,
+    start_date  = "2020-06-01", 
+    end_date    = "2021-08-29"
 )
 # read the points from the cube and produce a tibble with time series
 samples_mt <- sits_get_data(
@@ -1783,7 +1784,8 @@ cbers_cerrado_cube <- sits_cube(
     source     = "BDC",
     collection = "CB4_64_16D_STK-1",
     data_dir = data_dir,
-    parse_info = c("X1", "X2", "X3", "X4", "tile", "date", "X5", "band")
+    parse_info = c("X1", "X2", "X3", "X4", "tile", "date", "X5", "band"),
+    delim = "_"
 )
 # plot the first date with NDVI and EVI bands
 plot(cbers_cerrado_cube, red = "EVI", green = "NDVI", blue = "EVI")
@@ -2061,7 +2063,7 @@ Cross-validation uses part of the available samples to fit the classification mo
 
 A natural question that arises is: *how good is this estimation?* According to @Hastie2009, there is a bias-variance trade-off in choice of $k$. If $k$ is set to the number of samples, we obtain the so-called *leave-one-out* validation, the estimator gives a low bias for the true expected error, but produces a high variance expectation. This can be computational expensive as it requires the same number of fitting process as the number of samples. On the other hand, if we choose ${k=2}$, we get a high biased expected prediction error estimation that overestimates the true prediction error, but has a low variance. The recommended choices of $k$ are $5$ or $10$.
 
-`sits_kfold_validate()` gives support the k-fold validation in `sits`. The following code gives an example on how to proceed a k-fold cross-validation in the package. It perform a five-fold validation using SVM classification model as a default classifier. We can see in the output text the corresponding confusion matrix and the accuracy statistics (overall and by class). In the examples below, we use multiprocessing to speed up the results.
+`sits_kfold_validate()` supports k-fold validation in `sits`. The following code does a five-fold validation using random forests. The result is the confusion matrix and the accuracy statistics (overall and by class). In the examples below, we use multiprocessing to speed up the results.
 
 ```{r, echo = FALSE}
 set.seed(290356)
@@ -2083,7 +2085,7 @@ val_rfor
 
 ## Comparing different machine learning methods using k-fold validation{-}
 
-One useful function in SITS is the capacity to compare different validation methods and store them in an XLS file for further analysis. The following example shows how to do this, using the Cerrado data set. We take the models: random forests(`sits_rfor()`), extreme gradient boosting (`sits_xgboost()`), temporal CNN (`sits_tempcnn()`), and lightweight temporal attention encoder (`sits_lighttae())`.  After computing the confusion matrix and the statistics for each model, we also store the result in a list. When the calculation is finished, the function `sits_to_xlsx` writes all of the results in an Excel-compatible spreadsheet. We also show the overall accuracy. 
+One useful function in SITS is the capacity to compare different validation methods and store them in an XLS file for further analysis. The following example shows how to do this, using the Cerrado data set. We take the models: random forests(`sits_rfor()`), extreme gradient boosting (`sits_xgboost()`), temporal CNN (`sits_tempcnn()`), and lightweight temporal attention encoder (`sits_lighttae())`.  After computing the confusion matrix and the statistics for each model, we also store the result in a list. When the calculation is finished, the function `sits_to_xlsx()` writes all of the results in an Excel-compatible spreadsheet. We also show the overall accuracy. 
 
 
 ```{r, tidy = "styler", eval = FALSE}
@@ -2166,15 +2168,15 @@ model_acc
 
 The resulting Excel file can be opened with R or using spreadsheet programs. The figure below shows a printout of what is read by Excel. As shown below, each sheet corresponds to the output of one model. For simplicity, we show only the result of LightTAE, that has an overall accuracy of 97% and is the best-performing model. 
 
-```{r, echo = FALSE, fig.align="center", out.width = "90%", out.height = "90%", fig.cap= "Result of 5-fold cross validation of Mato Grosso dataset using TempCNN"}
+```{r, echo = FALSE, fig.align="center", out.width = "90%", out.height = "90%", fig.cap= "Result of 5-fold cross validation of Mato Grosso dataset using LightTAE"}
 
 knitr::include_graphics("images/k_fold_validation_xlsx.png")
 
 ```
 
-## Accuracy assessment 
+## Accuracy assessment{-}
 
-### Time series
+### Time series{-}
 
 Users can perform accuracy assessment in *sits* both in time series datasets or in classified images using the `sits_accuracy` function. In the case of time series, the input is a sits tibble which has been classified by a sits model. The input tibble needs to contain valid labels in its "label" column. These labels are compared to the results of the prediction to the reference values. This function calculates the confusion matrix and then the resulting statistics using the R package "caret". 
 
@@ -2197,11 +2199,11 @@ The detailed accuracy measures can be obtained by printing the accuracy object.
 acc_ts 
 ```
 
-### Classified images 
+### Classified images{-}
 
 To measure the accuracy of classified images, the `sits_accuracy` function uses an area-weighted technique, following the best practices proposed by @Olofsson2013. The need for area-weighted estimates arises from the fact the land use and land cover classes are not evenly distributed in space. In some applications (e.g., deforestation) where the interest lies in assessing how much of the image has changed, the area mapped as deforested is likely to be a small fraction of the total area. If users disregard the relative importance of small areas where change is taking place, the overall accuracy estimate will be inflated and unrealistic. For this reason, @Olofsson2013 argue that "mapped areas should be adjusted to eliminate bias attributable to map classification error and these error-adjusted area estimates should be accompanied by confidence intervals to quantify the sampling variability of the estimated area".
 
-With this motivation, when measuring accuracy of classified images, the function `sits_accuracy` follows @Olofsson2013 and @Olofsson2014.  The following explanation is extracted from the paper of @Olofsson2013, and users should refer to this paper for further explanation.
+With this motivation, when measuring accuracy of classified images, the function `sits_accuracy()` follows @Olofsson2013 and @Olofsson2014.  The following explanation is extracted from the paper of @Olofsson2013, and users should refer to this paper for further explanation.
 
 Given a classified image and a validation file, the first step is to calculate the confusion matrix in the traditional way, i.e., by identifying the commission and omission errors. Then we calculate the unbiased estimator of the proportion of area in cell $i,j$ of the error matrix
 
@@ -2214,7 +2216,7 @@ $$
 $$
 This unbiased area estimator includes the effect of false negatives (omission error) while not considering the effect of false positives (commission error). The area estimates also allow producing an unbiased estimate of the user's and producer's accuracy for each class. Following @Olofsson2013, we can also estimate the 95% confidence interval for $\hat{A_j}$. 
 
-To use the `sits_accuracy` function to produce the adjusted area estimates, users have to provide the classified image together with a csv file containing a set of well selected labeled points.  The csv file should have the same format as the one used to obtain samples, as discussed earlier. The labelled points should be based on a random stratified sample. All areas associated to each class should contribute to the test data used for accuracy asseesment. 
+To use the `sits_accuracy()` function to produce the adjusted area estimates, users have to provide the classified image together with a csv file containing a set of well selected labeled points.  The csv file should have the same format as the one used to obtain samples, as discussed earlier. The labelled points should be based on a random stratified sample. All areas associated to each class should contribute to the test data used for accuracy asseesment. 
 
 In what follows, we show a simple example of using the accuracy function to estimate the quality of the classification
 ```{r}
@@ -2229,7 +2231,8 @@ cube <- sits_cube(
     collection = "MOD13Q1-6",
     name       = "Sinop",
     data_dir   = data_dir,
-    parse_info = c("X1", "X2", "tile", "band", "date")
+    parse_info = c("X1", "X2", "tile", "band", "date"),
+    delim = "_"
 )
 # classify the data cube with xgb model
 probs_cube <- sits_classify(cube, xgb_model)
@@ -2304,7 +2307,7 @@ Designing software for big Earth observation data analysis requires making compr
 
 This chapter contains technical details on the algorithms available in `sits`. It is intended to support those that want to understand how the package works and also want to contribute to its development.
 
-##  Bayesian smoothing 
+##  Bayesian smoothing {-}
 
 Doing post-processing using Bayesian smoothing in SITS is straightforward. The result of the `sits_classify` function applied to a data cube is set of probability images, one per class. The next step is to apply the `sits_smooth` function. By default, this function selects the most likely class for each pixel considering only the probabilities of each class for each pixel. To allow for Bayesian smoothing, it suffices to include the `type = bayesian` parameter (which is also the default). If desired, the `smoothness` parameter (associated to the hyperparameter $\sigma^2_k$ described above) can control the degree of smoothness. If so desired, the `smoothness` parameter can also be expressed as a matrix.
 
@@ -2316,7 +2319,7 @@ $$
 
 Bayesian inference involves the estimation of an unknown parameter $\theta$, which is the random variable that describe what we are trying to measure. In the case of smoothing of image classification, $\theta$ is the class probability for a given pixel. We model our initial belief about this value by a probability distribution,  $\pi(\theta)$, called the \emph{prior} distribution. It represents what we know about $\theta$ \emph{before} observing the data. The distribution $\pi(x|\theta)$, called the \emph{likelihood}, is estimated based on the observed data. It represents the added information provided by our observations. The \emph{posterior} distribution $\pi(\theta|x)$ is our improved belief of $\theta$ \emph{after} seeing the data. Bayes's rule states that the \emph{posterior} probability is proportional to the product of the \emph{likelihood} and the \emph{prior} probability.
 
-### Derivation of bayesian parameters for spatiotemporal smoothing
+### Derivation of bayesian parameters for spatiotemporal smoothing{-}
 
 In our post-classification smoothing model, we consider the output of a machine learning algorithm that provides the probabilities of each pixel in the image to belong to target classes. More formally, consider a set of $K$ classes that are candidates for labelling each pixel. Let $p_{i,t,k}$ be the probability of pixel $i$ belonging to class $k$, $k = 1, \dots, K$ at a time $t$, $t=1,\dots{},T$. We have 
 $$
@@ -2407,7 +2410,7 @@ When the values of local class covariance $\mathbf{S}_{i,t}$ are relative to the
 
 In practice, $\boldsymbol\Sigma_{i,t}$ is a user-controlled covariance matrix parameter that will be set by users based on their knowledge of the region to be classified. In the simplest case, users can associate the  conditional covariance $\boldsymbol\Sigma_{i,t}$ to a diagonal matrix, using only one hyperparameter $\sigma^2_k$ to set the level of smoothness. Higher values of $\sigma^2_k$ will cause the assignment of the local mean to the pixel updated probability. In our case, after some classification tests, we decided to $\sigma^2_k=20$ by default for all $k$. 
 
-## Bilateral smoothing 
+## Bilateral smoothing {-}
 
 Bilateral smoothing combines proximity (combining pixels which are close) and similarity (comparing the values of the pixels) [@Tomasi1998]. If most of the pixels in a neighborhood have similar values, it is easy to identify outliers and noisy pixels. In contrast, there is a strong difference between the values of pixels in a if neighborhood, it is possible that the pixel is located in a class boundary. Bilateral filtering combines domain filtering with range filtering. In domain filtering, the weights used to combine pixels decrease with distance. In range filtering, the weights are computed considering value similarity. 
 
@@ -2436,6 +2439,11 @@ The normalization term to be applied to compute the smoothed values of pixel $i$
 $$
 W_{i} = \sum_{x_k \in \theta}{\mathcal{N}_{\tau}(\|I(x_k) - I(x_i)\|)\mathcal{N}_{\sigma}(\|x_k - x_i\|)}
 $$
+# References{-}
 
 <!--chapter:end:12-annex.Rmd-->
+
+# References{-}
+
+<!--chapter:end:13-references.Rmd-->
 

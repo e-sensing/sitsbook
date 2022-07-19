@@ -53,7 +53,7 @@ Cross-validation uses part of the available samples to fit the classification mo
 
 A natural question that arises is: *how good is this estimation?* According to @Hastie2009, there is a bias-variance trade-off in choice of $k$. If $k$ is set to the number of samples, we obtain the so-called *leave-one-out* validation, the estimator gives a low bias for the true expected error, but produces a high variance expectation. This can be computational expensive as it requires the same number of fitting process as the number of samples. On the other hand, if we choose ${k=2}$, we get a high biased expected prediction error estimation that overestimates the true prediction error, but has a low variance. The recommended choices of $k$ are $5$ or $10$.
 
-`sits_kfold_validate()` gives support the k-fold validation in `sits`. The following code gives an example on how to proceed a k-fold cross-validation in the package. It perform a five-fold validation using SVM classification model as a default classifier. We can see in the output text the corresponding confusion matrix and the accuracy statistics (overall and by class). In the examples below, we use multiprocessing to speed up the results.
+`sits_kfold_validate()` supports k-fold validation in `sits`. The following code does a five-fold validation using random forests. The result is the confusion matrix and the accuracy statistics (overall and by class). In the examples below, we use multiprocessing to speed up the results.
 
 ```{r, echo = FALSE}
 set.seed(290356)
@@ -75,7 +75,7 @@ val_rfor
 
 ## Comparing different machine learning methods using k-fold validation{-}
 
-One useful function in SITS is the capacity to compare different validation methods and store them in an XLS file for further analysis. The following example shows how to do this, using the Cerrado data set. We take the models: random forests(`sits_rfor()`), extreme gradient boosting (`sits_xgboost()`), temporal CNN (`sits_tempcnn()`), and lightweight temporal attention encoder (`sits_lighttae())`.  After computing the confusion matrix and the statistics for each model, we also store the result in a list. When the calculation is finished, the function `sits_to_xlsx` writes all of the results in an Excel-compatible spreadsheet. We also show the overall accuracy. 
+One useful function in SITS is the capacity to compare different validation methods and store them in an XLS file for further analysis. The following example shows how to do this, using the Cerrado data set. We take the models: random forests(`sits_rfor()`), extreme gradient boosting (`sits_xgboost()`), temporal CNN (`sits_tempcnn()`), and lightweight temporal attention encoder (`sits_lighttae())`.  After computing the confusion matrix and the statistics for each model, we also store the result in a list. When the calculation is finished, the function `sits_to_xlsx()` writes all of the results in an Excel-compatible spreadsheet. We also show the overall accuracy. 
 
 
 ```{r, tidy = "styler", eval = FALSE}
@@ -158,15 +158,15 @@ model_acc
 
 The resulting Excel file can be opened with R or using spreadsheet programs. The figure below shows a printout of what is read by Excel. As shown below, each sheet corresponds to the output of one model. For simplicity, we show only the result of LightTAE, that has an overall accuracy of 97% and is the best-performing model. 
 
-```{r, echo = FALSE, fig.align="center", out.width = "90%", out.height = "90%", fig.cap= "Result of 5-fold cross validation of Mato Grosso dataset using TempCNN"}
+```{r, echo = FALSE, fig.align="center", out.width = "90%", out.height = "90%", fig.cap= "Result of 5-fold cross validation of Mato Grosso dataset using LightTAE"}
 
 knitr::include_graphics("images/k_fold_validation_xlsx.png")
 
 ```
 
-## Accuracy assessment 
+## Accuracy assessment{-}
 
-### Time series
+### Time series{-}
 
 Users can perform accuracy assessment in *sits* both in time series datasets or in classified images using the `sits_accuracy` function. In the case of time series, the input is a sits tibble which has been classified by a sits model. The input tibble needs to contain valid labels in its "label" column. These labels are compared to the results of the prediction to the reference values. This function calculates the confusion matrix and then the resulting statistics using the R package "caret". 
 
@@ -189,11 +189,11 @@ The detailed accuracy measures can be obtained by printing the accuracy object.
 acc_ts 
 ```
 
-### Classified images 
+### Classified images{-}
 
 To measure the accuracy of classified images, the `sits_accuracy` function uses an area-weighted technique, following the best practices proposed by @Olofsson2013. The need for area-weighted estimates arises from the fact the land use and land cover classes are not evenly distributed in space. In some applications (e.g., deforestation) where the interest lies in assessing how much of the image has changed, the area mapped as deforested is likely to be a small fraction of the total area. If users disregard the relative importance of small areas where change is taking place, the overall accuracy estimate will be inflated and unrealistic. For this reason, @Olofsson2013 argue that "mapped areas should be adjusted to eliminate bias attributable to map classification error and these error-adjusted area estimates should be accompanied by confidence intervals to quantify the sampling variability of the estimated area".
 
-With this motivation, when measuring accuracy of classified images, the function `sits_accuracy` follows @Olofsson2013 and @Olofsson2014.  The following explanation is extracted from the paper of @Olofsson2013, and users should refer to this paper for further explanation.
+With this motivation, when measuring accuracy of classified images, the function `sits_accuracy()` follows @Olofsson2013 and @Olofsson2014.  The following explanation is extracted from the paper of @Olofsson2013, and users should refer to this paper for further explanation.
 
 Given a classified image and a validation file, the first step is to calculate the confusion matrix in the traditional way, i.e., by identifying the commission and omission errors. Then we calculate the unbiased estimator of the proportion of area in cell $i,j$ of the error matrix
 
@@ -206,7 +206,7 @@ $$
 $$
 This unbiased area estimator includes the effect of false negatives (omission error) while not considering the effect of false positives (commission error). The area estimates also allow producing an unbiased estimate of the user's and producer's accuracy for each class. Following @Olofsson2013, we can also estimate the 95% confidence interval for $\hat{A_j}$. 
 
-To use the `sits_accuracy` function to produce the adjusted area estimates, users have to provide the classified image together with a csv file containing a set of well selected labeled points.  The csv file should have the same format as the one used to obtain samples, as discussed earlier. The labelled points should be based on a random stratified sample. All areas associated to each class should contribute to the test data used for accuracy asseesment. 
+To use the `sits_accuracy()` function to produce the adjusted area estimates, users have to provide the classified image together with a csv file containing a set of well selected labeled points.  The csv file should have the same format as the one used to obtain samples, as discussed earlier. The labelled points should be based on a random stratified sample. All areas associated to each class should contribute to the test data used for accuracy asseesment. 
 
 In what follows, we show a simple example of using the accuracy function to estimate the quality of the classification
 ```{r}
@@ -221,7 +221,8 @@ cube <- sits_cube(
     collection = "MOD13Q1-6",
     name       = "Sinop",
     data_dir   = data_dir,
-    parse_info = c("X1", "X2", "tile", "band", "date")
+    parse_info = c("X1", "X2", "tile", "band", "date"),
+    delim = "_"
 )
 # classify the data cube with xgb model
 probs_cube <- sits_classify(cube, xgb_model)

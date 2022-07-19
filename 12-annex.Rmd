@@ -2,7 +2,7 @@
 
 This chapter contains technical details on the algorithms available in `sits`. It is intended to support those that want to understand how the package works and also want to contribute to its development.
 
-##  Bayesian smoothing 
+##  Bayesian smoothing {-}
 
 Doing post-processing using Bayesian smoothing in SITS is straightforward. The result of the `sits_classify` function applied to a data cube is set of probability images, one per class. The next step is to apply the `sits_smooth` function. By default, this function selects the most likely class for each pixel considering only the probabilities of each class for each pixel. To allow for Bayesian smoothing, it suffices to include the `type = bayesian` parameter (which is also the default). If desired, the `smoothness` parameter (associated to the hyperparameter $\sigma^2_k$ described above) can control the degree of smoothness. If so desired, the `smoothness` parameter can also be expressed as a matrix.
 
@@ -14,7 +14,7 @@ $$
 
 Bayesian inference involves the estimation of an unknown parameter $\theta$, which is the random variable that describe what we are trying to measure. In the case of smoothing of image classification, $\theta$ is the class probability for a given pixel. We model our initial belief about this value by a probability distribution,  $\pi(\theta)$, called the \emph{prior} distribution. It represents what we know about $\theta$ \emph{before} observing the data. The distribution $\pi(x|\theta)$, called the \emph{likelihood}, is estimated based on the observed data. It represents the added information provided by our observations. The \emph{posterior} distribution $\pi(\theta|x)$ is our improved belief of $\theta$ \emph{after} seeing the data. Bayes's rule states that the \emph{posterior} probability is proportional to the product of the \emph{likelihood} and the \emph{prior} probability.
 
-### Derivation of bayesian parameters for spatiotemporal smoothing
+### Derivation of bayesian parameters for spatiotemporal smoothing{-}
 
 In our post-classification smoothing model, we consider the output of a machine learning algorithm that provides the probabilities of each pixel in the image to belong to target classes. More formally, consider a set of $K$ classes that are candidates for labelling each pixel. Let $p_{i,t,k}$ be the probability of pixel $i$ belonging to class $k$, $k = 1, \dots, K$ at a time $t$, $t=1,\dots{},T$. We have 
 $$
@@ -105,7 +105,7 @@ When the values of local class covariance $\mathbf{S}_{i,t}$ are relative to the
 
 In practice, $\boldsymbol\Sigma_{i,t}$ is a user-controlled covariance matrix parameter that will be set by users based on their knowledge of the region to be classified. In the simplest case, users can associate the  conditional covariance $\boldsymbol\Sigma_{i,t}$ to a diagonal matrix, using only one hyperparameter $\sigma^2_k$ to set the level of smoothness. Higher values of $\sigma^2_k$ will cause the assignment of the local mean to the pixel updated probability. In our case, after some classification tests, we decided to $\sigma^2_k=20$ by default for all $k$. 
 
-## Bilateral smoothing 
+## Bilateral smoothing {-}
 
 Bilateral smoothing combines proximity (combining pixels which are close) and similarity (comparing the values of the pixels) [@Tomasi1998]. If most of the pixels in a neighborhood have similar values, it is easy to identify outliers and noisy pixels. In contrast, there is a strong difference between the values of pixels in a if neighborhood, it is possible that the pixel is located in a class boundary. Bilateral filtering combines domain filtering with range filtering. In domain filtering, the weights used to combine pixels decrease with distance. In range filtering, the weights are computed considering value similarity. 
 
@@ -134,3 +134,4 @@ The normalization term to be applied to compute the smoothed values of pixel $i$
 $$
 W_{i} = \sum_{x_k \in \theta}{\mathcal{N}_{\tau}(\|I(x_k) - I(x_i)\|)\mathcal{N}_{\sigma}(\|x_k - x_i\|)}
 $$
+# References{-}
