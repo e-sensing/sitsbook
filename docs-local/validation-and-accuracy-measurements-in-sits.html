@@ -25,7 +25,9 @@
 <meta name="twitter:image" content="/images/cover_sits_book.png">
 <!-- JS --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/6.4.6/fuse.js" integrity="sha512-zv6Ywkjyktsohkbp9bb45V6tEMoWhzFzXis+LrMehmJZZSys19Yxf1dopHx7WzIKxr5tK2dVcYmaCk2uqdjF4A==" crossorigin="anonymous"></script><script src="https://kit.fontawesome.com/6ecbd6c532.js" crossorigin="anonymous"></script><script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="libs/bootstrap-4.6.0/bootstrap.min.css" rel="stylesheet">
-<script src="libs/bootstrap-4.6.0/bootstrap.bundle.min.js"></script><script src="libs/bs3compat-0.3.1/transition.js"></script><script src="libs/bs3compat-0.3.1/tabs.js"></script><script src="libs/bs3compat-0.3.1/bs3compat.js"></script><link href="libs/bs4_book-1.0.0/bs4_book.css" rel="stylesheet">
+<script src="libs/bootstrap-4.6.0/bootstrap.bundle.min.js"></script><link href="libs/_IBM%20Plex%20Serif-0.4.1/font.css" rel="stylesheet">
+<link href="libs/_IBM%20Plex%20Mono-0.4.1/font.css" rel="stylesheet">
+<script src="libs/bs3compat-0.3.1/transition.js"></script><script src="libs/bs3compat-0.3.1/tabs.js"></script><script src="libs/bs3compat-0.3.1/bs3compat.js"></script><link href="libs/bs4_book-1.0.0/bs4_book.css" rel="stylesheet">
 <script src="libs/bs4_book-1.0.0/bs4_book.js"></script><script src="libs/kePrint-0.0.1/kePrint.js"></script><link href="libs/lightable-0.0.1/lightable.css" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/autocomplete.js/0.38.0/autocomplete.jquery.min.js" integrity="sha512-GU9ayf+66Xx2TmpxqJpliWbT5PiGYxpaG8rfnBEk1LL8l1KGkRShhngwdXK1UgqhAzWpZHSiYPc09/NwDQIGyg==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js" integrity="sha512-5CYOlHXGh6QpOFA/TeTylKLWfB3ftPsde7AnmhuitiTX4K5SqCLBeKro6sPS8ilsz1Q4NRx3v8Ko2IBiszzdww==" crossorigin="anonymous"></script><!-- CSS --><style type="text/css">
     
@@ -103,7 +105,7 @@
 </h2>
 <p>To present a realistic example of how to do validation and accuracy assessment in<code>sits</code>, we present an example resulting from a large-scale classification of the Cerrado biome in Brazil using Landsat-8 images, described in the paper by Simoes et al.<span class="citation"><a href="references.html#ref-Simoes2021" role="doc-biblioref">[48]</a></span>. The Cerrado is covered by 51 Landsat-8 tiles available in the Brazil Data Cube (BDC). Each Landsat tile in the BDC covers a 3° <span class="math inline">\(\times\)</span> 2° grid in Albers equal area projection with an area of 73,920 km<span class="math inline">\(^2\)</span>, and a size of 11,204 <span class="math inline">\(\times\)</span> 7324 pixels. The~one-year classification period ranges from September 2017 to August 2018, following the agricultural calendar. The~temporal interval is 16 days, resulting in 24 images per tile. We use seven spectral bands plus two vegetation indexes (NDVI and EVI) and the cloud cover information. The total input data size is about 8 TB. In the paper, a data set of 48,850 samples was used to train a convolutional neural network model using the TempCNN method. All available attributes in the BDC Landsat-8 data cube (two vegetation indices and seven spectral bands) were used for training and classification.</p>
 <p>The training data set used for classification of the Cerrado biome is available in the package <code>sitsdata</code>, and can be accessed as follows.</p>
-<div class="sourceCode" id="cb108"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb118"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/e-sensing/sitsdata/">sitsdata</a></span><span class="op">)</span>
 <span class="fu"><a href="https://rdrr.io/r/utils/data.html">data</a></span><span class="op">(</span><span class="st">"samples_cerrado_lc8"</span><span class="op">)</span>
 <span class="co"># show labels</span>
@@ -122,7 +124,7 @@
 #&gt;  9 Sugarcane       1775 0.0363  
 #&gt; 10 Water            263 0.00538</code></pre>
 <p>Since the dataset is big and highly imbalanced, we will use only the indexes “NDVI”, “EVI” and the short-wave infrared band “B7” to illustrate the validation techniques. We will also use the function <code><a href="https://rdrr.io/pkg/sits/man/sits_reduce_imbalance.html">sits_reduce_imbalance()</a></code> to reduce the size and produce a more balanced sample dataset.</p>
-<div class="sourceCode" id="cb110"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb120"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co"># select only NDVI, EVI and B7</span>
 <span class="va">samples_cerrado_3bands</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_select.html">sits_select</a></span><span class="op">(</span>
   data <span class="op">=</span> <span class="va">samples_cerrado_lc8</span>,
@@ -162,7 +164,7 @@
 <p>Cross-validation uses part of the available samples to fit the classification model, and a different part to test it. The so-called <em>k-fold</em> validation, we split the data into <span class="math inline">\(k\)</span> partitions with approximately the same size and proceed by fitting the model and testing it <span class="math inline">\(k\)</span> times. At each step, we take one distinct partition for test and the remaining <span class="math inline">\({k-1}\)</span> for training the model, and calculate its prediction error for classifying the test partition. A simple average gives us an estimation of the expected prediction error.</p>
 <p>A natural question that arises is: <em>how good is this estimation?</em> According to <span class="citation"><a href="references.html#ref-Hastie2009" role="doc-biblioref">[39]</a></span>, there is a bias-variance trade-off in choice of <span class="math inline">\(k\)</span>. If <span class="math inline">\(k\)</span> is set to the number of samples, we obtain the so-called <em>leave-one-out</em> validation, the estimator gives a low bias for the true expected error, but produces a high variance expectation. This can be computational expensive as it requires the same number of fitting process as the number of samples. On the other hand, if we choose <span class="math inline">\({k=2}\)</span>, we get a high biased expected prediction error estimation that overestimates the true prediction error, but has a low variance. The recommended choices of <span class="math inline">\(k\)</span> are <span class="math inline">\(5\)</span> or <span class="math inline">\(10\)</span>.</p>
 <p><code><a href="https://rdrr.io/pkg/sits/man/sits_kfold_validate.html">sits_kfold_validate()</a></code> supports k-fold validation in <code>sits</code>. The following code does a five-fold validation using random forests. The result is the confusion matrix and the accuracy statistics (overall and by class). In the examples below, we use multiprocessing to speed up the results.</p>
-<div class="sourceCode" id="cb112"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb122"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co"># perform a five fold validation for the "cerrado_2classes" data set</span>
 <span class="co"># random forests machine learning method using default parameters</span>
 <span class="va">val_rfor</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_kfold_validate.html">sits_kfold_validate</a></span><span class="op">(</span>
@@ -298,7 +300,7 @@
 <h2>Comparing different machine learning methods using k-fold validation<a class="anchor" aria-label="anchor" href="#comparing-different-machine-learning-methods-using-k-fold-validation"><i class="fas fa-link"></i></a>
 </h2>
 <p>One useful function in SITS is the capacity to compare different validation methods and store them in an XLS file for further analysis. The following example shows how to do this, using the Cerrado data set. We take the models: random forests(<code><a href="https://rdrr.io/pkg/sits/man/sits_rfor.html">sits_rfor()</a></code>), extreme gradient boosting (<code><a href="https://rdrr.io/pkg/sits/man/sits_xgboost.html">sits_xgboost()</a></code>), temporal CNN (<code><a href="https://rdrr.io/pkg/sits/man/sits_tempcnn.html">sits_tempcnn()</a></code>), and lightweight temporal attention encoder (<code>sits_lighttae())</code>. After computing the confusion matrix and the statistics for each model, we also store the result in a list. When the calculation is finished, the function <code><a href="https://rdrr.io/pkg/sits/man/sits_to_xlsx.html">sits_to_xlsx()</a></code> writes all of the results in an Excel-compatible spreadsheet. We also show the overall accuracy.</p>
-<div class="sourceCode" id="cb114"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb124"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co"># Compare different models for the Cerrado data set</span>
 <span class="co"># create a list to store the results</span>
 <span class="va">results</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span><span class="op">)</span>
@@ -357,7 +359,7 @@
 
 <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_to_xlsx.html">sits_to_xlsx</a></span><span class="op">(</span><span class="va">results</span>, file <span class="op">=</span> <span class="va">xlsx_file</span><span class="op">)</span></code></pre></div>
 <p>We now print the overall accuracy for each model.</p>
-<div class="sourceCode" id="cb115"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb125"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">model_acc</span> <span class="op">&lt;-</span> <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/tibble.html">tibble</a></span><span class="op">(</span>
   <span class="st">"Random Forest"</span> <span class="op">=</span> <span class="va">val_rfor</span><span class="op">$</span><span class="va">overall</span><span class="op">[[</span><span class="st">"Accuracy"</span><span class="op">]</span><span class="op">]</span>,
   <span class="st">"XGBoost"</span>       <span class="op">=</span> <span class="va">val_xgb</span><span class="op">$</span><span class="va">overall</span><span class="op">[[</span><span class="st">"Accuracy"</span><span class="op">]</span><span class="op">]</span>,
@@ -385,7 +387,7 @@ Figure 65: Result of 5-fold cross validation of Mato Grosso dataset using LightT
 <h3>Time series<a class="anchor" aria-label="anchor" href="#time-series"><i class="fas fa-link"></i></a>
 </h3>
 <p>Users can perform accuracy assessment in <em>sits</em> both in time series datasets or in classified images using the <code>sits_accuracy</code> function. In the case of time series, the input is a sits tibble which has been classified by a sits model. The input tibble needs to contain valid labels in its “label” column. These labels are compared to the results of the prediction to the reference values. This function calculates the confusion matrix and then the resulting statistics using the R package “caret”.</p>
-<div class="sourceCode" id="cb117"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb127"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co"># read a tibble with 400 time series of Cerrado and 346 of Pasture</span>
 <span class="fu"><a href="https://rdrr.io/r/utils/data.html">data</a></span><span class="op">(</span><span class="va">cerrado_2classes</span><span class="op">)</span>
 <span class="co"># create a model for classification of time series</span>
@@ -401,7 +403,7 @@ Figure 65: Result of 5-fold cross validation of Mato Grosso dataset using LightT
 #&gt;    95% CI : (0.981, 0.996)
 #&gt;     Kappa : 0.981</code></pre>
 <p>The detailed accuracy measures can be obtained by printing the accuracy object.</p>
-<div class="sourceCode" id="cb119"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb129"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co"># print the accuracy statistics</span>
 <span class="va">acc_ts</span></code></pre></div>
 <pre class="sourceCode"><code>#&gt; Confusion Matrix and Statistics
@@ -438,7 +440,7 @@ where the total area of the map is <span class="math inline">\(A_{tot}\)</span>,
 This unbiased area estimator includes the effect of false negatives (omission error) while not considering the effect of false positives (commission error). The area estimates also allow producing an unbiased estimate of the user’s and producer’s accuracy for each class. Following <span class="citation"><a href="references.html#ref-Olofsson2013" role="doc-biblioref">[70]</a></span>, we can also estimate the 95% confidence interval for <span class="math inline">\(\hat{A_j}\)</span>.</p>
 <p>To use the <code><a href="https://rdrr.io/pkg/sits/man/sits_accuracy.html">sits_accuracy()</a></code> function to produce the adjusted area estimates, users have to provide the classified image together with a csv file containing a set of well selected labeled points. The csv file should have the same format as the one used to obtain samples, as discussed earlier. The labelled points should be based on a random stratified sample. All areas associated to each class should contribute to the test data used for accuracy asseesment.</p>
 <p>In what follows, we show a simple example of using the accuracy function to estimate the quality of the classification</p>
-<div class="sourceCode" id="cb121"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb131"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co"># select a sample with 2 bands (NDVI and EVI)</span>
 <span class="va">samples_modis_ndvi</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_select.html">sits_select</a></span><span class="op">(</span><span class="va">samples_modis_4bands</span>, bands <span class="op">=</span> <span class="st">"NDVI"</span><span class="op">)</span>
 <span class="co"># build an extreme gradient boosting model</span>

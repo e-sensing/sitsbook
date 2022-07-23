@@ -189,9 +189,9 @@ The detailed accuracy measures can be obtained by printing the accuracy object.
 acc_ts 
 ```
 
-### Classified images{-}
+### Accuracy measures for classified images{-}
 
-To measure the accuracy of classified images, the `sits_accuracy` function uses an area-weighted technique, following the best practices proposed by @Olofsson2013. The need for area-weighted estimates arises from the fact the land use and land cover classes are not evenly distributed in space. In some applications (e.g., deforestation) where the interest lies in assessing how much of the image has changed, the area mapped as deforested is likely to be a small fraction of the total area. If users disregard the relative importance of small areas where change is taking place, the overall accuracy estimate will be inflated and unrealistic. For this reason, @Olofsson2013 argue that "mapped areas should be adjusted to eliminate bias attributable to map classification error and these error-adjusted area estimates should be accompanied by confidence intervals to quantify the sampling variability of the estimated area".
+To measure the accuracy of classified images, the `sits_accuracy()` function uses an area-weighted technique, following the best practices proposed by @Olofsson2013. The need for area-weighted estimates arises from the fact the land use and land cover classes are not evenly distributed in space. In some applications (e.g., deforestation) where the interest lies in assessing how much of the image has changed, the area mapped as deforested is likely to be a small fraction of the total area. If users disregard the relative importance of small areas where change is taking place, the overall accuracy estimate will be inflated and unrealistic. For this reason, @Olofsson2013 argue that "mapped areas should be adjusted to eliminate bias attributable to map classification error and these error-adjusted area estimates should be accompanied by confidence intervals to quantify the sampling variability of the estimated area".
 
 With this motivation, when measuring accuracy of classified images, the function `sits_accuracy()` follows @Olofsson2013 and @Olofsson2014.  The following explanation is extracted from the paper of @Olofsson2013, and users should refer to this paper for further explanation.
 
@@ -208,31 +208,49 @@ This unbiased area estimator includes the effect of false negatives (omission er
 
 To use the `sits_accuracy()` function to produce the adjusted area estimates, users have to provide the classified image together with a csv file containing a set of well selected labeled points.  The csv file should have the same format as the one used to obtain samples, as discussed earlier. The labelled points should be based on a random stratified sample. All areas associated to each class should contribute to the test data used for accuracy asseesment. 
 
-In what follows, we show a simple example of using the accuracy function to estimate the quality of the classification
-```{r}
-# select a sample with 2 bands (NDVI and EVI)
-samples_modis_ndvi <- sits_select(samples_modis_4bands, bands = "NDVI")
-# build an extreme gradient boosting model
-xgb_model <- sits_train(samples_modis_ndvi, ml_method = sits_xgboost())
-# create a data cube based on files
-data_dir <- system.file("extdata/raster/mod13q1", package = "sits")
-cube <- sits_cube(
-    source     = "BDC",
-    collection = "MOD13Q1-6",
-    name       = "Sinop",
-    data_dir   = data_dir,
-    parse_info = c("X1", "X2", "tile", "band", "date"),
-    delim = "_"
+### Use case
+
+In what follows, we show an example of using the accuracy function to estimate the quality of the classification. We will be using a classified data cube that contain labelled images which are part of result of Landsat-8 classification for the Brazilian Cerrado biome, as described in the paper by Simoes et al. [@Simoes2021]. 
+
+The Cerrado is Brazil's main agricultural frontier. Its large latitude gradient includes different climate regimes, which lead to important differences in the spectral responses of land cover types. This dataset was produced by a systematic sampling using a grid of 5km x 5km throughout the Cerrado biome, collecting 85,026 samples. The training data labels were extracted from three sources: the pastureland map of 2018 from Pastagem.org, MapBiomas Collection 5 for  2018, and Brazil's National Mapping Agency IBGE maps for 2016-2018. Out of the 85,026 samples, we selected those where there was no disagreement between the labels assigned by the three sources. The resulting set had 48,850 points from which we extracted the time series using the Landsat-8 data cube. The distribution of samples for each class is the following: `Annual Crop` (6887), `Cerradao` (4211), `Cerrado` (21,909), `Natural Non Vegetated` (38), `Pasture` (12,894), `Perennial Crop` (68), `Silviculture` (805), `Sugarcane` (1775), and `Water` (263). 
+
+
+
+
+To do the assessment, Simoes et al.[Simoes2021] merged the labels "Cerrado" and "Open Cerrado" into one label called "Cerrado". 
+
+
+
+The files cover tiles "042049", "042050", "043049", "043050" from the Brazil Data Cube. In what follows, we create the classified data cube.
+
+```{r, tidy="styler"}
+# define the directory where data is located
+data_dir <- system.file("extdata/Cerrado", package = "sitsdata")
+# create a data cube with the classified images
+cerrado_classif <- sits_cube(
+    source = "BDC", 
+    collection  = "LC8_30_16D_STK-1",
+    data_dir = data_dir,
+    bands = "class",
+    labels = c("Annual_Crop", "Cerradao", "Cerrado", 
+                "Nat_NonVeg", "Cerrado", "Pasture", 
+                "Perennial_Crop", "Silviculture", 
+                "Sugarcane", "Water"), 
+    parse_info = c("X1", "tile", "band", 
+                   "start_date", "end_date", "version")
 )
-# classify the data cube with xgb model
-probs_cube <- sits_classify(cube, xgb_model)
-# label the classification
-label_cube <- sits_label_classification(probs_cube, output_dir = "./tempdir/chp9")
+# plot the classification
+plot(cerrado_classif)
+```
+After creating the classified cube, Simoes et al.[Simoes2021] use a set of validation points to obtain an accuracy assessment of the classification. These points come from  a systematic sampling of the Cerrado biome using a 20 km2 grid with a total of 5402 points. These samples are independent of the training set used in the classification and were interpreted by five specialists using high resolution images from the same period of the classification. The authors also did additional sampling to reach a minimal number of samples for the classes "Natural Non Vegetated", "Perennial Crop", and "Water". This resulted in 5286 evaluation samples thus distributed: "Annual Crop"(553), "Cerradao" (704), "Cerrado" (2451), "Natural Non Vegetated" (44), "Pasture" (1246), "Perennial Crop" (38), "Silviculture" (94), "Sugarcane" (77), and "Water" (79). The assessment is done by `sits_accuracy()`. 
+
+```{r}
 # get ground truth points
-ground_truth <- system.file("extdata/samples/samples_sinop_crop.csv",
-                            package = "sits")
+valid_csv <- system.file("extdata/csv/cerrado_lc8_validation.csv",
+                            package = "sitsdata")
 # calculate accuracy according to Olofsson's method
-area_acc <- sits_accuracy(label_cube, validation_csv = ground_truth)
+area_acc <- sits_accuracy(cerrado_classif, 
+                          validation_csv = valid_csv)
 # print the area estimated accuracy 
 area_acc
 ```

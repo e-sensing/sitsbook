@@ -18,7 +18,14 @@ bookdown::render_book(
 # 
 bookdown::render_book(
     output_format = bookdown::bs4_book(
-        df_print = "tibble"
+        df_print = "tibble",
+        theme = bookdown::bs4_book_theme(
+            base_font = font_google(
+                "IBM Plex Serif",
+                wght = c(300, 400, 600)
+            ),
+            code_font = font_google("IBM Plex Mono")
+        ),
     )
 )
 

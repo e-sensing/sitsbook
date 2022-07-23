@@ -25,7 +25,9 @@
 <meta name="twitter:image" content="/images/cover_sits_book.png">
 <!-- JS --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/6.4.6/fuse.js" integrity="sha512-zv6Ywkjyktsohkbp9bb45V6tEMoWhzFzXis+LrMehmJZZSys19Yxf1dopHx7WzIKxr5tK2dVcYmaCk2uqdjF4A==" crossorigin="anonymous"></script><script src="https://kit.fontawesome.com/6ecbd6c532.js" crossorigin="anonymous"></script><script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="libs/bootstrap-4.6.0/bootstrap.min.css" rel="stylesheet">
-<script src="libs/bootstrap-4.6.0/bootstrap.bundle.min.js"></script><script src="libs/bs3compat-0.3.1/transition.js"></script><script src="libs/bs3compat-0.3.1/tabs.js"></script><script src="libs/bs3compat-0.3.1/bs3compat.js"></script><link href="libs/bs4_book-1.0.0/bs4_book.css" rel="stylesheet">
+<script src="libs/bootstrap-4.6.0/bootstrap.bundle.min.js"></script><link href="libs/_IBM%20Plex%20Serif-0.4.1/font.css" rel="stylesheet">
+<link href="libs/_IBM%20Plex%20Mono-0.4.1/font.css" rel="stylesheet">
+<script src="libs/bs3compat-0.3.1/transition.js"></script><script src="libs/bs3compat-0.3.1/tabs.js"></script><script src="libs/bs3compat-0.3.1/bs3compat.js"></script><link href="libs/bs4_book-1.0.0/bs4_book.css" rel="stylesheet">
 <script src="libs/bs4_book-1.0.0/bs4_book.js"></script><script src="libs/kePrint-0.0.1/kePrint.js"></script><link href="libs/lightable-0.0.1/lightable.css" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/autocomplete.js/0.38.0/autocomplete.jquery.min.js" integrity="sha512-GU9ayf+66Xx2TmpxqJpliWbT5PiGYxpaG8rfnBEk1LL8l1KGkRShhngwdXK1UgqhAzWpZHSiYPc09/NwDQIGyg==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js" integrity="sha512-5CYOlHXGh6QpOFA/TeTylKLWfB3ftPsde7AnmhuitiTX4K5SqCLBeKro6sPS8ilsz1Q4NRx3v8Ko2IBiszzdww==" crossorigin="anonymous"></script><!-- CSS --><style type="text/css">
     
@@ -109,7 +111,7 @@
 <h2>Hierachical clustering for sample quality control<a class="anchor" aria-label="anchor" href="#hierachical-clustering-for-sample-quality-control"><i class="fas fa-link"></i></a>
 </h2>
 <p>Agglomerative hierarchical clustering (AHC) computes the dissimilarity between any two elements from a data set. Depending on the distance functions and linkage criteria, the algorithm decides which two clusters are merged at each iteration. This approach is useful for exploring data samples due to its visualization power and ease of use <span class="citation"><a href="references.html#ref-Keogh2003" role="doc-biblioref">[12]</a></span>. In <code>sits</code>, AHC is implemented using <code><a href="https://rdrr.io/pkg/sits/man/sits_clustering.html">sits_cluster_dendro()</a></code>.</p>
-<div class="sourceCode" id="cb53"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb63"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co"># take a set of patterns for 2 classes</span>
 <span class="co"># create a dendrogram, plot, and get the optimal cluster based on ARI index</span>
 <span class="va">clusters</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_clustering.html">sits_cluster_dendro</a></span><span class="op">(</span>
@@ -126,7 +128,7 @@ Figure 28: Example of hierarchical clustering for a two class set of time series
 </div>
 <p>The <code><a href="https://rdrr.io/pkg/sits/man/sits_clustering.html">sits_cluster_dendro()</a></code> function has one mandatory parameter (<code>samples</code>), where users should provide the name of the R object containing the data samples to be evaluated. Optional parameters include <code>bands</code>, <code>dist_method</code> and <code>linkage</code>. The <code>dist_method</code> parameter specifies how to calculate the distance between two time series. We recommend a metric that uses dynamic time warping (DTW)<span class="citation"><a href="references.html#ref-Petitjean2012" role="doc-biblioref">[13]</a></span>, as DTW is reliable method for measuring differences between satellite image time series <span class="citation"><a href="references.html#ref-Maus2016" role="doc-biblioref">[14]</a></span>. The options available in <code>sits</code> are based on those provided by package <code>dtwclust</code>, which include <code>dtw_basic</code>, <code>dtw_lb</code>, and <code>dtw2</code>. Please check <code><a href="https://rdrr.io/pkg/dtwclust/man/tsclust.html">?dtwclust::tsclust</a></code> for more information on DTW distances.</p>
 <p>The <code>linkage</code> parameter defines the metric used for computing the distance between clusters. The recommended linkage criteria are: <code>complete</code> or <code>ward.D2</code>. Complete linkage prioritizes the within-cluster dissimilarities, producing clusters with shorter distance samples, but results are sensitive to outliers. As an alternative, Ward proposes to minimize the data variance by means of either <em>sum-of-squares</em> or <em>sum-of-squares-error</em> <span class="citation"><a href="references.html#ref-Ward1963" role="doc-biblioref">[15]</a></span>. To cut the dendrogram, the <code><a href="https://rdrr.io/pkg/sits/man/sits_clustering.html">sits_cluster_dendro()</a></code> function computes the <em>adjusted rand index</em> (ARI) <span class="citation"><a href="references.html#ref-Rand1971" role="doc-biblioref">[16]</a></span> and returns the height where the cut of the dendrogram maximizes the index . In the example, the ARI index indicates that six (6) clusters are present. The result of <code><a href="https://rdrr.io/pkg/sits/man/sits_clustering.html">sits_cluster_dendro()</a></code> is a time series tibble with one additional column, called “cluster”. The function <code><a href="https://rdrr.io/pkg/sits/man/sits_cluster_frequency.html">sits_cluster_frequency()</a></code> provides information on the composition of each cluster.</p>
-<div class="sourceCode" id="cb54"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb64"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co"># show clusters samples frequency</span>
 <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_cluster_frequency.html">sits_cluster_frequency</a></span><span class="op">(</span><span class="va">clusters</span><span class="op">)</span></code></pre></div>
 <pre class="sourceCode"><code>#&gt;          
@@ -135,7 +137,7 @@ Figure 28: Example of hierarchical clustering for a two class set of time series
 #&gt;   Pasture   2 176  28   0 140   0   346
 #&gt;   Total   205 189  51  80 141  80   746</code></pre>
 <p>The cluster frequency table shows that each cluster has a predominance of either “Cerrado” or “Pasture” class with the exception of cluster <span class="math inline">\(3\)</span> which has a mix of samples from both classes. Such confusion may have resulted from incorrect labeling, inadequacy of selected bands and spatial resolution, or even a natural confusion due to the variability of the land classes. To remove cluster <span class="math inline">\(3\)</span> use <code><a href="https://dplyr.tidyverse.org/reference/filter.html">dplyr::filter()</a></code>. The resulting clusters still contained mixed labels, possibly resulting from outliers. In this case, users may want to remove the outliers and leave only the most frequent class using <code><a href="https://rdrr.io/pkg/sits/man/sits_cluster_clean.html">sits_cluster_clean()</a></code>. After cleaning the samples, the result set of samples is likely to improve the classification results.</p>
-<div class="sourceCode" id="cb56"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb66"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co"># remove cluster 3 from the samples</span>
 <span class="va">clusters_new</span> <span class="op">&lt;-</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span><span class="op">(</span><span class="va">clusters</span>, <span class="va">cluster</span> <span class="op">!=</span> <span class="fl">3</span><span class="op">)</span>
 <span class="co"># clear clusters, leaving only the majority class</span>
@@ -167,7 +169,7 @@ Figure 30: Using SOM for class noise reduction (source: Santos et al.(2021). Rep
 </p>
 </div>
 <p>As an example, we take a time series dataset from the Cerrado region of Brazil, the second largest biome in South America with an area of more than 2 million km2. This set ranges from 2000 to 2017 and includes 50,160 land use and cover samples divided into 12 classes(“Dense_Woodland”, “Dunes”, “Fallow_Cotton”, “Millet_Cotton”, “Pasture”, “Rocky_Savanna”, “Savanna”, “Savanna_Parkland”, “Silviculture”, “Soy_Corn”, “Soy_Cotton”, “Soy_Fallow”). Each time series covers 12 months (23 data points) from MOD13Q1 product, and has 4 bands (“EVI”, “NDVI”, “MIR”, and “NIR”). We use bands “NDVI” and “EVI” for faster processing.</p>
-<div class="sourceCode" id="cb58"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb68"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co"># take only the NDVI and EVI bands</span>
 <span class="va">samples_cerrado_mod13q1_2bands</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_select.html">sits_select</a></span><span class="op">(</span>
   data <span class="op">=</span> <span class="va">samples_cerrado_mod13q1</span>,
@@ -196,7 +198,7 @@ Figure 30: Using SOM for class noise reduction (source: Santos et al.(2021). Rep
 <h3>SOM-based quality assessment: creating the SOM map<a class="anchor" aria-label="anchor" href="#som-based-quality-assessment-creating-the-som-map"><i class="fas fa-link"></i></a>
 </h3>
 <p>To perform the SOM-based quality assessment, the first step is to run <code><a href="https://rdrr.io/pkg/sits/man/sits_som.html">sits_som_map()</a></code> which uses the <code>kohonen</code> R package <span class="citation"><a href="references.html#ref-Wehrens2018" role="doc-biblioref">[19]</a></span> to compute a SOM grid, controlled by five parameters. The grid size is given by <code>grid_xdim</code> and <code>grid_ydim</code>. The starting learning rate is <code>alpha</code>, which decreases during the interactions. To measure separation between samples, use <code>distance</code> (either “sumofsquares” or “euclidean”). The number of iterations is set by <code>rlen</code>. For more details, please consult <code><a href="https://rdrr.io/pkg/kohonen/man/supersom.html">?kohonen::supersom</a></code>.</p>
-<div class="sourceCode" id="cb60"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb70"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co"># clustering time series using SOM</span>
 <span class="va">som_cluster</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_som.html">sits_som_map</a></span><span class="op">(</span><span class="va">samples_cerrado_mod13q1_2bands</span>,
   grid_xdim <span class="op">=</span> <span class="fl">15</span>,
@@ -220,7 +222,7 @@ Figure 31: SOM map for the Cerrado samples
 <h3>SOM-based quality assessment: measuring confusion between labels<a class="anchor" aria-label="anchor" href="#som-based-quality-assessment-measuring-confusion-between-labels"><i class="fas fa-link"></i></a>
 </h3>
 <p>The second step in SOM-based quality assessment is understanding the confusion between labels. The function <code><a href="https://rdrr.io/pkg/sits/man/sits_som.html">sits_som_evaluate_cluster()</a></code> groups neurons by their majority label and produces a tibble. For each label, the tibble show the percentage of samples with a different label that have been mapped to a neuron whose majority is that label.</p>
-<div class="sourceCode" id="cb61"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb71"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co"># produce a tibble with a summary of the mixed labels</span>
 <span class="va">som_eval</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_som.html">sits_som_evaluate_cluster</a></span><span class="op">(</span><span class="va">som_cluster</span><span class="op">)</span>
 <span class="co"># show the result</span>
@@ -241,7 +243,7 @@ Figure 31: SOM map for the Cerrado samples
 #&gt; # … with 69 more rows</code></pre>
 <p>As seen above, almost all labels are associated to clusters where there are some samples with a different label. Such confusion between labels arises because visual labeling of samples is subjective and can be biased. In many cases, interpreters use high-resolution data to identify samples. However, the actual images to be classified are captured by satellites with lower resolution. In our case study, a MOD13Q1 image has pixels with 250 x 250 meter resolution. Therefore, the correspondence between labelled locations in high-resolution images and mid to low-resolution images is not direct. Therefore, the SOM-based analysis is useful to select only homogeneous pixels.</p>
 <p>The confusion by class can be visualised in a bar plot using <code><a href="https://rdrr.io/pkg/sits/man/plot.html">plot()</a></code>, as shown below. The bar plot shows some confusion between the classes associated to the natural vegetation typical of the Brazilian Cerrado (“Savanna”, “Savanna_Parkland”, “Rocky_Savanna”). This mixture is due to the large variability of the natural vegetation of the Cerrado biome, which makes it difficult to draw sharp boundaries between each label. Some confusion is also visible between the agricultural classes. The “Millet_Cotton” class is a particularly difficult one, since many of the samples assigned to this class are confused with “Soy_Cotton” and “Fallow_Cotton”.</p>
-<div class="sourceCode" id="cb63"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb73"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co"># plot the confusion between clusters</span>
 <span class="fu"><a href="https://rdrr.io/pkg/sits/man/plot.html">plot</a></span><span class="op">(</span><span class="va">som_eval</span><span class="op">)</span></code></pre></div>
 <div class="figure" style="text-align: center">
@@ -268,7 +270,7 @@ Figure 32: Confusion between classes as measured by SOM.
 <li>If the prior probability is greater or equal to <code>prior_threshold</code> and the posterior probability is less than <code>posterior_threshold</code>, we have a situation the sample is part of the majority level of those assigned to its neuron, but its label is not consistent with most of its neighbors. This is an anomalous condition and is tagged as “analyze”. Users are encouraged to inspect such samples to find out whether they are in fact noisy or not.</li>
 </ul>
 <p>The default value for both <code>prior_threshold</code> and <code>posterior_threshold</code> is 60%. The <code><a href="https://rdrr.io/pkg/sits/man/sits_som.html">sits_som_clean_samples()</a></code> has an additional parameter (<code>keep</code>) which indicates which samples should be kept in the set based on their prior and posterior probabilities. The default for <code>keep</code> is <code>c("clean", "analyze")</code>. As a result of the cleaning, about 900 samples have been considered to be noisy and thus removed.</p>
-<div class="sourceCode" id="cb64"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb74"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">new_samples</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_som.html">sits_som_clean_samples</a></span><span class="op">(</span>
   som_map <span class="op">=</span> <span class="va">som_cluster</span>,
   prior_threshold <span class="op">=</span> <span class="fl">0.6</span>,
@@ -292,7 +294,7 @@ Figure 32: Confusion between classes as measured by SOM.
 #&gt; 10 Soy_Cotton        3489 0.0880 
 #&gt; 11 Soy_Fallow        1139 0.0287</code></pre>
 <p>All samples of the class which had the highest confusion with others(“Millet_Cotton”) have been removed. Most samples of class “Silviculture” (planted forests) have also been removed, since in the SOM map they have been confused with natural forests and woodlands. Further analysis includes calculating the SOM map and confusion matrix for the new set, as shown in the following example.</p>
-<div class="sourceCode" id="cb66"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb76"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co"># evaluate the misture in the SOM clusters of new samples</span>
 <span class="va">new_cluster</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_som.html">sits_som_map</a></span><span class="op">(</span>
   data <span class="op">=</span> <span class="va">new_samples</span>,
@@ -301,7 +303,7 @@ Figure 32: Confusion between classes as measured by SOM.
   alpha <span class="op">=</span> <span class="fl">1.0</span>,
   distance <span class="op">=</span> <span class="st">"euclidean"</span>,
 <span class="op">)</span></code></pre></div>
-<div class="sourceCode" id="cb67"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb77"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">new_cluster_mixture</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_som.html">sits_som_evaluate_cluster</a></span><span class="op">(</span><span class="va">new_cluster</span><span class="op">)</span>
 <span class="co"># plot the mixture information.</span>
 <span class="fu"><a href="https://rdrr.io/pkg/sits/man/plot.html">plot</a></span><span class="op">(</span><span class="va">new_cluster_mixture</span><span class="op">)</span></code></pre></div>
@@ -313,7 +315,7 @@ Figure 33: Cluster confusion plot for samples cleaned by SOM
 </div>
 <p>As expected, the new confusion map shows a significant improvement over the previous one. This result should be interpreted carefully, since it may be due to different effects. The most direct interpretation is that “Millet_Cotton” and “Silviculture” cannot be easily separated from the other classes, given the current attributes (a time series of “NDVI” and “EVI” indices from MODIS images). In such situations, users should consider improving the number of samples from the less represented classes, including more MODIS bands, or working with higher resolution satellites. In general, results of the SOM method should be interpreted based on the users’ understanding of the ecosystems and agricultural practices of the study region.</p>
 <p>A further comparison between the original and clean samples is to run a 5-fold validation on the original and on the cleaned sample sets using <code><a href="https://rdrr.io/pkg/sits/man/sits_kfold_validate.html">sits_kfold_validate()</a></code> and a random forests model. The SOM procedure improves the validation results from 95% on the original data set to 99% in the cleaned one. This improvement should not be interpreted as providing better fit for the final map accuracy. A 5-fold validation procedure only measures how well the machine learning model fits the samples; it is not an accuracy assessment of classification results. The result indicates that the resulting training set after the SOM sample removal procedure is more internally consistent than the original one. For more details on accuracy measures, please see chapter on “Validation and Accuracy Measures”.</p>
-<div class="sourceCode" id="cb68"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb78"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co"># run a k-fold validation</span>
 <span class="va">assess_orig</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_kfold_validate.html">sits_kfold_validate</a></span><span class="op">(</span>
   samples <span class="op">=</span> <span class="va">samples_cerrado_mod13q1_2bands</span>,
@@ -326,7 +328,7 @@ Figure 33: Cluster confusion plot for samples cleaned by SOM
 #&gt;  Accuracy : 0.945         
 #&gt;    95% CI : (0.943, 0.947)
 #&gt;     Kappa : 0.936</code></pre>
-<div class="sourceCode" id="cb70"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb80"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">assess_new</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_kfold_validate.html">sits_kfold_validate</a></span><span class="op">(</span>
   samples <span class="op">=</span> <span class="va">new_samples</span>,
   folds <span class="op">=</span> <span class="fl">5</span>,
@@ -348,7 +350,7 @@ Figure 33: Cluster confusion plot for samples cleaned by SOM
 <p>The function <code><a href="https://rdrr.io/pkg/sits/man/sits_reduce_imbalance.html">sits_reduce_imbalance()</a></code> deals with class imbalance; it oversamples minority classes and undersamples majority ones. Oversampling requires generation of synthetic samples. The package uses the SMOTE method that estimates new samples by considering the cluster formed by the nearest neighbors of each minority class. SMOTE takes two samples from this cluster and produces a new one by a random interpolation between them <span class="citation"><a href="references.html#ref-Chawla2002" role="doc-biblioref">[22]</a></span>.</p>
 <p>To perform undersampling for the majority classes, <code><a href="https://rdrr.io/pkg/sits/man/sits_reduce_imbalance.html">sits_reduce_imbalance()</a></code> builds a SOM map, based on the required number of samples to be selected. Each dimension of the SOM is set to <code>ceiling(sqrt(new_number_samples/4))</code> to allow a reasonable number of neurons to group similar samples. After calculating the SOM map, the algorithm extracts four samples per neuron to generate a reduced set of samples that approximates the variation of the original one.</p>
 <p>The <code><a href="https://rdrr.io/pkg/sits/man/sits_reduce_imbalance.html">sits_reduce_imbalance()</a></code> algorithm has two parameters: <code>n_samples_over</code> and <code>n_samples_under</code>. The first parameter ensures that all classes with samples less than its value are oversampled. The second parameter controls undersampling; all classes with more samples than its value are undersampled. The following example shows the use of <code><a href="https://rdrr.io/pkg/sits/man/sits_reduce_imbalance.html">sits_reduce_imbalance()</a></code> in the Cerrado data set used in this chapter. We generate a balanced data set where all classes have between 1000 and 1500 samples. We use <code><a href="https://rdrr.io/pkg/sits/man/sits_som.html">sits_som_evaluate_cluster()</a></code> to estimate the confusion between classes of the balanced data set.</p>
-<div class="sourceCode" id="cb72"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb82"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co"># reducing imbalances in the Cerrado data set</span>
 <span class="va">balanced_samples</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_reduce_imbalance.html">sits_reduce_imbalance</a></span><span class="op">(</span>
   samples <span class="op">=</span> <span class="va">samples_cerrado_mod13q1_2bands</span>,
@@ -356,7 +358,7 @@ Figure 33: Cluster confusion plot for samples cleaned by SOM
   n_samples_under <span class="op">=</span> <span class="fl">1500</span>,
   multicores <span class="op">=</span> <span class="fl">4</span>
 <span class="op">)</span></code></pre></div>
-<div class="sourceCode" id="cb73"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb83"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co"># print the balanced samples</span>
 <span class="co"># some classes have more than 1500 samples due to the SOM map</span>
 <span class="co"># each class has betwen 10% and 6% of the full set</span>
@@ -376,7 +378,7 @@ Figure 33: Cluster confusion plot for samples cleaned by SOM
 #&gt; 10 Soy_Corn          1584 0.0956
 #&gt; 11 Soy_Cotton        1576 0.0951
 #&gt; 12 Soy_Fallow        1516 0.0915</code></pre>
-<div class="sourceCode" id="cb75"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb85"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co"># clustering time series using SOM</span>
 <span class="va">som_cluster_bal</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_som.html">sits_som_map</a></span><span class="op">(</span>
   data <span class="op">=</span> <span class="va">balanced_samples</span>,
@@ -386,10 +388,10 @@ Figure 33: Cluster confusion plot for samples cleaned by SOM
   distance <span class="op">=</span> <span class="st">"euclidean"</span>,
   rlen <span class="op">=</span> <span class="fl">20</span>
 <span class="op">)</span></code></pre></div>
-<div class="sourceCode" id="cb76"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb86"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co"># produce a tibble with a summary of the mixed labels</span>
 <span class="va">som_eval</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_som.html">sits_som_evaluate_cluster</a></span><span class="op">(</span><span class="va">som_cluster_bal</span><span class="op">)</span></code></pre></div>
-<div class="sourceCode" id="cb77"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb87"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co"># show the result</span>
 <span class="fu"><a href="https://rdrr.io/pkg/sits/man/plot.html">plot</a></span><span class="op">(</span><span class="va">som_eval</span><span class="op">)</span></code></pre></div>
 <div class="figure" style="text-align: center">
