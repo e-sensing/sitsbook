@@ -224,9 +224,7 @@ The cross validation results have to be interpreted carefully. Cross validation 
 
 To measure the accuracy of classified images, the `sits_accuracy()` function uses an area-weighted technique, following the best practices proposed by Olofsson et al. [@Olofsson2013]. The need for area-weighted estimates arises from the fact the land use and land cover classes are not evenly distributed in space. In some applications (e.g., deforestation) where the interest lies in assessing how much of the image has changed, the area mapped as deforested is likely to be a small fraction of the total area. If users disregard the relative importance of small areas where change is taking place, the overall accuracy estimate will be inflated and unrealistic. For this reason, Olofsson et al [@Olofsson2013] argue that "mapped areas should be adjusted to eliminate bias attributable to map classification error and these error-adjusted area estimates should be accompanied by confidence intervals to quantify the sampling variability of the estimated area".
 
-With this motivation, when measuring accuracy of classified images, the function `sits_accuracy()` follows the procedure set by Olofsson et al. [@Olofsson2013]  The following explanation is extracted from thar paper, and users should refer to this paper for further explanation.
-
-Given a classified image and a validation file, the first step is to calculate the confusion matrix in the traditional way, i.e., by identifying the commission and omission errors. Then we calculate the unbiased estimator of the proportion of area in cell $i,j$ of the error matrix
+With this motivation, when measuring accuracy of classified images, the function `sits_accuracy()` follows the procedure set by Olofsson et al. [@Olofsson2013]. Given a classified image and a validation file, the first step is to calculate the confusion matrix in the traditional way, i.e., by identifying the commission and omission errors. Then we calculate the unbiased estimator of the proportion of area in cell $i,j$ of the error matrix
 
 $$
 \hat{p_{i,j}} = W_i\frac{n_{i,j}}{n_i}
@@ -235,39 +233,25 @@ where the total area of the map is $A_{tot}$, the mapping area of class $i$ is $
 $$
 \hat{A_j} = A_{tot}\sum_{i=1}^KW_i\frac{n_{i,j}}{n_i}
 $$
-This unbiased area estimator includes the effect of false negatives (omission error) while not considering the effect of false positives (commission error). The area estimates also allow producing an unbiased estimate of the user's and producer's accuracy for each class. Following @Olofsson2013, we can also estimate the 95% confidence interval for $\hat{A_j}$. 
+This unbiased area estimator includes the effect of false negatives (omission error) while not considering the effect of false positives (commission error). The area estimates also allow producing an unbiased estimate of the user's and producer's accuracy for each class. Following @Olofsson2013, we provide the 95% confidence interval for $\hat{A_j}$. 
 
-To use the `sits_accuracy()` function to produce the adjusted area estimates, users have to provide the classified image together with a csv file containing a set of well selected labeled points.  The csv file should have the same format as the one used to obtain samples, as discussed earlier. The labelled points should be based on a random stratified sample. All areas associated to each class should contribute to the test data used for accuracy asseesment. 
+To use the `sits_accuracy()` function to produce the adjusted area estimates, users have to provide the classified image together with a csv file containing a set of well selected labeled points.  The csv file should have the same format as the one used to obtain samples, as discussed earlier. The labelled points should be based on a random stratified sample. All areas associated to each class should contribute to the test data used for accuracy assessment. 
 
-Because of the biases inherent in cross validation of training data, users should provide an independent validation data set to measure classification accuracy. In this case study, Simoes et al.[@Simoes2021] did a systematic sampling of the Cerrado biome using a 20 x 20 km grid with a total of 5402 points. These samples are independent of the training set used in the classification. They were interpreted by five specialists using high resolution images from the same period of the classification. This resulted in 5286 evaluation samples thus distributed: "Annual Crop" (553), "Cerrado" (3155), "Natural Non Vegetated" (44), "Pasture" (1246), "Perennial Crop" (38), "Silviculture" (94), "Sugarcane" (77), and "Water" (79). This data set is available in package "sitsdata", as described below.
+Because of the biases inherent in cross validation of training data, users should provide an independent validation data set to measure classification accuracy. In this case study, Simoes et al.[@Simoes2021] did a systematic sampling of the Cerrado biome using a 20 x 20 km grid with a total of 5402 points. These samples are independent of the training set used in the classification. They were interpreted by five specialists using high resolution images from the same period of the classification. This resulted in 5286 evaluation samples thus distributed: "Annual Crop" (553), "Cerrado" (3155), "Natural Non Vegetated" (44), "Pasture" (1246), "Perennial Crop" (38), "Silviculture" (94), "Sugarcane" (77), and "Water" (79). This data set is available in package "sitsdata", as described below. In this validation file, all samples belonging to classes "Cerrado", "Open Cerrado" and "Cerradao" (Woody Savanna) have been grouped together in a single class. 
 
-The first step is to obtain the classification map. Since the map is too large for sharing by an R package, the data is available in a Dropbox folder. The code below shows how to retrieve these files. 
+The first step is to obtain the classification map. Since the map is too large for sharing by an R package, the data is available in a Dropbox folder. The metadata for the cube is provided by the library `sitsdata`. 
 
-```{r, tidy="styler", echo = FALSE, eval = TRUE}
-data_dir <- "./tempdir/chp9"
-
-# read the files from Dropbox to a local directory
-files_read <- purrr::map_chr(files_drop, function (f){
-    local_files 
-})
-
-# create a data cube with the classified images
-cerrado_classif <- sits_cube(
-    source = "BDC", 
-    collection  = "LC8_30_16D_STK-1",
-    data_dir = data_dir,
-    bands = "class",
-    labels = c("Annual_Crop", "Cerrado", "Cerrado", 
-                "Nat_NonVeg", "Cerrado", "Pasture", 
-                "Perennial_Crop", "Silviculture", 
-                "Sugarcane", "Water"), 
-    parse_info = c("X1", "tile", "band", 
-                   "start_date", "end_date", "version")
-)
+```{r, tidy="styler", out.width = "70%", fig.align="center", fig.cap="Classification of tile 044048 from the Landsat data cube for the Brazilian Cerrado in 2017/2018." }
+# retrieve the metadata for the classified cube
+# the files are stored as Dropbox links
+cerrado_classif_rds <- system.file("extdata/Cerrado/cerrado_classif_dropbox.rds",
+                                   package = "sitsdata")
+# read the cube metadata
+cerrado_classif <- readRDS(cerrado_classif_rds)
 # plot the classification
-plot(cerrado_classif)
+plot(cerrado_classif, tiles = "044048")
 ```
- 
+The next step is to provide a CSV file with the validation points, as described above.
 
 ```{r, eval = FALSE, echo = TRUE}
 # get ground truth points
@@ -279,9 +263,13 @@ area_acc <- sits_accuracy(cerrado_classif,
 # print the area estimated accuracy 
 area_acc
 ```
-
-
-
-This is an illustrative example to express the situation where there is a limited number of ground truth points. As a result of a limited validation sample, the estimated confidence interval in area estimation is large. This indicates a questionable result. We recommend that users follow the procedures recommended by @Olofsson2014 to estimate the number of ground truth measures per class that are required to get a reliable estimate. 
+```{r, eval = TRUE, echo = FALSE}
+# calculate accuracy according to Olofsson's method
+area_acc <- readRDS("./etc/area_acc.rds")
+# print the area estimated accuracy 
+options(digits = 3)
+area_acc
+```
+This example shows that it is important to correct area estimates in land classification, to reduce the bias effect of misclassification and to take into account the different producer's accuracies associated to each class. It also shows that actual overall accuracy is in general lower than the result of cross-validation.  
 
 
