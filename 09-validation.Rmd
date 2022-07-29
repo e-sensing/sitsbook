@@ -9,43 +9,71 @@ dir.create("./tempdir/chp9")
 
 ## Case study used in this Chapter{-}
 
-To present a realistic example of how to do validation and accuracy assessment in`sits`, we present an example resulting from a large-scale classification of the Cerrado biome in Brazil using Landsat-8 images, described in the paper by Simoes et al.[@Simoes2021]. The Cerrado is covered by 51 Landsat-8 tiles available in the Brazil Data Cube (BDC). Each Landsat tile in the BDC covers a 3&deg; $\times$ 2&deg; grid in Albers equal area projection with an area of 73,920 km$^2$, and a size of 11,204 $\times$ 7324 pixels. The~one-year classification period ranges from September 2017 to August 2018, following the agricultural calendar. The~temporal interval is 16 days, resulting in 24 images per tile. We use seven spectral bands plus two vegetation indexes (NDVI and EVI) and the cloud cover information. The total input data size is about 8 TB. In the paper, a data set of 48,850 samples was used to train a convolutional neural network model using the TempCNN method. All available attributes in the BDC Landsat-8 data cube (two vegetation indices and seven spectral bands) were used for training and classification. 
+To show how to do validation and accuracy assessment in`sits`, we present an example resulting using a study area located in the Bahia state, Brazil, in the Cerrado biome. The data is composed of 67 Landsat-8 tiles from the Brazil Data Cube, with 23 time steps covering the the period 2017-08-29 to 2018-08-29, covering the agricultural year in the Brazilian Cerrado near the city of Barreiras (Bahia) and available in the `sitsdata` package.  The following code creates the data cube from local files.
 
-The training data set used for classification of the Cerrado biome is available in the package `sitsdata`, and can be accessed as follows.
-
-```{r}
-library(sitsdata)
-data("samples_cerrado_lc8")
-# show labels 
-sits_labels_summary(samples_cerrado_lc8)
-
+Since the data is avaliable in the Brazil Data Cube, users should first obtain access to the BDC, by obtaining an access key. After obtaining the access key, they should  to include their credentials using an environment variables, as shown below. Obtaining a BDC access key is free. Users need to register at the [BDC site](https://brazildatacube.dpi.inpe.br/portal/explore) to obtain the key.
+```{r,eval = FALSE}
+Sys.setenv(
+    "BDC_ACCESS_KEY" = <your_bdc_access_key>
+)
 ```
-Since the dataset is big and highly imbalanced, we will use only the indexes "NDVI", "EVI" and the short-wave infrared band "B7" to illustrate the validation techniques. We will also use the function `sits_reduce_imbalance()` to reduce the size and produce a more balanced sample dataset.
+
+After obtaining the BDC access key, we now can 
+
+```{r, tidy = "styler", out.width = "70%", fig.align="center", fig.cap="Color composite image of first date of the cube"}
+
+# files are available in the Brazil Data Cube
+# 
+# obtain the region of interest covering the Cerrado biome
+roi_cerrado_shp <- system.file(
+    "extdata/shapefiles/cerrado_border/cerrado_border.shp",
+    package = "sitsdata")
+# read the shapefile as an object of the "sf" package
+roi_cerrado <- sf::st_read(roi_cerrado_shp)
+
+# create a data cube for the entire cerrado biome
+cerrado_cube <- sits_cube(
+        source = "BDC",
+        collection = "LC8_30_16D_STK-1",
+        roi = roi_cerrado,
+        start_date = "2017-08-29",
+        end_date = "2018-08-29",
+        multicores = 3
+)
+# plot the first date with NDVI and EVI bands
+plot(cerrado_cube, tile = "044049", red = "B7", green = "B5", blue = "B4")
+```
+
+We will use a training data set, produced by a systematic sampling using a grid of 5km x 5km throughout the Cerrado biome as a basis for the classification of Landsat-8 images described by Simoes et al.[@Simoes2021]. The full data set covers the entire Cerrado biome. The authors carried out a systematic sampling using a grid of 5 x 5 km throughout the Cerrado biome, collecting 85,026 samples. The training data labels were extracted from three sources: the pastureland map of 2018 from Parente et al. [@Parente2019], MapBiomas Collection 5 for  2018 [@Souza2020], and~Brazil's National Mapping Agency IBGE land maps for 2016--2018. Out of the 85,026 samples, the authors selected those where there was no disagreement between the labels assigned by the three sources.  The final training set consists of 48,850 points from which the authors extracted the time series using the Landsat-8 data cube available in the BDC. The classes for this training set are: `Annual Crop`, `Cerradao` (Woody Savanna), `Cerrado` (Savanna), `Nat_NonVeg` (Dunes), `Pasture`, `Perennial_Crop`, `Silviculture` (Planted Forests), `Sugarcane`, and `Water`. This data set is available in the package `sitsdata` as `samples_cerrado_lc8`. 
+
+For sake of simplicity to produce the example, we will also restrict the bands in the training set to be the same as those in the cube. 
+
+```{r, tidy = "styler", out.width = "70%"}
+data("samples_cerrado_lc8")
+# show the class distribution in the new training set
+sits_labels_summary(samples_cerrado_lc8)
+```
+
+Since the dataset is big and highly imbalanced, we will use the function `sits_reduce_imbalance()` to reduce the size and produce a more balanced sample dataset. We will use the resulting data set in the validation examples in this chapter.
 
 ```{r, tidy = "styler"}
-# select only NDVI, EVI and B7
-samples_cerrado_3bands <- sits_select(
-    data = samples_cerrado_lc8,
-    bands = c("NDVI", "EVI", "B7")
-)
-# join classes "Cerrado" and "Open Cerrado"
 # reduce imbalance in the data set
-# maximum number of samples per class will be 1500 
+# maximum number of samples per class will be 1000 
 # minimum number of samples per class will be 500
-samples_cerrado_3bands_bal <- sits_reduce_imbalance(
-    samples = samples_cerrado_3bands,
+samples_cerrado_bal <- sits_reduce_imbalance(
+    samples = samples_cerrado_lc8,
     n_samples_over = 500,
-    n_samples_under = 1500,
+    n_samples_under = 1000,
     multicores = 4
 )
 # show new sample distribution
-sits_labels_summary(samples_cerrado_3bands_bal)
+sits_labels_summary(samples_cerrado_bal)
 ```
 
 
-## Validation techniques{-}
+## Cross validation of training set{-}
 
-Validation is a process undertaken on models to estimate some error associated with them, and hence has been used widely in different scientific disciplines. When we talk about validation, we are interested in estimating the prediction error associated to some model. For this purpose, we concentrate on the *cross-validation* approach, probably the most used validation technique [@Hastie2009].
+Cross validation is a process undertaken on models to estimate some error associated with them, and hence has been used widely in different scientific disciplines. When we talk about validation, we are interested in estimating the prediction error associated to some model. For this purpose, we concentrate on the *cross-validation* approach, probably the most used validation technique [@Hastie2009].
 
 Notice that validation techniques are not a replacement of accuracy measures, which are described below. Validation methods are based on the training samples. In general, these samples will be biased due to many factors. When working in large areas, it is hard to obtain random stratified samples which would cover the different variations in land cover associated to the ecosystems of the study area. In general, all machine learning methods are prone to underspecification [@DAmour2020]. Therefore, cross-validation should not be used as an accuracy measures, unless the samples have been carefully collected to represent the diversity of possible ocurrences of classes in the study area [@Wadoux2021]. 
 
@@ -53,7 +81,7 @@ Cross-validation uses part of the available samples to fit the classification mo
 
 A natural question that arises is: *how good is this estimation?* According to @Hastie2009, there is a bias-variance trade-off in choice of $k$. If $k$ is set to the number of samples, we obtain the so-called *leave-one-out* validation, the estimator gives a low bias for the true expected error, but produces a high variance expectation. This can be computational expensive as it requires the same number of fitting process as the number of samples. On the other hand, if we choose ${k=2}$, we get a high biased expected prediction error estimation that overestimates the true prediction error, but has a low variance. The recommended choices of $k$ are $5$ or $10$.
 
-`sits_kfold_validate()` supports k-fold validation in `sits`. The following code does a five-fold validation using random forests. The result is the confusion matrix and the accuracy statistics (overall and by class). In the examples below, we use multiprocessing to speed up the results.
+`sits_kfold_validate()` supports k-fold validation in `sits`. The following code does a five-fold validation using random forests. The result is the confusion matrix and the accuracy statistics (overall and by class). In the examples below, we use multiprocessing to speed up the results. 
 
 ```{r, echo = FALSE}
 set.seed(290356)
@@ -61,10 +89,10 @@ set.seed(290356)
 
 
 ```{r, tidy = "styler"}
-# perform a five fold validation for the "cerrado_2classes" data set
+# perform a five fold validation for the cerrado data set
 # random forests machine learning method using default parameters
 val_rfor <- sits_kfold_validate(
-    samples = samples_cerrado_3bands_bal, 
+    samples = samples_cerrado_bal, 
     folds = 5, 
     ml_method = sits_rfor(),
     multicores = 5
@@ -73,9 +101,8 @@ val_rfor <- sits_kfold_validate(
 val_rfor
 ```
 
-## Comparing different machine learning methods using k-fold validation{-}
 
-One useful function in SITS is the capacity to compare different validation methods and store them in an XLS file for further analysis. The following example shows how to do this, using the Cerrado data set. We take the models: random forests(`sits_rfor()`), extreme gradient boosting (`sits_xgboost()`), temporal CNN (`sits_tempcnn()`), and lightweight temporal attention encoder (`sits_lighttae())`.  After computing the confusion matrix and the statistics for each model, we also store the result in a list. When the calculation is finished, the function `sits_to_xlsx()` writes all of the results in an Excel-compatible spreadsheet. We also show the overall accuracy. 
+One useful function in SITS is the capacity to compare different validation methods and store them in an XLS file for further analysis. The following example shows how to do this, using the Cerrado data set. We take the models: random forests(`sits_rfor()`), extreme gradient boosting (`sits_xgboost()`), temporal CNN (`sits_tempcnn()`), and lightweight temporal attention encoder (`sits_lighttae())`.  After computing the confusion matrix and the statistics for each model, we also store the result in a list. When the calculation is finished, the function `sits_to_xlsx()` writes all of the results in an Excel-compatible spreadsheet. 
 
 
 ```{r, tidy = "styler", eval = FALSE}
@@ -89,7 +116,7 @@ results[[length(results) + 1]] <- val_rfor
 
 ## Extreme Gradient Boosting
 val_xgb <- sits_kfold_validate(
-    samples = samples_cerrado_3bands_bal,
+    samples = samples_cerrado_bal,
     ml_method = sits_xgboost(),
     folds = 5,
     multicores = 5
@@ -102,7 +129,7 @@ results[[length(results) + 1]] <- val_xgb
 
 # Temporal CNN
 val_tcnn <- sits_kfold_validate(
-    samples = samples_cerrado_3bands_bal,
+    samples = samples_cerrado_bal,
     ml_method = sits_tempcnn(
         optimizer = torchopt::optim_adamw,
         opt_hparams = list(lr = 0.001)
@@ -118,7 +145,7 @@ results[[length(results) + 1]] <- val_tcnn
 
 # Light TAE
 val_ltae <- sits_kfold_validate(
-    samples = samples_cerrado_3bands_bal,
+    samples = samples_cerrado_bal,
     ml_method = sits_lighttae(
         optimizer = torchopt::optim_adamw,
         opt_hparams = list(lr = 0.001)
@@ -133,11 +160,19 @@ val_ltae$name <- "LightTAE"
 results[[length(results) + 1]] <- val_ltae
 
 # Save to an XLS file
-xlsx_file <- paste0(getwd(),"/model_comparison.xlsx")
+xlsx_file <- "./model_comparison.xlsx"
 
 sits_to_xlsx(results, file = xlsx_file)
 ```
-We now print the overall accuracy for each model.
+The resulting Excel file can be opened with R or using spreadsheet programs. The figure below shows a printout of what is read by Excel. As shown below, each sheet corresponds to the output of one model. For simplicity, we show only the result of Random Forests, that has an overall accuracy of 90%. 
+
+```{r, echo = FALSE, fig.align="center", out.width = "90%", out.height = "90%", fig.cap= "Result of 5-fold cross validation of Mato Grosso dataset using LightTAE"}
+
+knitr::include_graphics("images/k_fold_validation_xlsx.png")
+
+```
+
+The scores for overall accuracy are similar between the models. However, there are significant differences between the models, as shown by comparing their F1 scores, as shown below.    
 
 ```{r, eval = FALSE, echo = TRUE}
 model_acc <- tibble::tibble(
@@ -155,41 +190,33 @@ model_acc <- readRDS(file = "./etc/model_acc.rds")
 options(digits = 3)
 model_acc
 ```
+The table below shows the F1-scores of all classes for each model, as produced by the k-fold validation. The F1-scores are obtained as the harmonic mean between user's accuracy and precision accuracy for each class. The results show that although deep learning models such TempCNN and LightTAE have similar overall accuracies than Random Forests or XGBoost, their F1-scores per class are in most cases better.  
 
-The resulting Excel file can be opened with R or using spreadsheet programs. The figure below shows a printout of what is read by Excel. As shown below, each sheet corresponds to the output of one model. For simplicity, we show only the result of LightTAE, that has an overall accuracy of 97% and is the best-performing model. 
+```{r, eval=FALSE, echo = TRUE, tidy = "styler"}
+f1_score_rfor <- unname(val_rfor$byClass[,"F1"])
+f1_score_xgb <-  unname(val_xgb$byClass[,"F1"])
+f1_score_tcnn <-  unname(val_tcnn$byClass[,"F1"])
+f1_score_ltae <-  unname(val_ltae$byClass[,"F1"])
 
-```{r, echo = FALSE, fig.align="center", out.width = "90%", out.height = "90%", fig.cap= "Result of 5-fold cross validation of Mato Grosso dataset using LightTAE"}
-
-knitr::include_graphics("images/k_fold_validation_xlsx.png")
-
+f1_scores <- tibble::tibble(
+    "Classes"  = sits_labels(samples_cerrado_bal),
+    "RandFor"  = f1_score_rfor,
+    "XGBoost"  = f1_score_xgb,
+    "TempCNN"  = f1_score_tcnn,
+    "LightTAE" = f1_score_ltae
+)
+f1_scores
+```
+```{r, eval = TRUE, echo = FALSE}
+f1_scores <- readRDS(file = "./etc/f1_scores.rds")
+options(digits = 3)
+f1_scores
 ```
 
-## Accuracy assessment{-}
+The cross validation results have to be interpreted carefully. In general, cross validation should be interpreted as a measure how well the model fits the training data. Using these results as a measure of classification accuracy is only valid if the training data is a good sample of the entire data set. In practice, training data is subject to various sources of bias. In most case when of land classification, some classes are much more frequent than others and as such the training data set will be imbalanced. For large areas, regional differences in soil and climate condition will lead that the same classes will have different spectral responses. Also, when collecting samples for large areas, field analysts may be restricted to areas where they have access (e.g, along roads). An additional problem is that of mixed pixels. Expert interpreters tend to select samples which standout in field work or reference images. Border pixels are unlikely to be chosen as part of training data. For all these reason, cross validation results should not be considered as indicative of  accuracy measurement over the entire data set. 
 
-### Time series{-}
 
-Users can perform accuracy assessment in *sits* both in time series datasets or in classified images using the `sits_accuracy` function. In the case of time series, the input is a sits tibble which has been classified by a sits model. The input tibble needs to contain valid labels in its "label" column. These labels are compared to the results of the prediction to the reference values. This function calculates the confusion matrix and then the resulting statistics using the R package "caret". 
-
-```{r}
-# read a tibble with 400 time series of Cerrado and 346 of Pasture
-data(cerrado_2classes)
-# create a model for classification of time series
-svm_model <- sits_train(cerrado_2classes, sits_svm())
-# classify the time series
-predicted <- sits_classify(cerrado_2classes, svm_model)
-# calculate the classification accuracy
-acc_ts <- sits_accuracy(predicted)
-# print the accuracy statistics summary
-sits_accuracy_summary(acc_ts)
-```
-The detailed accuracy measures can be obtained by printing the accuracy object.
-
-```{r}
-# print the accuracy statistics
-acc_ts 
-```
-
-### Accuracy measures for classified images{-}
+## Accuracy assessment of classified images{-}
 
 To measure the accuracy of classified images, the `sits_accuracy()` function uses an area-weighted technique, following the best practices proposed by @Olofsson2013. The need for area-weighted estimates arises from the fact the land use and land cover classes are not evenly distributed in space. In some applications (e.g., deforestation) where the interest lies in assessing how much of the image has changed, the area mapped as deforested is likely to be a small fraction of the total area. If users disregard the relative importance of small areas where change is taking place, the overall accuracy estimate will be inflated and unrealistic. For this reason, @Olofsson2013 argue that "mapped areas should be adjusted to eliminate bias attributable to map classification error and these error-adjusted area estimates should be accompanied by confidence intervals to quantify the sampling variability of the estimated area".
 
@@ -208,31 +235,18 @@ This unbiased area estimator includes the effect of false negatives (omission er
 
 To use the `sits_accuracy()` function to produce the adjusted area estimates, users have to provide the classified image together with a csv file containing a set of well selected labeled points.  The csv file should have the same format as the one used to obtain samples, as discussed earlier. The labelled points should be based on a random stratified sample. All areas associated to each class should contribute to the test data used for accuracy asseesment. 
 
-### Use case
-
-In what follows, we show an example of using the accuracy function to estimate the quality of the classification. We will be using a classified data cube that contain labelled images which are part of result of Landsat-8 classification for the Brazilian Cerrado biome, as described in the paper by Simoes et al. [@Simoes2021]. 
-
-The Cerrado is Brazil's main agricultural frontier. Its large latitude gradient includes different climate regimes, which lead to important differences in the spectral responses of land cover types. This dataset was produced by a systematic sampling using a grid of 5km x 5km throughout the Cerrado biome, collecting 85,026 samples. The training data labels were extracted from three sources: the pastureland map of 2018 from Pastagem.org, MapBiomas Collection 5 for  2018, and Brazil's National Mapping Agency IBGE maps for 2016-2018. Out of the 85,026 samples, we selected those where there was no disagreement between the labels assigned by the three sources. The resulting set had 48,850 points from which we extracted the time series using the Landsat-8 data cube. The distribution of samples for each class is the following: `Annual Crop` (6887), `Cerradao` (4211), `Cerrado` (21,909), `Natural Non Vegetated` (38), `Pasture` (12,894), `Perennial Crop` (68), `Silviculture` (805), `Sugarcane` (1775), and `Water` (263). 
-
-
-
-
-To do the assessment, Simoes et al.[Simoes2021] merged the labels "Cerrado" and "Open Cerrado" into one label called "Cerrado". 
-
-
-
-The files cover tiles "042049", "042050", "043049", "043050" from the Brazil Data Cube. In what follows, we create the classified data cube.
+Because of the biases inherent in cross validation of training data, users should provide an independent validation data set to measure classification accuracy. In this case study, Simoes et al.[@Simoes2021] did a systematic sampling of the Cerrado biome using a 20 x 20 km grid with a total of 5402 points. These samples are independent of the training set used in the classification. They were interpreted by five specialists using high resolution images from the same period of the classification. This resulted in 5286 evaluation samples thus distributed: "Annual Crop" (553), "Cerrado" (3155), "Natural Non Vegetated" (44), "Pasture" (1246), "Perennial Crop" (38), "Silviculture" (94), "Sugarcane" (77), and "Water" (79). This data set is available in package "sitsdata", as described below.
 
 ```{r, tidy="styler"}
 # define the directory where data is located
-data_dir <- system.file("extdata/Cerrado", package = "sitsdata")
+data_dir <- "~/Dropbox/Family\ Room/Cerrado/Classification"
 # create a data cube with the classified images
 cerrado_classif <- sits_cube(
     source = "BDC", 
     collection  = "LC8_30_16D_STK-1",
     data_dir = data_dir,
     bands = "class",
-    labels = c("Annual_Crop", "Cerradao", "Cerrado", 
+    labels = c("Annual_Crop", "Cerrado", "Cerrado", 
                 "Nat_NonVeg", "Cerrado", "Pasture", 
                 "Perennial_Crop", "Silviculture", 
                 "Sugarcane", "Water"), 
@@ -242,9 +256,9 @@ cerrado_classif <- sits_cube(
 # plot the classification
 plot(cerrado_classif)
 ```
-After creating the classified cube, Simoes et al.[Simoes2021] use a set of validation points to obtain an accuracy assessment of the classification. These points come from  a systematic sampling of the Cerrado biome using a 20 km2 grid with a total of 5402 points. These samples are independent of the training set used in the classification and were interpreted by five specialists using high resolution images from the same period of the classification. The authors also did additional sampling to reach a minimal number of samples for the classes "Natural Non Vegetated", "Perennial Crop", and "Water". This resulted in 5286 evaluation samples thus distributed: "Annual Crop"(553), "Cerradao" (704), "Cerrado" (2451), "Natural Non Vegetated" (44), "Pasture" (1246), "Perennial Crop" (38), "Silviculture" (94), "Sugarcane" (77), and "Water" (79). The assessment is done by `sits_accuracy()`. 
+ 
 
-```{r}
+```{r, eval = FALSE, echo = TRUE}
 # get ground truth points
 valid_csv <- system.file("extdata/csv/cerrado_lc8_validation.csv",
                             package = "sitsdata")
@@ -254,6 +268,8 @@ area_acc <- sits_accuracy(cerrado_classif,
 # print the area estimated accuracy 
 area_acc
 ```
+
+
 
 This is an illustrative example to express the situation where there is a limited number of ground truth points. As a result of a limited validation sample, the estimated confidence interval in area estimation is large. This indicates a questionable result. We recommend that users follow the procedures recommended by @Olofsson2014 to estimate the number of ground truth measures per class that are required to get a reliable estimate. 
 
