@@ -18,7 +18,7 @@ Sys.setenv(
 )
 ```
 
-After obtaining the BDC access key, we now can 
+After obtaining the BDC access key, we now can create a data cube for the Cerrado biome. 
 
 ```{r, tidy = "styler", out.width = "70%", fig.align="center", fig.cap="Color composite image of first date of the cube"}
 
@@ -44,11 +44,11 @@ cerrado_cube <- sits_cube(
 plot(cerrado_cube, tile = "044049", red = "B7", green = "B5", blue = "B4")
 ```
 
-We will use a training data set, produced by a systematic sampling using a grid of 5km x 5km throughout the Cerrado biome as a basis for the classification of Landsat-8 images described by Simoes et al.[@Simoes2021]. The full data set covers the entire Cerrado biome. The authors carried out a systematic sampling using a grid of 5 x 5 km throughout the Cerrado biome, collecting 85,026 samples. The training data labels were extracted from three sources: the pastureland map of 2018 from Parente et al. [@Parente2019], MapBiomas Collection 5 for  2018 [@Souza2020], and~Brazil's National Mapping Agency IBGE land maps for 2016--2018. Out of the 85,026 samples, the authors selected those where there was no disagreement between the labels assigned by the three sources.  The final training set consists of 48,850 points from which the authors extracted the time series using the Landsat-8 data cube available in the BDC. The classes for this training set are: `Annual Crop`, `Cerradao` (Woody Savanna), `Cerrado` (Savanna), `Nat_NonVeg` (Dunes), `Pasture`, `Perennial_Crop`, `Silviculture` (Planted Forests), `Sugarcane`, and `Water`. This data set is available in the package `sitsdata` as `samples_cerrado_lc8`. 
+To classify the Cerrado, we will use a training data set, produced by a systematic sampling using a grid of 5km x 5km throughout the biome as described by Simoes et al.[@Simoes2021]. The authors carried out a systematic sampling using a grid of 5 x 5 km throughout the Cerrado biome, collecting 85,026 samples. The training data labels were extracted from three sources: the pastureland map of 2018 from Parente et al. [@Parente2019], MapBiomas Collection 5 for  2018 [@Souza2020], and~Brazil's National Mapping Agency IBGE land maps for 2016--2018. Out of the 85,026 samples, the authors selected those where there was no disagreement between the labels assigned by the three sources.  The final training set consists of 48,850 points from which the authors extracted the time series using the Landsat-8 data cube available in the BDC. The classes for this training set are: `Annual Crop`, `Cerradao` (Woody Savanna), `Cerrado` (Savanna), `Nat_NonVeg` (Dunes), `Pasture`, `Perennial_Crop`, `Silviculture` (Planted Forests), `Sugarcane`, and `Water`. This data set is available in the package `sitsdata` as `samples_cerrado_lc8`. 
 
-For sake of simplicity to produce the example, we will also restrict the bands in the training set to be the same as those in the cube. 
 
 ```{r, tidy = "styler", out.width = "70%"}
+library(sitsdata)
 data("samples_cerrado_lc8")
 # show the class distribution in the new training set
 sits_labels_summary(samples_cerrado_lc8)
@@ -56,7 +56,7 @@ sits_labels_summary(samples_cerrado_lc8)
 
 Since the dataset is big and highly imbalanced, we will use the function `sits_reduce_imbalance()` to reduce the size and produce a more balanced sample dataset. We will use the resulting data set in the validation examples in this chapter.
 
-```{r, tidy = "styler"}
+```{r, tidy = "styler", echo = TRUE, eval=FALSE}
 # reduce imbalance in the data set
 # maximum number of samples per class will be 1000 
 # minimum number of samples per class will be 500
@@ -70,6 +70,10 @@ samples_cerrado_bal <- sits_reduce_imbalance(
 sits_labels_summary(samples_cerrado_bal)
 ```
 
+```{r, tidy = "styler", echo = FALSE, eval=TRUE}
+samples_cerrado_bal <- readRDS("./etc/samples_cerrado_bal.rds")
+sits_labels_summary(samples_cerrado_bal)
+```
 
 ## Cross validation of training set{-}
 
@@ -98,7 +102,7 @@ val_rfor <- sits_kfold_validate(
     multicores = 5
 )
 # print the validation statistics
-val_rfor
+sits_accuracy_summary(val_rfor)
 ```
 
 
@@ -213,14 +217,14 @@ options(digits = 3)
 f1_scores
 ```
 
-The cross validation results have to be interpreted carefully. In general, cross validation should be interpreted as a measure how well the model fits the training data. Using these results as a measure of classification accuracy is only valid if the training data is a good sample of the entire data set. In practice, training data is subject to various sources of bias. In most case when of land classification, some classes are much more frequent than others and as such the training data set will be imbalanced. For large areas, regional differences in soil and climate condition will lead that the same classes will have different spectral responses. Also, when collecting samples for large areas, field analysts may be restricted to areas where they have access (e.g, along roads). An additional problem is that of mixed pixels. Expert interpreters tend to select samples which standout in field work or reference images. Border pixels are unlikely to be chosen as part of training data. For all these reason, cross validation results should not be considered as indicative of  accuracy measurement over the entire data set. 
+The cross validation results have to be interpreted carefully. Cross validation is a measure how well the model fits the training data. Using these results as a measure of classification accuracy is only valid if the training data is a good sample of the entire data set. In practice, training data is subject to various sources of bias. In most cases of land classification, some classes are much more frequent than others and as such the training data set will be imbalanced. For large areas, regional differences in soil and climate condition will lead that the same classes will have different spectral responses. When collecting samples for large areas, field analysts may be restricted to areas where they have access (e.g, along roads). An additional problem is that of mixed pixels. Expert interpreters tend to select samples which standout in field work or reference images. Border pixels are unlikely to be chosen as part of training data. For all these reason, cross validation results should not be considered as indicative of  accuracy measurement over the entire data set. 
 
 
 ## Accuracy assessment of classified images{-}
 
-To measure the accuracy of classified images, the `sits_accuracy()` function uses an area-weighted technique, following the best practices proposed by @Olofsson2013. The need for area-weighted estimates arises from the fact the land use and land cover classes are not evenly distributed in space. In some applications (e.g., deforestation) where the interest lies in assessing how much of the image has changed, the area mapped as deforested is likely to be a small fraction of the total area. If users disregard the relative importance of small areas where change is taking place, the overall accuracy estimate will be inflated and unrealistic. For this reason, @Olofsson2013 argue that "mapped areas should be adjusted to eliminate bias attributable to map classification error and these error-adjusted area estimates should be accompanied by confidence intervals to quantify the sampling variability of the estimated area".
+To measure the accuracy of classified images, the `sits_accuracy()` function uses an area-weighted technique, following the best practices proposed by Olofsson et al. [@Olofsson2013]. The need for area-weighted estimates arises from the fact the land use and land cover classes are not evenly distributed in space. In some applications (e.g., deforestation) where the interest lies in assessing how much of the image has changed, the area mapped as deforested is likely to be a small fraction of the total area. If users disregard the relative importance of small areas where change is taking place, the overall accuracy estimate will be inflated and unrealistic. For this reason, Olofsson et al [@Olofsson2013] argue that "mapped areas should be adjusted to eliminate bias attributable to map classification error and these error-adjusted area estimates should be accompanied by confidence intervals to quantify the sampling variability of the estimated area".
 
-With this motivation, when measuring accuracy of classified images, the function `sits_accuracy()` follows @Olofsson2013 and @Olofsson2014.  The following explanation is extracted from the paper of @Olofsson2013, and users should refer to this paper for further explanation.
+With this motivation, when measuring accuracy of classified images, the function `sits_accuracy()` follows the procedure set by Olofsson et al. [@Olofsson2013]  The following explanation is extracted from thar paper, and users should refer to this paper for further explanation.
 
 Given a classified image and a validation file, the first step is to calculate the confusion matrix in the traditional way, i.e., by identifying the commission and omission errors. Then we calculate the unbiased estimator of the proportion of area in cell $i,j$ of the error matrix
 
@@ -237,9 +241,16 @@ To use the `sits_accuracy()` function to produce the adjusted area estimates, us
 
 Because of the biases inherent in cross validation of training data, users should provide an independent validation data set to measure classification accuracy. In this case study, Simoes et al.[@Simoes2021] did a systematic sampling of the Cerrado biome using a 20 x 20 km grid with a total of 5402 points. These samples are independent of the training set used in the classification. They were interpreted by five specialists using high resolution images from the same period of the classification. This resulted in 5286 evaluation samples thus distributed: "Annual Crop" (553), "Cerrado" (3155), "Natural Non Vegetated" (44), "Pasture" (1246), "Perennial Crop" (38), "Silviculture" (94), "Sugarcane" (77), and "Water" (79). This data set is available in package "sitsdata", as described below.
 
-```{r, tidy="styler"}
-# define the directory where data is located
-data_dir <- "~/Dropbox/Family\ Room/Cerrado/Classification"
+The first step is to obtain the classification map. Since the map is too large for sharing by an R package, the data is available in a Dropbox folder. The code below shows how to retrieve these files. 
+
+```{r, tidy="styler", echo = FALSE, eval = TRUE}
+data_dir <- "./tempdir/chp9"
+
+# read the files from Dropbox to a local directory
+files_read <- purrr::map_chr(files_drop, function (f){
+    local_files 
+})
+
 # create a data cube with the classified images
 cerrado_classif <- sits_cube(
     source = "BDC", 
