@@ -4,24 +4,19 @@
 source("common.R")
 ```
 
-## Design decisions
+## Extending the color table{-}
 
-Compared with existing tools, sits has distinctive features:
+In examples provided in the book, the color legend is taken for the predefined color table provided by `sits`. The options for defining labels and colors include:
 
-1. A consistent API that encapsulates the entire land classification workflow in a few commands.
-2. Integration with data cubes and Earth observation image collections available in cloud services such as AWS and Microsoft.
-3. A single interface for different machine learning and deep learning algorithms.
-4. Internal support for parallel processing, without requiring users to learn how to improve the performance of their scripts.
-5. Support for efficient processing of large areas in a user-transparent way.
-6. Innovative methods for sample quality control and post-processing.
-7. Capacity to run on virtual machines in cloud environments.
+1.  Predefined color table: `sits` has a default color table, that can be shown using the command `sits_config_show(colors = TRUE)`. This color definition file assigns colors to about 250 class names, including the IPCC and IGBP land use classes, the UMD GLAD classification scheme, the FAO LCC1 and LCCS2 land use layers, and the LCCS3 surface hydrology layer.
+2.  User-defined defined color table: users can set the legend they prefer with a YAML user-defined configuration file. This file should defined by the environmental variable `SITS_CONFIG_USER_FILE`. Create an YAML file, and then set the path to it with `Sys.setenv(SITS_CONFIG_USER_FILE="path_to_myfile")`. An example of an YAML file with user-defined legend is shown below.
+3. User-defined legend: users may define their own legends and pass them as parameters to to the `plot` function.
 
-Considering the aims and design of **sits**, it is relevant to discuss how its design and implementation choices differ from other software for big EO data analytics, such as Google Earth Engine [@Gorelick2017], Open Data Cube [@Lewis2017] and openEO [@Schramm2021]. In what follows, we compare **sits** to each of these solutions.
-
-Google Earth Engine (GEE) [@Gorelick2017] uses the Google distributed file system [@Ghemawat2003] and its map-reduce paradigm [@Dean2008]. By combining a flexible API with an efficient back-end processing, GEE has become a widely used platform [@Amani2020]. However, GEE is restricted to the Google environment and does not provide direct support for deep learning. By contrast, **sits** aims to support different cloud environments and to allow advances in data analysis by providing a user-extensible interface to include new machine learning algorithms.
-
-The Open Data Cube (ODC) is an important contribution to the EO community and has proven its usefulness in many domains [@Lewis2017, @Giuliani2020]. It reads subsets of image collections and makes them available to users as a Python \texttt{xarray} structure. ODC does not provide an API to work with \texttt{xarrays}, relying on the tools available in Python. This choice allows much flexibility at the cost of increasing the learning curve. It also means that temporal continuity is restricted to the \texttt{xarray} memory data structure; cases where tiles from an image collection have different timelines are not handled by ODC. The design of **sits** takes a different approach, favouring a simple API with few commands to reduce the learning curve. Processing and handling large image collections in **sits** does not require knowledge of parallel programming tools. Thus, **sits** and ODC have different aims and will appeal to different classes of users. 
-
-Designers of the openEO API [@Schramm2021] aim to support applications that are both language-independent and server-independent. To achieve their goals, openEO designers use microservices based on REST protocols. The main abstraction of openEO is a \textit{process}, defined as an operation that performs a specific task. Processes are described in JSON and can be chained in process graphs. The software relies on server-specific implementations that translate an openEO process graph into an executable script. Arguably, openEO is the most ambitious solution for reproducibility across different EO data cubes. To achieve its goals, openEO needs to overcome some challenges. Most data analysis functions are not self-contained. For example, machine learning algorithms depend on libraries such as TensorFlow and Torch. If these libraries are not available in the target environment, the user-requested process may not be executable. Thus, while the authors expect openEO to evolve into a widely-used API, it is not yet feasible to base an user-driven operational software such as **sits** in openEO. 
-
-Designing software for big Earth observation data analysis requires making compromises between flexibility, interoperability, efficiency, and ease of use. GEE is constrained by the Google environment and excels at certain tasks (e.g., pixel-based processing) while being limited at others such as deep learning. ODC allows users complete flexibility in the Python ecosystem, at the cost of limitations when working with large areas and requiring programming skills. The openEO API achieves platform independence but needs additional effort in designing drivers for specific languages and cloud services. While the **sits** API provides a simple and powerful environment for land classification, it has currently no support for other kinds of EO applications. Therefore, each of these solutions has benefits and drawbacks. Potential users need to understand the design choices and constraints to decide which software best meets their needs.
+```{yaml}
+colors:
+    Cropland:           "khaki"
+    Deforestation:      "sienna"
+    Forest :            "darkgreen"
+    Grassland :         "lightgreen"
+    NonForest:          "lightsteelblue1"
+```

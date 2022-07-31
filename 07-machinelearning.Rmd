@@ -9,9 +9,7 @@ source("common.R")
 
 <a href="https://www.kaggle.com/brazildatacube/sits-classification-r" target="_blank"><img src="https://kaggle.com/static/images/open-in-kaggle.svg"/></a>
 
-The `sits` package supports for time series classification, preserving the temporal resolution of the input data. Instead of extracting metrics from time series segments, it uses all values of the time series. Our hypothesis is that building high-dimensional spaces using all values of the time series, coupled with advanced statistical learning methods, is a robust and efficient approach for land cover classification of large data sets. Thus, we use the full depth of satellite image time series to create large dimensional spaces for statistical classification.
-
-The goal of a machine learning models is to approximate a function $y = f(x)$ that maps an input $x$ to a category $y$. A model defines a mapping $y = f(x;\theta)$ and learns the value of the parameters $\theta$ that result in the best function approximation [@Goodfellow2016]. The difference between the different algorithms is the approach they take to build the mapping that classifies the input data. 
+The `sits` package includes methods for time series classification, preserving the temporal resolution of the input data. Instead of extracting metrics from time series segments, it uses all values of the time series. Using machine learning methods in high-dimensional spaces that contain all values of the time series is a robust and efficient approach for land cover classification of large data sets. The goal of a machine learning models is to approximate a function $y = f(x)$ that maps an input $x$ to a category $y$. A model defines a mapping $y = f(x;\theta)$ and learns the value of the parameters $\theta$ that result in the best function approximation [@Goodfellow2016]. The difference between the different algorithms is the approach they take to build the mapping that classifies the input data. 
 
 The following machine learning methods are available in `sits`:
 
@@ -26,17 +24,17 @@ The following machine learning methods are available in `sits`:
 
 \newpage
 
-These methods can be subdivided in two types. The first group does not explicitly consider spatial or temporal dimensions; these algorithms treat time series as a vector in a high-dimensional feature space. They include random forests [@Belgiu2016], support vector machines [@Mountrakis2011], extreme gradient boosting [@Chen2016], and multilayer perceptrons [@Parente2019a]. The second group of models comprises deep learning methods designed to work with time series. Temporal relations between observed values in a time series are taken into account. From this kind of models, `sits` supports 1D convolution neural networks  [@Pelletier2019], residual 1D networks [@Fawaz2020], and temporal attention-based encoders [@Garnot2020a; @Russwurm2020]. In these algorithms, the order of the samples in the time series is relevant for the classifier. 
+These methods can be divided in two types. The first group does not explicitly consider spatial or temporal dimensions; these algorithms treat time series as a vector in a high-dimensional feature space. They include random forests [@Belgiu2016], support vector machines [@Mountrakis2011], extreme gradient boosting [@Chen2016], and multilayer perceptrons [@Parente2019a]. The second group of models comprises deep learning methods designed to work with time series. Temporal relations between observed values in a time series are taken into account. From this kind of models, `sits` supports 1D convolution neural networks  [@Pelletier2019], residual 1D networks [@Fawaz2020], and temporal attention-based encoders [@Garnot2020a; @Russwurm2020]. In these algorithms, the order of the samples in the time series is relevant for the classifier. 
 
-Experience with `sits` shows that SVM, extreme gradient boosting and multilayer perceptron models tend to have inferior performance those using random forests and temporal deep learning. This difference derives from the temporal behavior of land use and land cover classes, where some dates capture more information than others. For example, in deforestation monitoring the dates associates to the actions of forest removal are more informative than earlier or later ones. The same situation occurs in crop mapping, when a large part of the variation is captured in a few dates. In these cases, classification methods which consider the temporal order of samples are more likely to capture the seasonal behavior of the image time series. Random forests methods that use individual measures as nodes in the decision trees can also capture particular events such as deforestation. 
+Experience with `sits` shows that SVM and multilayer perceptron models tend to have inferior performance those using random forests, extreme gradient boosting, and temporal deep learning. This difference derives from the temporal behavior of land use and land cover classes, where some dates capture more information than others. For example, in deforestation monitoring the dates associates to the actions of forest removal are more informative than earlier or later ones. The same situation occurs in crop mapping, when a large part of the variation is captured in a few dates. In these cases, classification methods which consider the temporal order of samples are more likely to capture the seasonal behavior of the image time series. Random forests methods that use individual measures as nodes in the decision trees can also capture particular events such as deforestation. 
 
-The following examples show how to train machine learning methods and apply it to classify a single time series. We use the set `samples_matogrosso_mod13q1`, containing time series samples from Brazilian Mato Grosso state, obtained from the MODIS MOD13Q1 product. It has 1,892 samples and 9 classes (Cerrado, Fallow_Cotton, Forest, Pasture, Soy_Corn, Soy_Cotton, Soy_Fallow, Soy_Millet, Soy_Sunflower). Each time series comprehends 12 months (23 data points) with 6 bands ("NDVI", "EVI", "BLUE", "RED", "NIR", "MIR"). The samples are arranged along an agricultural year, starting in September and ending in August. The data set was used in the paper "Big Earth observation time series analysis for monitoring Brazilian agriculture" [@Picoli2018], and is available in the R package `sitsdata`. Please see the "Setup" section for instructions on how to obtain this pacakge.
+The following examples show how to train machine learning methods and apply it to classify a single time series. We use the set `samples_matogrosso_mod13q1`, containing time series samples from Brazilian Mato Grosso state, obtained from the MODIS MOD13Q1 product. It has 1,892 samples and 9 classes (Cerrado, Fallow_Cotton, Forest, Pasture, Soy_Corn, Soy_Cotton, Soy_Fallow, Soy_Millet, Soy_Sunflower). Each time series covers 12 months (23 data points) with 6 bands ("NDVI", "EVI", "BLUE", "RED", "NIR", "MIR"). The samples are arranged along an agricultural year, starting in September and ending in August. The data set was used in the paper "Big Earth observation time series analysis for monitoring Brazilian agriculture" [@Picoli2018], and is available in the R package `sitsdata`. Please see the "Setup" section for instructions on how to obtain this package.
 
 The results should not be taken as indication of which method performs better. The most important factor for achieving a good result is the quality of the training data [@Maxwell2018]. Experience shows that classification quality depends on the training samples and on how well the model matches these samples. For examples of ML for classifying large areas, please see the "Case Studies" chapter in this book and also the papers by the authors [@Picoli2018; @Picoli2020a; @Simoes2020; @Ferreira2020a].
 
 ## Visualizing Sample Patterns{-}
 
-One useful way of describing and understanding the samples is by plotting them. A direct way of doing so is using the `plot` function, as discussed in the "Working with Time Series" chapter. A useful alternative is to estimate a statistical approximation to an idealized pattern based on a generalised additive models (GAM). A GAM is a linear model in which the linear predictor depends linearly on a smooth function of the predictor variables 
+One useful way of describing and understanding the samples is by plotting them. A direct way of doing so is using the `plot` function, as discussed in the "Working with Time Series" chapter. A useful alternative is to estimate a statistical approximation to an idealized pattern based on a generalized additive models (GAM). A GAM is a linear model in which the linear predictor depends linearly on a smooth function of the predictor variables 
 
 $$
 y = \beta_{i} + f(x) + \epsilon, \epsilon \sim N(0, \sigma^2).
@@ -55,13 +53,11 @@ The resulting patterns provide some insights over the time series behavior of ea
 
 ## Common interface to machine learning and deep learning models{-}
 
-The SITS package provides a common interface to all machine learning models, using the `sits_train()` function. This function takes two mandatory parameters: the training data (`samples`) and the ML algorithm (`ml_method`). After the model is estimated, it can be used to classify individual time series or data cubes with `sits_classify()`. In what follows, we show how to apply each method for the classification of a single time series. Then, in the "Classification of Images in Data Cubes" we discuss how to classify data cubes.
+The `sits_train()` function provides a common interface to all machine learning models. This function takes two mandatory parameters: the training data (`samples`) and the ML algorithm (`ml_method`). After the model is estimated, it can be used to classify individual time series or data cubes with `sits_classify()`. In what follows, we show how to apply each method for the classification of a single time series. Then, in the "Classification of Images in Data Cubes" we discuss how to classify data cubes.
 
 Since `sits` is aimed at remote sensing users who are not machine learning experts, it provides a set of default values for all classification models. These settings have been chosen based on  testing by the authors. Nevertheless, users can control all parameters for each model. Novice users can rely on the default values, while experienced ones can fine-tune model parameters to meet their needs. Model tuning is discussed at the end of this chapter. 
 
 When a set of time series organised as tibble is taken as input to the classifier, the result is the same tibble with one additional column ("predicted"), which contains the information on what labels are have been assigned for each interval. The results can be shown in text format using the function `sits_show_prediction()` or graphically using `plot()`.
-
-
 
 ## Random forests{-}
 
@@ -72,7 +68,7 @@ The random forests model uses *decision trees* as its base model with refinement
 knitr::include_graphics("images/random_forest.png") 
 ```
 
-SITS provides `sits_rfor()`, which uses the R `randomForest` package [@Wright2017]; its main parameter is `num_trees`, which is the number of trees to grow with a default value 100. The model can be visualized using `plot()`.
+SITS provides `sits_rfor()`, which uses the R `randomForest` package [@Wright2017]; its main parameter is `num_trees`, which is the number of trees to grow with a default value of 100. The model can be visualized using `plot()`.
 
 ```{r, echo = FALSE}
 set.seed(290356)
@@ -111,14 +107,14 @@ Random forests are robust to outliers and able to deal with irrelevant inputs [@
 
 ## Support Vector Machines{-}
 
-The support vector machine (SVM) classifier is a generalization of a linear classifier which finds an optimal separation hyperplane that minimizes misclassification [@Cortes1995]. Since a set of samples with $n$ features defines an n-dimensional feature space, hyperplanes are linear ${(n-1)}$-dimensional boundaries that define linear partitions in that space. If the classes are linearly separable on the feature space, there will be an optimal solution defined by the *maximal margin hyperplane*, which is the separating hyperplane that is farthest from the training observations[@James2013]. The maximal margin is computed as the the smallest distance from the observations to the hyperplane. The solution for the hyperplane coefficients depends only on the samples that define the maximum margin criteria, the so-called *support vectors*.
+The support vector machine (SVM) classifier is a generalization of a linear classifier which finds an optimal separation hyperplane that minimizes misclassification [@Cortes1995]. Since a set of samples with $n$ features defines an n-dimensional feature space, hyperplanes are linear ${(n-1)}$-dimensional boundaries that define linear partitions in that space. If the classes are linearly separable on the feature space, there will be an optimal solution defined by the maximal margin hyperplane, which is the separating hyperplane that is farthest from the training observations[@James2013]. The maximal margin is computed as the the smallest distance from the observations to the hyperplane. The solution for the hyperplane coefficients depends only on the samples that define the maximum margin criteria, the so-called support vectors.
 
 ```{r, echo = FALSE, out.width = "50%", fig.align="center", fig.cap="Maximum-margin hyperplane and margins for an SVM trained with samples from two classes. Samples on the margin are called the support vectors. (source: Larhmam in Wikipedia - licensed as CC-BY-SA-4.0 )."}
 
 knitr::include_graphics("images/svm_margin.png") 
 ```
 
-For data that is not linearly separable, SVM includes kernel functions that map the original feature space into a higher dimensional space, providing nonlinear boundaries to the original feature space. The new classification model, despite having a linear boundary on the enlarged feature space, generally translates its hyperplane to a nonlinear boundaries in the original attribute space. Kernels are an efficient computational strategy to produce nonlinear boundaries in the input attribute space; thus, they improve training-class separation. SVM is one of the most widely used algorithms in machine learning applications and has been applied to classify remote sensing data [@Mountrakis2011].
+For data that is not linearly separable, SVM includes kernel functions that map the original feature space into a higher dimensional space, providing nonlinear boundaries to the original feature space. The new classification model, despite having a linear boundary on the enlarged feature space, generally translates its hyperplane to a nonlinear boundary in the original attribute space. Kernels are an efficient computational strategy to produce nonlinear boundaries in the input attribute space; thus, they improve training-class separation. SVM is one of the most widely used algorithms in machine learning applications and has been applied to classify remote sensing data [@Mountrakis2011].
 
 In `sits`, SVM is implemented as a wrapper of `e1071` R package that uses the `LIBSVM` implementation [@Chang2011], the `sits` package adopts the *one-against-one* method for multiclass classification. For a $q$ class problem, this method creates ${q(q-1)/2}$ SVM binary models, one for each class pair combination and tests any unknown input vectors throughout all those models. The overall result is computed by a voting scheme.
 
@@ -130,7 +126,7 @@ set.seed(290356)
 
 
 ```{r, tidy="styler", out.width = "70%", fig.align="center", fig.cap="Classification of time series using SVM."}
-# Train a machine learning model for the mato grosso dataset using SVM
+# Train a SVM model
 svm_model <- sits_train(
     samples = samples_matogrosso_mod13q1, 
     ml_method = sits_svm())
@@ -162,8 +158,7 @@ set.seed(290356)
 
 
 ```{r, tidy="styler", out.width = "70%", fig.align="center", fig.cap="Classification of time series using XGBoost."}
-# Train a model for the mato grosso dataset using XGBOOST
-# The default parameters are those of the "xgboost" package
+# Train using  XGBoost
 xgb_model <- sits_train(
     samples = samples_matogrosso_mod13q1, 
     ml_method = sits_xgboost(verbose = 0)
@@ -195,7 +190,7 @@ Another relevant parameter is the list of dropout rates (`dropout`). Dropout is 
 
 The following example shows how to use `sits_mlp()`. The default parameters for have been chosen based on a modified verion of @Wang2017, which proposes the use of multilayer perceptrons as a baseline for time series classification. These parameters are: (a) Three layers with 512 neurons each, specified by the parameter `layers`; (b) Using the "relu" activation function; (c) dropout rates of 40%, 30%, and 20% for the layers; (d) the "optimizer_adamw" as optimizer (default value); (e) a number of training steps (`epochs`) of 100; (f) a `batch_size` of 64, which indicates how many time series are used for input at a given steps; and (g) a validation percentage of 20%, which means 20% of the samples will be randomly set side for validation.
 
-In our experience, if the training dataset is of good quality, using 3 to 5 layers is a reasonable compromise. Further increase on the number of layers will not improve the model. To simplify the output generation, the `verbose` option has been turned off. The default value is "on". After the model has been generated, we plot its training history. In this and in the following examples of using deep learning classifiers, both the training samples and the point to be classified are filtered with `sits_whittaker()` with a small smoothing parameter (lambda = 0.5). Since deep learning classifiers are not as robust as Random Forest or XGBoost, the right amount of smoothing improves their detection power in case of noisy data.
+In our experience, if the training data is of good quality, using 3 to 5 layers is a reasonable compromise. Further increase on the number of layers will not improve the model. To simplify the output generation, the `verbose` option has been turned off. The default value is "on". After the model has been generated, we plot its training history. 
 
 ```{r, echo = FALSE}
 set.seed(290356)
@@ -203,7 +198,7 @@ set.seed(290356)
 
 
 ```{r, tidy="styler", out.width = "70%", warning = FALSE, message = FALSE, fig.align="center", fig.cap="Evolution of training accuracy of MLP model."}
-# train a  model for the Mato Grosso data using an MLP model
+# train using an MLP model
 # this is an example of how to set parameters
 # first-time users should test default options first
 mlp_model <- sits_train(
@@ -253,7 +248,7 @@ set.seed(290356)
 
 ```{r, tidy="styler", out.width = "70%", warning = FALSE, message = FALSE, fig.align="center", fig.cap="Training evolution of TempCNN model."}
 library(torchopt)
-# train a machine learning model using tempCNN
+# train using tempCNN
 tempcnn_model <- sits_train(samples_matogrosso_mod13q1, 
                        sits_tempcnn(
                           optimizer            = torchopt::optim_adamw,
@@ -292,7 +287,7 @@ knitr::include_graphics("images/resnet.png")
 In `sits`, the Residual Network is implemented using the `sits_resnet()` function. The default parameters are those proposed by Wang et al. [@Wang2017], as implemented by Fawaz et al.[@Fawaz2019]. The first parameter is `blocks`, which controls the number of blocks and the size of filters in each block. By default, the model implements three blocks, the first with 64 filters and the others with 128 filters. Users can control the number of blocks and filter size by changing this parameter. The parameter `kernels` controls the size the of kernels of the three layers inside each block. We have found out that it is useful to experiment a bit with these kernel sizes in the case of satellite image time series. The default activation is "relu", which is recommended in the literature to reduce the problem of vanishing gradients. The default optimizer is `optim_adamw`, available in package `torchopt`.
 
 ```{r, tidy="styler", out.width = "70%", warning = FALSE, message = FALSE, fig.align="center", fig.cap="Training evolution of ResNet model."}
-# train a machine learning model using ResNet
+# train using ResNet
 resnet_model <- sits_train(samples_matogrosso_mod13q1, 
                        sits_resnet(
                           blocks               = c(64, 128, 128),
@@ -317,7 +312,7 @@ class <- point_mt_6bands %>%
  
 ## Attention-based models{-}
 
-Attention-based models have become one of the most used deep learning architectures for problems that involve sequential data inputs, e.g., text recognition and automatic translation. The general idea is that in applications such as language translation not all inputs are alike. Consider the English sentence *"Look at all the lonely people"* and its Portuguese translation *"Olhe para todas as pessoas solitárias"*. A good translation system needs to relate the words "look" and "people" as the key parts of this sentence and to ensure such link is captured in the translation. A specific type of attention models, called *transformers*, enables the recognition of such complex relationships between input and output sequences [@Vaswani2017]. 
+Attention-based models have become one of the most used deep learning architectures for problems that involve sequential data inputs, e.g., text recognition and automatic translation. The general idea is that in applications such as language translation not all inputs are alike. Consider the English sentence "Look at all the lonely people" and its Portuguese translation "Olhe para todas as pessoas solitárias". A good translation system needs to relate the words "look" and "people" as the key parts of this sentence and to ensure such link is captured in the translation. A specific type of attention models, called transformers, enables the recognition of such complex relationships between input and output sequences [@Vaswani2017]. 
 
 The basic structure of transformers is the same as other neural network algorithms. They have an encoder that transforms the input textual values into numerical vectors, and a decoder that processes these vectors and provides suitable answers. The difference is on how the values are handled internally. In multilayer perceptrons (MLP), all inputs are treated equally at first; based on iterative matching of training and test data, the backpropagation technique feeds information back to the initial layers to identify the most relevant combination of inputs that produces the best output. In convolutional nets (CNN), input values that are close in time (1D) or space (2D) are combined to produce higher-level information that helps to distinguish the different components of the input data. For text recognition, the initial choice of deep learning studies was to use recurrent neural networks (RNN) that handle input sequences sequentially. However, neither MLPs, nor CNNs or RNNs have been able to capture the structure of complex inputs such as natural language. The success of transformer-based solutions accounts for substantial improvements in natural language processing.
 
@@ -350,7 +345,7 @@ class <- point_mt_6bands %>%
     plot(bands = c("NDVI", "EVI"))
 ```
 
-In `sits`, the simplified transformer-based model proposed by Garnot and co-authors [@Garnot2020a]   is implemented using the `sits_lighttae()` function. The default optimizer is the same is `optim_adamw`, available in package `torchopt`. The most important parameter to be set is the learning rate `lr`. Values ranging from 0.001 to 0.005 should produce reasonable results. See also the section below on model tuning. 
+The `sits_lighttae()` function implements the simplified transformer-based model proposed by Garnot and co-authors [@Garnot2020a]. The default optimizer is `optim_adamw`, available in package `torchopt`. The most important parameter to be set is the learning rate `lr`. Values ranging from 0.001 to 0.005 should produce reasonable results. See also the section below on model tuning. 
 
 ```{r, tidy="styler", out.width = "70%", warning = FALSE, message = FALSE, fig.align="center", fig.cap="Training evolution of Lightweight Temporal Self-Attention model."}
 # train a machine learning model using TAE
@@ -380,15 +375,15 @@ The behaviour of both `sits_tae()` and `sits_lighttae()` is similar to that of `
 
 ## Model tuning{-}
 
-Model tuning is an important step in machine learning classification, to enable a better fir of the method to the training data. Learning algorithms have a set of internal configuration called *hyperparameters*, which control the convergence of the algorithm and minimize the classification error. In practice, an unsuitable choice of hyperparameters can have a detrimental effect on the quality of the results. 
+Model tuning is an important step in machine learning classification, to enable a better fir of the method to the training data. Learning algorithms have a set of internal configuration called hyperparameters, which control the convergence of the algorithm and minimize the classification error. In practice, an unsuitable choice of hyperparameters can have a detrimental effect on the quality of the results. 
 
 Deep learning algorithms try to find the optimal point that represents the best value of the prediction function that, given an input $X$ of data points, predicts the result $Y$. In our case, $X$ is a multidimensional time series and $Y$ is a vector of probabilities for the possible output classes. For complex situations, the best prediction function is time consuming to estimate. For this reason, deep learning methods rely on gradient descent methods to speed up predictions and converge faster than an exhaustive search [@Bengio2012]. All gradient descent methods use an optimization algorithm that is adjusted with hyperparameters such as the learning rate and regularization rate [@Schmidt2021]. The learning rate controls the numerical step of the gradient descent function and the regularization rate controls model overfitting. Adjusting these values to an optimal setting requires the use of model tuning methods. 
 
-To reduce the learning curve, `sits` provides default values for all machine learning and deep learning methods described above. These defaults ensure a reasonable baseline performance. More experienced users may want to refine model hyperparameters, especially for more complex models such as `sits_lighttae()` or `sits_tempcnn()`. To that end, the package provides the `sits_tuning()` function. 
+To reduce the learning curve, `sits` provides default values for all machine learning and deep learning methods, which ensure a reasonable baseline performance. More experienced users may want to refine model hyperparameters, especially for more complex models such as `sits_lighttae()` or `sits_tempcnn()`. To that end, the package provides the `sits_tuning()` function. 
 
 The simplest approach to model tuning is would be to run a grid search; this involves defining a range for each hyperparameter and then testing all possible combinations. This approach leads to a combinational explosion and thus is not recommended. Instead, Bergstra and Bengio [@Bergstra2012] propose to use randomly chosen trials. In their paper, the authors show that random trials are more efficient than grid search trials, allowing the selection of adequate hyperparameters at a fraction of the computational cost. The `sits_tuning()` function follows Bergstra and Bengio [@Bergstra2012] and uses a random search on the chosen hyperparameters.
 
-Since gradient descent plays a key role in deep learning model fitting, developing optimizers is an important topic of research [@Bottou2018]. A large number of optimizers have been proposed in the literature, and recent results are reviewed by Schmidt et al [Schmidt2021]. For general deep learning applications, the *Adam*  optimizer [@Kingma2017] provides a good baseline and reliable performance. For this reason, *Adam*  is the default optimizer in the R `torch` package. However, experiments with image time series show that other optimizers may have better performance for the specific problem of land use classification. For this reason, the authors developed a separate R package, called `torchopt` that includes a number of recently proposed optimizers, including *Adamw*  [@Loshchilov2019], *Madgrad* [@Defazio2021] and *Yogi* [@Zaheer2018]. Based on our experiments, we have selected *Adamw* as the default optimizer for deep learning methods. Using the `sits_tuning()` function allows testing these and other optimizers available in `torch` and `torch_opt` packages.
+Since gradient descent plays a key role in deep learning model fitting, developing optimizers is an important topic of research [@Bottou2018]. A large number of optimizers have been proposed in the literature, and recent results are reviewed by Schmidt et al. [Schmidt2021]. For general deep learning applications, the Adam  optimizer [@Kingma2017] provides a good baseline and reliable performance. For this reason, Adam  is the default optimizer in the R `torch` package. Experiments with image time series show that other optimizers may have better performance for the specific problem of land use classification. For this reason, the authors developed the  `torchopt` R package which includes a number of recently proposed optimizers, including Adamw  [@Loshchilov2019], Madgrad [@Defazio2021] and Yogi [@Zaheer2018]. Based on our experiments, we have selected Adamw as the default optimizer for deep learning methods. Using the `sits_tuning()` function allows testing these and other optimizers available in `torch` and `torch_opt` packages.
 
 The `sits_tuning()` function takes the following parameters:
 
@@ -403,7 +398,7 @@ The `sits_tuning()` function takes the following parameters:
 
 The `sits_tuning_hparams()` function inside `sits_tuning()` allows users to define optimizers and their hyperparameters including `lr` (learning rate), `eps` (controls numerical stability) and `weight_decay` (controls overfitting). The default values for `eps` and `weight_decay` in all `sits` deep learning functions are 1.0e-08  and 1.0e-06, respectively. The default `lr` for `sits_lighttae()` and `sits_tempcnn()` is  0.005, and for `sits_tae()` and `sits_resnet()` is 0.001. Users have different ways to randomize the hyperparameters, including: `choice()` (a list of options), `uniform` (a uniform distribution), `randint` (random integers from a uniform distribution), `normal(mean, sd)` (normal distribution), `beta(shape1, shape2)`(beta distribution). These options allow extensive combination of hyperparameters.
 
-In the example, the `sits_tuning()` function finds good hyperparameters to train the `sits_lighttae()` method for the Mato Grosso data set. It tests 100 combinations of learning rate and weight decay for the *Adamw* optimizer. To randomize the learning rate, it uses a beta distribution with parameters 0.35 and 10, which allows for variation between about 0.2 and 1.0e-00; for the weight decay, the beta distribution with parameters 0.1 and 2 generates values roughly between 1 and 1.0e-24. 
+In the example, the `sits_tuning()` function finds good hyperparameters to train the `sits_lighttae()` method for the Mato Grosso data set. It tests 100 combinations of learning rate and weight decay for the Adamw optimizer. To randomize the learning rate, it uses a beta distribution with parameters 0.35 and 10, which allows for variation between about 0.2 and 1.0e-00; for the weight decay, the beta distribution with parameters 0.1 and 2 generates values roughly between 1 and 1.0e-24. 
 
 ```{r, tidy="styler", eval = FALSE, echo = TRUE}
 tuned <- sits_tuning(
@@ -434,8 +429,8 @@ The result is a tibble with different values of accuracy, kappa, decision matrix
 # hyperparameters are organized as a list
 hparams_10 <- tuned[1:10,]$opt_hparams
 # extract learning rate and weight decay from the list
-lr_10 <- purrr::map_dbl(hparams_10, function (h) h$lr)
-wd_10 <- purrr::map_dbl(hparams_10, function (h) h$weight_decay)
+lr_10 <- purrr::map_dbl(hparams_10, function(h) h$lr)
+wd_10 <- purrr::map_dbl(hparams_10, function(h) h$weight_decay)
 
 # create a tibble to display the results
 best_10 <- tibble::tibble(
@@ -455,7 +450,7 @@ For large data sets, the tuning process is time consuming. Despite this cost, it
 
 The development of machine learning methods for classification of satellite image time series is an ongoing task. There is a lot of recent work using methods such as convolutional neural networks [@Pelletier2019, @Wang2017, @Fawaz2020] and temporal self-attention [@Garnot2020a]. Given the rapid evolution of the field with new methods still being developed, there are few references that offer a comparison between different machine learning methods. Most works on the literature [@Wang2017, @Fawaz2019] compare methods for generic time series classification. Their insights are not directly applicable for satellite image time series data, which have different properties than the time series using in applications such as economics and health.
 
-In the specific case of satellite image time series, Russwurm et al. [@Russwurm2020] present a comparative study between seven deep neural networks for classification of agricultural crops, using random forests (RF) as a baseline. The dataset is composed of Sentinel-2 images over Britanny, France. Their results indicate a slight difference between the best model (attention-based transformer model) over TempCNN, ResNet and RF. Attention-based models obtain accuracy ranging from 80-81%, TempCNN get 78-80%, and RF gets 78%. Based on this result and also on the authors' experience, we make the following recommendations:
+In the specific case of satellite image time series, Russwurm et al. [@Russwurm2020] present a comparative study between seven deep neural networks for classification of agricultural crops, using random forests (RF) as a baseline. The data is composed of Sentinel-2 images over Britanny, France. Their results indicate a slight difference between the best model (attention-based transformer model) over TempCNN, ResNet and RF. Attention-based models obtain accuracy ranging from 80-81%, TempCNN get 78-80%, and RF gets 78%. Based on this result and also on the authors' experience, we make the following recommendations:
 
 1.  Random forests provide a good baseline for image time series classification and should be included in users' assessments. 
 

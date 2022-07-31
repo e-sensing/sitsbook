@@ -8,7 +8,7 @@ library(sits)
 
 ## Analysis-ready data image collections{-}
 
-Collections of Earth observation analysis-ready data (ARD) are available in cloud services such as Amazon Web Service, Brazil Data Cube, Digital Earth Africa, Swiss Data Cube, and Microsoft's Planetary Computer. These collections which have been processed to improve multidate comparability.  Radiance measures at the top of the atmosphere have been converted to ground reflectance measures.  In general, timelines of the images of an ARD image collection are different. Images still contain cloudy or missing pixels; bands for the images in the collection may have different resolutions. Figure 9 shows an example of the Landsat ARD image collection. 
+Collections of Earth observation analysis-ready data (ARD) are available in cloud services such as Amazon Web Service, Brazil Data Cube, Digital Earth Africa, Swiss Data Cube, and Microsoft's Planetary Computer. These collections have been processed to improve multidate comparability.  Radiance measures at the top of the atmosphere are converted to ground reflectance measures.  In general, timelines of the images of an ARD image collection are different. Images still contain cloudy or missing pixels; bands for the images in the collection may have different resolutions. Figure 9 shows an example of the Landsat ARD image collection. 
 
 ```{r ardtile, echo = FALSE, out.width="70%", fig.align="center", fig.cap="ARD image collection (source: USGS). Reproduction based on fair use doctrine."}
 knitr::include_graphics("images/usgs_ard_tile.png")
@@ -60,7 +60,7 @@ Currently, the only cloud service that provides regular data cubes by default is
 
 To obtain information on ARD image collection from cloud providers, `sits` uses the STAC (SpatioTemporal Asset Catalogue) protocol, which is a specification of geospatial information which has been adopted by many large image collection providers. A 'spatiotemporal asset' is any file that represents information about the Earth captured in a certain space and time. To access STAC endpoints, `sits` uses the [rstac](http://github.com/brazil-data-cube/rstac) R package.
 
-All access to image collections and data cubes is done using `sits_cube()`,  which requires the following common parameters:
+All access to image collections and data cubes in cloud services is done using `sits_cube()`,  which requires the following parameters:
 
 1. `source`: name of the provider from the list of providers supported by `sits`. 
 2. `collection`: a collection available in the provider and supported by `sits`. To find out which collections are supported by `sits`, see `sits_list_collections()`. 
@@ -205,7 +205,7 @@ ARD images downloaded from cloud collections to a local computer are not associa
 5. `parse_info`: information to parse the file names. File names need to contain information on tile, date and band, separated by a delimiter (usually "_").
 6. `delim`: separator character between descriptors in the file name (default is "_").
 
-The example shows how to define a data cube using files from the *sitsdata* package.  Given the file name `CB4_64_16D_STK_022024_2018-08-29_2018-09-13_EVI.tif`, to retrieve information about the images, one needs to set the `parse_info` parameter to `c("X1", "X2", "X3", "X4", "tile", "date", "X5", "band")`. 
+The example shows how to define a data cube using files from the `sitsdata` package.  Given the file name `CB4_64_16D_STK_022024_2018-08-29_2018-09-13_EVI.tif`, to retrieve information about the images, one needs to set the `parse_info` parameter to `c("X1", "X2", "X3", "X4", "tile", "date", "X5", "band")`. 
 
 ```{r}
 library(sits)
@@ -229,13 +229,13 @@ plot(cbers_cube, band = "NDVI", date = "2018-08-29")
 
 ## Defining a data cube using classified images{-}
 
-It is also possible to create local cubes based on results that have been produced by classification or post-classification algorithms. In this case, there are more parameters that are required and the parameter `parse_info` is specified differently, as follows:
+It is also possible to create local cubes based on results that have been produced by classification or post-classification algorithms. In this case, more parameters are required and the parameter `parse_info` is specified differently, as follows:
 
 1. `source`:  name of the original data provider. 
 2. `collection`:  name of the collection from where the data was extracted. 
 3. `data_dir`: local directory for the classified images.
-4. `band`: Band name is associated to the type of result. Use `probs` for probability cubes produced by `sits_classify()`; `bayes`, `bilateral`, `gaussian` according to the function selected when using `sits_smooth()`; `entropy` when using `sits_uncertainty()`, `class` for labelled cubes.
-5. `labels`: Labels associated to the classification results. 
+4. `band`: Band name is associated to the type of result. Use: (a) `probs` for probability cubes produced by `sits_classify()`; (b) `bayes` or `bilateral`, according to the method selected when using `sits_smooth()`; (c) `entropy`, `least`, `ratio` or `margin`, according to the method selected when using `sits_uncertainty()`; and (d) `class` for labelled cubes.
+5. `labels`: Labels associated to the classification results (not required for cubes produced by `sits_uncertainty()`).
 6. `version`: Version of the result (default = `v1`).
 7. `parse_info`: File name parsing information to allow `sits` to deduce the values of `tile`, `start_date`, `end_date`, `band` and `version` from the file name. Unlike non-classified image files, cubes produced by classification and post-classification have both `start_date` and `end_date`. 
 
@@ -261,7 +261,9 @@ plot(Rondonia_class_cube)
 
 ## Regularizing data cubes{-}
 
-Analysis-ready data (ARD) collections available in AWS, MSPC, USGS and DEAFRICA are not regular in space and time. Bands may have different resolutions, images may not cover the entire tile, and time intervals are not regular. For this reason, subsets of these collection need to be converted to regular data cubes before further processing and data analysis. This is done in *sits* by the function `sits_regularize()`, which uses the  *gdalcubes* package [@Appel2019]. In the following example, the user has created an irregular data cube from the Sentinel-2 collection available in Microsoft's Planetary Computer (MSPC) for tiles `20LKP` and `20LLP` in the state of Rondonia, Brazil. As described earlier in this chapter, because of the way ARD image collections are built, some of the images have invalid pixels, as shown below.  We first build an irregular data cube using `sits_cube()`.
+Analysis-ready data (ARD) collections available in AWS, MSPC, USGS and DEAFRICA are not regular in space and time. Bands may have different resolutions, images may not cover the entire tile, and time intervals are not regular. For this reason, data from these collection need to be converted to regular data cubes to run machine learning methods. This is done in by the function `sits_regularize()`, which uses the  *gdalcubes* package [@Appel2019]. 
+
+In the following example, the user has created an irregular data cube from the Sentinel-2 collection available in Microsoft's Planetary Computer (MSPC) for tiles `20LKP` and `20LLP` in the state of Rondonia, Brazil. We first build an irregular data cube using `sits_cube()`.
 
 ```{r, tidy="styler", out.width="90%", fig.align="center", fig.cap="Sentinel-2 tile 20LLP for date 2018-07-03"}
 # creating an irregular data cube from MSPC

@@ -44,7 +44,7 @@ plot(ltae_model)
 We now build a data cube from the NDVI and EVI CBERS-4 images available in the package `sitsdata`. These images were downloaded from the Brazil Data Cube (`BDC`) and come from `CB4_64_16D_STK-1` collection, which contains CBERS-4 images from the AWFI sensor at 64 meter resolution. The image files follow the pattern `CB4_64_16D_STK_022024_2018-08-29_2018-09-13_EVI.tif`. As explained in the "Earth observation data cubes" chapter, we need to inform `sits` how to parse these file names to obtain tile, date and band information. 
 
 
-```{r, tidy = "styler", out.width = "70%", fig.align="center", fig.cap="Color composite image of first date of the cube"}
+```{r, tidy = "styler", out.width = "80%", fig.align="center", fig.cap="Color composite image of first date of the cube"}
 
 # files are available in a local directory
 data_dir <- system.file("extdata/CBERS", package = "sitsdata")
@@ -64,7 +64,7 @@ plot(cbers_cerrado_cube, red = "EVI", green = "NDVI", blue = "EVI")
 
 To classify both data cubes and sets of time series, use the function `sits_classify()`, which uses parallel processing for speed up performance, as described in the end of this Chapter. Its most relevant parameters are: (a) `data`, either a data cube or a set of time series; (b) `ml_model`, a trained model using one of the machine learning methods provided; (c) `multicores`, number of CPU cores that will be used for processing; (d) `memsize`, memory available for classification; (e) `output_dir`, directory where results will be stored; (f) `version`, for version control. If users want to follow the processing steps, they should turn on the parameters `verbose` to print information and `progress` to get a progress bar. The result of the classification is a data cube with a set of probability layers, one for each output class. Each probability layer contains the model's assessment of how likely is each pixel to belong to the related class. The probability cube can be visualisazed with `plot()`. 
 
-```{r, tidy = "styler", out.width = "70%", fig.align="center", fig.cap="Probability maps produced by LightTAE model."}
+```{r, tidy = "styler", out.width = "80%", fig.align="center", fig.cap="Probability maps produced by LightTAE model."}
 
 # classify data cube
 probs_cerrado <- sits_classify(
@@ -80,7 +80,7 @@ plot(probs_cerrado, breaks = "quantile")
 
 The probability cube is a useful tool for data analysis. It is used for post-processing smoothing, as described in this Chapter, but also in uncertainty estimates and active learning, as described in the "Uncertainty and Active Learning" Chapter.
 
-```{r, tidy = "styler", out.width = "70%", fig.align="center", fig.cap="Final classification map."}
+```{r, tidy = "styler", out.width = "80%", fig.align="center", fig.cap="Final classification map."}
 # generate thematic map
 cerrado_map <- sits_label_classification(
     cube = probs_cerrado,
@@ -91,7 +91,7 @@ cerrado_map <- sits_label_classification(
 plot(cerrado_map)
 ```
 
-The resulting labelled map shows a number of likely misclassified pixels which are shown as small patches surrounded by a different class. These outliers are a side-effect of pixel-based time series classification. Images contain many mixed pixels irrespective of the resolution, and there is a considerable degree of data variability in each class. These effects lead to outliers whose chance of misclassification is significant. To improve this result, it is recommended to include post-processing smoothing methods that use spatial context of the probability cubes. 
+The resulting labelled map shows a number of likely misclassified pixels which are shown as small patches surrounded by a different class. These outliers are a side-effect of pixel-based time series classification. Images contain many mixed pixels irrespective of the resolution, and there is a considerable degree of data variability in each class. These effects lead to outliers whose chance of misclassification is significant. To improve this result, `sits`  includes post-processing smoothing methods that use spatial context of the probability cubes. 
 
 ## Post-classification smoothing{-}
 
@@ -99,7 +99,7 @@ Smoothing methods are an important complement to machine learning algorithms for
 
 Image classification post-processing has been defined as "a refinement of the labelling in a classified image in order to enhance its classification accuracy" [@Huang2014]. In remote sensing image analysis, these procedures are used  to combine pixel-based classification methods with a spatial post-processing method to remove outliers and misclassified pixels. For pixel-based classifiers, post-processing methods enable the inclusion of spatial information in the final results. 
 
-Post-processing is a desirable step in any classification process. To offset these problems, most post-processing methods use the "smoothness assumption" [@Schindler2012]: nearby pixels tend to have the same label. To put this assumption in practice, smoothing methods use the neighbourhood information to remove outliers and enhance consistency in the resulting product. The spatial smoothing methods are available in `sits` are bayesian smoothing and bilinear smoothing. These methods are called using the `sits_smooth()` function, as shown in the examples below.
+Post-processing is a desirable step in any classification process. To offset these problems, most post-processing methods use the "smoothness assumption" [@Schindler2012]: nearby pixels tend to have the same label. To put this assumption in practice, smoothing methods use the neighborhood information to remove outliers and enhance consistency in the resulting product. The spatial smoothing methods are available in `sits` are bayesian smoothing and bilinear smoothing. These methods are called using the `sits_smooth()` function, as shown in the examples below.
 
 ### Bayesian smoothing{-}
 
@@ -111,7 +111,7 @@ The intuition for Bayesian smoothing is that homogeneous neighborhoods should ha
 
 To run Bayesian smoothing, the parameter of `sits_smooth()` are: (a) `cube`, a probability cube produced by `sits_classify()`; (b) `type` should be `bayes` (the default); (c) `window_size`, the local window to compute the neighborhood probabilities; (d) `smoothness`, an estimate of the local variance (see Technical Annex for details); (e) `multicores`, number of CPU cores that will be used for processing; (f) `memsize`, memory available for classification; (g) `output_dir`, directory where results will be stored; (h) `version`, for version control. The resulting cube can be visualized with `plot()`. The bigger one sets the `window_size` and `smoothness` parameters, the stronger the adjustments will be.  In what follows, we compare two situations of smoothing effects, by varying the `window_size` and `smoothness` parameters 
 
-```{r, tidy = "styler", out.width = "70%", fig.align="center", fig.cap="Probability maps after bayesian smoothing."}
+```{r, tidy = "styler", out.width = "80%", fig.align="center", fig.cap="Probability maps after bayesian smoothing."}
 # compute Bayesian smoothing
 probs_smooth <- sits_smooth(
     cube = probs_cerrado,
@@ -129,7 +129,7 @@ plot(probs_smooth, breaks = "quantile")
 
 Bayesian smoothing has removed some of local variability associated to misclassified pixels which are different from their neighbors. The impact of smoothing is best appreciated comparing the labelled map produced without smoothing to the one that follows the procedure, as shown below.
 
-```{r, tidy = "styler", out.width = "70%", fig.align="center", fig.cap="Final classification map after Bayesian smoothing."}
+```{r, tidy = "styler", out.width = "80%", fig.align="center", fig.cap="Final classification map after Bayesian smoothing."}
 # generate thematic map
 cerrado_map_smooth <- sits_label_classification(
     cube = probs_smooth,
@@ -143,7 +143,7 @@ plot(cerrado_map_smooth)
 
 To produce an even stronger smoothing effect, the example below uses bigger values for `window_size` and `smoothness`. 
 
-```{r, tidy = "styler", out.width = "70%", fig.align="center", fig.cap="Probability maps after bayesian smoothing with big window."}
+```{r, tidy = "styler", out.width = "80%", fig.align="center", fig.cap="Probability maps after bayesian smoothing with big window."}
 # compute Bayesian smoothing
 probs_smooth_2 <- sits_smooth(
     cube = probs_cerrado,
@@ -162,7 +162,7 @@ plot(probs_smooth_2, breaks = "quantile")
 
 Comparing the two maps, it is apparent that the smoothing procedure has reduced a lot of the noise in the original classification and produced a more homogeneous result. Although more pleasing to the eye, this map may not be be more accurate than the previous one, since much spatial details has been lost.  
 
-```{r, tidy = "styler", out.width = "70%", fig.align="center", fig.cap="Final classification map after Bayesian smoothing with large window size."}
+```{r, tidy = "styler", out.width = "80%", fig.align="center", fig.cap="Final classification map after Bayesian smoothing with large window size."}
 # generate thematic map
 cerrado_map_smooth_2 <- sits_label_classification(
     cube = probs_smooth_2,
@@ -179,13 +179,13 @@ One of the problems with post-classification smoothing is that we would like to 
 
 Bilateral smoothing combines proximity (combining pixels which are close) and similarity (comparing the values of the pixels) [@Tomasi1998]. If most of the pixels in a neighborhood have similar values, it is easy to identify outliers and noisy pixels. In contrast, there is a strong difference between the values of pixels in a  neighborhood, it is possible that the pixel is located in a class boundary. The method takes a considers two factors: the distance between the pixel and its neighbors, and the difference in class probabilities between them. Each of the values contributes according to a Gaussian kernel. These factors are calculated independently. Big difference between class probability values reduce the influence of the neighbor in the smoothed pixel. Big distances between pixels also reduce the impact of neighbors.
 
-To run Bayesian smoothing, the parameter of `sits_smooth()` are: (a) `cube`, a probability cube produced by `sits_classify()`; (b) `type` should be `bilateral` (the default); (c) `window_size`, the local window to compute the neighborhood probabilities; (d) `sigma`, an estimate of the variance of the Gaussian kernel based on distances (see Technical Annex for details); (e) `tau`, an estimate of the variance of the Gaussian kernel based on local probabilities; (f) `multicores`, number of CPU cores that will be used for processing; (g) `memsize`, memory available for classification; (h) `output_dir`, directory where results will be stored; (v) `version`, for version control. The resulting cube can be visualized with `plot()`. 
+To run bilateral smoothing, the parameter of `sits_smooth()` are: (a) `cube`, a probability cube produced by `sits_classify()`; (b) `type` should be `bilateral`; (c) `window_size`, the local window to compute the neighborhood probabilities; (d) `sigma`, an estimate of the variance of the Gaussian kernel based on distances (see Technical Annex for details); (e) `tau`, an estimate of the variance of the Gaussian kernel based on local probabilities; (f) `multicores`, number of CPU cores that will be used for processing; (g) `memsize`, memory available for classification; (h) `output_dir`, directory where results will be stored; (v) `version`, for version control. The resulting cube can be visualized with `plot()`. 
 
-The bigger one sets the `window_size`, the stronger the adjustments will be.  The `sigma` parameter controls the effects of distance; larger values will reduce the influence of the neighbors. The `tau` parameter controls the influence of the class probabilities of the neighbors.  Larger values of `sigma` will increase the influence of the neighbors. To achieve a satisfactory result, we need to balance the `sigma` and `tau`. As a general rule, the values of `tau` should range from 0.05 to 0.50, while the values of `sigma` should vary between 4 and 16[@Paris2007]. The default values adopted in *sits* are `tau = 0.1` and `sigma = 8`. As the best values of `sigma` and `tau` depend on the variance of the noisy pixels, users are encouraged to experiment and find parameter values that best fit their requirements.
+The bigger one sets the `window_size`, the stronger the adjustments will be.  The `sigma` parameter controls the effects of distance; larger values will reduce the influence of the neighbors. The `tau` parameter controls the influence of the class probabilities of the neighbors.  Larger values of `sigma` will increase the influence of the neighbors. To achieve a satisfactory result, we need to balance the `sigma` and `tau`. As a general rule, the values of `tau` should range from 0.05 to 0.50, while the values of `sigma` should vary between 4 and 16[@Paris2007]. The default values adopted in `sits` are `tau = 0.1` and `sigma = 8`. As the best values of `sigma` and `tau` depend on the variance of the noisy pixels, users are encouraged to experiment and find parameter values that best fit their requirements.
 
 The following example shows the behavior of the bilateral smoother and its impact on the classification map. The results show only a moderate reduction of classification noise. 
 
-```{r, tidy = "styler", out.width = "70%", fig.align="center", fig.cap="Classified image with bilateral smoothing"}
+```{r, tidy = "styler", out.width = "80%", fig.align="center", fig.cap="Classified image with bilateral smoothing"}
 # smooth the result with a bilateral filter
 cerrado_probs_bil_1 <- sits_smooth(
     cube = probs_cerrado, 
@@ -212,7 +212,7 @@ plot(cerrado_class_bil_1)
 
 For a stronger reduction in classification noise, we can increase the window size, while reducing the variance of the Gaussian kernels by decreasing `sigma` and `tau`. 
 
-```{r, tidy = "styler", out.width = "70%", fig.align="center", fig.cap="Classified image with bilateral smoothing"}
+```{r, tidy = "styler", out.width = "80%", fig.align="center", fig.cap="Classified image with bilateral smoothing"}
 # smooth the result with a bilateral filter
 cerrado_probs_bil_2 <- sits_smooth(
     cube = probs_cerrado, 
@@ -243,18 +243,17 @@ Bayesian smoothing tends to produce more homogeneous labeled images than bilater
 
 This section provides an overview of how the functions `sits_classify()`, `sits_smooth()` and `sits_label_classification()` process images in parallel. To achieve efficiency, `sits` implements a fault tolerant multitasking procedure for big EO data classification. Users are not burdened with the need to learn how to do multiprocessing. Thus, their learning curve is shortened. Image classification in `sits` is done by a cluster of independent workers linked to a virtual machine. To avoid communication overhead, all large payloads are read and stored independently; direct interaction between the main process and the workers is kept at a minimum. The customized approach is depicted in the figure below.
 
-1. Based on the size of the cube, the~number of cores, and~the available memory, divide the cube into chunks.
-2. The cube is divided into chunks along its spatial dimensions. Each chunk contains all temporal intervals.
-3. Assign chunks to the worker cores. Each core processes a block and produces an output image that is a subset of the result.
-4. After all the subimages are produced, join them to obtain the result.
-5. If a worker fails to process a block, provide failure recovery and ensure the worker completes the job.
+1. Based on the size of the cube, number of cores, and available memory, divide the cube into chunks  along its spatial dimensions. Each chunk contains all temporal intervals.
+2. Assign chunks to the worker cores. Each core processes a block and produces an output image that is a subset of the result.
+3. After all the subimages are produced, join them to obtain the result.
+4. If a worker fails to process a block, provide failure recovery and ensure the worker completes the job.
 
 ```{r, out.width = "90%", out.height = "90%", echo = FALSE, fig.align="center", fig.cap="Parallel processing in sits (source: Simoes et al.,2021)."}
 
 knitr::include_graphics("images/sits_parallel.png")
 ```
 
-This approach has many advantages. It works in any virtual machine that supports R and has no dependencies on proprietary software. Processing is done in a concurrent and independent way, with no communication between workers. Failure of one worker does not cause failure of the big data processing. The~software is prepared to resume classification processing from the last processed chunk, preventing against failures such as memory exhaustion, power supply interruption, or network breakdown. From~an end-user point of view, all work is done smoothly and transparently. 
+This approach has many advantages. It works in any virtual machine that supports R and has no dependencies on proprietary software. Processing is done in a concurrent and independent way, with no communication between workers. Failure of one worker does not cause failure of the big data processing. The software is prepared to resume classification processing from the last processed chunk, preventing against failures such as memory exhaustion, power supply interruption, or network breakdown. 
 
 The classification algorithm allows users to choose how many processes will run the task in parallel, and also the size of each data chunk to be consumed at each iteration. This strategy enables `sits` to work on average desktop computers without depleting all computational resources. The code bellow illustrates how to classify a large brick image that accompany the package. 
 

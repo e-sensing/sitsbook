@@ -13,15 +13,15 @@
 <meta name="author" content="Pedro R. Andrade">
 <meta name="author" content="Karine Ferreira">
 <meta name="author" content="Gilberto Queiroz">
-<meta name="description" content="0.1 Design decisions Compared with existing tools, sits has distinctive features: A consistent API that encapsulates the entire land classification workflow in a few commands. Integration with...">
+<meta name="description" content="Extending the color table In examples provided in the book, the color legend is taken for the predefined color table provided by sits. The options for defining labels and colors include:...">
 <meta name="generator" content="bookdown 0.27 with bs4_book()">
 <meta property="og:title" content="Design and extensibility considerations | sits: Satellite Image Time Series Analysis on Earth Observation Data Cubes">
 <meta property="og:type" content="book">
 <meta property="og:image" content="/images/cover_sits_book.png">
-<meta property="og:description" content="0.1 Design decisions Compared with existing tools, sits has distinctive features: A consistent API that encapsulates the entire land classification workflow in a few commands. Integration with...">
+<meta property="og:description" content="Extending the color table In examples provided in the book, the color legend is taken for the predefined color table provided by sits. The options for defining labels and colors include:...">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Design and extensibility considerations | sits: Satellite Image Time Series Analysis on Earth Observation Data Cubes">
-<meta name="twitter:description" content="0.1 Design decisions Compared with existing tools, sits has distinctive features: A consistent API that encapsulates the entire land classification workflow in a few commands. Integration with...">
+<meta name="twitter:description" content="Extending the color table In examples provided in the book, the color legend is taken for the predefined color table provided by sits. The options for defining labels and colors include:...">
 <meta name="twitter:image" content="/images/cover_sits_book.png">
 <!-- JS --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/6.4.6/fuse.js" integrity="sha512-zv6Ywkjyktsohkbp9bb45V6tEMoWhzFzXis+LrMehmJZZSys19Yxf1dopHx7WzIKxr5tK2dVcYmaCk2uqdjF4A==" crossorigin="anonymous"></script><script src="https://kit.fontawesome.com/6ecbd6c532.js" crossorigin="anonymous"></script><script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="libs/bootstrap-4.6.0/bootstrap.min.css" rel="stylesheet">
@@ -100,25 +100,21 @@
   </header><main class="col-sm-12 col-md-9 col-lg-7" id="content"><div id="design-and-extensibility-considerations" class="section level1 unnumbered">
 <h1>Design and extensibility considerations<a class="anchor" aria-label="anchor" href="#design-and-extensibility-considerations"><i class="fas fa-link"></i></a>
 </h1>
-<div id="design-decisions" class="section level2" number="0.1">
-<h2>
-<span class="header-section-number">0.1</span> Design decisions<a class="anchor" aria-label="anchor" href="#design-decisions"><i class="fas fa-link"></i></a>
+<div id="extending-the-color-table" class="section level2 unnumbered">
+<h2>Extending the color table<a class="anchor" aria-label="anchor" href="#extending-the-color-table"><i class="fas fa-link"></i></a>
 </h2>
-<p>Compared with existing tools, sits has distinctive features:</p>
+<p>In examples provided in the book, the color legend is taken for the predefined color table provided by <code>sits</code>. The options for defining labels and colors include:</p>
 <ol style="list-style-type: decimal">
-<li>A consistent API that encapsulates the entire land classification workflow in a few commands.</li>
-<li>Integration with data cubes and Earth observation image collections available in cloud services such as AWS and Microsoft.</li>
-<li>A single interface for different machine learning and deep learning algorithms.</li>
-<li>Internal support for parallel processing, without requiring users to learn how to improve the performance of their scripts.</li>
-<li>Support for efficient processing of large areas in a user-transparent way.</li>
-<li>Innovative methods for sample quality control and post-processing.</li>
-<li>Capacity to run on virtual machines in cloud environments.</li>
+<li>Predefined color table: <code>sits</code> has a default color table, that can be shown using the command <code>sits_config_show(colors = TRUE)</code>. This color definition file assigns colors to about 250 class names, including the IPCC and IGBP land use classes, the UMD GLAD classification scheme, the FAO LCC1 and LCCS2 land use layers, and the LCCS3 surface hydrology layer.</li>
+<li>User-defined defined color table: users can set the legend they prefer with a YAML user-defined configuration file. This file should defined by the environmental variable <code>SITS_CONFIG_USER_FILE</code>. Create an YAML file, and then set the path to it with <code>Sys.setenv(SITS_CONFIG_USER_FILE="path_to_myfile")</code>. An example of an YAML file with user-defined legend is shown below.</li>
+<li>User-defined legend: users may define their own legends and pass them as parameters to to the <code>plot</code> function.</li>
 </ol>
-<p>Considering the aims and design of <strong>sits</strong>, it is relevant to discuss how its design and implementation choices differ from other software for big EO data analytics, such as Google Earth Engine <span class="citation"><a href="references.html#ref-Gorelick2017" role="doc-biblioref">[72]</a></span>, Open Data Cube <span class="citation"><a href="references.html#ref-Lewis2017" role="doc-biblioref">[73]</a></span> and openEO <span class="citation"><a href="references.html#ref-Schramm2021" role="doc-biblioref">[74]</a></span>. In what follows, we compare <strong>sits</strong> to each of these solutions.</p>
-<p>Google Earth Engine (GEE) <span class="citation"><a href="references.html#ref-Gorelick2017" role="doc-biblioref">[72]</a></span> uses the Google distributed file system <span class="citation"><a href="references.html#ref-Ghemawat2003" role="doc-biblioref">[75]</a></span> and its map-reduce paradigm <span class="citation"><a href="references.html#ref-Dean2008" role="doc-biblioref">[76]</a></span>. By combining a flexible API with an efficient back-end processing, GEE has become a widely used platform <span class="citation"><a href="references.html#ref-Amani2020" role="doc-biblioref">[77]</a></span>. However, GEE is restricted to the Google environment and does not provide direct support for deep learning. By contrast, <strong>sits</strong> aims to support different cloud environments and to allow advances in data analysis by providing a user-extensible interface to include new machine learning algorithms.</p>
-<p>The Open Data Cube (ODC) is an important contribution to the EO community and has proven its usefulness in many domains <span class="citation"><a href="references.html#ref-Giuliani2020" role="doc-biblioref">[78]</a></span>. It reads subsets of image collections and makes them available to users as a Python structure. ODC does not provide an API to work with , relying on the tools available in Python. This choice allows much flexibility at the cost of increasing the learning curve. It also means that temporal continuity is restricted to the memory data structure; cases where tiles from an image collection have different timelines are not handled by ODC. The design of <strong>sits</strong> takes a different approach, favouring a simple API with few commands to reduce the learning curve. Processing and handling large image collections in <strong>sits</strong> does not require knowledge of parallel programming tools. Thus, <strong>sits</strong> and ODC have different aims and will appeal to different classes of users.</p>
-<p>Designers of the openEO API <span class="citation"><a href="references.html#ref-Schramm2021" role="doc-biblioref">[74]</a></span> aim to support applications that are both language-independent and server-independent. To achieve their goals, openEO designers use microservices based on REST protocols. The main abstraction of openEO is a , defined as an operation that performs a specific task. Processes are described in JSON and can be chained in process graphs. The software relies on server-specific implementations that translate an openEO process graph into an executable script. Arguably, openEO is the most ambitious solution for reproducibility across different EO data cubes. To achieve its goals, openEO needs to overcome some challenges. Most data analysis functions are not self-contained. For example, machine learning algorithms depend on libraries such as TensorFlow and Torch. If these libraries are not available in the target environment, the user-requested process may not be executable. Thus, while the authors expect openEO to evolve into a widely-used API, it is not yet feasible to base an user-driven operational software such as <strong>sits</strong> in openEO.</p>
-<p>Designing software for big Earth observation data analysis requires making compromises between flexibility, interoperability, efficiency, and ease of use. GEE is constrained by the Google environment and excels at certain tasks (e.g., pixel-based processing) while being limited at others such as deep learning. ODC allows users complete flexibility in the Python ecosystem, at the cost of limitations when working with large areas and requiring programming skills. The openEO API achieves platform independence but needs additional effort in designing drivers for specific languages and cloud services. While the <strong>sits</strong> API provides a simple and powerful environment for land classification, it has currently no support for other kinds of EO applications. Therefore, each of these solutions has benefits and drawbacks. Potential users need to understand the design choices and constraints to decide which software best meets their needs.</p>
+<div class="sourceCode" id="cb124"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb124-1"><a href="design-and-extensibility-considerations.html#cb124-1" aria-hidden="true" tabindex="-1"></a><span class="fu">colors</span><span class="kw">:</span></span>
+<span id="cb124-2"><a href="design-and-extensibility-considerations.html#cb124-2" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">Cropland</span><span class="kw">:</span><span class="at">           </span><span class="st">"khaki"</span></span>
+<span id="cb124-3"><a href="design-and-extensibility-considerations.html#cb124-3" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">Deforestation</span><span class="kw">:</span><span class="at">      </span><span class="st">"sienna"</span></span>
+<span id="cb124-4"><a href="design-and-extensibility-considerations.html#cb124-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">Forest </span><span class="kw">:</span><span class="at">            </span><span class="st">"darkgreen"</span></span>
+<span id="cb124-5"><a href="design-and-extensibility-considerations.html#cb124-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">Grassland </span><span class="kw">:</span><span class="at">         </span><span class="st">"lightgreen"</span></span>
+<span id="cb124-6"><a href="design-and-extensibility-considerations.html#cb124-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">NonForest</span><span class="kw">:</span><span class="at">          </span><span class="st">"lightsteelblue1"</span></span></code></pre></div>
 
 </div>
 </div>
@@ -129,7 +125,7 @@
     <nav id="toc" data-toggle="toc" aria-label="On this page"><h2>On this page</h2>
       <ul class="nav navbar-nav">
 <li><a class="nav-link" href="#design-and-extensibility-considerations">Design and extensibility considerations</a></li>
-<li><a class="nav-link" href="#design-decisions"><span class="header-section-number">0.1</span> Design decisions</a></li>
+<li><a class="nav-link" href="#extending-the-color-table">Extending the color table</a></li>
 </ul>
 
       <div class="book-extra">
@@ -146,7 +142,7 @@
 <footer class="bg-primary text-light mt-5"><div class="container"><div class="row">
 
   <div class="col-12 col-md-6 mt-3">
-    <p>"<strong><strong>sits</strong>: Satellite Image Time Series Analysis on Earth Observation Data Cubes</strong>" was written by Gilberto Camara, Rolf Simoes, Felipe Souza, Charlotte Peletier, Alber Sanchez, Pedro R. Andrade, Karine Ferreira, Gilberto Queiroz. It was last built on 2022-07-29.</p>
+    <p>"<strong><strong>sits</strong>: Satellite Image Time Series Analysis on Earth Observation Data Cubes</strong>" was written by Gilberto Camara, Rolf Simoes, Felipe Souza, Charlotte Peletier, Alber Sanchez, Pedro R. Andrade, Karine Ferreira, Gilberto Queiroz. It was last built on 2022-07-31.</p>
   </div>
 
   <div class="col-12 col-md-6 mt-3">
