@@ -1991,7 +1991,7 @@ dir.create("./tempdir/chp9")
 
 ## Case study used in this Chapter{-}
 
-To show how to do validation and accuracy assessment in`sits`, we present an example resulting the evaluation of land use and land cover classification in the Cerrado biome, the second largest biome in Brazil with 1.9 million km$^2$.  The Brazilian Cerrado is a tropical savanna ecoregion with a rich ecosystem ranging from grasslands to woodlands. It is home to more than 7000 species of plants with high levels of endemism \citep{Klink2005}. It includes three major types of natural vegetation: \emph{Open Cerrado}, typically composed of grasses and small shrubs with a sporadic presence of small tree vegetation; \emph{Cerrado }, a~typical savanna formation, characterised by the presence of low, irregularly branched, thin-trunked trees; and \emph{Cerradão}, a~dry forest of medium-sized trees (up to 10--12 m)~\cite{Goodland1971, Del-Claro2019}. Its natural areas are being converted to agriculture at a fast pace, as~it is one of the world's fast moving agricultural frontiers \citep{Walter2006}. The~main agricultural land uses include cattle ranching, crop farms, and~planted~forests.
+To show how to do validation and accuracy assessment in`sits`, we show an example of land classification in the Cerrado biome, the second largest biome in Brazil with 1.9 million km$^2$.  The Brazilian Cerrado is a tropical savanna ecoregion with a rich ecosystem ranging from grasslands to woodlands. It is home to more than 7000 species of plants with high levels of endemism [@Klink2005]. It includes three major types of natural vegetation: Open Cerrado, typically composed of grasses and small shrubs with a sporadic presence of small tree vegetation; Cerrado, a typical savanna formation, with the presence of low, irregularly branched, thin-trunked trees; and Cerradão, areas of medium-sized trees (up to 10--12 m)[@ Del-Claro2019]. Its natural areas are being converted to agriculture at a fast pace, as it is one of the world's fast moving agricultural frontiers [@Walter2006]. The~main agricultural land uses include cattle ranching, crop farms, and planted forests. The classification follows the work by Simoes et al.[@Simoes2021].
 
 The data is composed of 67 Landsat-8 tiles from the Brazil Data Cube, with 23 time steps covering the the period 2017-08-29 to 2018-08-29. Since the data is avaliable in the Brazil Data Cube, users should first obtain access to the BDC, by obtaining an access key. After obtaining the access key, they should  to include their credentials using an environment variables, as shown below. Obtaining a BDC access key is free. Users need to register at the [BDC site](https://brazildatacube.dpi.inpe.br/portal/explore) to obtain the key.
 ```{r,eval = FALSE}
@@ -2026,7 +2026,7 @@ cerrado_cube <- sits_cube(
 plot(cerrado_cube, tile = "044049", red = "B7", green = "B5", blue = "B4")
 ```
 
-To classify the Cerrado, we used a training data set, produced by a systematic sampling using a grid of 5km x 5km throughout the biome as described by Simoes et al.[@Simoes2021]. The authors carried out a systematic sampling using a grid of 5 x 5 km throughout the Cerrado biome, collecting 85,026 samples. The training data labels were extracted from three sources: the pastureland map of 2018 from Parente et al. [@Parente2019], MapBiomas Collection 5 for  2018 [@Souza2020], and~Brazil's National Mapping Agency IBGE land maps for 2016--2018. Out of the 85,026 samples, the authors selected those where there was no disagreement between the labels assigned by the three sources.  The final training set consists of 48,850 points from which the authors extracted the time series using the Landsat-8 data cube available in the BDC. The classes for this training set are: `Annual Crop`, `Cerradao` (Woody Savanna), `Cerrado` (Savanna), `Nat_NonVeg` (Dunes), `Pasture`, `Perennial_Crop`, `Silviculture` (Planted Forests), `Sugarcane`, and `Water`. This data set is available in the package `sitsdata` as `samples_cerrado_lc8`. 
+To classify the Cerrado, we use a training data set produced by by Simoes et al.[@Simoes2021]. The authors carried out a systematic sampling using a grid of 5 x 5 km throughout the Cerrado biome, collecting 85,026 samples. The training data labels were extracted from three sources: the 2018 pastureland map from Parente et al. [@Parente2019], MapBiomas Collection 5 for 2018 [@Souza2020], and~Brazil's National Mapping Agency IBGE land maps for 2016--2018. Out of the 85,026 samples, the authors selected those where there was no disagreement between the labels assigned by the three sources.  The final training set consists of 48,850 points from which the authors extracted the time series using the Landsat-8 data cube available in the BDC. The classes for this training set are: `Annual Crop`, `Cerradao`, `Cerrado`, `Open Cerrado`, `Nat_NonVeg` (Dunes), `Pasture`, `Perennial_Crop`, `Silviculture` (Planted Forests), `Sugarcane`, and `Water`. This data set is available in the package `sitsdata` as `samples_cerrado_lc8`. 
 
 
 ```{r, tidy = "styler", out.width = "70%"}
@@ -2038,13 +2038,11 @@ sits_labels_summary(samples_cerrado_lc8)
 
 ## Cross validation of training set{-}
 
-Cross validation is a process undertaken on models to estimate some error associated with them, and hence has been used widely in different scientific disciplines. When we talk about validation, we are interested in estimating the prediction error associated to some model. For this purpose, we concentrate on the cross-validation approach [@Hastie2009]. Validation methods are based on the training samples. In general, these samples will be biased due to many factors. When working in large areas, it is hard to obtain random stratified samples which would cover the different variations in land cover associated to the ecosystems of the study area. In general, all machine learning methods are prone to underspecification [@DAmour2020]. Therefore, cross-validation should not be used as an accuracy measures, unless the samples have been carefully collected to represent the diversity of possible ocurrences of classes in the study area [@Wadoux2021]. 
+Cross-validation is a technique to estimate the inherent prediction error of a model [@Hastie2009]. Since cross-validation uses only the training samples, its results are not accuracy measures, unless the samples have been carefully collected to represent the diversity of possible occurrences of classes in the study area [@Wadoux2021]. In practice, when working in large areas, it is hard to obtain random stratified samples which cover the different variations in land cover associated to the ecosystems of the study area. Thus, cross-validation should be taken a as measure of model performance on the training data and not as an estimate of overall map accuracy. 
 
-Cross-validation uses part of the available samples to fit the classification model, and a different part to test it. The so-called k-fold validation, we split the data into $k$ partitions with approximately the same size and proceed by fitting the model and testing it $k$ times. At each step, we take one distinct partition for test and the remaining ${k-1}$ for training the model, and calculate its prediction error for classifying the test partition. A simple average gives us an estimation of the expected prediction error. 
+Cross-validation uses part of the available samples to fit the classification model, and a different part to test it. The k-fold validation method splits the data into $k$ partitions with approximately the same size and proceed by fitting the model and testing it $k$ times. At each step, we take one distinct partition for test and the remaining ${k-1}$ for training the model, and calculate its prediction error for classifying the test partition. A simple average gives us an estimation of the expected prediction error. The recommended choices of $k$ are $5$ or $10$ [@Hastie2009].
 
-A natural question that arises is: how good is this estimation? According to @Hastie2009, there is a bias-variance trade-off in choice of $k$. If $k$ is set to the number of samples, we obtain the so-called leave-one-out validation, the estimator gives a low bias for the true expected error, but produces a high variance expectation. This can be computational expensive as it requires the same number of fitting process as the number of samples. On the other hand, if we choose ${k=2}$, we get a high biased expected prediction error estimation that overestimates the true prediction error, but has a low variance. The recommended choices of $k$ are $5$ or $10$.
-
-`sits_kfold_validate()` supports k-fold validation in `sits`. The following code does a five-fold validation using random forests. The result is the confusion matrix and the accuracy statistics (overall and by class). In the examples below, we use multiprocessing to speed up the results. 
+`sits_kfold_validate()` supports k-fold validation in `sits`. The result is the confusion matrix and the accuracy statistics (overall and by class). In the examples below, we use multiprocessing to speed up the results. 
 
 ```{r, echo = FALSE}
 set.seed(290356)
@@ -2071,6 +2069,7 @@ samples_cerrado_bal <- readRDS("./etc/samples_cerrado_bal.rds")
 sits_labels_summary(samples_cerrado_bal)
 ```
 
+The following code does a five-fold validation using random forests. 
 
 ```{r, tidy = "styler"}
 # perform a five fold validation for the cerrado data set
@@ -2084,7 +2083,6 @@ val_rfor <- sits_kfold_validate(
 # print the validation statistics
 sits_accuracy_summary(val_rfor)
 ```
-
 
 One useful function in SITS is the capacity to compare different validation methods and store them in an XLS file for further analysis. The following example shows how to do this, using the Cerrado data set. We take the models: random forests(`sits_rfor()`), extreme gradient boosting (`sits_xgboost()`), temporal CNN (`sits_tempcnn()`), and lightweight temporal attention encoder (`sits_lighttae())`.  After computing the confusion matrix and the statistics for each model, we also store the result in a list. When the calculation is finished, the function `sits_to_xlsx()` writes all of the results in an Excel-compatible spreadsheet. 
 
@@ -2217,9 +2215,9 @@ This unbiased area estimator includes the effect of false negatives (omission er
 
 To use the `sits_accuracy()` function to produce the adjusted area estimates, users have to provide the classified image together with a csv file containing a set of well selected labeled points.  The csv file should have the same format as the one used to obtain samples, as discussed earlier. The labelled points should be based on a random stratified sample. All areas associated to each class should contribute to the test data used for accuracy assessment. 
 
-Because of the biases inherent in cross validation of training data, users should provide an independent validation data set to measure classification accuracy. In this case study, Simoes et al.[@Simoes2021] did a systematic sampling of the Cerrado biome using a 20 x 20 km grid with a total of 5402 points. These samples are independent of the training set used in the classification. They were interpreted by five specialists using high resolution images from the same period of the classification. This resulted in 5286 evaluation samples thus distributed: "Annual Crop" (553), "Cerrado" (3155), "Natural Non Vegetated" (44), "Pasture" (1246), "Perennial Crop" (38), "Silviculture" (94), "Sugarcane" (77), and "Water" (79). This data set is available in package "sitsdata", as described below. In this validation file, all samples belonging to classes "Cerrado", "Open Cerrado" and "Cerradao" (Woody Savanna) have been grouped together in a single class. 
+Because of the biases inherent in cross validation of training data, users should provide an independent validation data set to measure classification accuracy. In this case study, Simoes et al.[@Simoes2021] did a systematic sampling of the Cerrado biome using a 20 x 20 km grid with a total of 5402 points. These samples are independent of the training set used in the classification. They were interpreted by five specialists using high resolution images from the same period of the classification. This resulted in 5286 evaluation samples thus distributed: "Annual Crop" (553), "Cerrado" (3155), "Natural Non Vegetated" (44), "Pasture" (1246), "Perennial Crop" (38), "Silviculture" (94), "Sugarcane" (77), and "Water" (79). This data set is available in package `sitsdata`, as described below. In this validation file, all samples belonging to classes "Cerrado", "Open Cerrado" and "Cerradao" (Woody Savanna) have been grouped together in a single class. 
 
-The first step is to obtain the classification map. The code for the full classification of the Cerrado biome, using the TempCNN algorithm, is shown below. Because of the large data size, the code will not be executed.  For the accuracy assessment, we will use the labelled classification map, available in a Dropbox folder. 
+The first step is to obtain the classification map. The code for the full classification of the Cerrado biome, using the TempCNN algorithm, is shown below. Because of the large data size, the code will not be executed.  For the accuracy assessment, we will use the labelled classification map available in a Dropbox folder. 
 
 ```{r, tidy="styler", echo = TRUE, eval = FALSE}
 # This code shows the classification of the Cerrado biome
@@ -2253,7 +2251,7 @@ cerrado_classif <- sits_label_classification(
 )
 ```
 
-Since the above code is included for information only, we use the labelled cube stored in a Dropbox folder to perform the accuracy assessment. First, we retrieve the metadata for the cube. 
+Since the above code is included for information only, we use the labelled cube stored in a Dropbox folder to perform the accuracy assessment. First, we retrieve the metadata for the cube.
 
 ```{r, tidy="styler", out.width = "70%", fig.align="center", fig.cap="Classification of tile 044048 from the Landsat data cube for the Brazilian Cerrado in 2017/2018." }
 # retrieve the metadata for the classified cube
