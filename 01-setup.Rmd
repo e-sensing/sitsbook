@@ -1,0 +1,82 @@
+# Setup {.unnumbered}
+
+The `sits` package relies on the `sf` and `terra` **R** packages, which require the GDAL and PROJ libraries. Please follow the instructions below for installing `sf` and `terra` together with GDAL, provided by Edzer Pebesma.
+
+## Support for GDAL and PROJ {.unnumbered}
+
+### Windows and MacOS {.unnumbered}
+
+Windows and MacOS users are strongly encouraged to install the `sf` and `terra` binary packages from CRAN. To install `sits` from source, please install package `Rtools` to have access to the compiling environment.
+
+### Ubuntu {.unnumbered}
+
+We recommend using the latest version of the GDAL, GEOS, and PROJ4 libraries and binaries. To do so, use the repository `ubuntugis-unstable`, which should be done as follows:
+
+``` sh
+sudo add-apt-repository ppa:ubuntugis/ubuntugis-unstable
+sudo apt-get update
+sudo apt-get install libudunits2-dev libgdal-dev libgeos-dev libproj-dev 
+sudo apt-get install gdal-bin
+sudo apt-get install proj-bin
+```
+
+Getting an error while adding this PPA repository could be due to the absence of the package `software-properties-common`. When GDAL is running in `docker` containers, please add the security flag `--security-opt seccomp=unconfined` on start. 
+
+After installing GDAL, GEOS, and PROJ4, please install packages `sf` and `terra`, in this order.
+
+```{r, eval = FALSE}
+install.packages("sf")
+install.packages("terra")
+```
+
+
+### Debian{-}
+
+To install on Debian, use the [rocker geospatial](https://github.com/rocker-org/geospatial) dockerfiles. 
+
+### Fedora {.unnumbered}
+
+The following command installs all required dependencies:
+
+``` sh
+sudo dnf install gdal-devel proj-devel geos-devel sqlite-devel udunits2-devel
+```
+
+## Support for deep learning with torch {.unnumbered}
+
+The deep learning models of `sits` use the `torch` package, which is an **R** version of `pyTorch`. Before installing `sits`, please also install packages `torch` and `luz`, and initialize torch. 
+
+```{r, eval = FALSE}
+install.packages("torch")
+install.packages("luz")
+torch::install_torch()
+```
+
+
+## Installing the `sits` package {.unnumbered}
+
+After installing `sf`, `terra`, `torch`, and `luz`, please proceed to install `sits`,  which is available on CRAN and should be installed as a regular **R** package.
+
+```{r, eval = FALSE}
+install.packages("sits", dependencies = TRUE)
+```
+
+The source code repository is on [GitHub](https://github.com/e-sensing/sits). To install the development version of `sits`, which contains the latest updates but might be unstable, users should install `devtools`, if not already available, and then install `sits` as follows:
+
+```{r, eval = FALSE}
+install.packages("devtools")
+devtools::install_github("e-sensing/sits@dev", dependencies = TRUE)
+```
+
+To run the examples in the book, please also install the `sitsdata` package.
+
+```{r, eval = FALSE}
+options(download.file.method = "wget")
+devtools::install_github("e-sensing/sitsdata")
+```
+
+
+## Using GPUs with `sits` {.unnumbered}
+
+The `torch` package automatically recognizes if a GPU is available on the machine and uses it for training and classification. There is a significant performance gain when GPUs are used instead of CPUs for deep learning models. There is no need for specific adjustments to `torch` scripts.  To use GPUs, `torch` requires version 11.6 of the CUDA library, which is available for Ubuntu 18.04 and 20.04. 
+ 

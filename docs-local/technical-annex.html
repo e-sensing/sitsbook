@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<title>Technical Annex | sits: Satellite Image Time Series Analysis on Earth Observation Data Cubes</title>
+<meta name="author" content="Gilberto Camara">
+<meta name="author" content="Rolf Simoes">
+<meta name="author" content="Felipe Souza">
+<meta name="author" content="Charlotte Pelletier">
+<meta name="author" content="Alber Sanchez">
+<meta name="author" content="Pedro R. Andrade">
+<meta name="author" content="Karine Ferreira">
+<meta name="author" content="Gilberto Queiroz">
+<meta name="description" content="This Chapter contains technical details on the algorithms available in sits. It is intended to support those that want to understand how the package works and also want to contribute to its...">
+<meta name="generator" content="bookdown 0.33 with bs4_book()">
+<meta property="og:title" content="Technical Annex | sits: Satellite Image Time Series Analysis on Earth Observation Data Cubes">
+<meta property="og:type" content="book">
+<meta property="og:image" content="/images/cover_sits_book.png">
+<meta property="og:description" content="This Chapter contains technical details on the algorithms available in sits. It is intended to support those that want to understand how the package works and also want to contribute to its...">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Technical Annex | sits: Satellite Image Time Series Analysis on Earth Observation Data Cubes">
+<meta name="twitter:description" content="This Chapter contains technical details on the algorithms available in sits. It is intended to support those that want to understand how the package works and also want to contribute to its...">
+<meta name="twitter:image" content="/images/cover_sits_book.png">
+<!-- JS --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/6.4.6/fuse.js" integrity="sha512-zv6Ywkjyktsohkbp9bb45V6tEMoWhzFzXis+LrMehmJZZSys19Yxf1dopHx7WzIKxr5tK2dVcYmaCk2uqdjF4A==" crossorigin="anonymous"></script><script src="https://kit.fontawesome.com/6ecbd6c532.js" crossorigin="anonymous"></script><script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<link href="libs/bootstrap-4.6.0/bootstrap.min.css" rel="stylesheet">
+<script src="libs/bootstrap-4.6.0/bootstrap.bundle.min.js"></script><link href="libs/IBM_Plex_Serif-0.4.6/font.css" rel="stylesheet">
+<link href="libs/IBM_Plex_Mono-0.4.6/font.css" rel="stylesheet">
+<script src="libs/bs3compat-0.4.2/transition.js"></script><script src="libs/bs3compat-0.4.2/tabs.js"></script><script src="libs/bs3compat-0.4.2/bs3compat.js"></script><link href="libs/bs4_book-1.0.0/bs4_book.css" rel="stylesheet">
+<script src="libs/bs4_book-1.0.0/bs4_book.js"></script><script src="libs/kePrint-0.0.1/kePrint.js"></script><link href="libs/lightable-0.0.1/lightable.css" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/autocomplete.js/0.38.0/autocomplete.jquery.min.js" integrity="sha512-GU9ayf+66Xx2TmpxqJpliWbT5PiGYxpaG8rfnBEk1LL8l1KGkRShhngwdXK1UgqhAzWpZHSiYPc09/NwDQIGyg==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js" integrity="sha512-5CYOlHXGh6QpOFA/TeTylKLWfB3ftPsde7AnmhuitiTX4K5SqCLBeKro6sPS8ilsz1Q4NRx3v8Ko2IBiszzdww==" crossorigin="anonymous"></script><!-- CSS --><style type="text/css">
+    
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  </style>
+<style type="text/css">
+    /* Used with Pandoc 2.11+ new --citeproc when CSL is used */
+    div.csl-bib-body { }
+    div.csl-entry {
+      clear: both;
+        }
+    .hanging div.csl-entry {
+      margin-left:2em;
+      text-indent:-2em;
+    }
+    div.csl-left-margin {
+      min-width:2em;
+      float:left;
+    }
+    div.csl-right-inline {
+      margin-left:2em;
+      padding-left:1em;
+    }
+    div.csl-indent {
+      margin-left: 2em;
+    }
+  </style>
+</head>
+<body data-spy="scroll" data-target="#toc">
+
+<div class="container-fluid">
+<div class="row">
+  <header class="col-sm-12 col-lg-3 sidebar sidebar-book"><a class="sr-only sr-only-focusable" href="#content">Skip to main content</a>
+
+    <div class="d-flex align-items-start justify-content-between">
+      <h1>
+        <a href="index.html" title=""><strong>sits</strong>: Satellite Image Time Series Analysis on Earth Observation Data Cubes</a>
+      </h1>
+      <button class="btn btn-outline-primary d-lg-none ml-2 mt-1" type="button" data-toggle="collapse" data-target="#main-nav" aria-expanded="true" aria-controls="main-nav"><i class="fas fa-bars"></i><span class="sr-only">Show table of contents</span></button>
+    </div>
+
+    <div id="main-nav" class="collapse-lg">
+      <form role="search">
+        <input id="search" class="form-control" type="search" placeholder="Search" aria-label="Search">
+</form>
+
+      <nav aria-label="Table of contents"><h2>Table of contents</h2>
+        <ul class="book-toc list-unstyled">
+<li><a class="" href="index.html">Preface</a></li>
+<li><a class="" href="setup.html">Setup</a></li>
+<li><a class="" href="acknowledgements.html">Acknowledgements</a></li>
+<li><a class="" href="introduction.html">Introduction</a></li>
+<li><a class="" href="earth-observation-data-cubes.html">Earth observation data cubes</a></li>
+<li><a class="" href="operations-on-data-cubes.html">Operations on data cubes</a></li>
+<li><a class="" href="working-with-time-series.html">Working with time series</a></li>
+<li><a class="" href="improving-the-quality-of-training-samples.html">Improving the quality of training samples</a></li>
+<li><a class="" href="machine-learning-for-data-cubes.html">Machine learning for data cubes</a></li>
+<li><a class="" href="image-classification-in-data-cubes.html">Image classification in data cubes</a></li>
+<li><a class="" href="bayesian-smoothing-for-post-processing.html">Bayesian smoothing for post-processing</a></li>
+<li><a class="" href="validation-and-accuracy-measurements.html">Validation and accuracy measurements</a></li>
+<li><a class="" href="uncertainty-and-active-learning.html">Uncertainty and active learning</a></li>
+<li><a class="" href="ensemble-prediction-from-multiple-models.html">Ensemble prediction from multiple models</a></li>
+<li><a class="" href="object-based-time-series-image-analysis.html">Object-based time series image analysis</a></li>
+<li><a class="active" href="technical-annex.html">Technical Annex</a></li>
+<li><a class="" href="references.html">References</a></li>
+</ul>
+
+        <div class="book-extra">
+          
+        </div>
+      </nav>
+</div>
+  </header><main class="col-sm-12 col-md-9 col-lg-7" id="content"><div id="technical-annex" class="section level1 unnumbered">
+<h1>Technical Annex<a class="anchor" aria-label="anchor" href="#technical-annex"><i class="fas fa-link"></i></a>
+</h1>
+<p>This Chapter contains technical details on the algorithms available in <code>sits</code>. It is intended to support those that want to understand how the package works and also want to contribute to its development.</p>
+<div id="including-new-methods-for-machine-learning" class="section level2 unnumbered">
+<h2>Including new methods for machine learning<a class="anchor" aria-label="anchor" href="#including-new-methods-for-machine-learning"><i class="fas fa-link"></i></a>
+</h2>
+<p>This section provides guidance for experts that want to include new methods for machine learning that work in connection with <code>sits</code>. The discussion below assumes familiarity with the R language. Developers should consult Hadley Wickham’s excellent book <a href="https://adv-r.hadley.nz/">Advanced R</a>, especially Chapter 10 on “Function Factories”.</p>
+<p>All machine learning and deep learning algorithm in <code>sits</code> follow the same logic; all models are created by <code><a href="https://rdrr.io/pkg/sits/man/sits_train.html">sits_train()</a></code>. This function has two parameters: (a) <code>samples</code>, a set of time series with the training samples; (b) <code>ml_method</code>, a function that fits the model to the input data. The result is a function that is passed on to <code><a href="https://rdrr.io/pkg/sits/man/sits_classify.html">sits_classify()</a></code> to classify time series or data cubes. The structure of <code><a href="https://rdrr.io/pkg/sits/man/sits_train.html">sits_train()</a></code> is simple, as shown below.</p>
+<div class="sourceCode" id="cb174"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">sits_train</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">samples</span>, <span class="va">ml_method</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="co"># train a ml classifier with the given data</span></span>
+<span>  <span class="va">result</span> <span class="op">&lt;-</span> <span class="fu">ml_method</span><span class="op">(</span><span class="va">samples</span><span class="op">)</span></span>
+<span>  <span class="co"># return a valid machine learning method</span></span>
+<span>  <span class="kw"><a href="https://rdrr.io/r/base/function.html">return</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span>
+<span><span class="op">}</span></span></code></pre></div>
+<p>In R terms, <code><a href="https://rdrr.io/pkg/sits/man/sits_train.html">sits_train()</a></code> is a function factory, or a function that makes functions. Such behavior is possible because functions are first-class objects in R. In other words, they can be bound to a name in the same way that variables are. A second propriety of R is that functions capture (enclose) the environment in which they are created. In other words, when a function is returned as a result of another function, the internal variables used to create it are available inside its environment. In programming language, this technique is called “closure”.</p>
+<p>The following definition from Wikipedia captures the purpose of clousures: <em>“Operationally, a closure is a record storing a function together with an environment. The environment is a mapping associating each free variable of the function with the value or reference to which the name was bound when the closure was created. A closure allows the function to access those captured variables through the closure’s copies of their values or references, even when the function is invoked outside their scope.”</em></p>
+<p>In <code>sits</code>, the properties of closures are used as a basis for making training and classification independent. The return of <code><a href="https://rdrr.io/pkg/sits/man/sits_train.html">sits_train()</a></code> is a model that contains information on how to classify input values, as well as information on the samples used to train the model.</p>
+<p>To ensure all models work in the same fashion, machine learning functions in <code>sits</code> also share the same data structure for prediction. This data structure is created by <code><a href="https://rdrr.io/pkg/sits/man/sits_predictors.html">sits_predictors()</a></code>, which transforms the time series tibble into a set of values suitable for using as training data, as shown in the following example.</p>
+<div class="sourceCode" id="cb175"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html">data</a></span><span class="op">(</span><span class="st">"samples_matogrosso_mod13q1"</span>, package <span class="op">=</span> <span class="st">"sitsdata"</span><span class="op">)</span></span>
+<span><span class="va">pred</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_predictors.html">sits_predictors</a></span><span class="op">(</span><span class="va">samples_matogrosso_mod13q1</span><span class="op">)</span></span>
+<span><span class="va">pred</span></span></code></pre></div>
+<pre class="sourceCode"><code>#&gt; # A tibble: 1,837 × 94
+#&gt;    sample_id label   NDVI1 NDVI2 NDVI3 NDVI4 NDVI5 NDVI6 NDVI7 NDVI8 NDVI9 NDVI10 NDVI11
+#&gt;        &lt;int&gt; &lt;chr&gt;   &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;
+#&gt;  1         1 Pasture 0.500 0.485 0.716 0.654 0.591 0.662 0.734 0.739 0.768  0.797  0.798
+#&gt;  2         2 Pasture 0.364 0.484 0.605 0.726 0.778 0.829 0.762 0.762 0.643  0.610  0.578
+#&gt;  3         3 Pasture 0.577 0.674 0.639 0.569 0.596 0.623 0.650 0.650 0.637  0.646  0.655
+#&gt;  4         4 Pasture 0.597 0.699 0.789 0.792 0.794 0.72  0.646 0.705 0.757  0.810  0.757
+#&gt;  5         5 Pasture 0.388 0.491 0.527 0.660 0.677 0.746 0.816 0.816 0.825  0.835  0.844
+#&gt;  6         6 Pasture 0.350 0.345 0.364 0.429 0.506 0.583 0.660 0.616 0.580  0.651  0.620
+#&gt;  7         7 Pasture 0.490 0.527 0.543 0.583 0.594 0.605 0.616 0.627 0.622  0.644  0.666
+#&gt;  8         8 Pasture 0.435 0.574 0.395 0.392 0.518 0.597 0.648 0.774 0.786  0.798  0.811
+#&gt;  9         9 Pasture 0.396 0.473 0.542 0.587 0.649 0.697 0.696 0.695 0.699  0.703  0.714
+#&gt; 10        10 Pasture 0.354 0.387 0.527 0.577 0.626 0.723 0.655 0.655 0.646  0.536  0.544
+#&gt; # ℹ 1,827 more rows
+#&gt; # ℹ 81 more variables: NDVI12 &lt;dbl&gt;, NDVI13 &lt;dbl&gt;, NDVI14 &lt;dbl&gt;, NDVI15 &lt;dbl&gt;,
+#&gt; #   NDVI16 &lt;dbl&gt;, NDVI17 &lt;dbl&gt;, NDVI18 &lt;dbl&gt;, NDVI19 &lt;dbl&gt;, NDVI20 &lt;dbl&gt;, NDVI21 &lt;dbl&gt;,
+#&gt; #   NDVI22 &lt;dbl&gt;, NDVI23 &lt;dbl&gt;, EVI1 &lt;dbl&gt;, EVI2 &lt;dbl&gt;, EVI3 &lt;dbl&gt;, EVI4 &lt;dbl&gt;,
+#&gt; #   EVI5 &lt;dbl&gt;, EVI6 &lt;dbl&gt;, EVI7 &lt;dbl&gt;, EVI8 &lt;dbl&gt;, EVI9 &lt;dbl&gt;, EVI10 &lt;dbl&gt;, EVI11 &lt;dbl&gt;,
+#&gt; #   EVI12 &lt;dbl&gt;, EVI13 &lt;dbl&gt;, EVI14 &lt;dbl&gt;, EVI15 &lt;dbl&gt;, EVI16 &lt;dbl&gt;, EVI17 &lt;dbl&gt;,
+#&gt; #   EVI18 &lt;dbl&gt;, EVI19 &lt;dbl&gt;, EVI20 &lt;dbl&gt;, EVI21 &lt;dbl&gt;, EVI22 &lt;dbl&gt;, EVI23 &lt;dbl&gt;, …</code></pre>
+<p>The predictors tibble is organized as a combination of the “X” and “Y” values used by machine learning algorithms. The first two columns are <code>sample_id</code> and <code>label</code>. The other columns contain the data values, organized by band and time. For machine learning methods that are not time-sensitive, such as random forest, this organization is sufficient for training. In the case of time-sensitive methods such as <code>tempCNN</code>, further arrangements are necessary to ensure the tensors have the right dimensions. Please refer to the <code><a href="https://rdrr.io/pkg/sits/man/sits_tempcnn.html">sits_tempcnn()</a></code> source code for an example of how to adapt the prediction table to appropriate <code>torch</code> tensor.</p>
+<p>Most algorithms require data normalization. Therefore, the <code><a href="https://rdrr.io/pkg/sits/man/sits_predictors.html">sits_predictors()</a></code> code is usually combined with methods that extract statistical information and then normalize the data, as in the example below.</p>
+<div class="sourceCode" id="cb177"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Data normalization</span></span>
+<span><span class="va">ml_stats</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_stats.html">sits_stats</a></span><span class="op">(</span><span class="va">samples</span><span class="op">)</span></span>
+<span><span class="co"># extract the training samples</span></span>
+<span><span class="va">train_samples</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_predictors.html">sits_predictors</a></span><span class="op">(</span><span class="va">samples</span><span class="op">)</span></span>
+<span><span class="co"># normalize the training samples</span></span>
+<span><span class="va">train_samples</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_pred_normalize.html">sits_pred_normalize</a></span><span class="op">(</span>pred <span class="op">=</span> <span class="va">train_samples</span>, stats <span class="op">=</span> <span class="va">ml_stats</span><span class="op">)</span></span></code></pre></div>
+<p>The following example shows the implementation of the LightGBM algorithm, designed to efficiently handle large-scale datasets and perform fast training and inference <span class="citation"><a href="references.html#ref-Ke2017">[92]</a></span>. Gradient boosting is a machine learning technique that builds an ensemble of weak prediction models, typically decision trees, to create a stronger model. LightGBM specifically focuses on optimizing the training and prediction speed, making it particularly suitable for large datasets. The example builds a model using the <code>lightgbm</code> package. This model will then be applied later to obtain a classification.</p>
+<p>Since LightGBM is a gradient boosting model, it uses part of the data as testing data to improve the model’s performance. The split between the training and test samples is controlled by a parameter, as shown in the following code extract.</p>
+<div class="sourceCode" id="cb178"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># split the data into training and validation data sets</span></span>
+<span><span class="co"># create partitions different splits of the input data</span></span>
+<span><span class="va">test_samples</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_pred_sample.html">sits_pred_sample</a></span><span class="op">(</span><span class="va">train_samples</span>,</span>
+<span>  frac <span class="op">=</span> <span class="va">validation_split</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co"># Remove the lines used for validation</span></span>
+<span><span class="va">sel</span> <span class="op">&lt;-</span> <span class="op">!</span><span class="op">(</span><span class="va">train_samples</span><span class="op">$</span><span class="va">sample_id</span> <span class="op"><a href="https://rdrr.io/r/base/match.html">%in%</a></span> <span class="va">test_samples</span><span class="op">$</span><span class="va">sample_id</span><span class="op">)</span></span>
+<span><span class="va">train_samples</span> <span class="op">&lt;-</span> <span class="va">train_samples</span><span class="op">[</span><span class="va">sel</span>, <span class="op">]</span></span></code></pre></div>
+<!--
+PEDRO: O trecho abaixo esta confuso porque ele fala de "`lightgbm` algorithm", mas o que existe e'
+lightgbm::lgb.train() e lgb_method(). Acho que seria melhor usar "LightGBM algorithm" ou os
+nomes das funcoes especificas. Os parametros boosting_type, objective, etc. sao da funcao lgb.train(), sendo tambem definidos na funcao lgb_method() implementada abaixo.
+-->
+<p>The parameters for the <code>lightgbm</code> algorithm, as defined in its documentation, are: (a) <code>boosting_type</code>, boosting algorithm; (b) <code>objective</code>, classification objective (c) <code>num_iterations</code>, number of runs; (d) <code>max_depth</code>, maximum tree depth; (d) <code>min_samples_leaf</code>, minimum size of data in one leaf (to avoid overfitting); (f) <code>learning_rate</code>, learning rate of the algorithm; (g) <code>n_iter_no_change</code>, number of successive iterations to stop training when validation metrics do not improve; (h) <code>validation_split</code>, fraction of training data to be used as validation data.</p>
+<p>The training part of the <code>lightgbm</code> algorithm uses two functions: (a) <code><a href="https://rdrr.io/pkg/lightgbm/man/lgb.Dataset.html">lgb.Dataset()</a></code>, which transforms training and test samples into internal structures; (b) <code><a href="https://rdrr.io/pkg/lightgbm/man/lgb.train.html">lgb.train()</a></code>, which trains the model.</p>
+<div class="sourceCode" id="cb179"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># install "lightgbm" package if not available</span></span>
+<span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="kw"><a href="https://rdrr.io/r/base/library.html">require</a></span><span class="op">(</span><span class="st"><a href="https://github.com/Microsoft/LightGBM">"lightgbm"</a></span><span class="op">)</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html">install.packages</a></span><span class="op">(</span><span class="st">"lightgbm"</span><span class="op">)</span></span>
+<span><span class="co"># create a function in sits style for LightGBM algorithm</span></span>
+<span><span class="va">lgb_method</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">samples</span> <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>                       <span class="va">boosting_type</span> <span class="op">=</span> <span class="st">"gbdt"</span>,</span>
+<span>                       <span class="va">objective</span> <span class="op">=</span> <span class="st">"multiclass"</span>,</span>
+<span>                       <span class="va">min_samples_leaf</span> <span class="op">=</span> <span class="fl">10</span>,</span>
+<span>                       <span class="va">max_depth</span> <span class="op">=</span> <span class="fl">6</span>,</span>
+<span>                       <span class="va">learning_rate</span> <span class="op">=</span> <span class="fl">0.1</span>,</span>
+<span>                       <span class="va">num_iterations</span> <span class="op">=</span> <span class="fl">100</span>,</span>
+<span>                       <span class="va">n_iter_no_change</span> <span class="op">=</span> <span class="fl">10</span>,</span>
+<span>                       <span class="va">validation_split</span> <span class="op">=</span> <span class="fl">0.2</span>, <span class="va">...</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="co"># function that returns MASS::lda model based on a sits sample tibble</span></span>
+<span>  <span class="va">result_fun</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">samples</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="co"># Data normalization</span></span>
+<span>    <span class="va">ml_stats</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_stats.html">sits_stats</a></span><span class="op">(</span><span class="va">samples</span><span class="op">)</span></span>
+<span>    <span class="va">train_samples</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_predictors.html">sits_predictors</a></span><span class="op">(</span><span class="va">samples</span><span class="op">)</span></span>
+<span>    <span class="va">train_samples</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_pred_normalize.html">sits_pred_normalize</a></span><span class="op">(</span>pred <span class="op">=</span> <span class="va">train_samples</span>, stats <span class="op">=</span> <span class="va">ml_stats</span><span class="op">)</span></span>
+<span></span>
+<span>    <span class="co"># find number of labels</span></span>
+<span>    <span class="va">labels</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_labels.html">sits_labels</a></span><span class="op">(</span><span class="va">samples</span><span class="op">)</span></span>
+<span>    <span class="va">n_labels</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html">length</a></span><span class="op">(</span><span class="va">labels</span><span class="op">)</span></span>
+<span>    <span class="co"># lightGBM uses numerical labels starting from 0</span></span>
+<span>    <span class="va">int_labels</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="va">n_labels</span><span class="op">)</span> <span class="op">-</span> <span class="fl">1</span></span>
+<span>    <span class="co"># create a named vector with integers match the class labels</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/names.html">names</a></span><span class="op">(</span><span class="va">int_labels</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">labels</span></span>
+<span></span>
+<span>    <span class="co"># add number of classes to lightGBM params</span></span>
+<span>    <span class="co"># split the data into training and validation data sets</span></span>
+<span>    <span class="co"># create partitions different splits of the input data</span></span>
+<span>    <span class="va">test_samples</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_pred_sample.html">sits_pred_sample</a></span><span class="op">(</span><span class="va">train_samples</span>,</span>
+<span>      frac <span class="op">=</span> <span class="va">validation_split</span></span>
+<span>    <span class="op">)</span></span>
+<span></span>
+<span>    <span class="co"># Remove the lines used for validation</span></span>
+<span>    <span class="va">sel</span> <span class="op">&lt;-</span> <span class="op">!</span><span class="op">(</span><span class="va">train_samples</span><span class="op">$</span><span class="va">sample_id</span> <span class="op"><a href="https://rdrr.io/r/base/match.html">%in%</a></span> <span class="va">test_samples</span><span class="op">$</span><span class="va">sample_id</span><span class="op">)</span></span>
+<span>    <span class="va">train_samples</span> <span class="op">&lt;-</span> <span class="va">train_samples</span><span class="op">[</span><span class="va">sel</span>, <span class="op">]</span></span>
+<span></span>
+<span>    <span class="co"># transform the training data to LGBM dataset</span></span>
+<span>    <span class="va">lgbm_train_samples</span> <span class="op">&lt;-</span> <span class="fu">lightgbm</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/lightgbm/man/lgb.Dataset.html">lgb.Dataset</a></span><span class="op">(</span></span>
+<span>      data <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html">as.matrix</a></span><span class="op">(</span><span class="va">train_samples</span><span class="op">[</span>, <span class="op">-</span><span class="fl">2</span><span class="op">:</span><span class="fl">0</span><span class="op">]</span><span class="op">)</span>,</span>
+<span>      label <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unname.html">unname</a></span><span class="op">(</span><span class="va">int_labels</span><span class="op">[</span><span class="va">train_samples</span><span class="op">[[</span><span class="fl">2</span><span class="op">]</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span>
+<span>    <span class="op">)</span></span>
+<span>    <span class="co"># transform the test data to LGBM dataset</span></span>
+<span>    <span class="va">lgbm_test_samples</span> <span class="op">&lt;-</span> <span class="fu">lightgbm</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/lightgbm/man/lgb.Dataset.html">lgb.Dataset</a></span><span class="op">(</span></span>
+<span>      data <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html">as.matrix</a></span><span class="op">(</span><span class="va">test_samples</span><span class="op">[</span>, <span class="op">-</span><span class="fl">2</span><span class="op">:</span><span class="fl">0</span><span class="op">]</span><span class="op">)</span>,</span>
+<span>      label <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unname.html">unname</a></span><span class="op">(</span><span class="va">int_labels</span><span class="op">[</span><span class="va">test_samples</span><span class="op">[[</span><span class="fl">2</span><span class="op">]</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span>
+<span>    <span class="op">)</span></span>
+<span>    <span class="co"># set the parameters for the lightGBM training</span></span>
+<span>    <span class="va">lgb_params</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span></span>
+<span>      boosting_type <span class="op">=</span> <span class="va">boosting_type</span>,</span>
+<span>      objective <span class="op">=</span> <span class="va">objective</span>,</span>
+<span>      min_samples_leaf <span class="op">=</span> <span class="va">min_samples_leaf</span>,</span>
+<span>      max_depth <span class="op">=</span> <span class="va">max_depth</span>,</span>
+<span>      learning_rate <span class="op">=</span> <span class="va">learning_rate</span>,</span>
+<span>      num_iterations <span class="op">=</span> <span class="va">num_iterations</span>,</span>
+<span>      n_iter_no_change <span class="op">=</span> <span class="va">n_iter_no_change</span>,</span>
+<span>      num_class <span class="op">=</span> <span class="va">n_labels</span></span>
+<span>    <span class="op">)</span></span>
+<span>    <span class="co"># call method and return the trained model</span></span>
+<span>    <span class="va">lgbm_model</span> <span class="op">&lt;-</span> <span class="fu">lightgbm</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/lightgbm/man/lgb.train.html">lgb.train</a></span><span class="op">(</span></span>
+<span>      data    <span class="op">=</span> <span class="va">lgbm_train_samples</span>,</span>
+<span>      valids  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>test_data <span class="op">=</span> <span class="va">lgbm_test_samples</span><span class="op">)</span>,</span>
+<span>      params  <span class="op">=</span> <span class="va">lgb_params</span>,</span>
+<span>      verbose <span class="op">=</span> <span class="op">-</span><span class="fl">1</span>,</span>
+<span>      <span class="va">...</span></span>
+<span>    <span class="op">)</span></span>
+<span>    <span class="co"># serialize the model for parallel processing</span></span>
+<span>    <span class="va">lgbm_model_string</span> <span class="op">&lt;-</span> <span class="va">lgbm_model</span><span class="op">$</span><span class="fu">save_model_to_string</span><span class="op">(</span><span class="cn">NULL</span><span class="op">)</span></span>
+<span>    <span class="co"># construct model predict closure function and returns</span></span>
+<span>    <span class="va">predict_fun</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">values</span><span class="op">)</span> <span class="op">{</span></span>
+<span>      <span class="co"># reload the model (unserialize)</span></span>
+<span>      <span class="va">lgbm_model</span> <span class="op">&lt;-</span> <span class="fu">lightgbm</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/lightgbm/man/lgb.load.html">lgb.load</a></span><span class="op">(</span>model_str <span class="op">=</span> <span class="va">lgbm_model_string</span><span class="op">)</span></span>
+<span>      <span class="co"># Performs data normalization - returns only values</span></span>
+<span>      <span class="co"># in the prediction only values are available</span></span>
+<span>      <span class="va">values</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_pred_normalize.html">sits_pred_normalize</a></span><span class="op">(</span>pred <span class="op">=</span> <span class="va">values</span>, stats <span class="op">=</span> <span class="va">ml_stats</span><span class="op">)</span></span>
+<span>      <span class="co"># predict probabilities</span></span>
+<span>      <span class="va">prediction</span> <span class="op">&lt;-</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">lgbm_model</span>,</span>
+<span>        data <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html">as.matrix</a></span><span class="op">(</span><span class="va">values</span><span class="op">)</span>,</span>
+<span>        rawscore <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>        reshape <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>      <span class="op">)</span></span>
+<span>      <span class="co"># adjust the names of the columns of the probs</span></span>
+<span>      <span class="fu"><a href="https://rdrr.io/r/base/colnames.html">colnames</a></span><span class="op">(</span><span class="va">prediction</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">labels</span></span>
+<span>      <span class="co"># retrieve the prediction results</span></span>
+<span>      <span class="kw"><a href="https://rdrr.io/r/base/function.html">return</a></span><span class="op">(</span><span class="va">prediction</span><span class="op">)</span></span>
+<span>    <span class="op">}</span></span>
+<span>    <span class="co"># Set model class</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/class.html">class</a></span><span class="op">(</span><span class="va">predict_fun</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"sits_model"</span>, <span class="fu"><a href="https://rdrr.io/r/base/class.html">class</a></span><span class="op">(</span><span class="va">predict_fun</span><span class="op">)</span><span class="op">)</span></span>
+<span>    <span class="kw"><a href="https://rdrr.io/r/base/function.html">return</a></span><span class="op">(</span><span class="va">predict_fun</span><span class="op">)</span></span>
+<span>  <span class="op">}</span></span>
+<span>  <span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_factory_function.html">sits_factory_function</a></span><span class="op">(</span><span class="va">samples</span>, <span class="va">result_fun</span><span class="op">)</span></span>
+<span>  <span class="kw"><a href="https://rdrr.io/r/base/function.html">return</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span>
+<span><span class="op">}</span></span></code></pre></div>
+<p>The above code has two nested functions: <code>results_fun()</code> and <code>predict_fun()</code>. When <code>lgb_method()</code> is called, it transforms the input samples into predictors and normalizes them. Then, it uses these predictors to train the algorithm, creating a model (<code>result_mlr</code>). This model is included as part of the function’s closure and becomes available at classification time. Then the code creates <code>prediction_fun()</code>, which applies the <code>result_mlr</code> model to the input values to be classified. This is the function returned by <code>results_fun()</code> which contains all the necessary information for classification. At classification time, the model is called directly.</p>
+<p>The last lines of the code also include the convenience function <code><a href="https://rdrr.io/pkg/sits/man/sits_factory_function.html">sits_factory_function()</a></code>, shown below. This function allows the model to be called either as part of <code><a href="https://rdrr.io/pkg/sits/man/sits_train.html">sits_train()</a></code> or to be called independently, with the same result.</p>
+<div class="sourceCode" id="cb180"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">sits_factory_function</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">samples</span>, <span class="va">fun</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="co"># if no data is given, we prepare a</span></span>
+<span>  <span class="co"># function to be called as a parameter of other functions</span></span>
+<span>  <span class="kw">if</span> <span class="op">(</span><span class="fu">purrr</span><span class="fu">::</span><span class="fu">is_null</span><span class="op">(</span><span class="va">data</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="va">result</span> <span class="op">&lt;-</span> <span class="va">fun</span></span>
+<span>  <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span></span>
+<span>    <span class="co"># ...otherwise compute the result on the input data</span></span>
+<span>    <span class="va">result</span> <span class="op">&lt;-</span> <span class="fu">fun</span><span class="op">(</span><span class="va">data</span><span class="op">)</span></span>
+<span>  <span class="op">}</span></span>
+<span>  <span class="kw"><a href="https://rdrr.io/r/base/function.html">return</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span>
+<span><span class="op">}</span></span></code></pre></div>
+<p>There is one additional requirement for the algorithm to be compatible with <code>sits</code>. Data cube processing algorithms in <code>sits</code> run in parallel. For this reason, once the classification model is trained, it is serialized, as shown in the following line. The serialized version of the model is exported to the function closure, so it can be used at classification time.</p>
+<div class="sourceCode" id="cb181"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># serialize the model for parallel processing</span></span>
+<span><span class="va">lgbm_model_string</span> <span class="op">&lt;-</span> <span class="va">lgbm_model</span><span class="op">$</span><span class="fu">save_model_to_string</span><span class="op">(</span><span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
+<p>During classification, <code>predict_fun()</code> is called in parallel by each CPU. At this moment, the serialized string is transformed back into a model, which is then run to obtain the classification, as shown in the code.</p>
+<div class="sourceCode" id="cb182"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># unserialize the model</span></span>
+<span><span class="va">lgbm_model</span> <span class="op">&lt;-</span> <span class="fu">lightgbm</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/lightgbm/man/lgb.load.html">lgb.load</a></span><span class="op">(</span>model_str <span class="op">=</span> <span class="va">lgbm_model_string</span><span class="op">)</span></span></code></pre></div>
+<p>Therefore, using function factories that produce closures, <code>sits</code> keeps the classification function independent of the machine learning or deep learning algorithm. This policy allows independent proposal, testing, and development of new classification methods. It also enables improvements on parallel processing methods without affecting the existing classification methods.</p>
+<p>To illustrate this separation between training and classification, the new algorithm developed in the chapter using <code>lightgbm</code> will be used to classify a data cube. The code is the same as the one in Chapter <a href="https://e-sensing.github.io/sitsbook/introduction.html">Introduction</a> as an example of data cube classification, except for the use of <code>lgb_method()</code>.</p>
+<div class="sourceCode" id="cb183"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html">data</a></span><span class="op">(</span><span class="st">"samples_matogrosso_mod13q1"</span>, package <span class="op">=</span> <span class="st">"sitsdata"</span><span class="op">)</span></span>
+<span><span class="co"># Create a data cube using local files</span></span>
+<span><span class="va">sinop</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_cube.html">sits_cube</a></span><span class="op">(</span></span>
+<span>  source <span class="op">=</span> <span class="st">"BDC"</span>,</span>
+<span>  collection <span class="op">=</span> <span class="st">"MOD13Q1-6"</span>,</span>
+<span>  data_dir <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html">system.file</a></span><span class="op">(</span><span class="st">"extdata/sinop"</span>, package <span class="op">=</span> <span class="st">"sitsdata"</span><span class="op">)</span>,</span>
+<span>  parse_info <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"X1"</span>, <span class="st">"X2"</span>, <span class="st">"tile"</span>, <span class="st">"band"</span>, <span class="st">"date"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co"># The data cube has only "NDVI" and "EVI" bands</span></span>
+<span><span class="co"># Select the bands NDVI and EVI</span></span>
+<span><span class="va">samples_2bands</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_select.html">sits_select</a></span><span class="op">(</span></span>
+<span>  data <span class="op">=</span> <span class="va">samples_matogrosso_mod13q1</span>,</span>
+<span>  bands <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"NDVI"</span>, <span class="st">"EVI"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co"># train lightGBM model</span></span>
+<span><span class="va">lgb_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_train.html">sits_train</a></span><span class="op">(</span><span class="va">samples_2bands</span>, <span class="fu">lgb_method</span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Classify the data cube</span></span>
+<span><span class="va">sinop_probs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_classify.html">sits_classify</a></span><span class="op">(</span></span>
+<span>  data <span class="op">=</span> <span class="va">sinop</span>,</span>
+<span>  ml_model <span class="op">=</span> <span class="va">lgb_model</span>,</span>
+<span>  multicores <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  memsize <span class="op">=</span> <span class="fl">8</span>,</span>
+<span>  output_dir <span class="op">=</span> <span class="st">"./tempdir/chp15"</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co"># Perform spatial smoothing</span></span>
+<span><span class="va">sinop_bayes</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_smooth.html">sits_smooth</a></span><span class="op">(</span></span>
+<span>  cube <span class="op">=</span> <span class="va">sinop_probs</span>,</span>
+<span>  multicores <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>  memsize <span class="op">=</span> <span class="fl">8</span>,</span>
+<span>  output_dir <span class="op">=</span> <span class="st">"./tempdir/chp15"</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co"># Label the smoothed file</span></span>
+<span><span class="va">sinop_map</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_label_classification.html">sits_label_classification</a></span><span class="op">(</span></span>
+<span>  cube <span class="op">=</span> <span class="va">sinop_bayes</span>,</span>
+<span>  output_dir <span class="op">=</span> <span class="st">"./tempdir/chp3"</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co"># plot the result</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">sinop_map</span>, title <span class="op">=</span> <span class="st">"Sinop Classification Map"</span><span class="op">)</span></span></code></pre></div>
+<div class="figure" style="text-align: center">
+<span style="display:block;" id="fig:unnamed-chunk-179"></span>
+<img src="sitsbook_files/figure-html/unnamed-chunk-179-1.png" alt="Classification map for Sinop using LightGBM." width="100%"><p class="caption">
+Figure 92: Classification map for Sinop using LightGBM.
+</p>
+</div>
+<p>The above example shows how it is possible to extend <code>sits</code> with new machine learning algorithms.</p>
+</div>
+<div id="how-colors-work-in-sits" class="section level2 unnumbered">
+<h2>How colors work in sits<a class="anchor" aria-label="anchor" href="#how-colors-work-in-sits"><i class="fas fa-link"></i></a>
+</h2>
+<p>In examples provided in the book, the color legend is taken from a predefined color table provided by <code>sits</code>. This default color table is displayed using <code><a href="https://rdrr.io/pkg/sits/man/sits_colors_show.html">sits_colors_show()</a></code>. This color definition file assigns colors to 99 class names, including the IPCC and IGBP land classes.</p>
+<div class="figure" style="text-align: center">
+<span style="display:block;" id="fig:unnamed-chunk-180"></span>
+<img src="sitsbook_files/figure-html/unnamed-chunk-180-1.png" alt="Default colors used in the sits package (Source: Authors)." width="100%" height="100%"><p class="caption">
+Figure 93: Default colors used in the sits package (Source: Authors).
+</p>
+</div>
+<p>The color table can be extended or adjusted by accessing and modifying the default color table, which is retrieved using <code><a href="https://rdrr.io/pkg/sits/man/sits_colors.html">sits_colors()</a></code>.</p>
+<div class="sourceCode" id="cb184"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Retrieve the color table</span></span>
+<span><span class="va">color_tb</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_colors.html">sits_colors</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="co"># Show the color table</span></span>
+<span><span class="va">color_tb</span></span></code></pre></div>
+<pre class="sourceCode"><code>#&gt; # A tibble: 99 × 3
+#&gt;    name                       color   group          
+#&gt;    &lt;chr&gt;                      &lt;chr&gt;   &lt;chr&gt;          
+#&gt;  1 Evergreen_Broadleaf_Forest #1E8449 Tropical_Forest
+#&gt;  2 Forest                     #1E8449 Tropical_Forest
+#&gt;  3 Closed_Forest              #1E8449 Tropical_Forest
+#&gt;  4 Woodland                   #27AE60 Tropical_Forest
+#&gt;  5 Dense_Woodland             #27AE60 Tropical_Forest
+#&gt;  6 Woody_Savanna              #27AE60 Tropical_Forest
+#&gt;  7 Open_Forest                #27AE60 Tropical_Forest
+#&gt;  8 Cerradao                   #27AE60 Tropical_Forest
+#&gt;  9 Mixed_Forest               #27AE60 Tropical_Forest
+#&gt; 10 Sparse_Forest              #27AE60 Tropical_Forest
+#&gt; # ℹ 89 more rows</code></pre>
+<p>The default color table can be redefined using <code><a href="https://rdrr.io/pkg/sits/man/sits_colors_set.html">sits_colors_set()</a></code>. As an example of a user-defined color table, consider a definition that covers level 1 of the Anderson Classification System used in the US National Land Cover Data, obtained by defining a new color table, as shown below. The colors can be defined by HEX values or by names accepted as R color codes.</p>
+<div class="sourceCode" id="cb186"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Define a color table based on the Anderson Land Classification System</span></span>
+<span><span class="va">us_nlcd</span> <span class="op">&lt;-</span> <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/tibble.html">tibble</a></span><span class="op">(</span>name <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html">character</a></span><span class="op">(</span><span class="op">)</span>, color <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html">character</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">us_nlcd</span> <span class="op">&lt;-</span> <span class="va">us_nlcd</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/add_row.html">add_row</a></span><span class="op">(</span>name <span class="op">=</span> <span class="st">"Urban Built Up"</span>, color <span class="op">=</span> <span class="st">"#85929E"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/add_row.html">add_row</a></span><span class="op">(</span>name <span class="op">=</span> <span class="st">"Agricultural Land"</span>, color <span class="op">=</span> <span class="st">"#F0B27A"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/add_row.html">add_row</a></span><span class="op">(</span>name <span class="op">=</span> <span class="st">"Rangeland"</span>, color <span class="op">=</span> <span class="st">"#F1C40F"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/add_row.html">add_row</a></span><span class="op">(</span>name <span class="op">=</span> <span class="st">"Forest Land"</span>, color <span class="op">=</span> <span class="st">"#27AE60"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/add_row.html">add_row</a></span><span class="op">(</span>name <span class="op">=</span> <span class="st">"Water"</span>, color <span class="op">=</span> <span class="st">"#2980B9"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/add_row.html">add_row</a></span><span class="op">(</span>name <span class="op">=</span> <span class="st">"Wetland"</span>, color <span class="op">=</span> <span class="st">"#D4E6F1"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/add_row.html">add_row</a></span><span class="op">(</span>name <span class="op">=</span> <span class="st">"Barren Land"</span>, color <span class="op">=</span> <span class="st">"#FDEBD0"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/add_row.html">add_row</a></span><span class="op">(</span>name <span class="op">=</span> <span class="st">"Tundra"</span>, color <span class="op">=</span> <span class="st">"#EBDEF0"</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></span></span>
+<span>  <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/add_row.html">add_row</a></span><span class="op">(</span>name <span class="op">=</span> <span class="st">"Snow and Ice"</span>, color <span class="op">=</span> <span class="st">"#F7F9F9"</span><span class="op">)</span></span>
+<span><span class="co"># Load the color table into `sits`</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_colors_set.html">sits_colors_set</a></span><span class="op">(</span><span class="va">us_nlcd</span><span class="op">)</span></span>
+<span><span class="co"># Show the new color table used by sits</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_colors_show.html">sits_colors_show</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<div class="figure" style="text-align: center">
+<span style="display:block;" id="fig:unnamed-chunk-182"></span>
+<img src="sitsbook_files/figure-html/unnamed-chunk-182-1.png" alt="Example of Anderson Land Classification Scheme use in sits (Source: Authors)." width="80%" height="80%"><p class="caption">
+Figure 94: Example of Anderson Land Classification Scheme use in sits (Source: Authors).
+</p>
+</div>
+<p>The original default <code>sits</code> color table can be restored using <code><a href="https://rdrr.io/pkg/sits/man/sits_colors_reset.html">sits_colors_reset()</a></code>.</p>
+<p>As an alternative, a legend can be used directly as a parameter to <code><a href="https://rdrr.io/r/graphics/plot.default.html">plot()</a></code>. Please see the example provided in Section “Map Reclassification” in Chapter <a href="https://e-sensing.github.io/sitsbook/image-classification-in-data-cubes.html">Image classification in data cubes</a>.</p>
+</div>
+<div id="exporting-data-to-json" class="section level2 unnumbered">
+<h2>Exporting data to JSON<a class="anchor" aria-label="anchor" href="#exporting-data-to-json"><i class="fas fa-link"></i></a>
+</h2>
+<p>Both the data cube and the time series tibble can be exported to exchange formats such as JSON.</p>
+<div class="sourceCode" id="cb187"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://arxiv.org/abs/1403.2805">jsonlite</a></span><span class="op">)</span></span>
+<span><span class="co"># Export the data cube to JSON</span></span>
+<span><span class="fu">jsonlite</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/jsonlite/man/read_json.html">write_json</a></span><span class="op">(</span></span>
+<span>  x <span class="op">=</span> <span class="va">s2_20LKP_cube_MPC</span>,</span>
+<span>  path <span class="op">=</span> <span class="st">"./data_cube.json"</span>,</span>
+<span>  pretty <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Export the time series to JSON</span></span>
+<span><span class="fu">jsonlite</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/jsonlite/man/read_json.html">write_json</a></span><span class="op">(</span></span>
+<span>  x <span class="op">=</span> <span class="va">samples_prodes_4classes</span>,</span>
+<span>  path <span class="op">=</span> <span class="st">"./time_series.json"</span>,</span>
+<span>  pretty <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+
+</div>
+</div>
+  <div class="chapter-nav">
+<div class="prev"><a href="object-based-time-series-image-analysis.html">Object-based time series image analysis</a></div>
+<div class="next"><a href="references.html">References</a></div>
+</div></main><div class="col-md-3 col-lg-2 d-none d-md-block sidebar sidebar-chapter">
+    <nav id="toc" data-toggle="toc" aria-label="On this page"><h2>On this page</h2>
+      <ul class="nav navbar-nav">
+<li><a class="nav-link" href="#technical-annex">Technical Annex</a></li>
+<li><a class="nav-link" href="#including-new-methods-for-machine-learning">Including new methods for machine learning</a></li>
+<li><a class="nav-link" href="#how-colors-work-in-sits">How colors work in sits</a></li>
+<li><a class="nav-link" href="#exporting-data-to-json">Exporting data to JSON</a></li>
+</ul>
+
+      <div class="book-extra">
+        <ul class="list-unstyled">
+          
+        </ul>
+</div>
+    </nav>
+</div>
+
+</div>
+</div> <!-- .container -->
+
+<footer class="bg-primary text-light mt-5"><div class="container"><div class="row">
+
+  <div class="col-12 col-md-6 mt-3">
+    <p>"<strong><strong>sits</strong>: Satellite Image Time Series Analysis on Earth Observation Data Cubes</strong>" was written by Gilberto Camara, Rolf Simoes, Felipe Souza, Charlotte Pelletier, Alber Sanchez, Pedro R. Andrade, Karine Ferreira, Gilberto Queiroz. It was last built on 2023-06-19.</p>
+  </div>
+
+  <div class="col-12 col-md-6 mt-3">
+    <p>This book was built by the <a class="text-light" href="https://bookdown.org">bookdown</a> R package.</p>
+  </div>
+
+</div></div>
+</footer><!-- dynamically load mathjax for compatibility with self-contained --><script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/latest.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script><script type="text/x-mathjax-config">const popovers = document.querySelectorAll('a.footnote-ref[data-toggle="popover"]');
+for (let popover of popovers) {
+  const div = document.createElement('div');
+  div.setAttribute('style', 'position: absolute; top: 0, left:0; width:0, height:0, overflow: hidden; visibility: hidden;');
+  div.innerHTML = popover.getAttribute('data-content');
+
+  var has_math = div.querySelector("span.math");
+  if (has_math) {
+    document.body.appendChild(div);
+    MathJax.Hub.Queue(["Typeset", MathJax.Hub, div]);
+    MathJax.Hub.Queue(function() {
+      popover.setAttribute('data-content', div.innerHTML);
+      document.body.removeChild(div);
+    })
+  }
+}
+</script>
+</body>
+</html>

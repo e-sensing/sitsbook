@@ -1,0 +1,251 @@
+```{r, include = FALSE}
+source("common.R")
+dir.create("./tempdir/chp9")
+sits:::.conf_set_options("tmap_legend_text_size" = 0.7)
+sits:::.conf_set_options("tmap_legend_title_size" = 0.7)
+```
+
+# Image classification in data cubes{-}
+
+
+<a href="https://www.kaggle.com/esensing/raster-classification-in-sits" target="_blank"><img src="https://kaggle.com/static/images/open-in-kaggle.svg"/></a>
+
+This Chapter discusses how to classify data cubes by providing a step-by-step example. Our study area is the state of Rondonia, Brazil, which underwent substantial deforestation in the last decades. The objective of the case study is to detect deforested areas. 
+
+## Training the classification model{-}
+
+The case study uses the training data set `samples_prodes_4bands`, available in package `sitsdata`. This data set consists of 480 samples collected from Sentinel-2 images covering the state of Rondonia. The samples are intended to detect deforestation events and include four classes: Forest, Burned_Area,   Cleared_Area, and Highly_Degraded. The time series cover a set of 29 dates with a period of 16 days, ranging from 2020-06-04 to 2021-08-26. The data has 12 attributes, including original bands (B02, B03, B04, B05, B08, B8A, B11, and B12) and indices (NDVI, EVI, and NBR).
+
+```{r, tidy = "styler"}
+library(sitsdata)
+# Obtain the samples 
+data("samples_prodes_4classes")
+# Show the contents of the samples
+summary(samples_prodes_4classes)
+```
+
+It is helpful to plot the basic patterns associated with the samples to understand the training set better. The function `sits_patterns()` uses a generalized additive model (GAM) to predict a smooth, idealized approximation to the time series associated with each class for all bands. Since the data cube used in the classification has only three bands (B02, B8A, and B11), we filter the samples for these bands before showing the patterns. 
+
+```{r, tidy = "styler", out.width = "90%", fig.align="center", fig.cap="Patterns associated to the training samples (Source: Authors)."}
+samples_3bands <- sits_select(
+    data = samples_prodes_4classes,
+    bands = c("B02", "B8A", "B11"))
+
+plot(sits_patterns(samples_3bands))
+```
+
+The patterns show different temporal responses for the selected classes. They match the typical behavior of deforestation in the Amazon. First, the forest is cut at the start of the dry season (June/July). At the end of the dry season, some clear-cut areas are burned to clean the remains; this action is reflected in the steep fall of the response of B8A values of burned area samples after July. In cleared but not burned areas, response in the middle infra-red band B11 increases significantly at the end of the dry season, while B8A values remain high. This is a sign of mixed pixels, which combine forest remains with bare soil. Forest areas show a constant spectral response during the year. Degraded areas show an increase in values of the middle infra-red band B11 compared to native forests, showing a mixed response of vegetation and soil.
+
+
+## Building a data cube{-}
+
+We now build a data cube from the Sentinel-2 images available in the package `sitsdata`. These images are from the `SENTINEL-2-L2A` collection in Microsoft Planetary Computer (`MPC`). We have chosen bands BO2, B8A, and B11 images in a small area of $1000 \times 1000$ pixels in the state of Rondonia. As explained in Chapter [Earth observation data cubes](https://e-sensing.github.io/sitsbook/earth-observation-data-cubes.html), we must inform `sits` how to parse these file names to obtain tile, date, and band information. Image files are named according to the convention "cube_tile_band_date" (e.g., `cube_20LKP_BO2_2020_06_04.tif`).
+
+
+```{r, tidy = "styler", out.width = "90%", fig.align="center", fig.cap="Color composite image of the cube for date 2021-07-25 (Source: Authors)."}
+# Files are available in a local directory 
+data_dir <- system.file("extdata/Rondonia-20LKP/", package = "sitsdata")
+# Read data cube
+ro_cube_20LKP <- sits_cube(
+    source = "MPC",
+    collection = "SENTINEL-2-L2A",
+    data_dir = data_dir,
+    parse_info = c('X1', "tile", "band", "date"))
+
+# Plot the cube
+plot(ro_cube_20LKP, dates = "2021-07-25", red = "B11", green = "B8A", blue = "B02")
+```
+
+## Training a deep learning model{-}
+
+The next step is to train a Lightweight Temporal Attention Encoder (LightTAE) model, using the `adamw` optimizer and a learning rate of 0.001. Since the data cube to be classified has bands BO2, B8A, and B11,  we select such bands from the training data.
+
+```{r, tidy = "styler", out.width = "80%", fig.align="center", fig.cap="Training evolution of LightTAE model (Source: Authors)."}
+# Use only the bands available in the cube
+samples_3bands <- sits_select(
+    data = samples_prodes_4classes, 
+    bands = sits_bands(ro_cube_20LKP))
+
+# Train model using LightTAE algorithm
+ltae_model <- sits_train(
+    samples = samples_3bands, 
+    ml_method = sits_lighttae(opt_hparams = list(lr = 0.001)))
+
+# Plot the evolution of the model
+plot(ltae_model)
+```
+
+## Classification using parallel processing{-}
+
+To classify both data cubes and sets of time series, use `sits_classify()`, which uses parallel processing to speed up the performance, as described at the end of this Chapter. Its most relevant parameters are: (a) `data`, either a data cube or a set of time series; (b) `ml_model`, a trained model using one of the machine learning methods provided; (c) `multicores`, number of CPU cores that will be used for processing; (d) `memsize`, memory available for classification; (e) `output_dir`, directory where results will be stored; (f) `version`, for version control. To follow the processing steps, turn on the parameters `verbose` to print information and `progress` to get a progress bar. The classification result is a data cube with a set of probability layers, one for each output class. Each probability layer contains the model's assessment of how likely each pixel belongs to the related class. The probability cube can be visualized with `plot()`. 
+
+```{r, tidy = "styler", out.width = "80%", fig.align="center", fig.cap="Probability maps produced by LightTAE model (Source: Authors)."}
+
+# Classify data cube
+ro_cube_20LKP_probs <- sits_classify(
+    data     = ro_cube_20LKP,
+    ml_model = ltae_model,
+    output_dir = "./tempdir/chp9",
+    version = "ltae",
+    multicores = 4,
+    memsize = 12)
+
+plot(ro_cube_20LKP_probs, palette = "YlGn")
+```
+
+A probability cube is a helpful tool for data analysis. It is used for post-processing smoothing, as described in this Chapter, but also in uncertainty estimates and active learning, as described in Chapter [Uncertainty and active learning](https://e-sensing.github.io/sitsbook/uncertainty-and-active-learning.html).
+
+```{r, tidy = "styler", out.width = "100%", fig.align="center", fig.cap="Final classification map (Source: Authors)."}
+# Generate a thematic map
+defor_map <- sits_label_classification(
+    cube = ro_cube_20LKP_probs,
+    multicores = 4,
+    memsize = 12,
+    output_dir = "./tempdir/chp9",
+    version = "no_smooth")
+
+plot(defor_map)
+```
+
+The labeled map generated from the pixel-based time series classification method exhibits several misclassified pixels, which are small patches surrounded by a different class. This occurrence of outliers is a common issue that arises due to the inherent nature of this classification approach. Regardless of their resolution, mixed pixels are prevalent in images, and each class exhibits considerable data variability. As a result, these factors can lead to outliers that are more likely to be misclassified. To overcome this limitation, `sits` employs post-processing smoothing techniques that leverage the spatial context of the probability cubes to refine the results. These techniques will be discussed in the next Chapter.
+
+## Map reclassification{-}
+
+Reclassification of a remote sensing map refers to changing the classes assigned to different pixels in the image. The purpose of reclassification is to modify the information contained in the image to better suit a specific use case. In `sits`, reclassification involves assigning new classes to pixels based on additional information from a reference map. Users define rules according to the desired outcome. These rules are then applied to the classified map. The result is a new map with updated classes.
+
+To illustrate the reclassification in `sits`, we take a classified data cube stored in the `sitsdata` package. As discussed in Chapter [Earth observation data cubes](https://e-sensing.github.io/sitsbook/earth-observation-data-cubes.html), `sits` can create a data cube from a classified image file. Users need to provide the original data source and collection, the directory where data is stored (`data_dir`), the information on how to retrieve data cube parameters from file names (`parse_info`), and the labels used in the classification. 
+
+```{r, tidy = "styler", out.width = "100%", fig.align="center", fig.cap="Original classification map (Source: Authors)."}
+# Open classification map
+data_dir <- system.file("extdata/Rondonia-Class", package = "sitsdata")
+ro_class <- sits_cube(
+    source = "MPC",
+    collection = "SENTINEL-2-L2A",
+    data_dir = data_dir,
+    parse_info = c("X1", "X2", "tile", "start_date", "end_date",
+                   "band", "version"),
+    bands = "class",
+    labels = c("1" = "Water", "2" = "ClearCut_Burn", "3" = "ClearCut_Soil",
+               "4" = "ClearCut_Veg", "5" = "Forest", 
+               "6" = "Bare_Soil", "7" = "Wetland"))
+
+plot(ro_class)
+```
+
+The above map shows the total extent of deforestation by clear cuts estimated by the `sits` random forest algorithm in an area in Rondonia, Brazil, based on a time series of Sentinel-2 images for the period 2020-06-04 to 2021-08-26. Suppose we want to estimate the deforestation that occurred from June 2020 to August 2021. We need a reference map containing information on forest cuts before 2020. 
+
+In this example, we use as a reference the PRODES deforestation map of Amazonia created by Brazil's National Institute for Space Research (INPE). This map is produced by visual interpretation. PRODES measures deforestation every year, starting from August of one year to July of the following year. It contains classes that represent the natural world (Forest, Water, NonForest, and  NonForest2) and classes that capture the yearly deforestation increments. These classes are named "dYYYY" and "rYYYY"; the first refers to deforestation in a given year (e.g., "d2008" for deforestation for August 2007 to July 2008); the second to places where the satellite data is not sufficient to determine the land class (e.g., "r2010" for 2010). This map is available on package `sitsdata`, as shown below.
+
+```{r, tidy = "styler", out.width = "100%", fig.align="center", fig.cap="Deforestation map produced by sits (Source: Authors)."}
+data_dir <- system.file("extdata/PRODES", package = "sitsdata")
+prodes2021 <- sits_cube(
+    source = "USGS",
+    collection = "LANDSAT-C2L2-SR",
+    data_dir = data_dir,
+    parse_info = c("X1", "X2", "tile", "start_date", "end_date",
+                   "band", "version"),
+    bands = "class",
+    version = "v20220606",
+    labels = c("1" = "Forest", "2" = "Water", "3" = "NonForest",
+               "4" = "NonForest2", "6" = "d2007", "7" = "d2008",
+               "8" = "d2009", "9" = "d2010", "10" = "d2011", 
+               "11" = "d2012", "12" = "d2013", "13" = "d2014", 
+               "14" = "d2015", "15" = "d2016", "16" = "d2017",
+               "17" = "d2018", "18" = "r2010", "19" = "r2011",
+               "21" = "r2013", "22" = "r2014", "23" = "r2015", 
+               "24" = "r2016", "25" = "r2017", "26" = "r2018", 
+               "27" = "d2019", "29" = "d2020", "31" = "r2020", "32" = "Clouds2021",
+               "33" = "d2021", "34" = "r2021")
+    )
+```
+
+Since the labels of the deforestation map are specialized and are not part of the default `sits` color table, we define a legend for better visualization of the different deforestation classes. 
+
+```{r, tidy = "styler", echo = TRUE, eval = FALSE}
+# Use the RColorBrewer palette "YlOrBr" for the deforestation years
+colors <- grDevices::hcl.colors(n = 15, palette = "YlOrBr")
+# Define the legend for the deforestation map
+def_legend <- c(
+    "Forest" = "forestgreen", "Water" = "dodgerblue3", 
+    "NonForest" = "bisque2", "NonForest2" = "bisque2",
+    "d2007" = colors[1],  "d2008" = colors[2],
+    "d2009" = colors[3],  "d2010" = colors[4], 
+    "d2011" = colors[5],  "d2012" = colors[6],
+    "d2013" = colors[7],  "d2014" = colors[8],
+    "d2015" = colors[9],  "d2016" = colors[10],
+    "d2017" = colors[11], "d2018" = colors[12],
+    "d2019" = colors[13], "d2020" = colors[14], 
+    "d2021" = colors[15], "r2010" = "lightcyan",
+    "r2011" = "lightcyan", "r2013" = "lightcyan", 
+    "r2014" = "lightcyan", "r2015" = "lightcyan", 
+    "r2016" = "lightcyan", "r2017" = "lightcyan", 
+    "r2018" = "lightcyan", "r2020" = "lightcyan",
+    "r2021" = "lightcyan", "Clouds2021" = "lightblue2")
+```
+
+Using this new legend, we can visualize the PRODES deforestation map.
+```{r, echo = TRUE, eval = FALSE}
+sits_view(prodes2021, legend = def_legend)
+```
+
+```{r prodes, echo = FALSE, out.width="90%", fig.align="center", fig.cap="Deforestation map produced by PRODES."}
+knitr::include_graphics("images/view_prodes_2021.png")
+```
+
+Taking the PRODES map as our reference, we can include new labels in the classified map produced by `sits` using `sits_reclassify()`. The new class name Defor_2020 will be applied to all pixels that PRODES considers that have been deforested before July 2020. We also include a Non_Forest class to include all pixels that PRODES takes as not covered by native vegetation, such as wetlands and rocky areas. The PRODES classes will be used as a mask over the `sits` deforestation map.
+
+The `sits_reclassify()` operation requires the parameters: (a) `cube`, the classified data cube whose pixels will be reclassified; (b) `mask`, the reference data cube used as a mask; (c) `rules`, a named list. The names of the `rules` list will be the new label. Each new label is associated with a `mask` vector that includes the labels of the reference map that will be joined. `sits_reclassify()` then compares the original and reference map pixel by pixel. For each pixel of the reference map whose labels are in one of the `rules`, the algorithm relabels the original map. The result will be a reclassified map with the original labels plus the new labels that have been masked using the reference map.
+
+```{r, tidy = "styler", out.width = "100%", fig.align="center", fig.cap="Deforestation map by sits masked by PRODES map (Source: Authors)."}
+# Reclassify cube
+ro_def_2021 <- sits_reclassify(
+    cube = ro_class,
+    mask = prodes2021,
+    rules = list(
+        "Non_Forest" = mask %in% c("NonForest", "NonForest2"),
+        "Deforestation_Mask" = mask %in% c(
+            "d2007", "d2008", "d2009",
+            "d2010", "d2011", "d2012",
+            "d2013", "d2014", "d2015",
+            "d2016", "d2017", "d2018",
+            "d2019", "d2020",
+            "r2010", "r2011", "r2012",
+            "r2013", "r2014", "r2015",
+            "r2016", "r2017", "r2018",
+            "r2019", "r2020", "r2021"),
+        "Water" = mask == "Water"),
+    memsize = 8,
+    multicores = 2,
+    output_dir = "./tempdir/chp9",
+    version = "reclass")
+
+# Plot the reclassified map
+plot(ro_def_2021)
+```
+
+The reclassified map has been split into deforestation before mid-2020 (using the PRODES map) and the areas classified by `sits` that are taken as being deforested from mid-2020 to mid-2021. This allows the experts to measure how much deforestation occurred in this period according to `sits` and compare the result with the PRODES map. 
+
+The `sits_reclassify()` function is not restricted to comparing deforestation maps. It can be used in any case that requires masking of a result based on a reference map. 
+
+## How parallel processing works{-}
+
+This section provides an overview of how `sits_classify()`, `sits_smooth()`, and `sits_label_classification()` process images in parallel. To achieve efficiency, `sits` implements a fault-tolerant multitasking procedure for big Earth observation data classification. The learning curve is shortened as there is no need to learn how to do multiprocessing. Image classification in `sits` is done by a cluster of independent workers linked to a virtual machine. To avoid communication overhead, all large payloads are read and stored independently; direct interaction between the main process and the workers is kept at a minimum. 
+
+The classification procedure benefits from the fact that most images available in cloud collections are stored as COGs (cloud-optimized GeoTIFF). COGs are regular GeoTIFF files organized in regular square blocks to improve visualization and access for large data sets. Thus, data requests can be optimized to access only portions of the images. All cloud services supported by `sits` use COG files. The classification algorithm in `sits` uses COGs to ensure optimal data access, reducing I/O demand as much as possible.
+
+The approach for parallel processing in `sits`, depicted in Figure \@ref(fig:par), has the following steps:
+
+1. Based on the block size of individual COG files, calculate the size of each chunk that must be loaded in memory, considering the number of bands and the timeline's length. Chunk access is optimized for the efficient transfer of data blocks.
+2. Divide the total memory available by the chunk size to determine how many processes can run in parallel. 
+3. Each core processes a chunk and produces a subset of the result.
+4. Repeat the process until all chunks in the cube have been processed.
+5. Check that subimages have been produced correctly. If there is a problem with one or more subimages, run a failure recovery procedure to ensure all data is processed.
+6. After generating all subimages, join them to obtain the result.
+
+```{r par, out.width = "90%", out.height = "90%", echo = FALSE, fig.align="center", fig.cap="Parallel processing in sits (Source: Simoes et al. (2021).  Reproduction under fair use doctrine)."}
+knitr::include_graphics("images/sits_parallel.png")
+```
+
+This approach has many advantages. It has no dependencies on proprietary software and runs in any virtual machine that supports R. Processing is done in a concurrent and independent way, with no communication between workers. Failure of one worker does not cause the failure of big data processing. The software is prepared to resume classification processing from the last processed chunk, preventing failures such as memory exhaustion, power supply interruption, or network breakdown. 
+
+To reduce processing time, it is necessary to adjust `sits_classify()`, `sits_smooth()`, and `sits_label_classification()`  according to the capabilities of the host environment. The `memsize` parameter controls the size of the main memory (in GBytes) to be used for classification. A practical approach is to set `memsize` to the maximum memory available in the virtual machine for classification and to choose `multicores` as the largest number of cores available. Based on the memory available and the size of blocks in COG files, `sits` will access the images in an optimized way. In this way, `sits` tries to ensure the best possible use of the available resources. 
