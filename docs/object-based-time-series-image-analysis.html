@@ -161,7 +161,7 @@
 <h2>Example of SLIC-based segmentation and classification<a class="anchor" aria-label="anchor" href="#example-of-slic-based-segmentation-and-classification"><i class="fas fa-link"></i></a>
 </h2>
 <p>To show an example of SLIC-based segmentation, we first build a data cube, using images available in the <code>sitsdata</code> package.</p>
-<div class="sourceCode" id="cb174"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb163"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># directory where files are located</span></span>
 <span><span class="va">data_dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html">system.file</a></span><span class="op">(</span><span class="st">"extdata/Rondonia-20LKP"</span>, package <span class="op">=</span> <span class="st">"sitsdata"</span><span class="op">)</span></span>
 <span><span class="co"># Builds a cube based on existing files</span></span>
@@ -173,14 +173,14 @@
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">s2_cube</span>, red <span class="op">=</span> <span class="st">"B11"</span>, green <span class="op">=</span> <span class="st">"B8A"</span>, blue <span class="op">=</span> <span class="st">"B02"</span>, date <span class="op">=</span> <span class="st">"2020-09-24"</span><span class="op">)</span></span></code></pre></div>
 <div class="figure" style="text-align: center">
-<span style="display:block;" id="fig:unnamed-chunk-160"></span>
-<img src="sitsbook_files/figure-html/unnamed-chunk-160-1.png" alt="Sentinel-2 image in an area of Rondonia in Brazil" width="100%"><p class="caption">
+<span style="display:block;" id="fig:unnamed-chunk-159"></span>
+<img src="sitsbook_files/figure-html/unnamed-chunk-159-1.png" alt="Sentinel-2 image in an area of Rondonia in Brazil" width="100%"><p class="caption">
 Figure 91: Sentinel-2 image in an area of Rondonia in Brazil
 </p>
 </div>
 <p>Given that the SLIC algorithm uses a single date and that the date of “2020-09-04” is cloud-free and is close to the end of the dry season in Amazonia, it is selected as a suitable date for the segmentation.</p>
 <p>The following example produces a segmented image.</p>
-<div class="sourceCode" id="cb175"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb164"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># segment a cube using</span></span>
 <span><span class="va">segments_20LKP</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_segment.html">sits_segment</a></span><span class="op">(</span></span>
 <span>  cube <span class="op">=</span> <span class="va">s2_cube</span>,</span>
@@ -197,14 +197,14 @@ Figure 91: Sentinel-2 image in an area of Rondonia in Brazil
 <span>  <span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p>It is useful to visualize the segments together with the RGB image using <code><a href="https://rdrr.io/pkg/sits/man/sits_view.html">sits_view()</a></code>.</p>
-<div class="sourceCode" id="cb176"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb165"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_view.html">sits_view</a></span><span class="op">(</span><span class="va">s2_cube</span>,</span>
 <span>  red <span class="op">=</span> <span class="st">"B11"</span>, green <span class="op">=</span> <span class="st">"B8A"</span>, blue <span class="op">=</span> <span class="st">"B02"</span>,</span>
 <span>  date <span class="op">=</span> <span class="st">"2020-09-24"</span>, segments <span class="op">=</span> <span class="va">segments_20LKP</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <div class="inline-figure"><img src="images/view_segments_RGB_detail.png" width="90%" style="display: block; margin: auto;"></div>
 <p>After obtaining the segments, the next step is to obtain one time series per segment. Each time series will represent one entire object and will be classified independently. To do this, use <code><a href="https://rdrr.io/pkg/sits/man/sits_get_data.html">sits_get_data()</a></code> passing the segments as the samples. See Chapter “Working with time series” for a detailed description of <code><a href="https://rdrr.io/pkg/sits/man/sits_get_data.html">sits_get_data()</a></code>.</p>
-<div class="sourceCode" id="cb177"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb166"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">time_series_segments</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_get_data.html">sits_get_data</a></span><span class="op">(</span></span>
 <span>  cube <span class="op">=</span> <span class="va">s2_cube</span>,</span>
 <span>  samples <span class="op">=</span> <span class="va">segments_20LKP</span>,</span>
@@ -213,21 +213,21 @@ Figure 91: Sentinel-2 image in an area of Rondonia in Brazil
 <span><span class="co"># show the output</span></span>
 <span><span class="va">time_series_segments</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">4</span>, <span class="op">]</span></span></code></pre></div>
 <pre class="sourceCode"><code>#&gt; # A tibble: 4 × 9
-#&gt;   longitude latitude start_date end_date   label   cube       tile  polygon_id time_series
-#&gt;       &lt;dbl&gt;    &lt;dbl&gt; &lt;date&gt;     &lt;date&gt;     &lt;chr&gt;   &lt;chr&gt;      &lt;chr&gt;      &lt;dbl&gt; &lt;list&gt;     
-#&gt; 1     -65.2    -10.7 2020-06-04 2021-08-26 NoClass SENTINEL-… 20LKP         25 &lt;tibble&gt;   
-#&gt; 2     -65.2    -10.7 2020-06-04 2021-08-26 NoClass SENTINEL-… 20LKP         21 &lt;tibble&gt;   
-#&gt; 3     -65.2    -10.6 2020-06-04 2021-08-26 NoClass SENTINEL-… 20LKP          6 &lt;tibble&gt;   
-#&gt; 4     -65.2    -10.6 2020-06-04 2021-08-26 NoClass SENTINEL-… 20LKP          8 &lt;tibble&gt;</code></pre>
+#&gt;   longitude latitude start_date end_date   label   cube        tile  polygon_id time_series
+#&gt;       &lt;dbl&gt;    &lt;dbl&gt; &lt;date&gt;     &lt;date&gt;     &lt;chr&gt;   &lt;chr&gt;       &lt;chr&gt;      &lt;dbl&gt; &lt;list&gt;     
+#&gt; 1     -65.2    -10.7 2020-06-04 2021-08-26 NoClass SENTINEL-2… 20LKP         25 &lt;tibble&gt;   
+#&gt; 2     -65.2    -10.7 2020-06-04 2021-08-26 NoClass SENTINEL-2… 20LKP         21 &lt;tibble&gt;   
+#&gt; 3     -65.2    -10.6 2020-06-04 2021-08-26 NoClass SENTINEL-2… 20LKP          6 &lt;tibble&gt;   
+#&gt; 4     -65.2    -10.6 2020-06-04 2021-08-26 NoClass SENTINEL-2… 20LKP          8 &lt;tibble&gt;</code></pre>
 <p>The <code>time_series_segments</code> object is a standard <code>sits</code> time series. For each segment, it contains the latitude/longitude of its geometrical centroid, the start and end dates of the cube. Its time series values will be computed as the average of all pixels inside the segment.</p>
 <p>After obtaining the segments, the next step is building the machine learning model. This model will use training samples selected by INPE’s researchers that describe the various land classes in the state of Rondonia; these samples are available in package <code>sitsdata</code>.</p>
-<div class="sourceCode" id="cb179"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb168"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">samples_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html">system.file</a></span><span class="op">(</span><span class="st">"extdata/Rondonia-model/samples.rds"</span>, package <span class="op">=</span> <span class="st">"sitsdata"</span><span class="op">)</span></span>
 <span><span class="va">samples</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html">readRDS</a></span><span class="op">(</span><span class="va">samples_file</span><span class="op">)</span></span>
 <span><span class="co"># select the bands to match those of the data cube</span></span>
 <span><span class="va">samples_3bands</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_select.html">sits_select</a></span><span class="op">(</span><span class="va">samples</span>, bands <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"B02"</span>, <span class="st">"B11"</span>, <span class="st">"B8A"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>Using the samples, we can now obtain a machine learning model and apply it to classify the time series associated to the segments.</p>
-<div class="sourceCode" id="cb180"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb169"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Obtain a random forest model</span></span>
 <span><span class="va">rf_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_train.html">sits_train</a></span><span class="op">(</span><span class="va">samples_3bands</span>, <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_rfor.html">sits_rfor</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co"># classify the time series segments</span></span>
@@ -239,18 +239,18 @@ Figure 91: Sentinel-2 image in an area of Rondonia in Brazil
 <span><span class="co">### show the first time series segments classified</span></span>
 <span><span class="va">time_series_class</span><span class="op">$</span><span class="va">predicted</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span></code></pre></div>
 <pre class="sourceCode"><code>#&gt; # A tibble: 1 × 10
-#&gt;   from       to         class     Bare_Soil ClearCut_BareSoil ClearCut_Burn ClearCut_Veg
-#&gt;   &lt;date&gt;     &lt;date&gt;     &lt;chr&gt;         &lt;dbl&gt;             &lt;dbl&gt;         &lt;dbl&gt;        &lt;dbl&gt;
-#&gt; 1 2020-06-04 2021-08-26 Bare_Soil       0.8               0.2             0            0
-#&gt; # ℹ 3 more variables: Forest &lt;dbl&gt;, Water &lt;dbl&gt;, Wetlands &lt;dbl&gt;</code></pre>
+#&gt;   from       to         class Bare_Soil ClearCut_BareSoil ClearCut_Burn ClearCut_Veg Forest
+#&gt;   &lt;date&gt;     &lt;date&gt;     &lt;chr&gt;     &lt;dbl&gt;             &lt;dbl&gt;         &lt;dbl&gt;        &lt;dbl&gt;  &lt;dbl&gt;
+#&gt; 1 2020-06-04 2021-08-26 Bare…       0.8               0.2             0            0      0
+#&gt; # ℹ 2 more variables: Water &lt;dbl&gt;, Wetlands &lt;dbl&gt;</code></pre>
 <p>The result of the classification is time series tibble, with an additional column called “predicted” that contains the most likely class for each pixel (in this case “Forest”), with the probabilities associated to each class. After obtaining the classes for the centroids of each object, it is useful to join the resulting time series tibble with the original segments using <code><a href="https://rdrr.io/pkg/sits/man/sits_join_segments.html">sits_join_segments()</a></code>. The result of this function is a set of labelled segments, which can be used by other R applications such as <code>sf</code> and can also be viewed in <code>sits</code>.</p>
-<div class="sourceCode" id="cb182"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb171"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">labelled_segments</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_join_segments.html">sits_join_segments</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="va">time_series_class</span>,</span>
 <span>  segments <span class="op">=</span> <span class="va">segments_20LKP</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p>To view the classified segments together with the original image, use <code><a href="https://rdrr.io/r/graphics/plot.default.html">plot()</a></code> or <code><a href="https://rdrr.io/pkg/sits/man/sits_view.html">sits_view()</a></code>, as in the following example.</p>
-<div class="sourceCode" id="cb183"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb172"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_view.html">sits_view</a></span><span class="op">(</span></span>
 <span>  <span class="va">s2_cube</span>,</span>
 <span>  red <span class="op">=</span> <span class="st">"B11"</span>,</span>
