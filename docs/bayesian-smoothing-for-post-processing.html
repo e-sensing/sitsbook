@@ -121,7 +121,7 @@ For each pixel <span class="math inline">\(i\)</span>, we consider that the mach
 <p><span class="math display">\[
 \pi(\mu_{i,k}|x_{i,k}) \propto{} \pi(x_{i,k}|\mu_{i,k})\pi(\mu_{i,k}).
 \]</span></p>
-<p>The first step in the Bayesian approach is to specify the prior probability density <span class="math inline">\(\pi(\mu_{i,k})\)</span> for the values of logits of each class <span class="math inline">\(k\)</span> for each pixel <span class="math inline">\(i\)</span>. A well-known approach is to use the local behaviour of the observed values <span class="math inline">\(x_{i,k}\)</span> and express the prior probability as a function of the observations in the vicinity of pixel <span class="math inline">\(i\)</span> <span class="citation"><a href="references.html#ref-Besag1991">[78]</a></span>. We assume a normal local prior for the parameter <span class="math inline">\(\mu_{i,k}\)</span> with parameters <span class="math inline">\(m_{i,k}\)</span> and <span class="math inline">\(s^2_{i,k}\)</span>:</p>
+<p>The first step in the Bayesian approach is to specify the prior probability density <span class="math inline">\(\pi(\mu_{i,k})\)</span> for the values of logits of each class <span class="math inline">\(k\)</span> for each pixel <span class="math inline">\(i\)</span>. A well-known approach is to use the local behaviour of the observed values <span class="math inline">\(x_{i,k}\)</span> and express the prior probability as a function of the observations in the vicinity of pixel <span class="math inline">\(i\)</span> <span class="citation"><a href="references.html#ref-Besag1991">[79]</a></span>. We assume a normal local prior for the parameter <span class="math inline">\(\mu_{i,k}\)</span> with parameters <span class="math inline">\(m_{i,k}\)</span> and <span class="math inline">\(s^2_{i,k}\)</span>:</p>
 <p><span class="math display">\[
     \mu_{i,k} \sim N(m_{i,k}, s^2_{i,k}).
 \]</span></p>
@@ -177,7 +177,7 @@ x_{i,k} +
 </h2>
 <p>To run Bayesian smoothing, we use <code><a href="https://rdrr.io/pkg/sits/man/sits_smooth.html">sits_smooth()</a></code> with parameters: (a) <code>cube</code>, a probability cube produced by <code><a href="https://rdrr.io/pkg/sits/man/sits_classify.html">sits_classify()</a></code>; (b) <code>window_size</code>, the local window to compute the neighborhood probabilities; (d) <code>neigh_fraction</code>, fraction of local neighbors used to calculate local statistics; (e) <code>smoothness</code>, a vector with estimates of the prior variance of each class; (f) <code>multicores</code>, number of CPU cores that will be used for processing; (g) <code>memsize</code>, memory available for classification; (h) <code>output_dir</code>, a directory where results will be stored; (i) <code>version</code>, for version control. The resulting cube can be visualized with <code><a href="https://rdrr.io/r/graphics/plot.default.html">plot()</a></code>. In what follows, we compare the smoothing effect by varying the <code>window_size</code> and <code>smoothness</code> parameters.</p>
 <p>Together, the parameters <code>window_size</code> and <code>neigh_fraction</code> control how many pixels in a neighborhood the Bayesian estimator will use to calculate the local statistics. For example, setting <code>window size</code> to <span class="math inline">\(7\)</span> and <code>neigh_fraction</code> to <span class="math inline">\(0.50\)</span> (the defaults) ensures that <span class="math inline">\(25\)</span> samples are used to estimate the local statistics.</p>
-<div class="sourceCode" id="cb128"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb131"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># define the classes of the probability cube</span></span>
 <span><span class="va">labels</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span></span>
 <span>  <span class="st">"Water"</span>, <span class="st">"ClearCut_Burn"</span>, <span class="st">"ClearCut_Soil"</span>,</span>
@@ -198,14 +198,14 @@ x_{i,k} +
 <span><span class="co"># plot the probabilities for water and forest</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">probs_cube</span>, labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"Water"</span>, <span class="st">"Forest"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <div class="figure" style="text-align: center">
-<span style="display:block;" id="fig:unnamed-chunk-120"></span>
-<img src="sitsbook_files/figure-html/unnamed-chunk-120-1.png" alt="Probability map produced for classes Forest and Water (Source: Authors)." width="100%"><p class="caption">
-Figure 70: Probability map produced for classes Forest and Water (Source: Authors).
+<span style="display:block;" id="fig:unnamed-chunk-123"></span>
+<img src="sitsbook_files/figure-html/unnamed-chunk-123-1.png" alt="Probability map produced for classes Forest and Water (Source: Authors)." width="100%"><p class="caption">
+Figure 69: Probability map produced for classes Forest and Water (Source: Authors).
 </p>
 </div>
 <p>The probability map for class Forest shows high values associated with compact patches and linear stretches in riparian areas. By contrast, the probability map for class Water has mostly low values, except in a few places with a high chance of occurrence of this class. To further understand the behavior of the Bayesian estimator, it is helpful to examine the local variance associated with the logits of the probabilities.</p>
 <p>Our first reference is the classified map without smoothing, which shows the presence of outliers and classification errors. To obtain it, we use <code><a href="https://rdrr.io/pkg/sits/man/sits_label_classification.html">sits_label_classification()</a></code>, taking the probability map as an input, as follows.</p>
-<div class="sourceCode" id="cb129"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb132"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Generate the thematic map</span></span>
 <span><span class="va">class_map</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_label_classification.html">sits_label_classification</a></span><span class="op">(</span></span>
 <span>  cube <span class="op">=</span> <span class="va">probs_cube</span>,</span>
@@ -218,13 +218,13 @@ Figure 70: Probability map produced for classes Forest and Water (Source: Author
 <span><span class="co"># Plot the result</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">class_map</span><span class="op">)</span></span></code></pre></div>
 <div class="figure" style="text-align: center">
-<span style="display:block;" id="fig:unnamed-chunk-121"></span>
-<img src="sitsbook_files/figure-html/unnamed-chunk-121-1.png" alt="Classified map without smoothing (Source: Authors)." width="100%"><p class="caption">
-Figure 71: Classified map without smoothing (Source: Authors).
+<span style="display:block;" id="fig:unnamed-chunk-124"></span>
+<img src="sitsbook_files/figure-html/unnamed-chunk-124-1.png" alt="Classified map without smoothing (Source: Authors)." width="100%"><p class="caption">
+Figure 70: Classified map without smoothing (Source: Authors).
 </p>
 </div>
 <p>To remove the outliers and classification errors, we run a smoothing procedure where all prior variances are set to the same value of <span class="math inline">\(20\)</span>, which is relatively high compared with the maximum local class variance shown above. In this case, for most situations, the new value of the probability will be strongly influenced by the local average.</p>
-<div class="sourceCode" id="cb130"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb133"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Compute Bayesian smoothing</span></span>
 <span><span class="va">cube_smooth_w7_f05_s20</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_smooth.html">sits_smooth</a></span><span class="op">(</span></span>
 <span>  cube <span class="op">=</span> <span class="va">probs_cube</span>,</span>
@@ -240,13 +240,13 @@ Figure 71: Classified map without smoothing (Source: Authors).
 <span><span class="co"># Plot the result</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">cube_smooth_w7_f05_s20</span>, labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"Water"</span>, <span class="st">"Forest"</span><span class="op">)</span>, palette <span class="op">=</span> <span class="st">"YlGn"</span><span class="op">)</span></span></code></pre></div>
 <div class="figure" style="text-align: center">
-<span style="display:block;" id="fig:unnamed-chunk-122"></span>
-<img src="sitsbook_files/figure-html/unnamed-chunk-122-1.png" alt="Probability maps after bayesian smoothing (Source: Authors)." width="100%"><p class="caption">
-Figure 72: Probability maps after bayesian smoothing (Source: Authors).
+<span style="display:block;" id="fig:unnamed-chunk-125"></span>
+<img src="sitsbook_files/figure-html/unnamed-chunk-125-1.png" alt="Probability maps after bayesian smoothing (Source: Authors)." width="100%"><p class="caption">
+Figure 71: Probability maps after bayesian smoothing (Source: Authors).
 </p>
 </div>
 <p>Bayesian smoothing has removed some of the local variability associated with misclassified pixels that differ from their neighbors. There is a side effect: the water areas surrounded by forests have not been preserved in the forest probability map. The smoothing impact is best appreciated by comparing the labeled map produced without smoothing to the one that follows the procedure, as shown below.</p>
-<div class="sourceCode" id="cb131"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb134"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Generate the thematic map</span></span>
 <span><span class="va">defor_map_w7_f05_20</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_label_classification.html">sits_label_classification</a></span><span class="op">(</span></span>
 <span>  cube <span class="op">=</span> <span class="va">cube_smooth_w7_f05_s20</span>,</span>
@@ -258,13 +258,13 @@ Figure 72: Probability maps after bayesian smoothing (Source: Authors).
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">defor_map_w7_f05_20</span><span class="op">)</span></span></code></pre></div>
 <div class="figure" style="text-align: center">
-<span style="display:block;" id="fig:unnamed-chunk-123"></span>
-<img src="sitsbook_files/figure-html/unnamed-chunk-123-1.png" alt="Final classification map after Bayesian smoothing with 7 x 7 window, using neigh_fraction = 0.5 and smoothness = 20 (Source: Authors)." width="100%"><p class="caption">
-Figure 73: Final classification map after Bayesian smoothing with 7 x 7 window, using neigh_fraction = 0.5 and smoothness = 20 (Source: Authors).
+<span style="display:block;" id="fig:unnamed-chunk-126"></span>
+<img src="sitsbook_files/figure-html/unnamed-chunk-126-1.png" alt="Final classification map after Bayesian smoothing with 7 x 7 window, using neigh_fraction = 0.5 and smoothness = 20 (Source: Authors)." width="100%"><p class="caption">
+Figure 72: Final classification map after Bayesian smoothing with 7 x 7 window, using neigh_fraction = 0.5 and smoothness = 20 (Source: Authors).
 </p>
 </div>
 <p>In the smoothed map, the outliers have been removed by expanding forest areas. Forests have replaced small corridors of water and soil encircled by trees. This effect is due to the high probability of forest detection in the training data. To keep the water areas and reduce the expansion of the forest area, a viable alternative is to reduce the smoothness (<span class="math inline">\(\sigma^2\)</span>) for Forest and Water classes. In this way, the local influence of the forest in the other classes is reduced. As for the water areas, since they are narrow, their neighborhoods will have many low probability values, which would reduce the expected value of the Bayesian estimator.</p>
-<div class="sourceCode" id="cb132"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb135"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Reduce smoothing for classes Water and Forest</span></span>
 <span><span class="co"># Labels:  "Water", "ClearCut_Burn", "ClearCut_Soil",</span></span>
 <span><span class="co">#          "ClearCut_Veg", "Forest", "Wetland"</span></span>
@@ -292,9 +292,9 @@ Figure 73: Final classification map after Bayesian smoothing with 7 x 7 window, 
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">defor_map_w7_f05_swf</span><span class="op">)</span></span></code></pre></div>
 <div class="figure" style="text-align: center">
-<span style="display:block;" id="fig:unnamed-chunk-124"></span>
-<img src="sitsbook_files/figure-html/unnamed-chunk-124-1.png" alt="Probability maps after Bayesian smoothing with 7 x 7 window with low smoothness for classes Water and Forest (Source: Authors)." width="100%"><p class="caption">
-Figure 74: Probability maps after Bayesian smoothing with 7 x 7 window with low smoothness for classes Water and Forest (Source: Authors).
+<span style="display:block;" id="fig:unnamed-chunk-127"></span>
+<img src="sitsbook_files/figure-html/unnamed-chunk-127-1.png" alt="Probability maps after Bayesian smoothing with 7 x 7 window with low smoothness for classes Water and Forest (Source: Authors)." width="100%"><p class="caption">
+Figure 73: Probability maps after Bayesian smoothing with 7 x 7 window with low smoothness for classes Water and Forest (Source: Authors).
 </p>
 </div>
 <p>Comparing the two maps, the narrow water streams inside the forest area have been better preserved. Small corridors between forest areas have also been maintained. For A better comparison between the two maps requires importing them into QGIS.</p>
@@ -330,7 +330,7 @@ Figure 74: Probability maps after Bayesian smoothing with 7 x 7 window with low 
 <footer class="bg-primary text-light mt-5"><div class="container"><div class="row">
 
   <div class="col-12 col-md-6 mt-3">
-    <p>"<strong><strong>sits</strong>: Satellite Image Time Series Analysis on Earth Observation Data Cubes</strong>" was written by Gilberto Camara, Rolf Simoes, Felipe Souza, Charlotte Pelletier, Alber Sanchez, Pedro R. Andrade, Karine Ferreira, Gilberto Queiroz. It was last built on 2023-06-19.</p>
+    <p>"<strong><strong>sits</strong>: Satellite Image Time Series Analysis on Earth Observation Data Cubes</strong>" was written by Gilberto Camara, Rolf Simoes, Felipe Souza, Charlotte Pelletier, Alber Sanchez, Pedro R. Andrade, Karine Ferreira, Gilberto Queiroz. It was last built on 2023-06-21.</p>
   </div>
 
   <div class="col-12 col-md-6 mt-3">

@@ -104,12 +104,35 @@
 <h1>Technical Annex<a class="anchor" aria-label="anchor" href="#technical-annex"><i class="fas fa-link"></i></a>
 </h1>
 <p>This Chapter contains technical details on the algorithms available in <code>sits</code>. It is intended to support those that want to understand how the package works and also want to contribute to its development.</p>
+<div id="how-parallel-processing-works" class="section level2 unnumbered">
+<h2>How parallel processing works<a class="anchor" aria-label="anchor" href="#how-parallel-processing-works"><i class="fas fa-link"></i></a>
+</h2>
+<p>This section provides an overview of how <code><a href="https://rdrr.io/pkg/sits/man/sits_classify.html">sits_classify()</a></code>, <code><a href="https://rdrr.io/pkg/sits/man/sits_smooth.html">sits_smooth()</a></code>, and <code><a href="https://rdrr.io/pkg/sits/man/sits_label_classification.html">sits_label_classification()</a></code> process images in parallel. To achieve efficiency, <code>sits</code> implements a fault-tolerant multitasking procedure for big Earth observation data classification. The learning curve is shortened as there is no need to learn how to do multiprocessing. Image classification in <code>sits</code> is done by a cluster of independent workers linked to a virtual machine. To avoid communication overhead, all large payloads are read and stored independently; direct interaction between the main process and the workers is kept at a minimum.</p>
+<p>The classification procedure benefits from the fact that most images available in cloud collections are stored as COGs (cloud-optimized GeoTIFF). COGs are regular GeoTIFF files organized in regular square blocks to improve visualization and access for large data sets. Thus, data requests can be optimized to access only portions of the images. All cloud services supported by <code>sits</code> use COG files. The classification algorithm in <code>sits</code> uses COGs to ensure optimal data access, reducing I/O demand as much as possible.</p>
+<p>The approach for parallel processing in <code>sits</code>, depicted in Figure <a href="technical-annex.html#fig:par">91</a>, has the following steps:</p>
+<ol style="list-style-type: decimal">
+<li>Based on the block size of individual COG files, calculate the size of each chunk that must be loaded in memory, considering the number of bands and the timeline’s length. Chunk access is optimized for the efficient transfer of data blocks.</li>
+<li>Divide the total memory available by the chunk size to determine how many processes can run in parallel.</li>
+<li>Each core processes a chunk and produces a subset of the result.</li>
+<li>Repeat the process until all chunks in the cube have been processed.</li>
+<li>Check that subimages have been produced correctly. If there is a problem with one or more subimages, run a failure recovery procedure to ensure all data is processed.</li>
+<li>After generating all subimages, join them to obtain the result.</li>
+</ol>
+<div class="figure" style="text-align: center">
+<span style="display:block;" id="fig:par"></span>
+<img src="images/sits_parallel.png" alt="Parallel processing in sits (Source: Simoes et al. (2021).  Reproduction under fair use doctrine)." width="90%" height="90%"><p class="caption">
+Figure 91: Parallel processing in sits (Source: Simoes et al. (2021). Reproduction under fair use doctrine).
+</p>
+</div>
+<p>This approach has many advantages. It has no dependencies on proprietary software and runs in any virtual machine that supports R. Processing is done in a concurrent and independent way, with no communication between workers. Failure of one worker does not cause the failure of big data processing. The software is prepared to resume classification processing from the last processed chunk, preventing failures such as memory exhaustion, power supply interruption, or network breakdown.</p>
+<p>To reduce processing time, it is necessary to adjust <code><a href="https://rdrr.io/pkg/sits/man/sits_classify.html">sits_classify()</a></code>, <code><a href="https://rdrr.io/pkg/sits/man/sits_smooth.html">sits_smooth()</a></code>, and <code><a href="https://rdrr.io/pkg/sits/man/sits_label_classification.html">sits_label_classification()</a></code> according to the capabilities of the host environment. The <code>memsize</code> parameter controls the size of the main memory (in GBytes) to be used for classification. A practical approach is to set <code>memsize</code> to the maximum memory available in the virtual machine for classification and to choose <code>multicores</code> as the largest number of cores available. Based on the memory available and the size of blocks in COG files, <code>sits</code> will access the images in an optimized way. In this way, <code>sits</code> tries to ensure the best possible use of the available resources.</p>
+</div>
 <div id="including-new-methods-for-machine-learning" class="section level2 unnumbered">
 <h2>Including new methods for machine learning<a class="anchor" aria-label="anchor" href="#including-new-methods-for-machine-learning"><i class="fas fa-link"></i></a>
 </h2>
 <p>This section provides guidance for experts that want to include new methods for machine learning that work in connection with <code>sits</code>. The discussion below assumes familiarity with the R language. Developers should consult Hadley Wickham’s excellent book <a href="https://adv-r.hadley.nz/">Advanced R</a>, especially Chapter 10 on “Function Factories”.</p>
 <p>All machine learning and deep learning algorithm in <code>sits</code> follow the same logic; all models are created by <code><a href="https://rdrr.io/pkg/sits/man/sits_train.html">sits_train()</a></code>. This function has two parameters: (a) <code>samples</code>, a set of time series with the training samples; (b) <code>ml_method</code>, a function that fits the model to the input data. The result is a function that is passed on to <code><a href="https://rdrr.io/pkg/sits/man/sits_classify.html">sits_classify()</a></code> to classify time series or data cubes. The structure of <code><a href="https://rdrr.io/pkg/sits/man/sits_train.html">sits_train()</a></code> is simple, as shown below.</p>
-<div class="sourceCode" id="cb173"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb176"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sits_train</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">samples</span>, <span class="va">ml_method</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="co"># train a ml classifier with the given data</span></span>
 <span>  <span class="va">result</span> <span class="op">&lt;-</span> <span class="fu">ml_method</span><span class="op">(</span><span class="va">samples</span><span class="op">)</span></span>
@@ -120,42 +143,42 @@
 <p>The following definition from Wikipedia captures the purpose of clousures: <em>“Operationally, a closure is a record storing a function together with an environment. The environment is a mapping associating each free variable of the function with the value or reference to which the name was bound when the closure was created. A closure allows the function to access those captured variables through the closure’s copies of their values or references, even when the function is invoked outside their scope.”</em></p>
 <p>In <code>sits</code>, the properties of closures are used as a basis for making training and classification independent. The return of <code><a href="https://rdrr.io/pkg/sits/man/sits_train.html">sits_train()</a></code> is a model that contains information on how to classify input values, as well as information on the samples used to train the model.</p>
 <p>To ensure all models work in the same fashion, machine learning functions in <code>sits</code> also share the same data structure for prediction. This data structure is created by <code><a href="https://rdrr.io/pkg/sits/man/sits_predictors.html">sits_predictors()</a></code>, which transforms the time series tibble into a set of values suitable for using as training data, as shown in the following example.</p>
-<div class="sourceCode" id="cb174"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb177"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html">data</a></span><span class="op">(</span><span class="st">"samples_matogrosso_mod13q1"</span>, package <span class="op">=</span> <span class="st">"sitsdata"</span><span class="op">)</span></span>
 <span><span class="va">pred</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_predictors.html">sits_predictors</a></span><span class="op">(</span><span class="va">samples_matogrosso_mod13q1</span><span class="op">)</span></span>
 <span><span class="va">pred</span></span></code></pre></div>
 <pre class="sourceCode"><code>#&gt; # A tibble: 1,837 × 94
-#&gt;    sample_id label   NDVI1 NDVI2 NDVI3 NDVI4 NDVI5 NDVI6 NDVI7 NDVI8 NDVI9 NDVI10 NDVI11
-#&gt;        &lt;int&gt; &lt;chr&gt;   &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;
-#&gt;  1         1 Pasture 0.500 0.485 0.716 0.654 0.591 0.662 0.734 0.739 0.768  0.797  0.798
-#&gt;  2         2 Pasture 0.364 0.484 0.605 0.726 0.778 0.829 0.762 0.762 0.643  0.610  0.578
-#&gt;  3         3 Pasture 0.577 0.674 0.639 0.569 0.596 0.623 0.650 0.650 0.637  0.646  0.655
-#&gt;  4         4 Pasture 0.597 0.699 0.789 0.792 0.794 0.72  0.646 0.705 0.757  0.810  0.757
-#&gt;  5         5 Pasture 0.388 0.491 0.527 0.660 0.677 0.746 0.816 0.816 0.825  0.835  0.844
-#&gt;  6         6 Pasture 0.350 0.345 0.364 0.429 0.506 0.583 0.660 0.616 0.580  0.651  0.620
-#&gt;  7         7 Pasture 0.490 0.527 0.543 0.583 0.594 0.605 0.616 0.627 0.622  0.644  0.666
-#&gt;  8         8 Pasture 0.435 0.574 0.395 0.392 0.518 0.597 0.648 0.774 0.786  0.798  0.811
-#&gt;  9         9 Pasture 0.396 0.473 0.542 0.587 0.649 0.697 0.696 0.695 0.699  0.703  0.714
-#&gt; 10        10 Pasture 0.354 0.387 0.527 0.577 0.626 0.723 0.655 0.655 0.646  0.536  0.544
+#&gt;    sample_id label  NDVI1 NDVI2 NDVI3 NDVI4 NDVI5 NDVI6 NDVI7 NDVI8 NDVI9 NDVI10
+#&gt;        &lt;int&gt; &lt;chr&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt;
+#&gt;  1         1 Pastu… 0.500 0.485 0.716 0.654 0.591 0.662 0.734 0.739 0.768  0.797
+#&gt;  2         2 Pastu… 0.364 0.484 0.605 0.726 0.778 0.829 0.762 0.762 0.643  0.610
+#&gt;  3         3 Pastu… 0.577 0.674 0.639 0.569 0.596 0.623 0.650 0.650 0.637  0.646
+#&gt;  4         4 Pastu… 0.597 0.699 0.789 0.792 0.794 0.72  0.646 0.705 0.757  0.810
+#&gt;  5         5 Pastu… 0.388 0.491 0.527 0.660 0.677 0.746 0.816 0.816 0.825  0.835
+#&gt;  6         6 Pastu… 0.350 0.345 0.364 0.429 0.506 0.583 0.660 0.616 0.580  0.651
+#&gt;  7         7 Pastu… 0.490 0.527 0.543 0.583 0.594 0.605 0.616 0.627 0.622  0.644
+#&gt;  8         8 Pastu… 0.435 0.574 0.395 0.392 0.518 0.597 0.648 0.774 0.786  0.798
+#&gt;  9         9 Pastu… 0.396 0.473 0.542 0.587 0.649 0.697 0.696 0.695 0.699  0.703
+#&gt; 10        10 Pastu… 0.354 0.387 0.527 0.577 0.626 0.723 0.655 0.655 0.646  0.536
 #&gt; # ℹ 1,827 more rows
-#&gt; # ℹ 81 more variables: NDVI12 &lt;dbl&gt;, NDVI13 &lt;dbl&gt;, NDVI14 &lt;dbl&gt;, NDVI15 &lt;dbl&gt;,
-#&gt; #   NDVI16 &lt;dbl&gt;, NDVI17 &lt;dbl&gt;, NDVI18 &lt;dbl&gt;, NDVI19 &lt;dbl&gt;, NDVI20 &lt;dbl&gt;, NDVI21 &lt;dbl&gt;,
-#&gt; #   NDVI22 &lt;dbl&gt;, NDVI23 &lt;dbl&gt;, EVI1 &lt;dbl&gt;, EVI2 &lt;dbl&gt;, EVI3 &lt;dbl&gt;, EVI4 &lt;dbl&gt;,
-#&gt; #   EVI5 &lt;dbl&gt;, EVI6 &lt;dbl&gt;, EVI7 &lt;dbl&gt;, EVI8 &lt;dbl&gt;, EVI9 &lt;dbl&gt;, EVI10 &lt;dbl&gt;, EVI11 &lt;dbl&gt;,
-#&gt; #   EVI12 &lt;dbl&gt;, EVI13 &lt;dbl&gt;, EVI14 &lt;dbl&gt;, EVI15 &lt;dbl&gt;, EVI16 &lt;dbl&gt;, EVI17 &lt;dbl&gt;,
-#&gt; #   EVI18 &lt;dbl&gt;, EVI19 &lt;dbl&gt;, EVI20 &lt;dbl&gt;, EVI21 &lt;dbl&gt;, EVI22 &lt;dbl&gt;, EVI23 &lt;dbl&gt;, …</code></pre>
+#&gt; # ℹ 82 more variables: NDVI11 &lt;dbl&gt;, NDVI12 &lt;dbl&gt;, NDVI13 &lt;dbl&gt;, NDVI14 &lt;dbl&gt;,
+#&gt; #   NDVI15 &lt;dbl&gt;, NDVI16 &lt;dbl&gt;, NDVI17 &lt;dbl&gt;, NDVI18 &lt;dbl&gt;, NDVI19 &lt;dbl&gt;,
+#&gt; #   NDVI20 &lt;dbl&gt;, NDVI21 &lt;dbl&gt;, NDVI22 &lt;dbl&gt;, NDVI23 &lt;dbl&gt;, EVI1 &lt;dbl&gt;,
+#&gt; #   EVI2 &lt;dbl&gt;, EVI3 &lt;dbl&gt;, EVI4 &lt;dbl&gt;, EVI5 &lt;dbl&gt;, EVI6 &lt;dbl&gt;, EVI7 &lt;dbl&gt;,
+#&gt; #   EVI8 &lt;dbl&gt;, EVI9 &lt;dbl&gt;, EVI10 &lt;dbl&gt;, EVI11 &lt;dbl&gt;, EVI12 &lt;dbl&gt;, EVI13 &lt;dbl&gt;,
+#&gt; #   EVI14 &lt;dbl&gt;, EVI15 &lt;dbl&gt;, EVI16 &lt;dbl&gt;, EVI17 &lt;dbl&gt;, EVI18 &lt;dbl&gt;, …</code></pre>
 <p>The predictors tibble is organized as a combination of the “X” and “Y” values used by machine learning algorithms. The first two columns are <code>sample_id</code> and <code>label</code>. The other columns contain the data values, organized by band and time. For machine learning methods that are not time-sensitive, such as random forest, this organization is sufficient for training. In the case of time-sensitive methods such as <code>tempCNN</code>, further arrangements are necessary to ensure the tensors have the right dimensions. Please refer to the <code><a href="https://rdrr.io/pkg/sits/man/sits_tempcnn.html">sits_tempcnn()</a></code> source code for an example of how to adapt the prediction table to appropriate <code>torch</code> tensor.</p>
 <p>Most algorithms require data normalization. Therefore, the <code><a href="https://rdrr.io/pkg/sits/man/sits_predictors.html">sits_predictors()</a></code> code is usually combined with methods that extract statistical information and then normalize the data, as in the example below.</p>
-<div class="sourceCode" id="cb176"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb179"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Data normalization</span></span>
 <span><span class="va">ml_stats</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_stats.html">sits_stats</a></span><span class="op">(</span><span class="va">samples</span><span class="op">)</span></span>
 <span><span class="co"># extract the training samples</span></span>
 <span><span class="va">train_samples</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_predictors.html">sits_predictors</a></span><span class="op">(</span><span class="va">samples</span><span class="op">)</span></span>
 <span><span class="co"># normalize the training samples</span></span>
 <span><span class="va">train_samples</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_pred_normalize.html">sits_pred_normalize</a></span><span class="op">(</span>pred <span class="op">=</span> <span class="va">train_samples</span>, stats <span class="op">=</span> <span class="va">ml_stats</span><span class="op">)</span></span></code></pre></div>
-<p>The following example shows the implementation of the LightGBM algorithm, designed to efficiently handle large-scale datasets and perform fast training and inference <span class="citation"><a href="references.html#ref-Ke2017">[92]</a></span>. Gradient boosting is a machine learning technique that builds an ensemble of weak prediction models, typically decision trees, to create a stronger model. LightGBM specifically focuses on optimizing the training and prediction speed, making it particularly suitable for large datasets. The example builds a model using the <code>lightgbm</code> package. This model will then be applied later to obtain a classification.</p>
+<p>The following example shows the implementation of the LightGBM algorithm, designed to efficiently handle large-scale datasets and perform fast training and inference <span class="citation"><a href="references.html#ref-Ke2017">[93]</a></span>. Gradient boosting is a machine learning technique that builds an ensemble of weak prediction models, typically decision trees, to create a stronger model. LightGBM specifically focuses on optimizing the training and prediction speed, making it particularly suitable for large datasets. The example builds a model using the <code>lightgbm</code> package. This model will then be applied later to obtain a classification.</p>
 <p>Since LightGBM is a gradient boosting model, it uses part of the data as testing data to improve the model’s performance. The split between the training and test samples is controlled by a parameter, as shown in the following code extract.</p>
-<div class="sourceCode" id="cb177"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb180"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># split the data into training and validation data sets</span></span>
 <span><span class="co"># create partitions different splits of the input data</span></span>
 <span><span class="va">test_samples</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_pred_sample.html">sits_pred_sample</a></span><span class="op">(</span><span class="va">train_samples</span>,</span>
@@ -171,7 +194,7 @@ nomes das funcoes especificas. Os parametros boosting_type, objective, etc. sao 
 -->
 <p>The parameters for the <code>lightgbm</code> algorithm, as defined in its documentation, are: (a) <code>boosting_type</code>, boosting algorithm; (b) <code>objective</code>, classification objective (c) <code>num_iterations</code>, number of runs; (d) <code>max_depth</code>, maximum tree depth; (d) <code>min_samples_leaf</code>, minimum size of data in one leaf (to avoid overfitting); (f) <code>learning_rate</code>, learning rate of the algorithm; (g) <code>n_iter_no_change</code>, number of successive iterations to stop training when validation metrics do not improve; (h) <code>validation_split</code>, fraction of training data to be used as validation data.</p>
 <p>The training part of the <code>lightgbm</code> algorithm uses two functions: (a) <code><a href="https://rdrr.io/pkg/lightgbm/man/lgb.Dataset.html">lgb.Dataset()</a></code>, which transforms training and test samples into internal structures; (b) <code><a href="https://rdrr.io/pkg/lightgbm/man/lgb.train.html">lgb.train()</a></code>, which trains the model.</p>
-<div class="sourceCode" id="cb178"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb181"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># install "lightgbm" package if not available</span></span>
 <span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="kw"><a href="https://rdrr.io/r/base/library.html">require</a></span><span class="op">(</span><span class="st"><a href="https://github.com/Microsoft/LightGBM">"lightgbm"</a></span><span class="op">)</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html">install.packages</a></span><span class="op">(</span><span class="st">"lightgbm"</span><span class="op">)</span></span>
 <span><span class="co"># create a function in sits style for LightGBM algorithm</span></span>
@@ -268,7 +291,7 @@ nomes das funcoes especificas. Os parametros boosting_type, objective, etc. sao 
 <span><span class="op">}</span></span></code></pre></div>
 <p>The above code has two nested functions: <code>results_fun()</code> and <code>predict_fun()</code>. When <code>lgb_method()</code> is called, it transforms the input samples into predictors and normalizes them. Then, it uses these predictors to train the algorithm, creating a model (<code>result_mlr</code>). This model is included as part of the function’s closure and becomes available at classification time. Then the code creates <code>prediction_fun()</code>, which applies the <code>result_mlr</code> model to the input values to be classified. This is the function returned by <code>results_fun()</code> which contains all the necessary information for classification. At classification time, the model is called directly.</p>
 <p>The last lines of the code also include the convenience function <code><a href="https://rdrr.io/pkg/sits/man/sits_factory_function.html">sits_factory_function()</a></code>, shown below. This function allows the model to be called either as part of <code><a href="https://rdrr.io/pkg/sits/man/sits_train.html">sits_train()</a></code> or to be called independently, with the same result.</p>
-<div class="sourceCode" id="cb179"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb182"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sits_factory_function</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">samples</span>, <span class="va">fun</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="co"># if no data is given, we prepare a</span></span>
 <span>  <span class="co"># function to be called as a parameter of other functions</span></span>
@@ -281,16 +304,16 @@ nomes das funcoes especificas. Os parametros boosting_type, objective, etc. sao 
 <span>  <span class="kw"><a href="https://rdrr.io/r/base/function.html">return</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
 <p>There is one additional requirement for the algorithm to be compatible with <code>sits</code>. Data cube processing algorithms in <code>sits</code> run in parallel. For this reason, once the classification model is trained, it is serialized, as shown in the following line. The serialized version of the model is exported to the function closure, so it can be used at classification time.</p>
-<div class="sourceCode" id="cb180"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb183"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># serialize the model for parallel processing</span></span>
 <span><span class="va">lgbm_model_string</span> <span class="op">&lt;-</span> <span class="va">lgbm_model</span><span class="op">$</span><span class="fu">save_model_to_string</span><span class="op">(</span><span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
 <p>During classification, <code>predict_fun()</code> is called in parallel by each CPU. At this moment, the serialized string is transformed back into a model, which is then run to obtain the classification, as shown in the code.</p>
-<div class="sourceCode" id="cb181"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb184"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># unserialize the model</span></span>
 <span><span class="va">lgbm_model</span> <span class="op">&lt;-</span> <span class="fu">lightgbm</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/lightgbm/man/lgb.load.html">lgb.load</a></span><span class="op">(</span>model_str <span class="op">=</span> <span class="va">lgbm_model_string</span><span class="op">)</span></span></code></pre></div>
 <p>Therefore, using function factories that produce closures, <code>sits</code> keeps the classification function independent of the machine learning or deep learning algorithm. This policy allows independent proposal, testing, and development of new classification methods. It also enables improvements on parallel processing methods without affecting the existing classification methods.</p>
 <p>To illustrate this separation between training and classification, the new algorithm developed in the chapter using <code>lightgbm</code> will be used to classify a data cube. The code is the same as the one in Chapter <a href="https://e-sensing.github.io/sitsbook/introduction.html">Introduction</a> as an example of data cube classification, except for the use of <code>lgb_method()</code>.</p>
-<div class="sourceCode" id="cb182"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb185"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html">data</a></span><span class="op">(</span><span class="st">"samples_matogrosso_mod13q1"</span>, package <span class="op">=</span> <span class="st">"sitsdata"</span><span class="op">)</span></span>
 <span><span class="co"># Create a data cube using local files</span></span>
 <span><span class="va">sinop</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_cube.html">sits_cube</a></span><span class="op">(</span></span>
@@ -331,8 +354,8 @@ nomes das funcoes especificas. Os parametros boosting_type, objective, etc. sao 
 <span><span class="co"># plot the result</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">sinop_map</span>, title <span class="op">=</span> <span class="st">"Sinop Classification Map"</span><span class="op">)</span></span></code></pre></div>
 <div class="figure" style="text-align: center">
-<span style="display:block;" id="fig:unnamed-chunk-178"></span>
-<img src="sitsbook_files/figure-html/unnamed-chunk-178-1.png" alt="Classification map for Sinop using LightGBM." width="100%"><p class="caption">
+<span style="display:block;" id="fig:unnamed-chunk-181"></span>
+<img src="sitsbook_files/figure-html/unnamed-chunk-181-1.png" alt="Classification map for Sinop using LightGBM." width="100%"><p class="caption">
 Figure 92: Classification map for Sinop using LightGBM.
 </p>
 </div>
@@ -343,13 +366,13 @@ Figure 92: Classification map for Sinop using LightGBM.
 </h2>
 <p>In examples provided in the book, the color legend is taken from a predefined color table provided by <code>sits</code>. This default color table is displayed using <code><a href="https://rdrr.io/pkg/sits/man/sits_colors_show.html">sits_colors_show()</a></code>. This color definition file assigns colors to 99 class names, including the IPCC and IGBP land classes.</p>
 <div class="figure" style="text-align: center">
-<span style="display:block;" id="fig:unnamed-chunk-179"></span>
-<img src="sitsbook_files/figure-html/unnamed-chunk-179-1.png" alt="Default colors used in the sits package (Source: Authors)." width="100%" height="100%"><p class="caption">
+<span style="display:block;" id="fig:unnamed-chunk-182"></span>
+<img src="sitsbook_files/figure-html/unnamed-chunk-182-1.png" alt="Default colors used in the sits package (Source: Authors)." width="100%" height="100%"><p class="caption">
 Figure 93: Default colors used in the sits package (Source: Authors).
 </p>
 </div>
 <p>The color table can be extended or adjusted by accessing and modifying the default color table, which is retrieved using <code><a href="https://rdrr.io/pkg/sits/man/sits_colors.html">sits_colors()</a></code>.</p>
-<div class="sourceCode" id="cb183"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb186"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Retrieve the color table</span></span>
 <span><span class="va">color_tb</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_colors.html">sits_colors</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co"># Show the color table</span></span>
@@ -369,7 +392,7 @@ Figure 93: Default colors used in the sits package (Source: Authors).
 #&gt; 10 Sparse_Forest              #27AE60 Tropical_Forest
 #&gt; # ℹ 89 more rows</code></pre>
 <p>The default color table can be redefined using <code><a href="https://rdrr.io/pkg/sits/man/sits_colors_set.html">sits_colors_set()</a></code>. As an example of a user-defined color table, consider a definition that covers level 1 of the Anderson Classification System used in the US National Land Cover Data, obtained by defining a new color table, as shown below. The colors can be defined by HEX values or by names accepted as R color codes.</p>
-<div class="sourceCode" id="cb185"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb188"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Define a color table based on the Anderson Land Classification System</span></span>
 <span><span class="va">us_nlcd</span> <span class="op">&lt;-</span> <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/tibble.html">tibble</a></span><span class="op">(</span>name <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html">character</a></span><span class="op">(</span><span class="op">)</span>, color <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html">character</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">us_nlcd</span> <span class="op">&lt;-</span> <span class="va">us_nlcd</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></span></span>
@@ -387,8 +410,8 @@ Figure 93: Default colors used in the sits package (Source: Authors).
 <span><span class="co"># Show the new color table used by sits</span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_colors_show.html">sits_colors_show</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <div class="figure" style="text-align: center">
-<span style="display:block;" id="fig:unnamed-chunk-181"></span>
-<img src="sitsbook_files/figure-html/unnamed-chunk-181-1.png" alt="Example of Anderson Land Classification Scheme use in sits (Source: Authors)." width="80%" height="80%"><p class="caption">
+<span style="display:block;" id="fig:unnamed-chunk-184"></span>
+<img src="sitsbook_files/figure-html/unnamed-chunk-184-1.png" alt="Example of Anderson Land Classification Scheme use in sits (Source: Authors)." width="80%" height="80%"><p class="caption">
 Figure 94: Example of Anderson Land Classification Scheme use in sits (Source: Authors).
 </p>
 </div>
@@ -399,7 +422,7 @@ Figure 94: Example of Anderson Land Classification Scheme use in sits (Source: A
 <h2>Exporting data to JSON<a class="anchor" aria-label="anchor" href="#exporting-data-to-json"><i class="fas fa-link"></i></a>
 </h2>
 <p>Both the data cube and the time series tibble can be exported to exchange formats such as JSON.</p>
-<div class="sourceCode" id="cb186"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb189"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://arxiv.org/abs/1403.2805">jsonlite</a></span><span class="op">)</span></span>
 <span><span class="co"># Export the data cube to JSON</span></span>
 <span><span class="fu">jsonlite</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/jsonlite/man/read_json.html">write_json</a></span><span class="op">(</span></span>
@@ -424,6 +447,7 @@ Figure 94: Example of Anderson Land Classification Scheme use in sits (Source: A
     <nav id="toc" data-toggle="toc" aria-label="On this page"><h2>On this page</h2>
       <ul class="nav navbar-nav">
 <li><a class="nav-link" href="#technical-annex">Technical Annex</a></li>
+<li><a class="nav-link" href="#how-parallel-processing-works">How parallel processing works</a></li>
 <li><a class="nav-link" href="#including-new-methods-for-machine-learning">Including new methods for machine learning</a></li>
 <li><a class="nav-link" href="#how-colors-work-in-sits">How colors work in sits</a></li>
 <li><a class="nav-link" href="#exporting-data-to-json">Exporting data to JSON</a></li>
@@ -443,7 +467,7 @@ Figure 94: Example of Anderson Land Classification Scheme use in sits (Source: A
 <footer class="bg-primary text-light mt-5"><div class="container"><div class="row">
 
   <div class="col-12 col-md-6 mt-3">
-    <p>"<strong><strong>sits</strong>: Satellite Image Time Series Analysis on Earth Observation Data Cubes</strong>" was written by Gilberto Camara, Rolf Simoes, Felipe Souza, Charlotte Pelletier, Alber Sanchez, Pedro R. Andrade, Karine Ferreira, Gilberto Queiroz. It was last built on 2023-06-19.</p>
+    <p>"<strong><strong>sits</strong>: Satellite Image Time Series Analysis on Earth Observation Data Cubes</strong>" was written by Gilberto Camara, Rolf Simoes, Felipe Souza, Charlotte Pelletier, Alber Sanchez, Pedro R. Andrade, Karine Ferreira, Gilberto Queiroz. It was last built on 2023-06-21.</p>
   </div>
 
   <div class="col-12 col-md-6 mt-3">
