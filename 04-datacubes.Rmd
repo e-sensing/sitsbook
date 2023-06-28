@@ -18,7 +18,7 @@ ARD collections are available in cloud services such as Amazon Web Service, Braz
 knitr::include_graphics("images/usgs_ard_tile.png")
 ```
 
-ARD image collections are organized in spatial partitions. Sentinel-2/2A images follow the Military Grid Reference System (MGRS) tiling system, which divides the world into 60 UTM zones of 8 degrees of longitude. Each zone has blocks of 6 degrees of latitude. Blocks are split into tiles of $110 \times 110$ km$^2$ with a 10 km overlap. Figure \@ref(fig:mgrs) shows the MGRS tiling system for a part of the Northeastern coast of Brazil, contained in UTM zone 24, block M. 
+ARD image collections are organized in spatial partitions. Sentinel-2/2A images follow the Military Grid Reference System (MGRS) tiling system, which divides the world into 60 UTM zones of 8 degrees of longitude. Each zone has blocks of 6 degrees of latitude. Blocks are split into tiles of 110 $\times$ 110 km$^2$ with a 10 km overlap. Figure \@ref(fig:mgrs) shows the MGRS tiling system for a part of the Northeastern coast of Brazil, contained in UTM zone 24, block M. 
 
 ```{r mgrs, echo = FALSE, out.width="80%", fig.align="center", fig.cap="MGRS tiling system used by Sentinel-2 images (Source: GISSurfer 2.0. Reproduction based on fair use doctrine)."}
 knitr::include_graphics("images/s2_mgrs_grid.png")
@@ -57,7 +57,7 @@ All cells of a data cube have the same spatiotemporal extent. The spatial resolu
 knitr::include_graphics("images/datacube_conception.png")
 ```
 
-Currently, the only cloud service that provides regular data cubes by default is the Brazil Data Cube (BDC). ARD collections available in AWS, MSPC, USGS, and DEAFRICA are not regular in space and time. Bands may have different resolutions, images may not cover the entire time, and time intervals may be irregular. For this reason, subsets of these collections need to be converted to regular data cubes before further processing. To produce data cubes for machine-learning data analysis, users should first create an irregular data cube from an ARD collection and then use `sits_regularize()`, as described below.
+Currently, the only cloud service that provides regular data cubes by default is the Brazil Data Cube (BDC). ARD collections available in AWS, MPC, USGS, and DEAFRICA are not regular in space and time. Bands may have different resolutions, images may not cover the entire time, and time intervals may be irregular. For this reason, subsets of these collections need to be converted to regular data cubes before further processing. To produce data cubes for machine-learning data analysis, users should first create an irregular data cube from an ARD collection and then use `sits_regularize()`, as described below.
 
 ## Creating data cubes{-}
 
@@ -81,7 +81,7 @@ The result of `sits_cube()` is a tibble with a description of the selected image
 
 ## Assessing Amazon Web Services{-}
 
-Amazon Web Services (AWS) holds two kinds of collections: *open-data* and *requester-pays*. Open data collections can be accessed without cost. Requester-pays collections require payment from an AWS account. Currently, `sits` supports collection `SENTINEL-2-L2A` which is open data.  The bands in 10m resolution are `B02`, `B03`, `B04`, and `B08`. The  20m bands are `B05`, `B06`, `B07`, `B8A`, `B11`, and `B12`. Bands `B01` and `B09` are available at 60m resolution. A `CLOUD` band is also available. The example below shows how to access one tile of the open data `SENTINEL-2-L2A` collection.  The `tiles` parameter allows selecting the desired area according to the MGRS reference system. 
+Amazon Web Services (AWS) holds two kinds of collections: *open-data* and *requester-pays*. Open data collections can be accessed without cost. Requester-pays collections require payment from an AWS account. Currently, `sits` supports collection `SENTINEL-2-L2A` which is open data.  The bands in 10 m resolution are B02, B03, B04, and B08. The  20 m bands are B05, B06, B07, B8A, B11, and B12. Bands B01 and B09 are available at 60 m resolution. A CLOUD band is also available. The example below shows how to access one tile of the open data `SENTINEL-2-L2A` collection.  The `tiles` parameter allows selecting the desired area according to the MGRS reference system. 
 
 ```{r, tidy="styler", out.width="100%", fig.align="center", fig.cap= "Sentinel-2 image in an area of the Northeastern coast of Brazil."}
 # Create a data cube covering an area in Brazil
@@ -119,7 +119,7 @@ plot(s2_20LKP_cube_MPC, red = "B11", blue = "B02", green = "B8A",
 )
 ```
 
-The `LANDSAT-C2-L2` collection provides access to data from Landsat-4/5/7/8/9 satellites. Images from these satellites have been intercalibrated to ensure data consistency. For compatibility between the different Landsat sensors, the band names are `BLUE`, `GREEN`, `RED`,  `NIR08`,  `SWIR16`, and `SWIR22`. All images have 30m resolution. For this collection,  tile search is not supported; the `roi` parameter should be used. The example below shows how to retrieve data from a region of interest covering the city of Brasilia in Brazil. 
+The `LANDSAT-C2-L2` collection provides access to data from Landsat-4/5/7/8/9 satellites. Images from these satellites have been intercalibrated to ensure data consistency. For compatibility between the different Landsat sensors, the band names are BLUE, GREEN, RED,  NIR08,  SWIR16, and SWIR22. All images have 30 m resolution. For this collection,  tile search is not supported; the `roi` parameter should be used. The example below shows how to retrieve data from a region of interest covering the city of Brasilia in Brazil. 
 
 ```{r, tidy="styler", out.width="100%", fig.align="center", fig.cap= "Landsat-8 image in an area in Northeast Brazil (Source: Authors)."}
 
@@ -158,9 +158,9 @@ plot(dea_cube, red = "B11", blue = "B05", green = "B8A")
 
 ## Assessing the Brazil Data Cube{-}
 
-The [Brazil Data Cube](http://brazildatacube.org/en) (BDC) is built by Brazil’s National Institute for Space Research (INPE), to provide regular EO data cubes from CBERS, LANDSAT, SENTINEL-2, and TERRA/MODIS satellites for environmental applications. The collections available in the BDC are: `LANDSAT-OLI-16D` (Landsat-8 OLI, 30m resolution, 16-day intervals),  `SENTINEL-2-16D` (Sentinel-2A and 2B MSI images at 10m resolution, 16-day intervals), `CBERS-WFI-16D` (CBERS 4 WFI, 64m resolution, 16-day intervals), `CBERS-WFI-8D`(CBERS 4 and 4A WFI images, 64m resolution, 8-day intervals) `CBERS-MUX-2M` (CBERS 4/4A MUX, 20m resolution, two-month intervals), and `MOD13Q1-6` (MODIS MOD13SQ1 product, collection 6, 250m resolution, 16-day intervals). For more details, use `sits_list_collections(source = "BDC")`.
+The [Brazil Data Cube](http://brazildatacube.org/en) (BDC) is built by Brazil’s National Institute for Space Research (INPE), to provide regular EO data cubes from CBERS, LANDSAT, SENTINEL-2, and TERRA/MODIS satellites for environmental applications. The collections available in the BDC are: `LANDSAT-OLI-16D` (Landsat-8 OLI, 30 m resolution, 16-day intervals),  `SENTINEL-2-16D` (Sentinel-2A and 2B MSI images at 10 m resolution, 16-day intervals), `CBERS-WFI-16D` (CBERS 4 WFI, 64 m resolution, 16-day intervals), `CBERS-WFI-8D`(CBERS 4 and 4A WFI images, 64m resolution, 8-day intervals) `CBERS-MUX-2M` (CBERS 4/4A MUX, 20 m resolution, two-month intervals), and `MOD13Q1-6` (MODIS MOD13SQ1 product, collection 6, 250 m resolution, 16-day intervals). For more details, use `sits_list_collections(source = "BDC")`.
 
-The BDC uses three hierarchical grids based on the Albers Equal Area projection and SIRGAS 2000 datum. The large grid has tiles of $4224.4\times4224.4$ km^2^ and is used for CBERS-4 AWFI collections at 64 meter resolution; each CBERS-4 AWFI tile contains images of $6600\times6600$ pixels. The medium grid is used for Landsat-8 OLI collections at 30m resolution; tiles have an extension of $211.2\times211.2$ km^2^, and each image has $7040\times7040$ pixels. The small grid covers $105.6\times105.6$ km^2^ and is used for Sentinel-2 MSI collections at 10m resolutions; each image has $10560\times10560$ pixels. The data cubes in the BDC are regularly spaced in time and cloud-corrected [@Ferreira2020a]. 
+The BDC uses three hierarchical grids based on the Albers Equal Area projection and SIRGAS 2000 datum. The large grid has tiles of 4224.4 $\times4$ 224.4 km^2^ and is used for CBERS-4 AWFI collections at 64 m resolution; each CBERS-4 AWFI tile contains images of 6600 $\times$ 6600 pixels. The medium grid is used for Landsat-8 OLI collections at 30 m resolution; tiles have an extension of 211.2 $\times$ 211.2 km^2^, and each image has 7040 $\times$ 7040 pixels. The small grid covers 105.6 $\times$ 105.6 km^2^ and is used for Sentinel-2 MSI collections at 10 m resolutions; each image has 10560 $\times$ 10560 pixels. The data cubes in the BDC are regularly spaced in time and cloud-corrected [@Ferreira2020a]. 
 
 
 ```{r, echo = FALSE, out.width="80%", fig.align="center", fig.cap="Hierarchical BDC tiling system showing (a) large BDC grid overlayed on Brazilian biomes, (b) one large tile, (c) four medium tiles, and (d) sixteen small tiles (Source: Ferreira et al. (2020). Reproduction under fair use doctrine)."}
@@ -193,11 +193,11 @@ Harmonized Landsat Sentinel (HLS) is a NASA initiative that processes and harmon
 
 The NASA Harmonized Landsat and Sentinel (HLS) service provides two image collections:
 
-1. Landsat 8 OLI Surface Reflectance HLS (HLSL30) – The HLSL30 product includes atmospherically corrected surface reflectance from the Landsat 8 OLI sensors at 30m resolution. The dataset includes 11 spectral bands.
+1. Landsat 8 OLI Surface Reflectance HLS (HLSL30) – The HLSL30 product includes atmospherically corrected surface reflectance from the Landsat 8 OLI sensors at 30 m resolution. The dataset includes 11 spectral bands.
 
-2. Sentinel-2 MultiSpectral Instrument Surface Reflectance HLS (HLSS30) – The HLSS30 product includes atmospherically corrected surface reflectance from the Sentinel-2 MSI sensors at 30m resolution. The dataset includes 12 spectral bands.
+2. Sentinel-2 MultiSpectral Instrument Surface Reflectance HLS (HLSS30) – The HLSS30 product includes atmospherically corrected surface reflectance from the Sentinel-2 MSI sensors at 30 m resolution. The dataset includes 12 spectral bands.
 
-The HLS tiling system is identical as the one used for Sentinel-2 (MGRS). The tiles dimension is 109.8km and there is an overlap of 4,900m on each side.
+The HLS tiling system is identical as the one used for Sentinel-2 (MGRS). The tiles dimension is 109.8 km and there is an overlap of 4,900 m on each side.
 
 To access NASA HLS, users need to registed at [NASA EarthData](https://urs.earthdata.nasa.gov/), and save their login and password in a ~/.netrc plain text file in Unix (or %HOME%\_netrc in Windows). The file must contain the following fields:
 
@@ -268,12 +268,12 @@ sits_timeline(hls_cube_merged)
 
 ARD images downloaded from cloud collections to a local computer are not associated with a STAC endpoint that describes them. They must be organized and named to allow `sits` to create a data cube from them. All local files have to be in the same directory and have the same spatial resolution and projection. Each file must contain a single image band for a single date. Each file name needs to include tile, date, and band information. Users must provide information about the original data source to allow `sits` to retrieve information about image attributes such as band names, missing values, etc. When working with local cubes,  `sits_cube()` needs the following parameters: 
 
-1. `source`: Name of the original data provider; either `BDC`, `AWS`, `USGS`, `MSPC`, or `DEAFRICA`. 
+1. `source`: Name of the original data provider; either `"BDC"`, `"AWS"`, `"USGS"`, `"MPC"`, or `"DEAFRICA"`. 
 2. `collection`:  Collection from where the data was extracted. 
 3. `data_dir`: Local directory for images.
 4. `bands`: Optional parameter to describe the bands to be retrieved.
-5. `parse_info`: Information to parse the file names. File names need to contain information on tile, date, and band, separated by a delimiter (usually "_").
-6. `delim`: Separator character between descriptors in the file name (default is "_").
+5. `parse_info`: Information to parse the file names. File names need to contain information on tile, date, and band, separated by a delimiter (usually `"_"`).
+6. `delim`: Separator character between descriptors in the file name (default is `"_"`).
 
 The example shows how to define a data cube using files from the `sitsdata` package.  The data set contains part of tile "20LKP" of Sentinel-2 images for the period 2020-06-04 to 2021-08-26, with bands B02, B8A, and B11. Data is extracted from collection "SENTINEL-2-L2A" on Microsoft Planetary Computer ("MPC"). Given the file name `cube_20LKP_B02_2020-06-04.tif`, the parameter `parse_info` must be set to `c("X1", "tile", "band", "date")` for retrieving information about the images.
 
@@ -336,12 +336,12 @@ plot(Rondonia_class_cube,
 
 ## Regularizing data cubes{-}
 
-ARD collections available in AWS, MSPC, USGS, and DEAFRICA are not regular in space and time. Bands may have different resolutions, images may not cover the entire tile, and time intervals are irregular. For this reason, data from these collections need to be converted to regular data cubes by calling `sits_regularize()`, which uses the  *gdalcubes* package [@Appel2019]. 
+ARD collections available in AWS, MPC, USGS, and DEAFRICA are not regular in space and time. Bands may have different resolutions, images may not cover the entire tile, and time intervals are irregular. For this reason, data from these collections need to be converted to regular data cubes by calling `sits_regularize()`, which uses the  *gdalcubes* package [@Appel2019]. 
 
-In the following example, the user has created an irregular data cube from the Sentinel-2 collection available in Microsoft's Planetary Computer (MSPC) for tiles `20LKP` and `20LLP` in the state of Rondonia, Brazil. We first build an irregular data cube using `sits_cube()`.
+In the following example, the user has created an irregular data cube from the Sentinel-2 collection available in Microsoft's Planetary Computer (MPC) for tiles `20LKP` and `20LLP` in the state of Rondonia, Brazil. We first build an irregular data cube using `sits_cube()`.
 
 ```{r, tidy="styler"}
-# Creating an irregular data cube from MSPC
+# Creating an irregular data cube from MPC
 s2_cube <- sits_cube(
     source = "MPC",
     collection = "SENTINEL-2-L2A",
