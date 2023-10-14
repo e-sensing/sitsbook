@@ -81,7 +81,7 @@ To classify both data cubes and sets of time series, use `sits_classify()`, whic
 
 ```{r, tidy = "styler", out.width = "80%", fig.align="center", fig.cap="Probability maps produced by LightTAE model (Source: Authors)."}
 
-# Classify data cube
+# Classify data cube to obtain a probability cube
 ro_cube_20LKP_probs <- sits_classify(
     data     = ro_cube_20LKP,
     ml_model = ltae_model,
@@ -93,12 +93,18 @@ ro_cube_20LKP_probs <- sits_classify(
 plot(ro_cube_20LKP_probs, palette = "YlGn")
 ```
 
-A probability cube is a helpful tool for data analysis. It is used for post-processing smoothing, as described in this Chapter, but also in uncertainty estimates and active learning, as described in Chapter [Uncertainty and active learning](https://e-sensing.github.io/sitsbook/uncertainty-and-active-learning.html).
+The probability cube provides information on the output values of the algorithm for each class. In deep learning algorithms, the last step before producing the output is to apply a neural network layer just before the output layer, which assigns probabilities to each class in a multi-class problem. Those probabilities add up to 1.0. Machine learning algorithms such as random forests also produce a probability cube. 
+
+Most probability maps contain outliers or misclassified pixels. The labeled map generated from the pixel-based time series classification method exhibits several misclassified pixels, which are small patches surrounded by a different class. This occurrence of outliers is a common issue that arises due to the inherent nature of this classification approach. Regardless of their resolution, mixed pixels are prevalent in images, and each class exhibits considerable data variability. As a result, these factors can lead to outliers that are more likely to be misclassified. To overcome this limitation, `sits` employs post-processing smoothing techniques that leverage the spatial context of the probability cubes to refine the results. These techniques will be discussed in the Chapter [Bayesian smoothing for post-processing](https://e-sensing.github.io/sitsbook/bayesian-smoothing-for-post-processing.html). 
+
+Thus, in general, users should perform a post-processing smoothing after obtaining the probability maps. To further illustrate such need, let us consider the case when the labelling operation is performed directly after the classification. To do so, we use the function `sits_label_classification()`, as shown below. 
 
 ```{r, tidy = "styler", out.width = "100%", fig.align="center", fig.cap="Final classification map (Source: Authors)."}
 # Generate a thematic map
 defor_map <- sits_label_classification(
     cube = ro_cube_20LKP_probs,
+    clean = TRUE,
+    window_size = 3L,
     multicores = 4,
     memsize = 12,
     output_dir = "./tempdir/chp9",
@@ -107,7 +113,7 @@ defor_map <- sits_label_classification(
 plot(defor_map)
 ```
 
-The labeled map generated from the pixel-based time series classification method exhibits several misclassified pixels, which are small patches surrounded by a different class. This occurrence of outliers is a common issue that arises due to the inherent nature of this classification approach. Regardless of their resolution, mixed pixels are prevalent in images, and each class exhibits considerable data variability. As a result, these factors can lead to outliers that are more likely to be misclassified. To overcome this limitation, `sits` employs post-processing smoothing techniques that leverage the spatial context of the probability cubes to refine the results. These techniques will be discussed in the next Chapter.
+For each pixel, the `sits_label_classification()` function takes the label with highest probability and assigns it to the resulting map. The output is a labelled map with classes. In addition, the function will remove of outliers after the labelling step if the `clean` parameter is set to `TRUE` (which is the default value). In this case, for each pixel of the labelled map, it scans a window defined by the `window_size` parameter (default = 3) and assigns such pixel to the most frequent label inside the window.
 
 ## Map reclassification{-}
 

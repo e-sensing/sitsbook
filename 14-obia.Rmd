@@ -2,44 +2,61 @@
 
 ```{r, include = FALSE}
 source("common.R")
+dir.create("./tempdir/chp9")
+sits:::.conf_set_options("tmap_legend_text_size" = 0.7)
+sits:::.conf_set_options("tmap_legend_title_size" = 0.7)
 ```
 
-Object-Based Image Analysis (OBIA) is an approach to remote sensing image analysis that partitions an image into meaningful segments or objects, which are then classified and analyzed. In contrast to traditional pixel-based approaches, which analyze each individual pixel in isolation, OBIA operates on groups of pixels, or "segments", which have similar spectral and spatial characteristics.
+Object-Based Image Analysis (OBIA) is an approach to remote sensing image analysis that partitions an image into closed segments which are then classified and analyzed. For high-resolution images (1 meter or smaller) the aim of OBIA is to create objects that represent meaningful features in the real world,
+like buildings, roads, fields, forests, and water bodies. In case of medium resolution images (such as Sentinel-2 or Landsat) the segments represent groups  of the image with similar spectral responses which in general do not correspond directly to individual objects in the ground. These groups of pixels are called super-pixels. In both situations, the aim of OBIA is to obtain a spatial partition of the image which can then be assigned to a single class. When applicable, OBIA reduces processing time and produces labelled maps with greater spatial consistency.
 
-The general sequence of the processes involved in OBIA include:
+In contrast to traditional pixel-based approaches, which analyze each individual pixel in isolation, OBIA operates on segments, which have similar spectral and spatial characteristics.
 
-1.  Segmentation: The first step in OBIA is to group together pixels that are similar based on certain criteria such as color, intensity or texture. These groupings are called "segments". The aim here is to create objects that represent meaningful features in the real world, like buildings, roads, fields, forests, and water bodies.
+The general sequence of the processes involved in OBIA in SITS is:
 
-2.  Attribute Calculation: After the image has been segmented into distinct objects, the next step is to extract attributes from each object. In general, these attributes can be spectral (e.g., mean reflectance), spatial (e.g., size, shape, orientation), or textural (e.g., smoothness, roughness).
+1.  Segmentation: The first step is to group together pixels that are similar based on certain criteria such as color, intensity or texture. These groupings are called superpixels. 
 
-3.  Classification: Once the attributes have been extracted from the segments, they can be used to classify each segment.
+2.  Probability Estimation: After the image has been partitioned into distinct objects, the next step is to classify each segment. For satellite image time series, a subset of pixels inside each segment is classified. The result is a set of probabilities for each segment. 
 
-One of the advantages of OBIA is that it more closely mimics the way humans visually perceive their environment, not by individual pixels, but by groups of pixels as meaningful objects. This often results in more accurate and contextually rich analysis of imagery data. It's widely used in various fields such as environmental monitoring, agriculture, urban planning, defense, and more.
+3. Labelling: Once the set of probabilities have been obtain for each time series inside a segment, they can be used for labelling. This is done by considering the median value of the probabilities for the time series inside the segment that have been classified. For each class, we take the median of the probability values. Then, median values for the classes are normalised, and the most likely value is assigned as the class for the segment. 
 
-Version 1.4.1. of `sits` includes an extension of OBIA for working with image time series. The initial step of the process is to segment one image of a reference date. Then, for each segment, we use an aggregation function to obtain a set of spectral attributes for each segment. The default option is to take the mean value for each temporal instance of each band. The result are a set of time series, one for each segment. Each time series is then classified independently. The result can be joined together with the original image to obtain a classification. We call this process "OBIA-TS" (object-based image time series analysis)
 
-## Generic Image segmentation in SITS{-}
+Version 1.4.2. of `sits` includes an extension of OBIA for working with image time series. The initial step of the process is to perform a spatio-temporal segmentation. To do this, we build a multitemporal attribute space where each time/band combination is taken as an independent dimension. Thus, a data cube with 10 bands and 24 time steps will be expressed as a 240-dimension space. 
 
-The first step of the OBIA-TS procedure is to select a data cube to be segmented and function that performs the segmentation. For this purpose, `sits` provides a generic `sits_segment()` function, which allows users to select different segmentation algorithms. The `sits_segment()` function has the following parameters:
+After building the multidimensional space, we use the SLIC algorithm [Achanta2012] that clusters pixels to efficiently generate compact, nearly uniform superpixels. This algorithm has been adapted by Nowosad and Stepinski [Nowosad2022] to work with multispectral images. The `sits` implementation extends their implementation to deal with space-time data. 
+
+SLIC starts by initializing a set of cluster centers or seeds evenly spaced throughout the image. These initial cluster centers represent the centers of the superpixels. For each cluster center, SLIC assigns nearby pixels to that cluster based on a distance metric in space-time. The distance metric considers band values in all of the time steps of a data cube. The distance metric considers the distance between pixel coordinates and the distance between attribute values in space-time. 
+
+Additionally, for each segment, we use an aggregation function to obtain a set of spectral attributes for each segment. The default option is to take the median value for each temporal instance of each band. This information can be optionally used for segment classification. 
+
+The result  are a set of time series, one for each segment. Each time series is then classified independently. The result can be joined together with the original image to obtain a classification. 
+
+## Image segmentation in SITS{-}
+
+The first step of the OBIA procedure in `sits` is to select a data cube to be segmented and function that performs the segmentation. For this purpose, `sits` provides a generic `sits_segment()` function, which allows users to select different segmentation algorithms. The `sits_segment()` function has the following parameters:
 
 -   `cube`: a regular data cube.
--   `tiles`: tiles to be segmented.
--   `bands`: bands to include in the segmentation
--   `dates`: dates to include in the segmentation
 -   `seg_fn`: function to apply the segmentation
--   `...`: other params to be passed to segmentation function
+-   `roi`: spatial region of interest in the cube
+-   `start_date`: starting date for the space-time segmentation
+-   `end_date`: final date for the space-time segmentation
+-   `memsize`: memory available for processing
+-   `multicores`: number of cores available for processing
+-   `output_dir`: output directory for the resulting cube
+-   `version`: version of the result
+-   `progress`: show progress bar?
 
-In `sits` version 1.4.2, there is only one segmentation function available that implements the Simple Linear Iterative Clustering (SLIC) algorithm, which is described below. In future versions of `sits`, we expect to include additional functions that support spatio-temporal segmentation.
+In `sits` version 1.4.2, there is only one segmentation function available (`sits_slic`) which implements the extended version of the Simple Linear Iterative Clustering (SLIC) which is described below. In future versions of `sits`, we expect to include additional functions that support spatio-temporal segmentation.
 
 ## Simple Linear Iterative Clustering (SLIC) algorithm{-}
 
-In `sits` 1.4.2, we provide an implementation of The Simple Linear Iterative Clustering (SLIC) algorithm [@Achanta2012a]. SLIC uses spectral similarity and proximity in the image space to segment the image into "superpixels". Superpixels are clusters of pixels with similar spectral responses that are close together, which correspond to coherent object parts in the image. Here's a high-level view of the SLIC algorithm:
+In `sits` 1.4.2, we provide an implementation the extended off The Simple Linear Iterative Clustering (SLIC) algorithm. SLIC was initially proposed by Achanta el al. [@Achanta2012a] and later extended for multidimensional raster images by Nowosad and Stepinksi [@Nowosad2022]. SLIC uses spectral similarity and proximity in the image space to segment the image into "superpixels". Superpixels are clusters of pixels with similar spectral responses that are close together, which correspond to coherent object parts in the image. Here's a high-level view of the SLIC algorithm:
 
 1.  The algorithm starts by dividing the image into a grid, where each cell of the grid will become a superpixel.
 
 2.  For each cell, the pixel in the center becomes the initial "cluster center" for that superpixel.
 
-3.  For each pixel, the algorithm calculates a distance to each of the nearby cluster centers. This distance includes both a spatial component (how far the pixel is from the center of the superpixel in terms of x and y coordinates) and a spectral component (how different the pixel's spectral values are from the average values of the superpixel).
+3.  For each pixel, the algorithm calculates a distance to each of the nearby cluster centers. This distance includes both a spatial component (how far the pixel is from the center of the superpixel in terms of x and y coordinates) and a spectral component (how different the pixel's spectral values are from the average values of the superpixel). The spectral distance is calculated using all the temporal instances of the bands. 
 
 4.  Each pixel is assigned to the closest cluster. After all pixels have been assigned to clusters, the algorithm recalculates the cluster centers by averaging the spatial coordinates and spectral values of all pixels within each cluster.
 
@@ -70,24 +87,23 @@ s2_cube <- sits_cube(
 plot(s2_cube, red = "B11", green = "B8A", blue = "B02", date = "2020-09-24")
 ```
 
-Given that the SLIC algorithm uses a single date and that the date of "2020-09-04" is cloud-free and is close to the end of the dry season in Amazonia, it is selected as a suitable date for the segmentation.
-
-The following example produces a segmented image.
+The following example produces a segmented image. Given that the SLIC algorithm uses multiple dates and that we are interested in finding deforested areas in 2021, we will take "2021-05-06" as the starting date and "2021-08-26" as the last date for spatio-temporal segmentation. These are dates inside the dry season in Amazonia, which are more likely to capture deforested areas. For the SLIC algorithm, we take the initial separation between cluster centres (`step`) to be 20 pixels, the `compactness` to be 1, and the minimum area for each superpixel (`min_area`) to be 20 pixels.
 
 ```{r}
-# segment a cube using 
+# segment a cube using SLIC
+# select three bands of the cube
+s2_cube_3bands <- sits_select(s2_cube, bands = c("B02", "B11", "B8A"))
 segments_20LKP <- sits_segment(
-    cube = s2_cube,
-    tiles = "20LKP",
-    bands = c("B02", "B11", "B8A"),
-    dates = "2020-09-24",
-    seg_fn = sits_supercells(
-        step = 60,
+    cube = s2_cube_3bands,
+    start_date = "2021-05-06",
+    end_date = "2021-08-26",
+    output_dir = "./tempdir/chp9",
+    seg_fn = sits_slic(
+        step = 20,
         compactness = 1,
         dist_fun = "euclidean",
         iter = 10,
-        minarea = 50,
-        multicores = 1
+        minarea = 20
     )
 )
 ```
