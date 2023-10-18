@@ -1,8 +1,8 @@
 ```{r, include = FALSE}
 source("common.R")
 dir.create("./tempdir/chp9")
-sits:::.conf_set_options("tmap_legend_text_size" = 0.7)
-sits:::.conf_set_options("tmap_legend_title_size" = 0.7)
+sits:::.conf_set_options("tmap_legend_text_size" = 0.5)
+sits:::.conf_set_options("tmap_legend_title_size" = 0.5)
 ```
 
 # Image classification in data cubes{-}
@@ -14,83 +14,83 @@ This Chapter discusses how to classify data cubes by providing a step-by-step ex
 
 ## Training the classification model{-}
 
-The case study uses the training data set `samples_prodes_4bands`, available in package `sitsdata`. This data set consists of 480 samples collected from Sentinel-2 images covering the state of Rondonia. The samples are intended to detect deforestation events and include four classes: Forest, Burned_Area,   Cleared_Area, and Highly_Degraded. The time series cover a set of 29 dates with a period of 16 days, ranging from 2020-06-04 to 2021-08-26. The data has 12 attributes, including original bands (B02, B03, B04, B05, B08, B8A, B11, and B12) and indices (NDVI, EVI, and NBR).
+The case study uses the training data set `samples_deforestation_rondonia`, available in package `sitsdata`. This data set consists of 6007 samples collected from Sentinel-2 images covering the state of Rondonia. There are nine classes: "Clear_Cut_Bare_Soil", "Clear_Cut_Burned_Area", "Mountainside_Forest", "Forest", "Riparian_Forest", "Clear_Cut_Vegetation", "Water", "Wetland", and "Seasonally_Flooded". Each time series contains values from Sentinel-2/2A bands B02, B03, B04, B05, B07, B8A, B08, B11, B12 and indices NDVI, EVI and NBR  from 2022-01-05 to 2022-12-23 in 16-day intervals. The samples are intended to detect deforestation events and have been collected by remote sensing experts using visual interpretation.
 
 ```{r, tidy = "styler"}
 library(sitsdata)
 # Obtain the samples 
-data("samples_prodes_4classes")
+data("samples_deforestation_rondonia")
 # Show the contents of the samples
-summary(samples_prodes_4classes)
+summary(samples_deforestation_rondonia)
 ```
 
-It is helpful to plot the basic patterns associated with the samples to understand the training set better. The function `sits_patterns()` uses a generalized additive model (GAM) to predict a smooth, idealized approximation to the time series associated with each class for all bands. Since the data cube used in the classification has only three bands (B02, B8A, and B11), we filter the samples for these bands before showing the patterns. 
+It is helpful to plot the basic patterns associated with the samples to understand the training set better. The function `sits_patterns()` uses a generalized additive model (GAM) to predict a smooth, idealized approximation to the time series associated with each class for all bands. Since the data cube used in the classification has three bands (B02, B8A, and B11) and three indexes (NDVI, EVI, NBR), we filter the samples for these bands and indexes before showing the patterns. 
 
 ```{r, tidy = "styler", out.width = "90%", fig.align="center", fig.cap="Patterns associated to the training samples (Source: Authors)."}
-samples_3bands <- sits_select(
-    data = samples_prodes_4classes,
-    bands = c("B02", "B8A", "B11"))
+samples_6bands <- sits_select(
+    data = samples_deforestation_rondonia,
+    bands = c("B02", "B8A", "B11", "NDVI", "EVI", "NBR")
+)
 
-plot(sits_patterns(samples_3bands))
+samples_6bands |> 
+    sits_select(bands = c("NDVI", "EVI", "NBR")) |> 
+    sits_patterns() |> 
+    plot()
 ```
 
-The patterns show different temporal responses for the selected classes. They match the typical behavior of deforestation in the Amazon. First, the forest is cut at the start of the dry season (June/July). At the end of the dry season, some clear-cut areas are burned to clean the remains; this action is reflected in the steep fall of the response of B8A values of burned area samples after July. In cleared but not burned areas, response in the middle infra-red band B11 increases significantly at the end of the dry season, while B8A values remain high. This is a sign of mixed pixels, which combine forest remains with bare soil. Forest areas show a constant spectral response during the year. Degraded areas show an increase in values of the middle infra-red band B11 compared to native forests, showing a mixed response of vegetation and soil.
+The patterns show different temporal responses for the selected classes. They match the typical behavior of deforestation in the Amazon. In most, the forest is cut at the start of the dry season (May/June). At the end of the dry season, some clear-cut areas are burned to clean the remains; this action is reflected in the steep fall of the response of NBR values of burned area samples after August. The areas where native trees have been cut but some vegatation remain ("Clear_Cut_Vegetation") have values in the NBR band that increase during the period. This is a sign of mixed pixels, which combine forest remains with bare soil. 
 
 
 ## Building a data cube{-}
 
-We now build a data cube from the Sentinel-2 images available in the package `sitsdata`. These images are from the `SENTINEL-2-L2A` collection in Microsoft Planetary Computer (`MPC`). We have chosen bands BO2, B8A, and B11 images in a small area of $1000 \times 1000$ pixels in the state of Rondonia. As explained in Chapter [Earth observation data cubes](https://e-sensing.github.io/sitsbook/earth-observation-data-cubes.html), we must inform `sits` how to parse these file names to obtain tile, date, and band information. Image files are named according to the convention "cube_tile_band_date" (e.g., `cube_20LKP_BO2_2020_06_04.tif`).
+We now build a data cube from the Sentinel-2 images available in the package `sitsdata`. These images are from the `SENTINEL-2-L2A` collection in Microsoft Planetary Computer (`MPC`). We have chosen bands BO2, B8A, and B11, and indexes NDVI, EVI and NBR in a small area of $1200 \times 1200$ pixels in the state of Rondonia. As explained in Chapter [Earth observation data cubes](https://e-sensing.github.io/sitsbook/earth-observation-data-cubes.html), we must inform `sits` how to parse these file names to obtain tile, date, and band information. Image files are named according to the convention "satellite_ sensor_tile_band_date" (e.g., `SENTINEL-2_MSI_20LKP_BO2_2020_06_04.tif`) which is the default format in `sits`. 
 
 
 ```{r, tidy = "styler", out.width = "90%", fig.align="center", fig.cap="Color composite image of the cube for date 2021-07-25 (Source: Authors)."}
 # Files are available in a local directory 
-data_dir <- system.file("extdata/Rondonia-20LKP/", package = "sitsdata")
+data_dir <- system.file("extdata/Rondonia-20LMR/", package = "sitsdata")
 # Read data cube
-ro_cube_20LKP <- sits_cube(
+ro_cube_20LMR <- sits_cube(
     source = "MPC",
     collection = "SENTINEL-2-L2A",
-    data_dir = data_dir,
-    parse_info = c('X1', "tile", "band", "date"))
+    data_dir = data_dir
+)
 
 # Plot the cube
-plot(ro_cube_20LKP, dates = "2021-07-25", red = "B11", green = "B8A", blue = "B02")
+plot(ro_cube_20LMR, date = "2022-07-16", red = "B11", green = "B8A", blue = "B02")
 ```
 
-## Training a deep learning model{-}
+## Training a machine learning model{-}
 
-The next step is to train a Lightweight Temporal Attention Encoder (LightTAE) model, using the `adamw` optimizer and a learning rate of 0.001. Since the data cube to be classified has bands BO2, B8A, and B11,  we select such bands from the training data.
+The next step is to train a random forest model. Since the data cube to be classified has bands BO2, B8A, and B11, we use the selection made in the previous step. 
 
-```{r, tidy = "styler", out.width = "80%", fig.align="center", fig.cap="Training evolution of LightTAE model (Source: Authors)."}
-# Use only the bands available in the cube
-samples_3bands <- sits_select(
-    data = samples_prodes_4classes, 
-    bands = sits_bands(ro_cube_20LKP))
+```{r, tidy = "styler", out.width = "80%", fig.align="center", fig.cap="Relevant attributes of the random forest model (Source: Authors)."}
+# Train model using Random Fores
+rfor_model <- sits_train(
+    samples = samples_6bands, 
+    ml_method = sits_rfor()
+)
 
-# Train model using LightTAE algorithm
-ltae_model <- sits_train(
-    samples = samples_3bands, 
-    ml_method = sits_lighttae(opt_hparams = list(lr = 0.001)))
-
-# Plot the evolution of the model
-plot(ltae_model)
+# Plot the model
+plot(rfor_model)
 ```
 
 ## Classification using parallel processing{-}
 
 To classify both data cubes and sets of time series, use `sits_classify()`, which uses parallel processing to speed up the performance, as described at the end of this Chapter. Its most relevant parameters are: (a) `data`, either a data cube or a set of time series; (b) `ml_model`, a trained model using one of the machine learning methods provided; (c) `multicores`, number of CPU cores that will be used for processing; (d) `memsize`, memory available for classification; (e) `output_dir`, directory where results will be stored; (f) `version`, for version control. To follow the processing steps, turn on the parameters `verbose` to print information and `progress` to get a progress bar. The classification result is a data cube with a set of probability layers, one for each output class. Each probability layer contains the model's assessment of how likely each pixel belongs to the related class. The probability cube can be visualized with `plot()`. 
 
-```{r, tidy = "styler", out.width = "80%", fig.align="center", fig.cap="Probability maps produced by LightTAE model (Source: Authors)."}
+```{r, tidy = "styler", out.width = "80%", fig.align="center", fig.cap="Probability maps produced by random forest model (Source: authors)."}
 
 # Classify data cube to obtain a probability cube
-ro_cube_20LKP_probs <- sits_classify(
-    data     = ro_cube_20LKP,
-    ml_model = ltae_model,
+ro_cube_20LMR_probs <- sits_classify(
+    data     = ro_cube_20LMR,
+    ml_model = rfor_model,
     output_dir = "./tempdir/chp9",
-    version = "ltae",
+    version = "rfor_6bands",
     multicores = 4,
     memsize = 12)
 
-plot(ro_cube_20LKP_probs, palette = "YlGn")
+plot(ro_cube_20LMR_probs, palette = "YlGn")
 ```
 
 The probability cube provides information on the output values of the algorithm for each class. In deep learning algorithms, the last step before producing the output is to apply a neural network layer just before the output layer, which assigns probabilities to each class in a multi-class problem. Those probabilities add up to 1.0. Machine learning algorithms such as random forests also produce a probability cube. 
@@ -99,10 +99,10 @@ Most probability maps contain outliers or misclassified pixels. The labeled map 
 
 Thus, in general, users should perform a post-processing smoothing after obtaining the probability maps. To further illustrate such need, let us consider the case when the labelling operation is performed directly after the classification. To do so, we use the function `sits_label_classification()`, as shown below. 
 
-```{r, tidy = "styler", out.width = "100%", fig.align="center", fig.cap="Final classification map (Source: Authors)."}
+```{r, tidy = "styler", out.width = "120%", fig.align="center", fig.cap="Final classification map (Source: Authors)."}
 # Generate a thematic map
 defor_map <- sits_label_classification(
-    cube = ro_cube_20LKP_probs,
+    cube = ro_cube_20LMR_probs,
     clean = TRUE,
     window_size = 3L,
     multicores = 4,
@@ -110,7 +110,9 @@ defor_map <- sits_label_classification(
     output_dir = "./tempdir/chp9",
     version = "no_smooth")
 
-plot(defor_map)
+plot(defor_map, tmap_options = 
+         list("tmap_legend_text_size" = 0.6,
+              "tmap_legend_title_size" = 0.6))
 ```
 
 For each pixel, the `sits_label_classification()` function takes the label with highest probability and assigns it to the resulting map. The output is a labelled map with classes. In addition, the function will remove of outliers after the labelling step if the `clean` parameter is set to `TRUE` (which is the default value). In this case, for each pixel of the labelled map, it scans a window defined by the `window_size` parameter (default = 3) and assigns such pixel to the most frequent label inside the window.

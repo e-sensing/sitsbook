@@ -276,35 +276,37 @@ sits_timeline(hls_cube_merged)
 
 ARD images downloaded from cloud collections to a local computer are not associated with a STAC endpoint that describes them. They must be organized and named to allow `sits` to create a data cube from them. All local files have to be in the same directory and have the same spatial resolution and projection. Each file must contain a single image band for a single date. Each file name needs to include tile, date, and band information. Users must provide information about the original data source to allow `sits` to retrieve information about image attributes such as band names, missing values, etc. When working with local cubes,  `sits_cube()` needs the following parameters: 
 
-1. `source`: Name of the original data provider; either `"BDC"`, `"AWS"`, `"USGS"`, `"MPC"`, or `"DEAFRICA"`. 
+1. `source`: Name of the original data provider; for a list of providers and collections, use `sits_list_collections()`. 
 2. `collection`:  Collection from where the data was extracted. 
 3. `data_dir`: Local directory for images.
 4. `bands`: Optional parameter to describe the bands to be retrieved.
 5. `parse_info`: Information to parse the file names. File names need to contain information on tile, date, and band, separated by a delimiter (usually `"_"`).
 6. `delim`: Separator character between descriptors in the file name (default is `"_"`).
 
-The example shows how to define a data cube using files from the `sitsdata` package.  The data set contains part of tile "20LKP" of Sentinel-2 images for the period 2020-06-04 to 2021-08-26, with bands B02, B8A, and B11. Data is extracted from collection "SENTINEL-2-L2A" on Microsoft Planetary Computer ("MPC"). Given the file name `cube_20LKP_B02_2020-06-04.tif`, the parameter `parse_info` must be set to `c("X1", "tile", "band", "date")` for retrieving information about the images.
+The example shows how to define a data cube using files from the `sitsdata` package.  The data set contains part of tile "20LMR" of Sentinel-2 images for the period 2022-01-05 to 2021-08-26, with bands B02, B8A, and B11. Data is extracted from collection "SENTINEL-2-L2A" on Microsoft Planetary Computer ("MPC"). 
+
+In general, `sits` users need to match the local file names to the values provided by the `parse_info` parameter. Since the file names of this data set use the format `SENTINEL-2_MSI_20LMR_B8A_2022-12-23.tif`, which fits the default value for `parse_info` which is `c("X1", "X2", "tile", "band", "date")` and for `delim` which is "_",  it is not necessary to set these values when creating a data cube from the local files. 
 
 
 ```{r}
 library(sits)
 # Create a cube based on a stack of CBERS data
-data_dir <- system.file("extdata/Rondonia-20LKP", package = "sitsdata")
+data_dir <- system.file("extdata/Rondonia-20LMR", package = "sitsdata")
 # List the first file
 list.files(data_dir)[1]
 ```
 
 ```{r, tidy="styler", out.width="100%", fig.align="center", fig.cap="CBERS-4 NDVI in an area over Brazil (Source: Authors)."}
 # Create a data cube from local files
-s2_cube_20LKP <- sits_cube(
+s2_cube_20LMR <- sits_cube(
     source = "MPC",
     collection = "SENTINEL-2-L2A",
-    data_dir = data_dir,
-    parse_info = c("X1", "tile", "band", "date"))
+    data_dir = data_dir
+)
 
 # Plot the band B8A in the first time instance
-plot(s2_cube_20LKP, red = "B11", green = "B8A", blue = "B02", 
-     dates = "2021-07-25")
+plot(s2_cube_20LMR, red = "B11", green = "B8A", blue = "B02", 
+     dates = "2022-07-16")
 ```
 
 ## Defining a data cube using classified images{-}

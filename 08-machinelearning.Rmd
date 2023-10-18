@@ -342,9 +342,11 @@ Deep learning algorithms try to find the optimal point representing the best val
 
 To reduce the learning curve, `sits` provides default values for all machine learning and deep learning methods, ensuring a reasonable baseline performance. However, refininig model hyperparameters might be necessary, especially for more complex models such as `sits_lighttae()` or `sits_tempcnn()`. To that end, the package provides the `sits_tuning()` function. 
 
-The most straightforward approach to model tuning is to run a grid search; this involves defining a range for each hyperparameter and then testing all possible combinations. This approach leads to a combinational explosion and thus is not recommended. Instead, Bergstra and Bengio  propose to use randomly chosen trials [@Bergstra2012]. In their paper, the authors show that randomized trials are more efficient than grid search trials, selecting adequate hyperparameters at a fraction of the computational cost. The `sits_tuning()` function follows Bergstra and Bengio [@Bergstra2012] by using a random search on the chosen hyperparameters.
+The most straightforward approach to model tuning is to run a grid search; this involves defining a range for each hyperparameter and then testing all possible combinations. This approach leads to a combinational explosion and thus is not recommended. Instead, Bergstra and Bengio propose randomly chosen trials [@Bergstra2012]. Their paper shows that randomized trials are more efficient than grid search trials, selecting adequate hyperparameters at a fraction of the computational cost. The `sits_tuning()` function follows Bergstra and Bengio by using a random search on the chosen hyperparameters.
 
-Since gradient descent plays a key role in deep learning model fitting, developing optimizers is an important topic of research [@Bottou2018]. Many optimizers have been proposed in the literature, and recent results are reviewed by Schmidt et al. [@Schmidt2021]. The Adam optimizer  provides a good baseline and reliable performance for general deep learning applications [@Kingma2017]. For this reason, Adam is the default optimizer in the R `torch` package. Experiments with image time series show that other optimizers may have better performance for the specific problem of land classification. For this reason, the authors developed the  `torchopt` R package, which includes several recently proposed optimizers, including Adamw  [@Loshchilov2019], Madgrad [@Defazio2021], and Yogi [@Zaheer2018]. Based on our experiments, we have selected Adamw as the default optimizer for deep learning methods. Using the `sits_tuning()` function allows testing these and other optimizers available in `torch` and `torch_opt` packages.
+Since gradient descent plays a key role in deep learning model fitting, developing optimizers is an important topic of research [@Bottou2018]. Many optimizers have been proposed in the literature, and recent results are reviewed by Schmidt et al. [@Schmidt2021]. The Adamw optimizer  provides a good baseline and reliable performance for general deep learning applications [@Kingma2017]. 
+
+Experiments with image time series show that other optimizers may have better performance for the specific problem of land classification. For this reason, the authors developed the  `torchopt` R package, which includes several recently proposed optimizers, including Madgrad [@Defazio2021], and Yogi [@Zaheer2018]. Using the `sits_tuning()` function allows testing these and other optimizers available in `torch` and `torch_opt` packages.  
 
 The `sits_tuning()` function takes the following parameters:
 
@@ -357,22 +359,27 @@ The `sits_tuning()` function takes the following parameters:
 7. `multicores`: Number of cores to be used for the procedure.
 8. `progress`: Show a progress bar?
 
-The `sits_tuning_hparams()` function inside `sits_tuning()` allows defining optimizers and their hyperparameters, including `lr` (learning rate), `eps` (controls numerical stability), and `weight_decay` (controls overfitting). The default values for `eps` and `weight_decay` in all `sits` deep learning functions are 1e-08  and 1e-06, respectively. The default `lr` for `sits_lighttae()` and `sits_tempcnn()` is  0.005, and for `sits_tae()` and `sits_resnet()` is 0.001. Users have different ways to randomize the hyperparameters, including: `choice()` (a list of options), `uniform` (a uniform distribution), `randint` (random integers from a uniform distribution), `normal(mean, sd)` (normal distribution), and `beta(shape1, shape2)` (beta distribution). These options allow an extensive combination of hyperparameters.
+The `sits_tuning_hparams()` function inside `sits_tuning()` allows defining optimizers and their hyperparameters, including `lr` (learning rate), `eps` (controls numerical stability), and `weight_decay` (controls overfitting). The default values for `eps` and `weight_decay` in all `sits` deep learning functions are 1e-08  and 1e-06, respectively. The default `lr` for `sits_lighttae()` and `sits_tempcnn()` is  0.005, and for `sits_tae()` and `sits_resnet()` is 0.001. Users have different ways to randomize the hyperparameters, including: `choice()` (a list of options), `uniform` (a uniform distribution), `randint` (random integers from a uniform distribution), `normal(mean, sd)` (normal distribution), and `beta(shape1, shape2)` (beta distribution) and `loguniform(max, min)` (loguniform distribution). These options allow an extensive combination of hyperparameters.
 
-In the example, `sits_tuning()` finds good hyperparameters to train `sits_lighttae()` for the Mato Grosso data set. It tests 100 combinations of learning rate and weight decay for the Adamw optimizer. To randomize the learning rate, it uses a beta distribution with parameters 0.35 and 10, which allows for variation between about 0.2 and 1; for the weight decay, the beta distribution with parameters 0.1 and 2 generates values roughly between 1 and 1e-24. 
+We suggest to use the log-uniform distribution to search over a wide range of values that span several orders of magnitude. This is common for hyperparameters like learning rates, which can vary from very small values (e.g., 0.0001) to larger values (e.g., 1.0) in a logarithmic manner. By default, `sits_tuning()` uses a loguniform distribution between 10^-2 and 10^-4 for the learning rate and the same distribution between 10^-2 and 10^-4 for the weight decay.
+
+In the example, we use `sits_tuning()` with the training data set `samples_deforestation_rondonia`, available in package `sitsdata`. This data set consists of 6007 samples collected from Sentinel-2 images covering the state of Rondonia. More details on this data set are available in Chapter [Image classification in data cubes](https://e-sensing.github.io/sitsbook/image-classification-in-data-cubes.html). The function finds good hyperparameters to train `sits_lighttae()` for the training data set. It tests 20 combinations of learning rate and weight decay for the Adamw optimizer. 
 
 ```{r, tidy="styler", eval = FALSE, echo = TRUE}
 tuned <- sits_tuning(
-     samples = samples_matogrosso_mod13q1,
+     samples = samples_deforestation_rondonia,
      ml_method = sits_lighttae(),
      params = sits_tuning_hparams(
          optimizer = torchopt::optim_adamw,
          opt_hparams = list(
-             lr = beta(0.35, 10),
-             weight_decay = beta(0.1, 2))),
-     trials = 100,
+             lr = loguniform(10^-2, 10^-4),
+             weight_decay = loguniform(10^-2, 10^-8)
+         ),
+     ),
+     trials = 20,
      multicores = 6,
-     progress = FALSE)
+     progress = FALSE
+)
 ```
 
 ```{r, eval = TRUE, echo = FALSE}
