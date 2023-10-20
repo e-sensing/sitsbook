@@ -12,10 +12,30 @@ sits:::.conf_set_options("tmap_legend_title_size" = 0.5)
 
 This Chapter discusses how to classify data cubes by providing a step-by-step example. Our study area is the state of Rondonia, Brazil, which underwent substantial deforestation in the last decades. The objective of the case study is to detect deforested areas. 
 
+## Building a data cube{-}
+
+The case study uses a data cube with Sentinel-2 images available in the package `sitsdata`. These images are from the `SENTINEL-2-L2A` collection in Microsoft Planetary Computer (`MPC`). We have chosen bands BO2, B8A, and B11, and indexes NDVI, EVI and NBR in a small area of $1200 \times 1200$ pixels in the state of Rondonia. As explained in Chapter [Earth observation data cubes](https://e-sensing.github.io/sitsbook/earth-observation-data-cubes.html), we must inform `sits` how to parse these file names to obtain tile, date, and band information. Image files are named according to the convention "satellite_ sensor_tile_band_date" (e.g., `SENTINEL-2_MSI_20LKP_BO2_2020_06_04.tif`) which is the default format in `sits`. 
+
+
+```{r, tidy = "styler", out.width = "90%", fig.align="center", fig.cap="Color composite image of the cube for date 2021-07-25 (Source: Authors)."}
+# Files are available in a local directory 
+data_dir <- system.file("extdata/Rondonia-20LMR/", package = "sitsdata")
+# Read data cube
+ro_cube_20LMR <- sits_cube(
+    source = "MPC",
+    collection = "SENTINEL-2-L2A",
+    data_dir = data_dir,
+    parse_info = c("satellite", "sensor", "tile", "band", "date")
+)
+
+# Plot the cube
+plot(ro_cube_20LMR, date = "2022-07-16", red = "B11", green = "B8A", blue = "B02")
+```
+
+
 ## Training the classification model{-}
 
-The case study uses the training data set `samples_deforestation_rondonia`, available in package `sitsdata`. This data set consists of 6007 samples collected from Sentinel-2 images covering the state of Rondonia. There are nine classes: "Clear_Cut_Bare_Soil", "Clear_Cut_Burned_Area", "Mountainside_Forest", "Forest", "Riparian_Forest", "Clear_Cut_Vegetation", "Water", "Wetland", and "Seasonally_Flooded". Each time series contains values from Sentinel-2/2A bands B02, B03, B04, B05, B07, B8A, B08, B11, B12 and indices NDVI, EVI and NBR  from 2022-01-05 to 2022-12-23 in 16-day intervals. The samples are intended to detect deforestation events and have been collected by remote sensing experts using visual interpretation. In what follows, we will use a subset of the data, consisting of bands B02,
-B8A and B11, and indexes NDVI, EVI, and NBR. The reason for this choice is because we will classify a subset of a data cube covering the state of Rondonia which has these bands and 
+The case study uses the training data set `samples_deforestation_rondonia`, available in package `sitsdata`. This data set consists of 6007 samples collected from Sentinel-2 images covering the state of Rondonia. There are nine classes: "Clear_Cut_Bare_Soil", "Clear_Cut_Burned_Area", "Mountainside_Forest", "Forest", "Riparian_Forest", "Clear_Cut_Vegetation", "Water", "Wetland", and "Seasonally_Flooded". Each time series contains values from Sentinel-2/2A bands B02, B03, B04, B05, B07, B8A, B08, B11, B12 and indices NDVI, EVI and NBR  from 2022-01-05 to 2022-12-23 in 16-day intervals. The samples are intended to detect deforestation events and have been collected by remote sensing experts using visual interpretation. In what follows, we will use a subset of the data, consisting of bands B02,  B8A and B11, and indexes NDVI, EVI, and NBR. The reason for this choice is because we will classify a subset of a data cube covering the state of Rondonia which has these bands and 
 indexes.
 
 ```{r, tidy = "styler"}
@@ -141,24 +161,6 @@ worst_5
 For large data sets, the tuning process is time-consuming. Despite this cost, it is recommended to achieve the best performance. In general, tuning hyperparameters for models such as `sits_tempcnn()` and `sits_lighttae()` will result in a slight performance improvement over the default parameters on overall accuracy. The performance gain will be stronger in the less well represented classes, where significant gains in producer's and user's accuracies are possible. When detecting change in less frequent classes, tuning can make a substantial difference in the results.
 
 
-## Building a data cube{-}
-
-We now build a data cube from the Sentinel-2 images available in the package `sitsdata`. These images are from the `SENTINEL-2-L2A` collection in Microsoft Planetary Computer (`MPC`). We have chosen bands BO2, B8A, and B11, and indexes NDVI, EVI and NBR in a small area of $1200 \times 1200$ pixels in the state of Rondonia. As explained in Chapter [Earth observation data cubes](https://e-sensing.github.io/sitsbook/earth-observation-data-cubes.html), we must inform `sits` how to parse these file names to obtain tile, date, and band information. Image files are named according to the convention "satellite_ sensor_tile_band_date" (e.g., `SENTINEL-2_MSI_20LKP_BO2_2020_06_04.tif`) which is the default format in `sits`. 
-
-
-```{r, tidy = "styler", out.width = "90%", fig.align="center", fig.cap="Color composite image of the cube for date 2021-07-25 (Source: Authors)."}
-# Files are available in a local directory 
-data_dir <- system.file("extdata/Rondonia-20LMR/", package = "sitsdata")
-# Read data cube
-ro_cube_20LMR <- sits_cube(
-    source = "MPC",
-    collection = "SENTINEL-2-L2A",
-    data_dir = data_dir
-)
-
-# Plot the cube
-plot(ro_cube_20LMR, date = "2022-07-16", red = "B11", green = "B8A", blue = "B02")
-```
 
 ## Training a machine learning model{-}
 
@@ -230,7 +232,7 @@ ro_class <- sits_cube(
     source = "MPC",
     collection = "SENTINEL-2-L2A",
     data_dir = data_dir,
-    parse_info = c("X1", "X2", "tile", "start_date", "end_date",
+    parse_info = c("satellite", "sensor", "tile", "start_date", "end_date",
                    "band", "version"),
     bands = "class",
     labels = c("1" = "Water", "2" = "ClearCut_Burn", "3" = "ClearCut_Soil",
@@ -250,7 +252,7 @@ prodes2021 <- sits_cube(
     source = "USGS",
     collection = "LANDSAT-C2L2-SR",
     data_dir = data_dir,
-    parse_info = c("X1", "X2", "tile", "start_date", "end_date",
+    parse_info = c("product", "sensor", "tile", "start_date", "end_date",
                    "band", "version"),
     bands = "class",
     version = "v20220606",
