@@ -1,8 +1,10 @@
 ```{r, include = FALSE}
 source("common.R")
 dir.create("./tempdir/chp9")
-sits:::.conf_set_options("tmap_legend_text_size" = 0.5)
-sits:::.conf_set_options("tmap_legend_title_size" = 0.5)
+sits:::.conf_set_options("tmap_scale" = 0.6)
+library(torch)
+library(luz)
+torch::install_torch()
 ```
 
 # Image classification in data cubes{-}
@@ -12,23 +14,33 @@ sits:::.conf_set_options("tmap_legend_title_size" = 0.5)
 
 This Chapter discusses how to classify data cubes by providing a step-by-step example. Our study area is the state of Rondonia, Brazil, which underwent substantial deforestation in the last decades. The objective of the case study is to detect deforested areas. 
 
-## Training the classification model{-}
+## Data cube for case study {-}
 
-The case study uses the training data set `samples_deforestation_rondonia`, available in package `sitsdata`. This data set consists of 6007 samples collected from Sentinel-2 images covering the state of Rondonia. There are nine classes: "Clear_Cut_Bare_Soil", "Clear_Cut_Burned_Area", "Mountainside_Forest", "Forest", "Riparian_Forest", "Clear_Cut_Vegetation", "Water", "Wetland", and "Seasonally_Flooded". Each time series contains values from Sentinel-2/2A bands B02, B03, B04, B05, B07, B8A, B08, B11, B12 and indices NDVI, EVI and NBR  from 2022-01-05 to 2022-12-23 in 16-day intervals. The samples are intended to detect deforestation events and have been collected by remote sensing experts using visual interpretation. In what follows, we will use a subset of the data, consisting of bands B02,
-B8A and B11, and indexes NDVI, EVI, and NBR. The reason for this choice is because we will classify a subset of a data cube covering the state of Rondonia which has these bands and 
-indexes.
+The examples of this chapter use a pre-built data cube of Sentinel-2 images, available in the package `sitsdata`. These images are from the `SENTINEL-2-L2A` collection in Microsoft Planetary Computer (`MPC`). The data consists of bands BO2, B8A, and B11, and indexes NDVI, EVI and NBR in a small area of $1200 \times 1200$ pixels in the state of Rondonia. As explained in Chapter [Earth observation data cubes](https://e-sensing.github.io/sitsbook/earth-observation-data-cubes.html), we must inform `sits` how to parse these file names to obtain tile, date, and band information. Image files are named according to the convention "satellite_ sensor_tile_band_date" (e.g., `SENTINEL-2_MSI_20LKP_BO2_2020_06_04.tif`) which is the default format in `sits`. 
+
+```{r, tidy = "styler", out.width = "90%", fig.align="center", fig.cap="Color composite image of the cube for date 2023-07-16 (Source: authors)."}
+# Files are available in a local directory 
+data_dir <- system.file("extdata/Rondonia-20LMR/", package = "sitsdata")
+# Read data cube
+cube_20LMR <- sits_cube(
+    source = "MPC",
+    collection = "SENTINEL-2-L2A",
+    data_dir = data_dir
+)
+
+# Plot the cube
+plot(cube_20LMR, date = "2022-07-16", red = "B11", green = "B8A", blue = "B02")
+```
+
+## Training data for the case study{-}
+
+This case study uses the training data set `samples_deforestation`, available in package `sitsdata`. This data set consists of 6007 samples collected from Sentinel-2 images covering the state of Rondonia. There are nine classes: "Clear_Cut_Bare_Soil", "Clear_Cut_Burned_Area", "Mountainside_Forest", "Forest", "Riparian_Forest", "Clear_Cut_Vegetation", "Water", "Wetland", and "Seasonally_Flooded". Each time series contains values from Sentinel-2/2A bands B02, B8A, B11, and indices NDVI, EVI and NBR  from 2022-01-05 to 2022-12-23 in 16-day intervals. The samples are intended to detect deforestation events and have been collected by remote sensing experts using visual interpretation. 
 
 ```{r, tidy = "styler"}
 library(sitsdata)
 # Obtain the samples 
-data("samples_deforestation_rondonia")
-# Select the bands and indexes used in the example
-samples_deforestation <- sits_select(
-    samples_deforestation_rondonia,
-    bands = c("B02", "B8A", "B11", "NDVI", "EVI", "NBR")
-)
+data("samples_deforestation")
 # Show the contents of the samples
-# 
 summary(samples_deforestation)
 ```
 
@@ -43,179 +55,186 @@ samples_deforestation |>
 
 The patterns show different temporal responses for the selected classes. They match the typical behavior of deforestation in the Amazon. In most cases, the forest is cut at the start of the dry season (May/June). At the end of the dry season, some clear-cut areas are burned to clean the remains; this action is reflected in the steep fall of the response of NBR values of burned area samples after August. The areas where native trees have been cut but some vegatation remain ("Clear_Cut_Vegetation") have values in the NBR band that increase during the period. This is a sign of mixed pixels, which combine forest remains with bare soil. 
 
-## Model tuning{-}
 
-Model tuning is the process of selecting the best set of hyperparameters for a specific application. When using deep learning models for image classification, it is a highly recommended step to enable a better fit of the algorithm to the training data. Hyperparameters are parameters of the model that are not learned during training but instead are set prior to training and affect the behavior of the model during training. Examples include the learning rate, batch size, number of epochs, number of hidden layers, number of neurons in each layer, activation functions, regularization parameters, and optimization algorithms.
+## Training machine learning models{-}
 
-Deep learning model tuning involves selecting the best combination of hyperparameters that results in the optimal performance of the model on a given task. This is done by training and evaluating the model with different sets of hyperparameters to select the set that gives the best performance.
+The next step is to train a machine learning model to illustrate CPU-based classification a random forest model and a tempCNN model. We build a Random Forest model using `sits_train()` and then plot the model to find out what are the most important variables for the model.
 
-Deep learning algorithms try to find the optimal point representing the best value of the prediction function that, given an input $X$ of data points, predicts the result $Y$. In our case, $X$ is a multidimensional time series, and $Y$ is a vector of probabilities for the possible output classes. For complex situations, the best prediction function is time-consuming to estimate. For this reason, deep learning methods rely on gradient descent methods to speed up predictions and converge faster than an exhaustive search [@Bengio2012]. All gradient descent methods use an optimization algorithm adjusted with hyperparameters such as the learning and regularization rates [@Schmidt2021]. The learning rate controls the numerical step of the gradient descent function, and the regularization rate controls model overfitting. Adjusting these values to an optimal setting requires using model tuning methods. 
-
-To reduce the learning curve, `sits` provides default values for all machine learning and deep learning methods, ensuring a reasonable baseline performance. However, refininig model hyperparameters might be necessary, especially for more complex models such as `sits_lighttae()` or `sits_tempcnn()`. To that end, the package provides the `sits_tuning()` function. 
-
-The most straightforward approach to model tuning is to run a grid search; this involves defining a range for each hyperparameter and then testing all possible combinations. This approach leads to a combinational explosion and thus is not recommended. Instead, Bergstra and Bengio propose randomly chosen trials [@Bergstra2012]. Their paper shows that randomized trials are more efficient than grid search trials, selecting adequate hyperparameters at a fraction of the computational cost. The `sits_tuning()` function follows Bergstra and Bengio by using a random search on the chosen hyperparameters.
-
-Since gradient descent plays a key role in deep learning model fitting, developing optimizers is an important topic of research [@Bottou2018]. Many optimizers have been proposed in the literature, and recent results are reviewed by Schmidt et al. [@Schmidt2021]. The Adamw optimizer  provides a good baseline and reliable performance for general deep learning applications [@Kingma2017]. 
-
-Experiments with image time series show that other optimizers may have better performance for the specific problem of land classification. For this reason, the authors developed the  `torchopt` R package, which includes several recently proposed optimizers, including Madgrad [@Defazio2021], and Yogi [@Zaheer2018]. Using the `sits_tuning()` function allows testing these and other optimizers available in `torch` and `torch_opt` packages.  
-
-The `sits_tuning()` function takes the following parameters:
-
-1. `samples`: Training data set to be used by the model.
-2. `samples_validation`: Optional data set containing time series to be used for validation. If missing, the next parameter will be used.
-3. `validation_split`: If `samples_validation` is not used, this parameter defines the proportion of time series in the training data set to be used for validation (default is 20%).
-4. `ml_method()`: Deep learning method (either `sits_mlp()`, `sits_tempcnn()`, `sits_resnet()`, `sits_tae()` or `sits_lighttae()`).
-5. `params`: Defines the optimizer and its hyperparameters by calling  `sits_tuning_hparams()`, as shown in the example below. 
-6. `trials`: Number of trials to run the random search.
-7. `multicores`: Number of cores to be used for the procedure.
-8. `progress`: Show a progress bar?
-
-The `sits_tuning_hparams()` function inside `sits_tuning()` allows defining optimizers and their hyperparameters, including `lr` (learning rate), `eps` (controls numerical stability), and `weight_decay` (controls overfitting). The default values for `eps` and `weight_decay` in all `sits` deep learning functions are 1e-08  and 1e-06, respectively. The default `lr` for `sits_lighttae()` and `sits_tempcnn()` is  0.005, and for `sits_tae()` and `sits_resnet()` is 0.001. Users have different ways to randomize the hyperparameters, including: `choice()` (a list of options), `uniform` (a uniform distribution), `randint` (random integers from a uniform distribution), `normal(mean, sd)` (normal distribution), and `beta(shape1, shape2)` (beta distribution) and `loguniform(max, min)` (loguniform distribution). These options allow an extensive combination of hyperparameters.
-
-We suggest to use the log-uniform distribution to search over a wide range of values that span several orders of magnitude. This is common for hyperparameters like learning rates, which can vary from very small values (e.g., 0.0001) to larger values (e.g., 1.0) in a logarithmic manner. By default, `sits_tuning()` uses a loguniform distribution between 10^-2 and 10^-4 for the learning rate and the same distribution between 10^-2 and 10^-8 for the weight decay.
-
-In the example, we use `sits_tuning()` with the training data set `samples_deforestation_rondonia`, available in package `sitsdata`. This data set consists of 6007 samples collected from Sentinel-2 images covering the state of Rondonia. More details on this data set are available in Chapter [Image classification in data cubes](https://e-sensing.github.io/sitsbook/image-classification-in-data-cubes.html). The function finds good hyperparameters to train `sits_lighttae()` for the training data set. It tests 20 combinations of learning rate and weight decay for the Adamw optimizer. 
-
-```{r, tidy="styler", eval = FALSE, echo = TRUE}
-tuned <- sits_tuning(
-     samples = samples_deforestation_rondonia,
-     ml_method = sits_lighttae(),
-     params = sits_tuning_hparams(
-         optimizer = torchopt::optim_adamw,
-         opt_hparams = list(
-             lr = loguniform(10^-2, 10^-4),
-             weight_decay = loguniform(10^-2, 10^-8)
-         ),
-     ),
-     trials = 20,
-     multicores = 6,
-     progress = FALSE
+```{r, tidy = "styler", eval = FALSE, echo = TRUE}
+# Train model using Temporal CNN model
+rfor_model <- sits_train(
+  samples_deforestation,
+  ml_method = sits_rfor()
 )
 ```
 
 ```{r, eval = TRUE, echo = FALSE}
-
-tuned <- readRDS("./etc/tuned.rds")
+rfor_model <- readRDS("./etc/rfor_model_chp9.rds")
 ```
 
-The result is a tibble with different values of accuracy, kappa, decision matrix, and hyperparameters. The 10 best results obtain accuracy values between 0.919 and 0.908, as shown below. The best result is obtained by a learning rate of 2e-04 and a weight decay of 6.3e-06.
-
-```{r} 
-# Obtain accuracy, kappa, lr, and weight decay for the five best results
-# Hyperparameters are organized as a list
-hparams_5 <- tuned[1:5,]$opt_hparams
-# Extract learning rate and weight decay from the list
-lr_5 <- purrr::map_dbl(hparams_5, function(h) h$lr)
-wd_5 <- purrr::map_dbl(hparams_5, function(h) h$weight_decay)
-
-# Create a tibble to display the results
-best_5 <- tibble::tibble(
-    accuracy = tuned[1:5,]$accuracy,
-    kappa = tuned[1:5,]$kappa,
-    lr    = lr_5,
-    weight_decay = wd_5)
-# Print the five best combination of hyperparameters
-best_5
-```
-To understand the need for tuning, consider the worst 5 results, as show below. The worst result in the 20 trials is an accuracy of 0.829, when the learning rate is set to 5.6e-04 and the weight_decay to 2.57e-07
-
-```{r} 
-# Obtain accuracy, kappa, lr, and weight decay for the five best results
-# Hyperparameters are organized as a list
-hparams_5_worst <- tuned[16:20,]$opt_hparams
-# Extract learning rate and weight decay from the list
-lr_5_worst <- purrr::map_dbl(hparams_5, function(h) h$lr)
-wd_5_worst <- purrr::map_dbl(hparams_5, function(h) h$weight_decay)
-
-# Create a tibble to display the results
-worst_5 <- tibble::tibble(
-    accuracy = tuned[16:20, ]$accuracy,
-    kappa = tuned[16:20, ]$kappa,
-    lr    = lr_5_worst,
-    weight_decay = wd_5_worst)
-# Print the five best combination of hyperparameters
-worst_5
-```
-
-
-For large data sets, the tuning process is time-consuming. Despite this cost, it is recommended to achieve the best performance. In general, tuning hyperparameters for models such as `sits_tempcnn()` and `sits_lighttae()` will result in a slight performance improvement over the default parameters on overall accuracy. The performance gain will be stronger in the less well represented classes, where significant gains in producer's and user's accuracies are possible. When detecting change in less frequent classes, tuning can make a substantial difference in the results.
-
-
-## Building a data cube{-}
-
-We now build a data cube from the Sentinel-2 images available in the package `sitsdata`. These images are from the `SENTINEL-2-L2A` collection in Microsoft Planetary Computer (`MPC`). We have chosen bands BO2, B8A, and B11, and indexes NDVI, EVI and NBR in a small area of $1200 \times 1200$ pixels in the state of Rondonia. As explained in Chapter [Earth observation data cubes](https://e-sensing.github.io/sitsbook/earth-observation-data-cubes.html), we must inform `sits` how to parse these file names to obtain tile, date, and band information. Image files are named according to the convention "satellite_ sensor_tile_band_date" (e.g., `SENTINEL-2_MSI_20LKP_BO2_2020_06_04.tif`) which is the default format in `sits`. 
-
-
-```{r, tidy = "styler", out.width = "90%", fig.align="center", fig.cap="Color composite image of the cube for date 2021-07-25 (Source: Authors)."}
-# Files are available in a local directory 
-data_dir <- system.file("extdata/Rondonia-20LMR/", package = "sitsdata")
-# Read data cube
-ro_cube_20LMR <- sits_cube(
-    source = "MPC",
-    collection = "SENTINEL-2-L2A",
-    data_dir = data_dir
-)
-
-# Plot the cube
-plot(ro_cube_20LMR, date = "2022-07-16", red = "B11", green = "B8A", blue = "B02")
-```
-
-## Training a machine learning model{-}
-
-The next step is to train a random forest model. Since the data cube to be classified has bands BO2, B8A, and B11, we use the selection made in the previous step. 
-
-```{r, tidy = "styler", out.width = "80%", fig.align="center", fig.cap="Relevant attributes of the random forest model (Source: Authors)."}
-# Train model using Random Fores
-rfor_model <- sits_train(
-    samples = samples_6bands, 
-    ml_method = sits_rfor()
-)
-
-# Plot the model
+```{r, tidy = "styler", out.width = "90%", fig.align="center", fig.cap="Most relevant variables of the Random Forest model (Source: Authors)."}
 plot(rfor_model)
 ```
+The figure shows that "B11" band values in date 15 ("2022-08-17") is the most informative for the RF model, followed by "EVI" index values in date 9 ("2022-05-13"). These bands and dates represent inflection points in the image time series. 
 
-## Classification using parallel processing{-}
+## Classification of machine learning models in CPUs{-}
+
+The machine learning models available in `sits` (`sits_rfor()`, `sits_svm()` and `sits_xgboost()`) use CPU-based parallel processing, which is done internally by the package. The algorithms are adaptable; the only requirement for users is to inform the configuration of their machines. Details of CPU-based parallel processing in `sits` can be found in the [Technical Annex](https://e-sensing.github.io/sitsbook/technical-annex.html).
 
 To classify both data cubes and sets of time series, use `sits_classify()`, which uses parallel processing to speed up the performance, as described at the end of this Chapter. Its most relevant parameters are: (a) `data`, either a data cube or a set of time series; (b) `ml_model`, a trained model using one of the machine learning methods provided; (c) `multicores`, number of CPU cores that will be used for processing; (d) `memsize`, memory available for classification; (e) `output_dir`, directory where results will be stored; (f) `version`, for version control. To follow the processing steps, turn on the parameters `verbose` to print information and `progress` to get a progress bar. The classification result is a data cube with a set of probability layers, one for each output class. Each probability layer contains the model's assessment of how likely each pixel belongs to the related class. The probability cube can be visualized with `plot()`. 
 
-```{r, tidy = "styler", out.width = "80%", fig.align="center", fig.cap="Probability maps produced by random forest model (Source: authors)."}
+```{r, tidy = "styler", out.width = "90%", fig.align="center", fig.cap="Probabilities for class Forest"}
 
 # Classify data cube to obtain a probability cube
-ro_cube_20LMR_probs <- sits_classify(
-    data     = ro_cube_20LMR,
+cube_20LMR_probs <- sits_classify(
+    data     = cube_20LMR,
     ml_model = rfor_model,
     output_dir = "./tempdir/chp9",
-    version = "rfor_6bands",
+    version = "rf-raster",
     multicores = 4,
-    memsize = 12)
+    memsize = 16)
 
-plot(ro_cube_20LMR_probs, palette = "YlGn")
+plot(cube_20LMR_probs, labels = "Forest", palette = "YlGn")
 ```
 
-The probability cube provides information on the output values of the algorithm for each class. In deep learning algorithms, the last step before producing the output is to apply a neural network layer just before the output layer, which assigns probabilities to each class in a multi-class problem. Those probabilities add up to 1.0. Machine learning algorithms such as random forests also produce a probability cube. 
+The probability cube provides information on the output values of the algorithm for each class. Most probability maps contain outliers or misclassified pixels. The labeled map generated from the pixel-based time series classification method exhibits several misclassified pixels, which are small patches surrounded by a different class. This occurrence of outliers is a common issue that arises due to the inherent nature of this classification approach. Regardless of their resolution, mixed pixels are prevalent in images, and each class exhibits considerable data variability. As a result, these factors can lead to outliers that are more likely to be misclassified. To overcome this limitation, `sits` employs post-processing smoothing techniques that leverage the spatial context of the probability cubes to refine the results. These techniques will be discussed in the Chapter [Bayesian smoothing for post-processing](https://e-sensing.github.io/sitsbook/bayesian-smoothing-for-post-processing.html). In what follows, we will generate the smoothed cube to illustrate the procedure. 
 
-Most probability maps contain outliers or misclassified pixels. The labeled map generated from the pixel-based time series classification method exhibits several misclassified pixels, which are small patches surrounded by a different class. This occurrence of outliers is a common issue that arises due to the inherent nature of this classification approach. Regardless of their resolution, mixed pixels are prevalent in images, and each class exhibits considerable data variability. As a result, these factors can lead to outliers that are more likely to be misclassified. To overcome this limitation, `sits` employs post-processing smoothing techniques that leverage the spatial context of the probability cubes to refine the results. These techniques will be discussed in the Chapter [Bayesian smoothing for post-processing](https://e-sensing.github.io/sitsbook/bayesian-smoothing-for-post-processing.html). 
+```{r, tidy = "styler", out.width = "90%", fig.align="center", fig.cap="Smoothened probabilities for class Forest"}
+# Smoothen a  probability cube
+cube_20LMR_bayes <- sits_smooth(
+    cube    = cube_20LMR_probs,
+    output_dir = "./tempdir/chp9",
+    version = "rf-raster",
+    multicores = 4,
+    memsize = 16)
+plot(cube_20LMR_bayes, labels = c("Forest", "Clear_Cut_Bare_Soil"),  palette = "YlGn")
+```
 
-Thus, in general, users should perform a post-processing smoothing after obtaining the probability maps. To further illustrate such need, let us consider the case when the labelling operation is performed directly after the classification. To do so, we use the function `sits_label_classification()`, as shown below. 
+In general, users should perform a post-processing smoothing after obtaining the probability maps in raster format. After the post-processing operation, we apply `sits_label_classification()` to obtain a map with the most likely class for each pixel. For each pixel, the `sits_label_classification()` function takes the label with highest probability and assigns it to the resulting map. The output is a labelled map with classes. In addition, the function will remove outliers using a modal filter after if the `clean` parameter is set to `TRUE` (default value). For each pixel, the modal filter scans a neighborhood defined by `window_size` (default = 3) and assigns such pixel to the most frequent label inside the window.
 
-```{r, tidy = "styler", out.width = "120%", fig.align="center", fig.cap="Final classification map (Source: Authors)."}
+```{r, tidy = "styler", out.width = "120%", fig.align="center", fig.cap="Final map of deforestation (Source: Authors)."}
 # Generate a thematic map
-defor_map <- sits_label_classification(
-    cube = ro_cube_20LMR_probs,
+cube_20LMR_class <- sits_label_classification(
+    cube = cube_20LMR_bayes,
     clean = TRUE,
     window_size = 3L,
     multicores = 4,
     memsize = 12,
     output_dir = "./tempdir/chp9",
-    version = "no_smooth")
+    version = "rf-raster")
 
-plot(defor_map, tmap_options = 
-         list("tmap_legend_text_size" = 0.6,
-              "tmap_legend_title_size" = 0.6))
+# Plot the thematic map
+plot(cube_20LMR_class, tmap_options = 
+         list("scale" = 0.6))
 ```
 
-For each pixel, the `sits_label_classification()` function takes the label with highest probability and assigns it to the resulting map. The output is a labelled map with classes. In addition, the function will remove of outliers after the labelling step if the `clean` parameter is set to `TRUE` (which is the default value). In this case, for each pixel of the labelled map, it scans a window defined by the `window_size` parameter (default = 3) and assigns such pixel to the most frequent label inside the window.
+
+
+## Training and runninng deep learning models{-}
+
+The next examples shows how to run deep learning models in `sits`. This model will show how to run deep learning methods in GPUs if available. The case study uses the Temporal CNN model [@Pelletier2019], which is described in Chapter[Machine learning for data cubes](https://e-sensing.github.io/sitsbook/machine-learning-for-data-cubes.html). We first show the need for model tuning, before applying the model for data cube classification. 
+
+### Deep learning model tuning{-}
+
+In the example, we use `sits_tuning()` to find good hyperparameters to train the `sits_tempcnn()` algorithm for the Rondonia training data set. The hyperparameters for the `sits_tempcnn()` method include the size of the layers, convolution kernels, dropout rates, learning rate and weight decay. Please refer to description of the Temporal CNN algorithm in Chapter [Machine learning for data cubes](https://e-sensing.github.io/sitsbook/machine-learning-for-data-cubes.html) 
+
+```{r, tidy="styler", eval = FALSE, echo = TRUE}
+tuned_tempcnn <- sits_tuning(
+  samples = samples_deforestation,
+  ml_method = sits_tempcnn(),
+  params = sits_tuning_hparams(
+    cnn_layers = choice(c(256, 256, 256), c(128, 128, 128), c(64, 64, 64)),
+    cnn_kernels = choice(c(3, 3, 3), c(5, 5, 5), c(7, 7, 7)),
+    cnn_dropout_rates = choice(c(0.15, 0.15, 0.15), c(0.2, 0.2, 0.2),
+                               c(0.3, 0.3, 0.3), c(0.4, 0.4, 0.4)),
+    optimizer = torchopt::optim_adamw,
+    opt_hparams = list(
+      lr = loguniform(10^-2, 10^-4),
+      weight_decay = loguniform(10^-2, 10^-8)
+    )
+  ),
+  trials = 50,
+  multicores = 4
+)
+```
+
+```{r, eval = TRUE, echo = FALSE}
+tuned_tempcnn <- readRDS("./etc/tuned_tempcnn_2.rds")
+```
+
+The result of `sits_tuning()` is  tibble with different values of accuracy, kappa, decision matrix, and hyperparameters. The five best results obtain accuracy values between 0.939 and 0.908, as shown below. The best result is obtained by a learning rate of 3.76e-04 and a weight decay of 1.5e-04, and three CNN layers of size 256, kernel size of 5, and dropout rates of 0.2.
+
+```{r} 
+# Obtain accuracy, kappa, cnn_layers, cnn_kernels, and cnn_dropout_rates the best result
+cnn_params <- tuned_tempcnn[1,c("accuracy", "kappa", "cnn_layers", "cnn_kernels", "cnn_dropout_rates"), ]
+# Learning rates and weight decay are organized as a list
+hparams_best <- tuned_tempcnn[1,]$opt_hparams[[1]]
+# Extract learning rate and weight decay 
+lr_wd <- tibble::tibble(lr_best = hparams_best$lr, 
+                        wd_best = hparams_best$weight_decay)
+# Print the best parameters 
+dplyr::bind_cols(cnn_params, lr_wd)
+```
+
+### Classification in GPUs using parallel processing{-}
+
+Deep learning time series classification methods in `sits`, which include `sits_tempcnn()`, `sits_mlp()`, `sits_resnet()`, `sits_lightae()` and `sits_tae()`, are written using the `torch` package, which is an adaptation of pyTorch to the R environment. These algorithms can use a CUDA-compatible NVDIA GPU which has been  properly configured. Please refer to the `torch` [installation guide](https://torch.mlverse.org/docs/articles/installation) for details. If no GPU is available, these algorithms will run on regular CPUs, using the same paralellization methods as traditional machine learning methods. Typically, there is a 10-fold performance increase when running `torch` based methods in GPUs relative to their processing time in GPU.
+
+To illustrate the use of GPUs, we take the same data cube and training data used in the previous examples and use a Temporal CNN method. The first step is to obtain a deep learning model using the hyperparameters produced by the tuning procedure shown earlier. We run
+
+```{r, tidy="styler", out.width = "100%", fig.align="center", fig.cap="Plot of tempCNN model"}
+tcnn_model <- sits_train(
+  samples_deforestation,
+  sits_tempcnn(
+    cnn_layers = c(256, 256, 256),
+    cnn_kernels = c(5, 5, 5),
+    cnn_dropout_rates = c(0.2, 0.2, 0.2),
+    opt_hparams = list(
+      lr = 0.000376,
+      weight_decay = 0.000153
+    )
+  )
+)
+```
+
+After training the model, we classify the data cube. If a GPU is available, users need to provide the additional parameter `gpu_memory` to the `sits_classify()` function. This information will be used by `sits` to optimize access to the GPU and speed up processing. 
+
+```{r, tidy="styler"}
+cube_20LMR_probs_tcnn <- sits_classify(
+    cube_20LMR,
+    ml_model = tcnn_model,
+    output_dir = "./tempdir/chp9",
+    version = "tcnn-raster",
+    gpu_memory = 16,
+    multicores = 6,
+    memsize = 24
+)
+```
+
+After classification, we can smooth the probability cube and then label the resulting smoothed probabilities to obtain a classified map. 
+
+```{r, tidy="styler", out.width = "120%", fig.align="center", fig.cap="Final map of deforestation (Source: Authors)."}
+# Smoothen the probability map 
+cube_20LMR_bayes_tcnn <- sits_smooth(
+    cube_20LMR_probs_tcnn,
+    output_dir = "./tempdir/chp9",
+    version = "tcnn-raster",
+    multicores = 6,
+    memsize = 24
+)
+# Obtain the final labelled map
+cube_20LMR_class_tcnn <- sits_label_classification(
+    cube_20LMR_bayes_tcnn,
+    output_dir = "./tempdir/chp9",
+    version = "tcnn-raster",
+    multicores = 6,
+    memsize = 24
+)
+# plot the final classification map
+plot(cube_20LMR_class_tcnn,
+     tmap_options = list("scale" = 0.6) )
+```
+
 
 ## Map reclassification{-}
 
@@ -233,11 +252,16 @@ ro_class <- sits_cube(
     parse_info = c("X1", "X2", "tile", "start_date", "end_date",
                    "band", "version"),
     bands = "class",
-    labels = c("1" = "Water", "2" = "ClearCut_Burn", "3" = "ClearCut_Soil",
-               "4" = "ClearCut_Veg", "5" = "Forest", 
-               "6" = "Bare_Soil", "7" = "Wetland"))
+    labels = c("1" = "Water", "2" = "Clear_Cut_Burned_Area", 
+               "3" = "Clear_Cut_Bare_Soil",
+               "4" = "Clear_Cut_Vegetation", 
+               "5" = "Forest", 
+               "6" = "Bare_Soil", 
+               "7" = "Wetland")
+    )
 
-plot(ro_class)
+plot(ro_class, 
+     tmap_options = list("scale" = 0.6))
 ```
 
 The above map shows the total extent of deforestation by clear cuts estimated by the `sits` random forest algorithm in an area in Rondonia, Brazil, based on a time series of Sentinel-2 images for the period 2020-06-04 to 2021-08-26. Suppose we want to estimate the deforestation that occurred from June 2020 to August 2021. We need a reference map containing information on forest cuts before 2020. 
@@ -330,7 +354,8 @@ ro_def_2021 <- sits_reclassify(
     version = "reclass")
 
 # Plot the reclassified map
-plot(ro_def_2021)
+plot(ro_def_2021,
+     tmap_options = list("scale" = 0.6))
 ```
 
 The reclassified map has been split into deforestation before mid-2020 (using the PRODES map) and the areas classified by `sits` that are taken as being deforested from mid-2020 to mid-2021. This allows the experts to measure how much deforestation occurred in this period according to `sits` and compare the result with the PRODES map. 

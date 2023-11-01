@@ -9,7 +9,7 @@ sits:::.conf_set_options("tmap_max_cells" = 1e+09)
 
 This Chapter contains technical details on the algorithms available in `sits`. It is intended to support those that want to understand how the package works and also want to contribute to its development.
 
-## How parallel processing works{-}
+## How parallel processing works in virtual machines with CPUs{-}
 
 This section provides an overview of how `sits_classify()`, `sits_smooth()`, and `sits_label_classification()` process images in parallel. To achieve efficiency, `sits` implements a fault-tolerant multitasking procedure for big Earth observation data classification. The learning curve is shortened as there is no need to learn how to do multiprocessing. Image classification in `sits` is done by a cluster of independent workers linked to a virtual machine. To avoid communication overhead, all large payloads are read and stored independently; direct interaction between the main process and the workers is kept at a minimum. 
 
@@ -279,40 +279,37 @@ The above example shows how it is possible to extend `sits` with new machine lea
 
 ## How colors work in sits{-}
 
-In examples provided in the book, the color legend is taken from a predefined color table provided by `sits`. This default color table is displayed using `sits_colors_show()`. This color definition file assigns colors to 99 class names, including the IPCC and IGBP land classes. 
+In examples provided in the book, the color legend is taken from a predefined color pallete provided by `sits`. The color definition file used by `sits` has 210 class names, which can be shown using `sits_colors()`
 
 ```{r, tidy = "styler", out.width = "100%", out.height = "100%", echo = FALSE, fig.align="center", fig.cap="Default colors used in the sits package (Source: Authors)."}
 # Display default `sits` colors
-sits_colors_show()
+sits_colors()
 ```
 
-The color table can be extended or adjusted by accessing and modifying the default color table, which is retrieved using `sits_colors()`.
+These colors are grouped by typical legends used by the Earth observation community, which include "IGBP", "UMD", "ESA_CCI_LC", "WORLDCOVER", "PRODES", "PRODES_VISUAL", "TERRA_CLASS", "TERRA_CLASS_PT". The following commands shows the colors associated with the IGBP legend
 
-```{r}
-# Retrieve the color table
-color_tb <- sits_colors()
-# Show the color table
-color_tb
+```{r, tidy = "styler", out.width = "100%", out.height = "100%", echo = FALSE, fig.align="center", fig.cap="Default colors used in the sits package (Source: Authors)."}
+# Display default `sits` colors
+sits_colors_show(legend = "IBGP")
 ```
+
 
 The default color table can be redefined using `sits_colors_set()`. As an example of a user-defined color table, consider a definition that covers level 1 of the Anderson Classification System used in the US National Land Cover Data, obtained by defining a new color table, as shown below. The colors can be defined by HEX values or by names accepted as R color codes.
 ```{r, tidy = "styler", out.width = "80%", out.height = "80%", fig.align="center", fig.cap="Example of Anderson Land Classification Scheme use in sits (Source: Authors)."}
 # Define a color table based on the Anderson Land Classification System
 us_nlcd <- tibble::tibble(name = character(), color = character())
 us_nlcd <- us_nlcd %>% 
-  tibble::add_row(name = "Urban Built Up", color =  "#85929E") %>% 
-  tibble::add_row(name = "Agricultural Land", color = "#F0B27A") %>% 
-  tibble::add_row(name = "Rangeland", color = "#F1C40F") %>% 
-  tibble::add_row(name = "Forest Land", color = "#27AE60") %>% 
-  tibble::add_row(name = "Water", color = "#2980B9") %>% 
-  tibble::add_row(name = "Wetland", color = "#D4E6F1") %>% 
-  tibble::add_row(name = "Barren Land", color = "#FDEBD0") %>% 
-  tibble::add_row(name = "Tundra", color = "#EBDEF0") %>% 
+  tibble::add_row(name = "Urban Built Up", color =  "#85929E") |> 
+  tibble::add_row(name = "Agricultural Land", color = "#F0B27A") |>  
+  tibble::add_row(name = "Rangeland", color = "#F1C40F") |> 
+  tibble::add_row(name = "Forest Land", color = "#27AE60") |>  
+  tibble::add_row(name = "Water", color = "#2980B9") |>  
+  tibble::add_row(name = "Wetland", color = "#D4E6F1") |> 
+  tibble::add_row(name = "Barren Land", color = "#FDEBD0") |> 
+  tibble::add_row(name = "Tundra", color = "#EBDEF0") |> 
   tibble::add_row(name = "Snow and Ice", color = "#F7F9F9")
 # Load the color table into `sits`
 sits_colors_set(us_nlcd)
-# Show the new color table used by sits
-sits_colors_show()
 ```
 
 The original default `sits` color table can be restored using `sits_colors_reset()`. 

@@ -1,9 +1,6 @@
 ```{r, include = FALSE}
 source("common.R")
 dir.create("./tempdir/ch10")
-sits:::.conf_set_options("tmap_legend_text_size" = 0.7)
-sits:::.conf_set_options("tmap_legend_title_size" = 0.7)
-sits:::.conf_set_options("tmap_max_cells" = 1e+09) 
 ```
 
 # Bayesian smoothing for post-processing{-}
@@ -12,54 +9,27 @@ sits:::.conf_set_options("tmap_max_cells" = 1e+09)
 
 Machine learning algorithms rely on training samples that are derived from "pure" pixels, hand-picked by users to represent the desired output classes. Given the presence of mixed pixels in images regardless of resolution, and the considerable data variability within each class, these classifiers often produce results with outliers or misclassified pixels. Therefore, post-processing techniques have become crucial to refine the labels of a classified image \citep{Huang2014}. Post-processing methods reduce salt-and-pepper and border effects, where single pixels or small groups of pixels are classified differently from their larger surrounding areas; these effects leads to visual discontinuity and inconsistency. By mitigating these errors and minimizing noise, post-processing improves the quality of the initial classification results, bringing  a significant gain in the overall accuracy and interpretability of the final output \citep{Schindler2012}.
 
-The `sits` package uses a *time-first, space-later* approach. Since machine learning classifiers in `sits` are mostly pixel-based, it is necessary to complement them with spatial smoothing methods. These methods improve the accuracy of land classification by incorporating spatial and contextual information into the classification process. The smoothing method available in `sits` uses Bayesian inference for including expert knowledge on the derivation of probabilities. The assumption is that class probabilities at the local level should be similar and provide the baseline for comparison with the pixel values produced by the classifier. Based on these two elements, Bayesian smoothing adjusts the probabilities for the pixels, considering spatial dependence.  
+The `sits` package uses a *time-first, space-later* approach. Since machine learning classifiers in `sits` are mostly pixel-based, it is necessary to complement them with spatial smoothing methods. These methods improve the accuracy of land classification by incorporating spatial and contextual information into the classification process. The smoothing method available in `sits` uses an Empirical Bayes approach, adjusted to the specific properties of land classification. The assumption is that class probabilities at the local level should be similar and provide the baseline for comparison with the pixel values produced by the classifier. Based on these two elements, Bayesian smoothing adjusts the probabilities for the pixels, considering spatial dependence.  
 
-## Bayesian estimation{-}
+## Using non-isotropic neighbourhoods for smoothing{-}
 
-The Bayesian estimate is based on two random variables: (a) The observed class probabilities for each pixel denoted by a random variable $p_{i,k}$, where $i$ is the index of the pixel and $k$ indicates the class; (b) The underlying class probabilities for each pixel, denoted by a random variable $\phi_{i,k}$. The probabilities $p_{i,k}$ are the classifier's output, being subject to noise, outliers, and classification errors. Our estimation aims to remove these effects and obtain $\phi_{i,k}$ to approximate the actual class probability better. 
+The fundamental idea behind Bayesian smoothing for land classification posits that image patches with similar characteristics usually have a dominant class. This dominant class is marked by higher average probabilities and lower variance compared to other classes. In such regions, an outlier assigned to a different class will have lower average probabilities and higher local variance. Post-processing will adjust this pixel to match the dominant class.
 
-We first convert the class probability values $p_{i,k}$  to log-odds values using the logit function, as shown below. The logit function converts probability values ranging from $0$ to $1$ to values from negative infinity to infinity. The conversion from probabilities logit values is helpful to support our assumption of normal distribution for our data. 
+Pixels in the border between two areas of different classes pose a challenge. Only some of their neighbours belong to the same class as the pixel. To address this issue, we employ a non-isotropic definition of a neighbourhood to estimate the prior class distribution. For instance, consider a boundary pixel with a neighborhood defined by a 7 x 7 window, located along the border between Forest and Grassland classes. To estimate the prior probability of the pixel being labelled as a Forest, we should only take into account the neighbours on one side of the border that are likely to be correctly classified as Forest. Pixels on the opposite side of the border should be disregarded, since they are unlikely to belong to the same spatial process. In practice, we use only half of the pixels in the 7 x 7 window, opting for those that have a higher probability of being named as Forest. For the prior probability of the Grassland class, we reverse the selection and only consider those on the opposite side of the border.
+
+Although this choice of neighbourhood may seem unconventional, it is consistent with the assumption of non-continuity of the spatial processes describing each class. A dense forest patch, for example, will have pixels with strong spatial autocorrelation for values of the Forest class; however, this spatial autocorrelation doesn't extend across its border with other land classes.
+
+## Empirical Bayesian estimation{-}
+
+The Bayesian estimate is based on the probabilities produced by the classifiers. Let $\p_{i,k} \geq 0$ be the prior probability of the $i$-th pixel belonging to class $k \in \{1, \ldots, m\}$.  The probabilities $p_{i,k}$ are the classifier's output, being subject to noise, outliers, and classification errors. Our estimation aims to remove these effects and obtain values that approximate the actual class probability better. 
+
+We convert the class probability values $p_{i,k}$  to log-odds values using the logit function, to transform probability values ranging from $0$ to $1$ to values from negative infinity to infinity. The conversion from probabilities logit values is helpful to support our assumption of normal distribution for our data. 
 
 $$
     x_{i,k} = \ln \left(\frac{p_{i,k}}{1 - p_{i,k}}\right)
 $$
-For each pixel $i$, we consider that the machine learning algorithms produce a set of logit values $x_{i,k}$, where $k = {1,..n}$ is a predefined set of classes. We assume there is an unknown set of values $\mu_{i,k}$ which represent the best estimate of the actual pixel class. The Bayesian inference procedure can be expressed as a combination of the prior probability distribution $\pi(\mu_{i,k})$ for each class $k$ and the conditional distribution $\pi(x_{i,k}|\mu_{i,k})$ which expresses the dependence of the logit values $x_{i,k}$ on the unknown values $\mu_{i,k}$. We aim to estimate $\pi[\mu_{i,k} | x_{i,k}]$, the posterior probability of the $\mu_{i,k}$ given $x_{i,k}$, which will be our estimate of the actual values of class probability per pixel.  The Bayesian inference will be expressed as
 
-$$
-\pi(\mu_{i,k}|x_{i,k}) \propto{} \pi(x_{i,k}|\mu_{i,k})\pi(\mu_{i,k}).
-$$
-
-
-The first step in the Bayesian approach is to specify the prior probability density $\pi(\mu_{i,k})$ for the values of logits of each class $k$ for each pixel $i$. A well-known approach is to use the local behaviour of the observed values $x_{i,k}$ and express the prior probability as a function of the observations in the vicinity of pixel $i$ [@Besag1991]. We assume a normal local prior for the parameter $\mu_{i,k}$ with parameters $m_{i,k}$ and $s^2_{i,k}$:
-
-$$
-	\mu_{i,k} \sim N(m_{i,k}, s^2_{i,k}).
-$$
-
-The method assumes that class probabilities in the nearby pixels also follow a normal distribution. Estimating the local means and variances for the prior distribution considers a spatial neighbourhood $N_{i}$ close to pixel $i$. Let $\#(N_{i})$ be the number of elements in the neighbourhood $N_{i}$. The mean value is given by
-
-$$
-m_{i,k} = \frac{\sum_{(j) \in N_{i}} x_{j,k}}{\#(N_{i})}
-$$
-
-and the variance by
-
-$$
-s^2_{i,k} = \frac{\sum_{(j) \in N_{i}} [x_{j,k} - m_{i,k}]^2}{\#(N_{i})-1}.
-$$
-
-Since the nature of land classification differs from the usual assumptions made in Bayesian spatial statistics, we use non-isotropic neighbourhoods to obtain the estimates for the prior. Our assumptions are described in detail in section "Defining non-isotropic neighbourhoods". 
-
-The second part of the Bayesian inference is the definition of the likelihood $\pi(x_{i_k}|\mu_{i_k})$. The method assumes that the likelihood $x_{i,k} | \mu_{i,k}$ follows a normal distribution $N(\mu_{i,k}, \sigma^2_{k})$, with parameters $\mu_{i,k}$ and $\sigma^2_{k}$. The variance $\sigma^2_{k}$ will be estimated based on user expertise and taken as a hyperparameter to control the smoothness of the resulting estimate.
-
-Given these assumptions, and following \citet{Gelman2014}, the Bayesian update for the expected conditional mean ${E}[\mu_{i,k} | x_{i,k}]$ is given by 
-
-$$
-{E}[\mu_{i,k} | x_{i,k}] = \frac{m_{i,t} \times \sigma^2_{k} +
-x_{i,k} \times s^2_{i,k}}{ \sigma^2_{k} +s^2_{i,k}},
-$$
-
-which can be expressed as a weighted mean
+The standard Empirical Bayesian updating \citep{Gelman2014} leads to the estimation values for posterior distribution which can be expressed as a weighted mean
 
 $$
 {E}[\mu_{i,k} | x_{i,k}] =
@@ -67,7 +37,6 @@ $$
 x_{i,k} +
 \Biggl [ \frac{\sigma^2_{k}}{\sigma^2_{k} +s^2_{i,k}} \Biggr ] \times m_{i,k},
 $$
-
 where:
 
 \begin{itemize}
@@ -81,6 +50,9 @@ an user-derived hyperparameter.
 \end{itemize}
 
 The above equation is a weighted average between the value $x_{i,k}$ for the pixel and the mean $m_{i,k}$ for the neighboring pixels. When the variance $s^2_{i,k}$ for the neighbors is too high, the algorithm gives more weight to the pixel value $x_{i,k}$. When the variance of the likelihood $\sigma^2_k$ increases, the method gives more weight to the neighborhood mean $m_{i,k}$.
+
+However, a plain neighborhood of each pixel, based uniquely on the distance between locations, did not produce reasonable results. As explained above, we must consider non-isotropic neighborhoods.  The reason is that we want to give more weight to those neighborhood pixels with assignment classes with large probabilities as those are the ones estimated more reliably by the classification algorithm. 
+
 
 ## Effect of the hyperparameter{-}
 
@@ -102,24 +74,20 @@ We make the following recommendations for setting the $\sigma^2_{k}$ parameter:
 
 Consider the case of forest areas and watersheds. If an expert wishes to have compact areas classified as forests without many outliers inside them, she will set the $\sigma^2$ parameter for the class Forest to be high. For comparison, to avoid that small watersheds with few similar neighbors being relabeled, it is advisable to avoid a strong influence of the neighbors, setting $\sigma^2$ to be as low as possible. 
 
-## Defining non-isotropic neighbourhoods{-}
-
-The fundamental idea behind Bayesian smoothing for land classification posits that image patches with similar characteristics usually have a dominant class. This dominant class is marked by higher average probabilities and lower variance compared to other classes. In such regions, an outlier assigned to a different class will have lower average probabilities and higher local variance. Post-processing will adjust this pixel to match the dominant class.
-
-Pixels in the border between two areas of different classes pose a challenge. Only some of their neighbours belong to the same class as the pixel. To address this issue, we employ a non-isotropic definition of a neighbourhood to estimate the prior class distribution. For instance, consider a boundary pixel with a neighborhood defined by a 7 x 7 window, located along the border between Forest and Grassland classes. To estimate the prior probability of the pixel being labelled as a Forest, we should only take into account the neighbours on one side of the border that are likely to be correctly classified as Forest. Pixels on the opposite side of the border should be disregarded, since they are unlikely to belong to the same spatial process. In practice, we use only half of the pixels in the 7 x 7 window, opting for those that have a higher probability of being named as Forest. For the prior probability of the Grassland class, we reverse the selection and only consider those on the opposite side of the border.
-
-Although this choice of neighbourhood may seem unconventional, it is consistent with the assumption of non-continuity of the spatial processes describing each class. A dense forest patch, for example, will have pixels with strong spatial autocorrelation for values of the Forest class; however, this spatial autocorrelation doesn't extend across its border with other land classes.
 
 ## Running Bayesian smoothing {-}
 
-To run Bayesian smoothing, we use `sits_smooth()` with parameters: (a) `cube`, a probability cube produced by `sits_classify()`; (b) `window_size`, the local window to compute the neighborhood probabilities; (d) `neigh_fraction`, fraction of local neighbors used to calculate local statistics; (e) `smoothness`, a vector with estimates of the prior variance of each class; (f) `multicores`, number of CPU cores that will be used for processing; (g) `memsize`, memory available for classification; (h) `output_dir`, a directory where results will be stored; (i) `version`, for version control. The resulting cube can be visualized with `plot()`. In what follows, we compare the smoothing effect by varying the `window_size` and `smoothness` parameters. 
-
-Together, the parameters `window_size` and `neigh_fraction` control how many pixels in a neighborhood the Bayesian estimator will use to calculate the local statistics. For example, setting `window size` to $7$ and `neigh_fraction` to $0.50$ (the defaults) ensures that $25$ samples are used to estimate the local statistics. 
+In the example below, we create a probability cube based on an existing local file.
 
 ```{r, tidy = "styler", out.width = "100%", fig.align="center", fig.cap="Probability map produced for classes Forest and Water (Source: Authors)."}
 # define the classes of the probability cube
-labels <- c("Water", "ClearCut_Burn", "ClearCut_Soil",
-            "ClearCut_Veg", "Forest", "Wetland")
+labels <- c("1" = "Water", 
+            "2" = "Clear_Cut_Burned_Area", 
+            "3" = "Clear_Cut_Bare_Soil",
+            "4" = "Clear_Cut_Vegetation", 
+            "5" = "Forest", 
+            "6" = "Wetland"
+)
 # directory where the data is stored 
 data_dir <- system.file("extdata/Rondonia-20LLQ/", package = "sitsdata")
 # create a probability data cube from a file 
@@ -149,10 +117,15 @@ class_map <- sits_label_classification(
     version = "no_smooth")
 
 # Plot the result
-plot(class_map)
+plot(class_map, 
+     tmap_options = list("scale" = 0.6))
 ```
 
-To remove the outliers and classification errors, we run a smoothing procedure where all prior variances are set to the same value of $20$, which is relatively high compared with the maximum local class variance shown above. In this case, for most situations, the new value of the probability will be strongly influenced by the local average.
+To remove the outliers and classification errors, we run a smoothing procedure with `sits_smooth()` with parameters: (a) `cube`, a probability cube produced by `sits_classify()`; (b) `window_size`, the local window to compute the neighborhood probabilities; (d) `neigh_fraction`, fraction of local neighbors used to calculate local statistics; (e) `smoothness`, a vector with estimates of the prior variance of each class; (f) `multicores`, number of CPU cores that will be used for processing; (g) `memsize`, memory available for classification; (h) `output_dir`, a directory where results will be stored; (i) `version`, for version control. The resulting cube can be visualized with `plot()`. In what follows, we compare the smoothing effect by varying the `window_size` and `smoothness` parameters. 
+
+Together, the parameters `window_size` and `neigh_fraction` control how many pixels in a neighborhood the Bayesian estimator will use to calculate the local statistics. For example, setting `window size` to $7$ and `neigh_fraction` to $0.50$ (the defaults) ensures that $25$ samples are used to estimate the local statistics.
+
+The `smoothness` values for all classes aare set to the same value of $20$, which is relatively high. In this case, for most situations, the new value of the probability will be strongly influenced by the local average.
 
 ```{r, tidy = "styler", out.width = "100%", fig.align="center", fig.cap="Probability maps after bayesian smoothing (Source: Authors)."}
 # Compute Bayesian smoothing
@@ -181,7 +154,8 @@ defor_map_w7_f05_20 <- sits_label_classification(
     output_dir = "./tempdir/chp8",
     version = "w7-f05-s20")
 
-plot(defor_map_w7_f05_20)
+plot(defor_map_w7_f05_20,
+     tmap_options = list("scale" = 0.6))
 ```
 
 In the smoothed map, the outliers have been removed by expanding forest areas. Forests have replaced small corridors of water and soil encircled by trees. This effect is due to the high probability of forest detection in the training data. To keep the water areas and reduce the expansion of the forest area, a viable alternative is to reduce the smoothness ($\sigma^2$) for  Forest and Water classes. In this way, the local influence of the forest in the other classes is reduced. As for the water areas, since they are narrow, their neighborhoods will have many low probability values, which would reduce the expected value of the Bayesian estimator. 
@@ -210,7 +184,8 @@ defor_map_w7_f05_swf <- sits_label_classification(
     output_dir = "./tempdir/chp10",
     version = "w7-f05-swf")
 
-plot(defor_map_w7_f05_swf)
+plot(defor_map_w7_f05_swf,
+     tmap_options = list("scale" = 0.6))
 ```
 
 Comparing the two maps, the narrow water streams inside the forest area have been better preserved. Small corridors between forest areas have also been maintained. For A better comparison between the two maps requires importing them into QGIS. 

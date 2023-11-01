@@ -35,6 +35,5 @@ if (!knitr:::is_html_output())
     knitr::opts_chunk$set(tidy.opts = list(width.cutoff = 60, indent = 4), 
                           tidy = TRUE)
 }
-    
 
 

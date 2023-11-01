@@ -2,34 +2,19 @@
 
 ```{r, include = FALSE}
 source("common.R")
-dir.create("./tempdir/chp9")
-sits:::.conf_set_options("tmap_legend_text_size" = 0.7)
-sits:::.conf_set_options("tmap_legend_title_size" = 0.7)
+dir.create("./tempdir/chp14")
 ```
 
 Object-Based Image Analysis (OBIA) is an approach to remote sensing image analysis that partitions an image into closed segments which are then classified and analyzed. For high-resolution images (1 meter or smaller) the aim of OBIA is to create objects that represent meaningful features in the real world,
 like buildings, roads, fields, forests, and water bodies. In case of medium resolution images (such as Sentinel-2 or Landsat) the segments represent groups  of the image with similar spectral responses which in general do not correspond directly to individual objects in the ground. These groups of pixels are called super-pixels. In both situations, the aim of OBIA is to obtain a spatial partition of the image which can then be assigned to a single class. When applicable, OBIA reduces processing time and produces labelled maps with greater spatial consistency.
 
-In contrast to traditional pixel-based approaches, which analyze each individual pixel in isolation, OBIA operates on segments, which have similar spectral and spatial characteristics.
+The general sequence of the processes involved in OBIA in `sits` is:
 
-The general sequence of the processes involved in OBIA in SITS is:
+1.  Segmentation: The first step is to group together pixels that are similar based a distance metric that consider the values of all bands in all time instances. We build a multitemporal attribute space where each time/band combination is taken as an independent dimension. Thus, distance metrics for segmentation in a data cube with 10 bands and 24 time steps use a 240-dimension space.
 
-1.  Segmentation: The first step is to group together pixels that are similar based on certain criteria such as color, intensity or texture. These groupings are called superpixels. 
-
-2.  Probability Estimation: After the image has been partitioned into distinct objects, the next step is to classify each segment. For satellite image time series, a subset of pixels inside each segment is classified. The result is a set of probabilities for each segment. 
+2.  Probability Estimation: After the image has been partitioned into distinct objects, the next step is to classify each segment. For satellite image time series, a subset of time series inside each segment is classified. 
 
 3. Labelling: Once the set of probabilities have been obtain for each time series inside a segment, they can be used for labelling. This is done by considering the median value of the probabilities for the time series inside the segment that have been classified. For each class, we take the median of the probability values. Then, median values for the classes are normalised, and the most likely value is assigned as the class for the segment. 
-
-
-Version 1.4.2. of `sits` includes an extension of OBIA for working with image time series. The initial step of the process is to perform a spatio-temporal segmentation. To do this, we build a multitemporal attribute space where each time/band combination is taken as an independent dimension. Thus, a data cube with 10 bands and 24 time steps will be expressed as a 240-dimension space. 
-
-After building the multidimensional space, we use the SLIC algorithm [Achanta2012] that clusters pixels to efficiently generate compact, nearly uniform superpixels. This algorithm has been adapted by Nowosad and Stepinski [Nowosad2022] to work with multispectral images. The `sits` implementation extends their implementation to deal with space-time data. 
-
-SLIC starts by initializing a set of cluster centers or seeds evenly spaced throughout the image. These initial cluster centers represent the centers of the superpixels. For each cluster center, SLIC assigns nearby pixels to that cluster based on a distance metric in space-time. The distance metric considers band values in all of the time steps of a data cube. The distance metric considers the distance between pixel coordinates and the distance between attribute values in space-time. 
-
-Additionally, for each segment, we use an aggregation function to obtain a set of spectral attributes for each segment. The default option is to take the median value for each temporal instance of each band. This information can be optionally used for segment classification. 
-
-The result  are a set of time series, one for each segment. Each time series is then classified independently. The result can be joined together with the original image to obtain a classification. 
 
 ## Image segmentation in SITS{-}
 
@@ -50,7 +35,9 @@ In `sits` version 1.4.2, there is only one segmentation function available (`sit
 
 ## Simple Linear Iterative Clustering (SLIC) algorithm{-}
 
-In `sits` 1.4.2, we provide an implementation the extended off The Simple Linear Iterative Clustering (SLIC) algorithm. SLIC was initially proposed by Achanta el al. [@Achanta2012a] and later extended for multidimensional raster images by Nowosad and Stepinksi [@Nowosad2022]. SLIC uses spectral similarity and proximity in the image space to segment the image into superpixels. Superpixels are clusters of pixels with similar spectral responses that are close together, which correspond to coherent object parts in the image. Here's a high-level view of the extended SLIC algorithm:
+ After building the multidimensional space, we use the SLIC algorithm [Achanta2012] that clusters pixels to efficiently generate compact, nearly uniform superpixels. This algorithm has been adapted by Nowosad and Stepinski [Nowosad2022] to work with multispectral images. The `sits` implementation extends their implementation to deal with space-time data. 
+
+In `sits` 1.4.2, we provide an implementation of  Simple Linear Iterative Clustering (SLIC) algorithm. SLIC was initially proposed by Achanta el al. [@Achanta2012a] and later extended for multidimensional raster images by Nowosad and Stepinksi [@Nowosad2022]. SLIC uses spectral similarity and proximity in the image space to segment the image into superpixels. Superpixels are clusters of pixels with similar spectral responses that are close together, which correspond to coherent object parts in the image. Here's a high-level view of the extended SLIC algorithm:
 
 1.  The algorithm starts by dividing the image into a grid, where each cell of the grid will become a superpixel.
 
@@ -62,7 +49,7 @@ In `sits` 1.4.2, we provide an implementation the extended off The Simple Linear
 
 5.  Steps 3-4 are repeated for a set number of iterations, or until the cluster assignments stop changing.
 
-The outcome of the SLIC algorithm is a set of superpixels which try to capture the to boundaries of objects within the image. The SLIC implementation in `sits` 1.4.1 uses the `supercells` R package [@Nowosad2022]. The parameters for the `sits_supercells()` function are:
+The outcome of the SLIC algorithm is a set of superpixels which try to capture the to boundaries of objects within the image. The SLIC implementation in `sits` 1.4.1 uses the `supercells` R package [@Nowosad2022]. The parameters for the `sits_slic()` function are:
 
 -   `dist_fn`: metric used to calculate the distance between values. By default, the "euclidean" metric is used. Alternatives include "jsd" (Jensen-Shannon distance), and "dtw" (dynamic time warping) or one of 46 distance and similarity measures implemented in the R package `philentropy` [@Drost2018].
 -   `avg_fn`: function to calculate a value of each superpixel. There are two internal functions implemented in C++ - "mean" and "median". It is also possible to provide a user-defined R function that returns one value based on an R vector.
@@ -70,99 +57,82 @@ The outcome of the SLIC algorithm is a set of superpixels which try to capture t
 -   `compactness`: A value that controls superpixels' density. Larger values cause clusters to be more compact.
 -   `minarea`: minimal size of the output superpixels (measured in number of cells).
 
+
+
 ## Example of SLIC-based segmentation and classification{-}
 
 To show an example of SLIC-based segmentation, we first build a data cube, using images available in the `sitsdata` package.
 
 ```{r, tidy = "styler", out.width="100%", fig.align="center", fig.cap= "Sentinel-2 image in an area of Rondonia in Brazil"}
 # directory where files are located
-data_dir <- system.file("extdata/Rondonia-20LKP", package = "sitsdata")
+data_dir <- system.file("extdata/Rondonia-20LMR", package = "sitsdata")
 # Builds a cube based on existing files
-s2_cube <- sits_cube(
+cube_20LMR <- sits_cube(
     source = "AWS",
     collection = "SENTINEL-2-L2A",
-    data_dir = data_dir,
-    parse_info = c("X1", "tile", "band", "date")
+    data_dir = data_dir
 )
-plot(s2_cube, red = "B11", green = "B8A", blue = "B02", date = "2020-09-24")
+plot(cube_20LMR, red = "B11", green = "B8A", blue = "B02", date = "2022-07-16")
 ```
 
 The following example produces a segmented image. Given that the SLIC algorithm uses multiple dates and that we are interested in finding deforested areas in 2021, we will take "2021-05-06" as the starting date and "2021-08-26" as the last date for spatio-temporal segmentation. These are dates inside the dry season in Amazonia, which are more likely to capture deforested areas. For the SLIC algorithm, we take the initial separation between cluster centres (`step`) to be 20 pixels, the `compactness` to be 1, and the minimum area for each superpixel (`min_area`) to be 20 pixels.
 
-```{r}
+```{r, tidy = "styler", out.width="90%", fig.caption = "Segmentation of image in Amazonia", fig.align="center"}
 # segment a cube using SLIC
-# select three bands of the cube
-s2_cube_3bands <- sits_select(s2_cube, bands = c("B02", "B11", "B8A"))
-segments_20LKP <- sits_segment(
-    cube = s2_cube_3bands,
-    start_date = "2021-05-06",
-    end_date = "2021-08-26",
-    output_dir = "./tempdir/chp9",
+# Files are available in a local directory 
+segments_20LMR <- sits_segment(
+    cube = cube_20LMR,
+    output_dir = "./tempdir/chp14",
     seg_fn = sits_slic(
         step = 20,
         compactness = 1,
         dist_fun = "euclidean",
-        iter = 10,
+        iter = 20,
         minarea = 20
     )
 )
+plot(segments_20LMR, red = "B11", green = "B8A", blue = "B02", 
+          date = "2022-07-16")
 ```
 
-It is useful to visualize the segments together with the RGB image using `sits_view()`.
+It is useful to visualize the segments in a leaflet together with the RGB image using `sits_view()`.
 
 ```{r, tidy = "styler", echo = TRUE, eval = FALSE}
-sits_view(s2_cube, red = "B11", green = "B8A", blue = "B02", 
-          date = "2020-09-24", segments = segments_20LKP)
+sits_view(segments_20LMR, red = "B11", green = "B8A", blue = "B02", 
+          dates = "2022-07-16")
 ```
 
 ```{r, echo = FALSE, out.width="90%", fig.caption = "Detail of segementation of image in Amazonia", fig.align="center"}
 knitr::include_graphics("images/view_segments_RGB_detail.png")
 ```
 
-After obtaining the segments, the next step is to obtain one time series per segment. Each time series will represent one entire object and will be classified independently. To do this, use `sits_get_data()` passing the segments as the samples. See Chapter "Working with time series" for a detailed description of `sits_get_data()`.
+After obtaining the segments, the next step is to classify them. This is done by first training a classification model. In this case study, we will use an SVM model.
 
-```{r, eval = TRUE, tidy = "styler"}
-time_series_segments <- sits_get_data(
-    cube = s2_cube,
-    samples = segments_20LKP,
-    multicores = 4
+```{r, tidy="styler"} 
+svm_model <- sits_train(samples_deforestation, sits_svm())
+```
+
+The segment classification procedure applies the model to a number of user-defined samples inside each segment. Each of these samples is then assigned a set of probability values, one for each class. We then obtain the median value of the probabilities for each class and normalize them. The output of the procedure is a vector data cube containing a set of classified segments. The parameters for the `sits_classify()`
+
+```{r, eval = FALSE, tidy = "styler"}
+
+segments_20LMR_probs_svm <- sits_classify(
+    data = segments_20LMR,
+    ml_model = svm_model,
+    output_dir = "./tempdir/chp14",
+    n_sam_pol = 40,
+    gpu_memory = 16,
+    memsize = 24,
+    multicores = 6,
+    version = "svm-segments"
 )
-# show the output 
-time_series_segments[1:4, ]
-```
 
-The `time_series_segments` object is a standard `sits` time series. For each segment, it contains the latitude/longitude of its geometrical centroid, the start and end dates of the cube. Its time series values will be computed as the average of all pixels inside the segment.
-
-After obtaining the segments, the next step is building the machine learning model. This model will use training samples selected by INPE's researchers that describe the various land classes in the state of Rondonia; these samples are available in package `sitsdata`.
-
-```{r, tidy = "styler"}
-samples_file <- system.file("extdata/Rondonia-model/samples.rds", package = "sitsdata")
-samples <- readRDS(samples_file)
-# select the bands to match those of the data cube
-samples_3bands <- sits_select(samples, bands = c("B02", "B11", "B8A"))
-```
-
-Using the samples, we can now obtain a machine learning model and apply it to classify the time series associated to the segments.
-
-```{r, tidy = "styler"}
-# Obtain a random forest model
-rf_model <- sits_train(samples_3bands, sits_rfor())
-# classify the time series segments
-time_series_class <- sits_classify(
-    data = time_series_segments,
-    ml_model = rf_model,
-    multicores = 4
-)
-### show the first time series segments classified
-time_series_class$predicted[[1]]
-```
-
-The result of the classification is time series tibble, with an additional column called "predicted" that contains the most likely class for each pixel (in this case "Forest"), with the probabilities associated to each class. After obtaining the classes for the centroids of each object, it is useful to join the resulting time series tibble with the original segments using `sits_join_segments()`. The result of this function is a set of labelled segments, which can be used by other R applications such as `sf` and can also be viewed in `sits`.
-
-```{r, tidy = "styler"}
-labelled_segments <- sits_join_segments(
-    data = time_series_class,
-    segments = segments_20LKP
+segments_20LMR_class_svm <- sits_label_classification(
+    segments_20LMR_probs_svm,
+    output_dir = "./tempdir/chp14",
+    memsize = 24,
+    multicores = 6,
+    version = "svm-segments"
 )
 ```
 
@@ -170,14 +140,16 @@ To view the classified segments together with the original image, use `plot()` o
 
 ```{r, tidy = "styler", eval = FALSE}
 sits_view(
-    s2_cube, 
+    segments_20LMR_class_svm, 
     red = "B11", 
     green = "B8A", 
     blue = "B02", 
-    dates = "2020-09-24",
-    segments = labelled_segments
+    dates = "2022-07-16",
 )
 ```
+
 ```{r, echo = FALSE, out.width="90%", fig.caption = "Detail of labelled segements for image in Rondonia, Brazil", fig.align="center"}
-knitr::include_graphics("images/view_segments_class.png")
+knitr::include_graphics("images/segments_20LMR.png")
 ```
+
+We conclude that OBIA analysis applied to image time series is a worthy and efficient technique for land classification, combining the desirable sharp object boundary properties required by land use and cover maps with the analytical power of image time series. 
