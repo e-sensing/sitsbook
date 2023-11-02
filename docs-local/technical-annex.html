@@ -132,7 +132,7 @@ Figure 93: Parallel processing in sits (Source: Simoes et al. (2021). Reproduct
 </h2>
 <p>This section provides guidance for experts that want to include new methods for machine learning that work in connection with <code>sits</code>. The discussion below assumes familiarity with the R language. Developers should consult Hadley Wickham’s excellent book <a href="https://adv-r.hadley.nz/">Advanced R</a>, especially Chapter 10 on “Function Factories”.</p>
 <p>All machine learning and deep learning algorithm in <code>sits</code> follow the same logic; all models are created by <code><a href="https://rdrr.io/pkg/sits/man/sits_train.html">sits_train()</a></code>. This function has two parameters: (a) <code>samples</code>, a set of time series with the training samples; (b) <code>ml_method</code>, a function that fits the model to the input data. The result is a function that is passed on to <code><a href="https://rdrr.io/pkg/sits/man/sits_classify.html">sits_classify()</a></code> to classify time series or data cubes. The structure of <code><a href="https://rdrr.io/pkg/sits/man/sits_train.html">sits_train()</a></code> is simple, as shown below.</p>
-<div class="sourceCode" id="cb185"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb188"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sits_train</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">samples</span>, <span class="va">ml_method</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="co"># train a ml classifier with the given data</span></span>
 <span>  <span class="va">result</span> <span class="op">&lt;-</span> <span class="fu">ml_method</span><span class="op">(</span><span class="va">samples</span><span class="op">)</span></span>
@@ -143,7 +143,7 @@ Figure 93: Parallel processing in sits (Source: Simoes et al. (2021). Reproduct
 <p>The following definition from Wikipedia captures the purpose of clousures: <em>“Operationally, a closure is a record storing a function together with an environment. The environment is a mapping associating each free variable of the function with the value or reference to which the name was bound when the closure was created. A closure allows the function to access those captured variables through the closure’s copies of their values or references, even when the function is invoked outside their scope.”</em></p>
 <p>In <code>sits</code>, the properties of closures are used as a basis for making training and classification independent. The return of <code><a href="https://rdrr.io/pkg/sits/man/sits_train.html">sits_train()</a></code> is a model that contains information on how to classify input values, as well as information on the samples used to train the model.</p>
 <p>To ensure all models work in the same fashion, machine learning functions in <code>sits</code> also share the same data structure for prediction. This data structure is created by <code><a href="https://rdrr.io/pkg/sits/man/sits_predictors.html">sits_predictors()</a></code>, which transforms the time series tibble into a set of values suitable for using as training data, as shown in the following example.</p>
-<div class="sourceCode" id="cb186"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb189"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html">data</a></span><span class="op">(</span><span class="st">"samples_matogrosso_mod13q1"</span>, package <span class="op">=</span> <span class="st">"sitsdata"</span><span class="op">)</span></span>
 <span><span class="va">pred</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_predictors.html">sits_predictors</a></span><span class="op">(</span><span class="va">samples_matogrosso_mod13q1</span><span class="op">)</span></span>
 <span><span class="va">pred</span></span></code></pre></div>
@@ -169,7 +169,7 @@ Figure 93: Parallel processing in sits (Source: Simoes et al. (2021). Reproduct
 #&gt; #   NIR2 &lt;dbl&gt;, NIR3 &lt;dbl&gt;, NIR4 &lt;dbl&gt;, NIR5 &lt;dbl&gt;, NIR6 &lt;dbl&gt;, NIR7 &lt;dbl&gt;, NIR8 &lt;dbl&gt;, NIR9 &lt;dbl&gt;, …</code></pre>
 <p>The predictors tibble is organized as a combination of the “X” and “Y” values used by machine learning algorithms. The first two columns are <code>sample_id</code> and <code>label</code>. The other columns contain the data values, organized by band and time. For machine learning methods that are not time-sensitive, such as random forest, this organization is sufficient for training. In the case of time-sensitive methods such as <code>tempCNN</code>, further arrangements are necessary to ensure the tensors have the right dimensions. Please refer to the <code><a href="https://rdrr.io/pkg/sits/man/sits_tempcnn.html">sits_tempcnn()</a></code> source code for an example of how to adapt the prediction table to appropriate <code>torch</code> tensor.</p>
 <p>Most algorithms require data normalization. Therefore, the <code><a href="https://rdrr.io/pkg/sits/man/sits_predictors.html">sits_predictors()</a></code> code is usually combined with methods that extract statistical information and then normalize the data, as in the example below.</p>
-<div class="sourceCode" id="cb188"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb191"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Data normalization</span></span>
 <span><span class="va">ml_stats</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_stats.html">sits_stats</a></span><span class="op">(</span><span class="va">samples</span><span class="op">)</span></span>
 <span><span class="co"># extract the training samples</span></span>
@@ -178,7 +178,7 @@ Figure 93: Parallel processing in sits (Source: Simoes et al. (2021). Reproduct
 <span><span class="va">train_samples</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_pred_normalize.html">sits_pred_normalize</a></span><span class="op">(</span>pred <span class="op">=</span> <span class="va">train_samples</span>, stats <span class="op">=</span> <span class="va">ml_stats</span><span class="op">)</span></span></code></pre></div>
 <p>The following example shows the implementation of the LightGBM algorithm, designed to efficiently handle large-scale datasets and perform fast training and inference <span class="citation"><a href="references.html#ref-Ke2017">[91]</a></span>. Gradient boosting is a machine learning technique that builds an ensemble of weak prediction models, typically decision trees, to create a stronger model. LightGBM specifically focuses on optimizing the training and prediction speed, making it particularly suitable for large datasets. The example builds a model using the <code>lightgbm</code> package. This model will then be applied later to obtain a classification.</p>
 <p>Since LightGBM is a gradient boosting model, it uses part of the data as testing data to improve the model’s performance. The split between the training and test samples is controlled by a parameter, as shown in the following code extract.</p>
-<div class="sourceCode" id="cb189"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb192"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># split the data into training and validation data sets</span></span>
 <span><span class="co"># create partitions different splits of the input data</span></span>
 <span><span class="va">test_samples</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_pred_sample.html">sits_pred_sample</a></span><span class="op">(</span><span class="va">train_samples</span>,</span>
@@ -194,7 +194,7 @@ nomes das funcoes especificas. Os parametros boosting_type, objective, etc. sao 
 -->
 <p>The parameters for the <code>lightgbm</code> algorithm, as defined in its documentation, are: (a) <code>boosting_type</code>, boosting algorithm; (b) <code>objective</code>, classification objective (c) <code>num_iterations</code>, number of runs; (d) <code>max_depth</code>, maximum tree depth; (d) <code>min_samples_leaf</code>, minimum size of data in one leaf (to avoid overfitting); (f) <code>learning_rate</code>, learning rate of the algorithm; (g) <code>n_iter_no_change</code>, number of successive iterations to stop training when validation metrics do not improve; (h) <code>validation_split</code>, fraction of training data to be used as validation data.</p>
 <p>The training part of the <code>lightgbm</code> algorithm uses two functions: (a) <code><a href="https://rdrr.io/pkg/lightgbm/man/lgb.Dataset.html">lgb.Dataset()</a></code>, which transforms training and test samples into internal structures; (b) <code><a href="https://rdrr.io/pkg/lightgbm/man/lgb.train.html">lgb.train()</a></code>, which trains the model.</p>
-<div class="sourceCode" id="cb190"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb193"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># install "lightgbm" package if not available</span></span>
 <span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="kw"><a href="https://rdrr.io/r/base/library.html">require</a></span><span class="op">(</span><span class="st"><a href="https://github.com/Microsoft/LightGBM">"lightgbm"</a></span><span class="op">)</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html">install.packages</a></span><span class="op">(</span><span class="st">"lightgbm"</span><span class="op">)</span></span>
 <span><span class="co"># create a function in sits style for LightGBM algorithm</span></span>
@@ -291,7 +291,7 @@ nomes das funcoes especificas. Os parametros boosting_type, objective, etc. sao 
 <span><span class="op">}</span></span></code></pre></div>
 <p>The above code has two nested functions: <code>results_fun()</code> and <code>predict_fun()</code>. When <code>lgb_method()</code> is called, it transforms the input samples into predictors and normalizes them. Then, it uses these predictors to train the algorithm, creating a model (<code>result_mlr</code>). This model is included as part of the function’s closure and becomes available at classification time. Then the code creates <code>prediction_fun()</code>, which applies the <code>result_mlr</code> model to the input values to be classified. This is the function returned by <code>results_fun()</code> which contains all the necessary information for classification. At classification time, the model is called directly.</p>
 <p>The last lines of the code also include the convenience function <code><a href="https://rdrr.io/pkg/sits/man/sits_factory_function.html">sits_factory_function()</a></code>, shown below. This function allows the model to be called either as part of <code><a href="https://rdrr.io/pkg/sits/man/sits_train.html">sits_train()</a></code> or to be called independently, with the same result.</p>
-<div class="sourceCode" id="cb191"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb194"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sits_factory_function</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">samples</span>, <span class="va">fun</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="co"># if no data is given, we prepare a</span></span>
 <span>  <span class="co"># function to be called as a parameter of other functions</span></span>
@@ -304,16 +304,16 @@ nomes das funcoes especificas. Os parametros boosting_type, objective, etc. sao 
 <span>  <span class="kw"><a href="https://rdrr.io/r/base/function.html">return</a></span><span class="op">(</span><span class="va">result</span><span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
 <p>There is one additional requirement for the algorithm to be compatible with <code>sits</code>. Data cube processing algorithms in <code>sits</code> run in parallel. For this reason, once the classification model is trained, it is serialized, as shown in the following line. The serialized version of the model is exported to the function closure, so it can be used at classification time.</p>
-<div class="sourceCode" id="cb192"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb195"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># serialize the model for parallel processing</span></span>
 <span><span class="va">lgbm_model_string</span> <span class="op">&lt;-</span> <span class="va">lgbm_model</span><span class="op">$</span><span class="fu">save_model_to_string</span><span class="op">(</span><span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
 <p>During classification, <code>predict_fun()</code> is called in parallel by each CPU. At this moment, the serialized string is transformed back into a model, which is then run to obtain the classification, as shown in the code.</p>
-<div class="sourceCode" id="cb193"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb196"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># unserialize the model</span></span>
 <span><span class="va">lgbm_model</span> <span class="op">&lt;-</span> <span class="fu">lightgbm</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/lightgbm/man/lgb.load.html">lgb.load</a></span><span class="op">(</span>model_str <span class="op">=</span> <span class="va">lgbm_model_string</span><span class="op">)</span></span></code></pre></div>
 <p>Therefore, using function factories that produce closures, <code>sits</code> keeps the classification function independent of the machine learning or deep learning algorithm. This policy allows independent proposal, testing, and development of new classification methods. It also enables improvements on parallel processing methods without affecting the existing classification methods.</p>
 <p>To illustrate this separation between training and classification, the new algorithm developed in the chapter using <code>lightgbm</code> will be used to classify a data cube. The code is the same as the one in Chapter <a href="https://e-sensing.github.io/sitsbook/introduction.html">Introduction</a> as an example of data cube classification, except for the use of <code>lgb_method()</code>.</p>
-<div class="sourceCode" id="cb194"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb197"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html">data</a></span><span class="op">(</span><span class="st">"samples_matogrosso_mod13q1"</span>, package <span class="op">=</span> <span class="st">"sitsdata"</span><span class="op">)</span></span>
 <span><span class="co"># Create a data cube using local files</span></span>
 <span><span class="va">sinop</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_cube.html">sits_cube</a></span><span class="op">(</span></span>
@@ -383,7 +383,7 @@ Figure 94: Classification map for Sinop using LightGBM.
 <p>These colors are grouped by typical legends used by the Earth observation community, which include “IGBP”, “UMD”, “ESA_CCI_LC”, “WORLDCOVER”, “PRODES”, “PRODES_VISUAL”, “TERRA_CLASS”, “TERRA_CLASS_PT”. The following commands shows the colors associated with the IGBP legend</p>
 <pre class="sourceCode"><code>#&gt; [1] "Please select one of the legends: IGBP, UMD, ESA_CCI_LC, WORLDCOVER, PRODES, PRODES_VISUAL, TERRA_CLASS, TERRA_CLASS_PT"</code></pre>
 <p>The default color table can be redefined using <code><a href="https://rdrr.io/pkg/sits/man/sits_colors_set.html">sits_colors_set()</a></code>. As an example of a user-defined color table, consider a definition that covers level 1 of the Anderson Classification System used in the US National Land Cover Data, obtained by defining a new color table, as shown below. The colors can be defined by HEX values or by names accepted as R color codes.</p>
-<div class="sourceCode" id="cb198"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb201"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Define a color table based on the Anderson Land Classification System</span></span>
 <span><span class="va">us_nlcd</span> <span class="op">&lt;-</span> <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/tibble.html">tibble</a></span><span class="op">(</span>name <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html">character</a></span><span class="op">(</span><span class="op">)</span>, color <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html">character</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">us_nlcd</span> <span class="op">&lt;-</span> <span class="va">us_nlcd</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html">%&gt;%</a></span></span>
@@ -405,7 +405,7 @@ Figure 94: Classification map for Sinop using LightGBM.
 <h2>Exporting data to JSON<a class="anchor" aria-label="anchor" href="#exporting-data-to-json"><i class="fas fa-link"></i></a>
 </h2>
 <p>Both the data cube and the time series tibble can be exported to exchange formats such as JSON.</p>
-<div class="sourceCode" id="cb199"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb202"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://jeroen.r-universe.dev/jsonlite">jsonlite</a></span><span class="op">)</span></span>
 <span><span class="co"># Export the data cube to JSON</span></span>
 <span><span class="fu">jsonlite</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/jsonlite/man/read_json.html">write_json</a></span><span class="op">(</span></span>
@@ -450,7 +450,7 @@ Figure 94: Classification map for Sinop using LightGBM.
 <footer class="bg-primary text-light mt-5"><div class="container"><div class="row">
 
   <div class="col-12 col-md-6 mt-3">
-    <p>"<strong><strong>sits</strong>: Satellite Image Time Series Analysis on Earth Observation Data Cubes</strong>" was written by Gilberto Camara, Rolf Simoes, Felipe Souza, Charlotte Pelletier, Alber Sanchez, Pedro R. Andrade, Karine Ferreira, Gilberto Queiroz. It was last built on 2023-10-31.</p>
+    <p>"<strong><strong>sits</strong>: Satellite Image Time Series Analysis on Earth Observation Data Cubes</strong>" was written by Gilberto Camara, Rolf Simoes, Felipe Souza, Charlotte Pelletier, Alber Sanchez, Pedro R. Andrade, Karine Ferreira, Gilberto Queiroz. It was last built on 2023-11-01.</p>
   </div>
 
   <div class="col-12 col-md-6 mt-3">

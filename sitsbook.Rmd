@@ -182,7 +182,7 @@ devtools::install_github("e-sensing/sitsdata")
 
 ## Using GPUs with `sits` {.unnumbered}
 
-The `torch` package automatically recognizes if a GPU is available on the machine and uses it for training and classification. There is a significant performance gain when GPUs are used instead of CPUs for deep learning models. There is no need for specific adjustments to `torch` scripts.  To use GPUs, `torch` requires version 11.6 of the CUDA library, which is available for Ubuntu 18.04 and 20.04. 
+The `torch` package automatically recognizes if a GPU is available on the machine and uses it for training and classification. There is a significant performance gain when GPUs are used instead of CPUs for deep learning models. There is no need for specific adjustments to `torch` scripts.  To use GPUs, `torch` requires version 11.6 of the CUDA library, which is available for Ubuntu 18.04 and 20.04. Please follow the detailed instructions for setting up `torch` available [here](https://torch.mlverse.org/docs/articles/installation.html).
 
 ```{r, eval = FALSE}
 install.packages("torch")
@@ -303,7 +303,7 @@ The `sits` package uses satellite image time series for land classification, usi
 knitr::include_graphics("images/sits_general_view.png")
 ```
 
-The package provides tools for analysis, visualization, and classification of satellite image time series. Users follow a typical workflow:
+The package provides tools for analysis, visualization, and classification of satellite image time series. Users follow a typical workflow for a pixel-based classification:
 
 1.  Select an analysis-ready data image collection on cloud providers such as AWS, Microsoft Planetary Computer, Digital Earth Africa, or Brazil Data Cube.
 2.  Build a regular data cube using the chosen image collection.
@@ -369,6 +369,8 @@ kableExtra::kbl(sits_api,
 knitr::include_graphics("images/sits_api.png") 
 ```
 
+Additionally, experts can perform object-based image analysis (OBIA) with `sits`. In this case, before classifying the time series, one can use the function `sits_segments()` to create a set of closed polygons. These polygons are classified using a subset of the time series contained inside each segment. For details, see Chapter [Object-based time series image analysis](https://e-sensing.github.io/sitsbook/object-based-time-series-image-analysis.html).
+
 ## Land use and land cover{-}
 
 Since the main aim of `sits` is to support land use and land cover classification, this section presents a short discussion on the use of these terms. The UN Food and Agriculture Organization defines land cover as "the observed biophysical cover on the Earth's surface" [@DiGregorio2016]. Land cover can be observed and mapped directly through remote sensing images. In FAO's guidelines and reports, land use is described as "the human activities or purposes for which land is managed or exploited". FAO's land use classifications include classes such as cropland and pasture. Although *land cover* and *land use* denote different approaches for describing the Earth's landscape, in practice there is considerable overlap between these concepts [@Comber2008b]. When classifying remote sensing images, natural areas are classified using land cover types (e.g, forest), while human-modified areas are described with land use classes (e.g., pasture). 
@@ -392,7 +394,7 @@ To build a data cube from local files, users must provide information about the 
 (a) `source`, the cloud provider from where the data has been obtained (in this case, the Brazil Data Cube "BDC");
 (b) `collection`, the collection of the cloud provider from where the images have been extracted. In this case, data comes from the MOD13Q1 collection 6; 
 (c) `data_dir`, the local directory where the image files are stored; 
-(d) `parse_info`, a vector of strings stating how file names store information on "tile", "band", and "date". In this case, local images are stored in files like `TERRA_MODIS_012010_EVI_2014-07-28.tif`. This file represents tile 012010, band EVI, and date 2014-07-28.
+(d) `parse_info`, a vector of strings stating how file names store information on "tile", "band", and "date". In this case, local images are stored in files whose names are similar to `TERRA_MODIS_012010_EVI_2014-07-28.tif`. This file represents a image obtained by the MODIS sensor onboard the TERRA satellite, covering part of tile 012010 in the EVI band for date 2014-07-28.
 
 ```{r, out.width = "100%", tidy="styler", fig.align = 'center', fig.cap="Color composite image MODIS cube for NDVI band in 2013-09-14 (Source: Authors)."}
 # Create a data cube object based on the information about the files
@@ -400,7 +402,7 @@ sinop <- sits_cube(
   source = "BDC", 
   collection  = "MOD13Q1-6",
   data_dir = system.file("extdata/sinop", package = "sitsdata"),  
-  parse_info = c("X1", "X2", "tile", "band", "date")
+  parse_info = c("satellite", "sensor", "tile", "band", "date")
 )
 # select bands NDVI and EVI
 sinop_2bands <- sits_select(sinop, bands = c("NDVI", "EVI"))
@@ -483,7 +485,7 @@ sinop_probs <- sits_classify(
     output_dir = "./tempdir/chp3"
 )
 # Plot the probability cube for class Forest
-plot(sinop_probs, labels = "Forest", palette = "BuGn")
+plot(sinop_probs, labels = "Forest", palette = "RdYlGn")
 ```
 
 After completing the classification, we plot the probability maps for class Forest. Probability maps are helpful to visualize the degree of confidence the classifier assigns to the labels for each pixel. They can be used to produce uncertainty information and support active learning, as described in Chapter [Image classification in data cubes](https://e-sensing.github.io/sitsbook/image-classification-in-data-cubes.html).
@@ -500,7 +502,7 @@ sinop_bayes <- sits_smooth(
     memsize = 8,
     output_dir = "./tempdir/chp3"
 )
-plot(sinop_bayes, labels = "Forest", palette = "Blues")
+plot(sinop_bayes, labels = "Forest", palette = "RdYlGn")
 ```
 
 ## Labeling a probability data cube {.unnumbered}
@@ -514,8 +516,7 @@ sinop_map <- sits_label_classification(
     output_dir = "./tempdir/chp3"
 )
 plot(sinop_map, title = "Sinop Classification Map", 
-     tmap_options = list("scale" = 0.7)
-     )
+     tmap_options = list("scale" = 0.7))
 ```
 
 When plotting the classified map, users can control the map display by setting various options associated to `tmap_options`. These options include: (a) `scale` (default = 0.5); (b) `graticules_labels_size` (default: 0.7); (c) `legend_title_size` (default: 1.0); (d) `legend_text_size`  (default: 1.0); (e) `legend_width` (default: 0.5); (f) `legend_height` (default: 0.7);  (g) `legend_position` (default: c("left", "bottom"). The `scale` parameter affect all others. Users should first try to adjust it before fine-tuning the other options.
@@ -637,16 +638,11 @@ s2_23MMU_cube <- sits_cube(
     start_date = "2018-07-12",
     end_date = "2019-07-28"
 )
-s2_cube <- sits_cube(
-  source = "AWS",
-  collection = "SENTINEL-2-L2A",
-  tiles = c("20LKP", "20LLP"),
-  bands = c("B04", "B08", "B11"),
-  start_date = "2018-07-18",
-  end_date = "2019-07-23"
-)
-plot(s2_23MMU_cube, red = "B11", 
-     blue = "B02", green = "B8A", date = "2018-10-05"
+plot(s2_23MMU_cube, 
+     red = "B11", 
+     blue = "B02", 
+     green = "B8A", 
+     date = "2018-10-05"
 )
 ```
 
@@ -726,7 +722,7 @@ Sys.setenv("BDC_ACCESS_KEY" = <your_bdc_access_key>)
 
 In the example below, the data cube is defined as one tile ("005004") of `CBERS-WFI-16D` collection, which holds CBERS AWFI images at 16 days resolution.
 
-```{r, tidy="styler", eval = FALSE, out.width="100%", fig.align="center", fig.cap="CBERS-4 WFI image in a Cerrado area in Brazil."}
+```{r, tidy="styler", out.width="100%", fig.align="center", fig.cap="CBERS-4 WFI image in a Cerrado area in Brazil."}
 # Define a tile from the CBERS-4/4A AWFI collection
 cbers_tile <- sits_cube(
     source = "BDC",
@@ -736,10 +732,11 @@ cbers_tile <- sits_cube(
     start_date = "2021-05-01",
     end_date = "2021-09-01")
 # Plot one time instance
-plot(cbers_tile, red = "B15", green = "B16", blue = "B13", date = "2021-05-09")
-```
-```{r echo = FALSE, out.width="80%", fig.align="center", fig.cap="ARD image collection (Source: USGS. Reproduction based on fair use doctrine)."}
-knitr::include_graphics("images/cbers4_image_bdc.png")
+plot(cbers_tile, 
+     red = "B15", 
+     green = "B16", 
+     blue = "B13", 
+     date = "2021-05-09")
 ```
 
 
@@ -808,7 +805,7 @@ hls_cube_merged <- sits_merge(hls_cube_s2, hls_cube_l8)
 
 Comparing the timelines of the original cubes and the merged one, one can see the benefits of the merged collection for time series data analysis. 
 
-```{r, tidy="styler"}
+```{r, tidy="styler", out.width="100%", fig.align="center", fig.cap="Plot of Landsat-8 image obtained from the NASA HLS collection with a single tile showing the island of Ilhabela in the Brazilian coast."}
 # Timeline of the Sentinel-2 cube
 sits_timeline(hls_cube_s2)
 ```
@@ -819,6 +816,14 @@ sits_timeline(hls_cube_l8)
 ```{r, tidy="styler"}
 # Timeline of the Landsat-8 cube
 sits_timeline(hls_cube_merged)
+
+# plotting a harmonized Landsat image from the merged data set 
+# plot the cube
+plot(hls_cube_merged, 
+     red = "RED", 
+     green = "GREEN", 
+     blue = "BLUE", 
+     date = "2020-07-11")
 ```
 
 ## Defining a data cube using ARD local files{-}
@@ -884,7 +889,7 @@ Rondonia_class_cube <- sits_cube(
     labels = c("1" = "Burned_Area", "2" = "Cleared_Area", 
                "3" = "Highly_Degraded", "4" =  "Forest"),
     data_dir = data_dir,
-    parse_info = c("X1", "X2", "tile", "start_date", "end_date", 
+    parse_info = c("satellite", "sensor", "tile", "start_date", "end_date", 
                    "band", "version"))
 # Plot the classified cube
 plot(Rondonia_class_cube, 
@@ -1263,7 +1268,7 @@ raster_cube <- sits_cube(
     source     = "BDC",
     collection = "MOD13Q1-6",
     data_dir   = data_dir,
-    parse_info = c("X1", "X2", "tile", "band", "date"))
+    parse_info = c("satellite", "sensor", "tile", "band", "date"))
 # Obtain a time series from the raster cube from a point
 sample_latlong <- tibble::tibble(
     longitude = -55.57320, 
@@ -1377,6 +1382,55 @@ Selecting good training samples for machine learning classification of satellite
 
 It is necessary to distinguish between wrongly labelled samples and differences resulting from the natural variability of class signatures. When training data belongs to a large geographic region, the variability of vegetation phenology leads to different patterns being assigned to the same label. A related issue is the limitation of crisp boundaries to describe the natural world. Class definitions use idealized descriptions (e.g., "a savanna woodland has tree cover of 50% to 90% ranging from 8 to 15 m in height"). In practice, the boundaries between classes are fuzzy and sometimes overlap, making it hard to distinguish between them. To improve sample quality, `sits` provides methods for evaluating the training data.
 
+Given a set of training samples, experts should first perform a cross-validation of the training set, to be able to assess their inherent prediction error. The results indicate whether the data is internally consistent. Since cross-validation is not a predictor of actual model performance, this chapter provides additional tools for improving the quality of training sets. More detailed information is available on Chapter ["Validation and Accuracy Assessment"](https://e-sensing.github.io/sitsbook/validation-and-accuracy-measurements.html).
+
+## Data sets used in this chapter{-}
+
+The examples of this chapter use two data sets: 
+
+1. `cerrado_2classes`: a set of time series for the Cerrado region of Brazil, the second largest biome in South America with an area of more than 2 million km^2. The data contains 746 samples divided into 2 classes (Cerrado and Pasture). Each time series covers 12 months (23 data points) from MOD13Q1 product, and has 2 bands (EVI, and NDVI).
+
+2. `samples_cerrado_mod13q1`: a set of time series from the Cerrado region of Brazil. The data ranges from 2000 to 2017 and includes 50,160 samples divided into 12 classes (Dense_Woodland, Dunes, Fallow_Cotton, Millet_Cotton, Pasture, Rocky_Savanna, Savanna, Savanna_Parkland, Silviculture, Soy_Corn, Soy_Cotton, and Soy_Fallow). Each time series covers 12 months (23 data points) from MOD13Q1 product, and has 4 bands (EVI, NDVI, MIR, and NIR). We use bands NDVI and EVI for faster processing.
+
+```{r, tidy = "styler"}
+library(sits)
+library(sitsdata)
+# Take only the NDVI and EVI bands
+samples_cerrado_mod13q1_2bands <- sits_select(
+    data = samples_cerrado_mod13q1, 
+    bands = c("NDVI", "EVI"))
+
+# Show the summary of the samples
+summary(samples_cerrado_mod13q1_2bands)
+```
+
+
+## Cross-validation of training sets{-}
+
+Cross-validation is a technique to estimate the inherent prediction error of a model [@Hastie2009]. Since cross-validation uses only the training samples, its results are not accuracy measures unless the samples have been carefully collected to represent the diversity of possible occurrences of classes in the study area [@Wadoux2021]. In practice, when working in large areas, it is hard to obtain random stratified samples which cover the different variations in land classes associated with the ecosystems of the study area. Thus, cross-validation should be taken as a measure of model performance on the training data and not an estimate of overall map accuracy. 
+
+Cross-validation uses part of the available samples to fit the classification model and a different part to test it. The k-fold validation method splits the data into $k$ partitions with approximately the same size and proceeds by fitting the model and testing it $k$ times. At each step, we take one distinct partition for the test and the remaining ${k-1}$ for training the model and calculate its prediction error for classifying the test partition. A simple average gives us an estimation of the expected prediction error. The recommended choices of $k$ are $5$ or $10$ [@Hastie2009].
+
+`sits_kfold_validate()` supports k-fold validation in `sits`. The result is the confusion matrix and the accuracy statistics (overall and by class). In the examples below, we use multiprocessing to speed up the results. The parameters of `sits_kfold_validate` are:
+
+1. `samples`:  training samples organized as a time series tibble;
+2. `folds`: number of folds, or how many times to split the data (default = 5);
+3. `ml_method`: ML/DL method to be used for the validation (default = random forest);
+4. `multicores`: number of cores to be used for parallel processing (default = 2).
+
+Below we show an example of cross-validation on the `samples_cerrado_mod13q1` data set. 
+
+```{r, tidy = "styler"}
+rfor_validate <- sits_kfold_validate(
+    samples = samples_cerrado_mod13q1_2bands,
+    folds = 5,
+    ml_method = sits_rfor(),
+    multicores = 5
+)
+rfor_validate
+```
+
+The results show a good validation, reaching 94% accuracy. However, this accuracy does not guarantee a good classification result. It only shows if the training data is internally consistent. In what follows, we present additional methods for improving sample quality.
 
 ## Hierarchical clustering for sample quality control{-}
 
@@ -1433,17 +1487,6 @@ The input data for quality assessment is a set of training samples, which are hi
 knitr::include_graphics("images/methodology_bayes_som.png")
 ```
 
-As an example, we take a set of time series from the Cerrado region of Brazil, the second largest biome in South America with an area of more than 2 million km2. This data ranges from 2000 to 2017 and includes 50,160 samples divided into 12 classes (Dense_Woodland, Dunes, Fallow_Cotton, Millet_Cotton, Pasture, Rocky_Savanna, Savanna, Savanna_Parkland, Silviculture, Soy_Corn, Soy_Cotton, and Soy_Fallow). Each time series covers 12 months (23 data points) from MOD13Q1 product, and has 4 bands (EVI, NDVI, MIR, and NIR). We use bands NDVI and EVI for faster processing.
-
-```{r, message = FALSE, tidy = "styler", warning = FALSE}
-# Take only the NDVI and EVI bands
-samples_cerrado_mod13q1_2bands <- sits_select(
-    data = samples_cerrado_mod13q1, 
-    bands = c("NDVI", "EVI"))
-
-# Show the summary of the samples
-summary(samples_cerrado_mod13q1_2bands)
-```
 
 ## Creating the SOM map{-}
 
@@ -1571,7 +1614,7 @@ balanced_samples <- sits_reduce_imbalance(
     n_samples_under = 1500,
     multicores = 4)
 ```
-
+a
 ```{r, tidy = "styler"}
 # Print the balanced samples
 # Some classes have more than 1500 samples due to the SOM map
@@ -2038,7 +2081,7 @@ The results should not be taken as an indication of which method performs better
 
 In the specific case of satellite image time series, Russwurm et al. present a comparative study between seven deep neural networks for the classification of agricultural crops, using random forest as a baseline [@Russwurm2020]. The data is composed of Sentinel-2 images over Britanny, France. Their results indicate a slight difference between the best model (attention-based transformer model) over TempCNN, ResNet, and random forest. Attention-based models obtain accuracy ranging from 80-81%, TempCNN gets 78-80%, and random forest obtains 78%. Based on this result and also on the authors' experience, we make the following recommendations:
 
-1.  Random forest provide a good baseline for image time series classification and should be included in users' assessments. 
+1.  Random forest provides a good baseline for image time series classification and should be included in users' assessments. 
 
 2.  XGBoost is a worthy alternative to random forest. In principle, XGBoost is more sensitive to data variations at the cost of possible overfitting.
 
@@ -2301,7 +2344,7 @@ ro_class <- sits_cube(
     source = "MPC",
     collection = "SENTINEL-2-L2A",
     data_dir = data_dir,
-    parse_info = c("X1", "X2", "tile", "start_date", "end_date",
+    parse_info = c("satellite", "sensor", "tile", "start_date", "end_date",
                    "band", "version"),
     bands = "class",
     labels = c("1" = "Water", "2" = "Clear_Cut_Burned_Area", 
@@ -2326,7 +2369,7 @@ prodes2021 <- sits_cube(
     source = "USGS",
     collection = "LANDSAT-C2L2-SR",
     data_dir = data_dir,
-    parse_info = c("X1", "X2", "tile", "start_date", "end_date",
+    parse_info = c("product", "sensor", "tile", "start_date", "end_date",
                    "band", "version"),
     bands = "class",
     version = "v20220606",
@@ -2516,7 +2559,8 @@ probs_cube <- sits_cube(
     data_dir = data_dir,
     bands = "probs",
     labels = labels,
-    parse_info = c("X1", "X2", "tile", "start_date", "end_date", "band", "version"))
+    parse_info = c("satellite", "sensor", "tile", 
+                   "start_date", "end_date", "band", "version"))
 
 # plot the probabilities for water and forest
 plot(probs_cube, labels = c("Water", "Forest"))
@@ -2667,17 +2711,11 @@ summary(samples_cerrado_lc8)
 
 ## Cross-validation of training set{-}
 
-Cross-validation is a technique to estimate the inherent prediction error of a model [@Hastie2009]. Since cross-validation uses only the training samples, its results are not accuracy measures unless the samples have been carefully collected to represent the diversity of possible occurrences of classes in the study area [@Wadoux2021]. In practice, when working in large areas, it is hard to obtain random stratified samples which cover the different variations in land classes associated with the ecosystems of the study area. Thus, cross-validation should be taken as a measure of model performance on the training data and not an estimate of overall map accuracy. 
-
-Cross-validation uses part of the available samples to fit the classification model and a different part to test it. The k-fold validation method splits the data into $k$ partitions with approximately the same size and proceeds by fitting the model and testing it $k$ times. At each step, we take one distinct partition for the test and the remaining ${k-1}$ for training the model and calculate its prediction error for classifying the test partition. A simple average gives us an estimation of the expected prediction error. The recommended choices of $k$ are $5$ or $10$ [@Hastie2009].
-
-`sits_kfold_validate()` supports k-fold validation in `sits`. The result is the confusion matrix and the accuracy statistics (overall and by class). In the examples below, we use multiprocessing to speed up the results. 
-
 ```{r, echo = FALSE}
 set.seed(290356)
 ```
 
-Since the data set is big and highly imbalanced, we use `sits_reduce_imbalance()` to reduce the size and produce a smaller, more balanced sample data set for the validation examples.
+The first step in analysing the results is to perform cross-validation. Since the data set is big and highly imbalanced, we use `sits_reduce_imbalance()` to reduce the size and produce a smaller, more balanced sample data set for the validation examples.
 
 ```{r, tidy = "styler", echo = TRUE, eval=FALSE}
 # Reduce imbalance in the data set
@@ -3430,7 +3468,7 @@ cube_20LMR <- sits_cube(
 plot(cube_20LMR, red = "B11", green = "B8A", blue = "B02", date = "2022-07-16")
 ```
 
-The following example produces a segmented image. Given that the SLIC algorithm uses multiple dates and that we are interested in finding deforested areas in 2021, we will take "2021-05-06" as the starting date and "2021-08-26" as the last date for spatio-temporal segmentation. These are dates inside the dry season in Amazonia, which are more likely to capture deforested areas. For the SLIC algorithm, we take the initial separation between cluster centres (`step`) to be 20 pixels, the `compactness` to be 1, and the minimum area for each superpixel (`min_area`) to be 20 pixels.
+The following example produces a segmented image. For the SLIC algorithm, we take the initial separation between cluster centres (`step`) to be 20 pixels, the `compactness` to be 1, and the minimum area for each superpixel (`min_area`) to be 20 pixels.
 
 ```{r, tidy = "styler", out.width="90%", fig.caption = "Segmentation of image in Amazonia", fig.align="center"}
 # segment a cube using SLIC

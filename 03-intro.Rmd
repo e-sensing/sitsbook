@@ -31,7 +31,7 @@ The `sits` package uses satellite image time series for land classification, usi
 knitr::include_graphics("images/sits_general_view.png")
 ```
 
-The package provides tools for analysis, visualization, and classification of satellite image time series. Users follow a typical workflow:
+The package provides tools for analysis, visualization, and classification of satellite image time series. Users follow a typical workflow for a pixel-based classification:
 
 1.  Select an analysis-ready data image collection on cloud providers such as AWS, Microsoft Planetary Computer, Digital Earth Africa, or Brazil Data Cube.
 2.  Build a regular data cube using the chosen image collection.
@@ -96,6 +96,8 @@ kableExtra::kbl(sits_api,
 
 knitr::include_graphics("images/sits_api.png") 
 ```
+
+Additionally, experts can perform object-based image analysis (OBIA) with `sits`. In this case, before classifying the time series, one can use the function `sits_segments()` to create a set of closed polygons. These polygons are classified using a subset of the time series contained inside each segment. For details, see Chapter [Object-based time series image analysis](https://e-sensing.github.io/sitsbook/object-based-time-series-image-analysis.html).
 
 ## Land use and land cover{-}
 
@@ -211,7 +213,7 @@ sinop_probs <- sits_classify(
     output_dir = "./tempdir/chp3"
 )
 # Plot the probability cube for class Forest
-plot(sinop_probs, labels = "Forest", palette = "BuGn")
+plot(sinop_probs, labels = "Forest", palette = "RdYlGn")
 ```
 
 After completing the classification, we plot the probability maps for class Forest. Probability maps are helpful to visualize the degree of confidence the classifier assigns to the labels for each pixel. They can be used to produce uncertainty information and support active learning, as described in Chapter [Image classification in data cubes](https://e-sensing.github.io/sitsbook/image-classification-in-data-cubes.html).
@@ -228,7 +230,7 @@ sinop_bayes <- sits_smooth(
     memsize = 8,
     output_dir = "./tempdir/chp3"
 )
-plot(sinop_bayes, labels = "Forest", palette = "Blues")
+plot(sinop_bayes, labels = "Forest", palette = "RdYlGn")
 ```
 
 ## Labeling a probability data cube {.unnumbered}
@@ -242,8 +244,7 @@ sinop_map <- sits_label_classification(
     output_dir = "./tempdir/chp3"
 )
 plot(sinop_map, title = "Sinop Classification Map", 
-     tmap_options = list("scale" = 0.7)
-     )
+     tmap_options = list("scale" = 0.7))
 ```
 
 When plotting the classified map, users can control the map display by setting various options associated to `tmap_options`. These options include: (a) `scale` (default = 0.5); (b) `graticules_labels_size` (default: 0.7); (c) `legend_title_size` (default: 1.0); (d) `legend_text_size`  (default: 1.0); (e) `legend_width` (default: 0.5); (f) `legend_height` (default: 0.7);  (g) `legend_position` (default: c("left", "bottom"). The `scale` parameter affect all others. Users should first try to adjust it before fine-tuning the other options.

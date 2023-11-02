@@ -8,6 +8,55 @@ Selecting good training samples for machine learning classification of satellite
 
 It is necessary to distinguish between wrongly labelled samples and differences resulting from the natural variability of class signatures. When training data belongs to a large geographic region, the variability of vegetation phenology leads to different patterns being assigned to the same label. A related issue is the limitation of crisp boundaries to describe the natural world. Class definitions use idealized descriptions (e.g., "a savanna woodland has tree cover of 50% to 90% ranging from 8 to 15 m in height"). In practice, the boundaries between classes are fuzzy and sometimes overlap, making it hard to distinguish between them. To improve sample quality, `sits` provides methods for evaluating the training data.
 
+Given a set of training samples, experts should first perform a cross-validation of the training set, to be able to assess their inherent prediction error. The results indicate whether the data is internally consistent. Since cross-validation is not a predictor of actual model performance, this chapter provides additional tools for improving the quality of training sets. More detailed information is available on Chapter ["Validation and Accuracy Assessment"](https://e-sensing.github.io/sitsbook/validation-and-accuracy-measurements.html).
+
+## Data sets used in this chapter{-}
+
+The examples of this chapter use two data sets: 
+
+1. `cerrado_2classes`: a set of time series for the Cerrado region of Brazil, the second largest biome in South America with an area of more than 2 million km^2. The data contains 746 samples divided into 2 classes (Cerrado and Pasture). Each time series covers 12 months (23 data points) from MOD13Q1 product, and has 2 bands (EVI, and NDVI).
+
+2. `samples_cerrado_mod13q1`: a set of time series from the Cerrado region of Brazil. The data ranges from 2000 to 2017 and includes 50,160 samples divided into 12 classes (Dense_Woodland, Dunes, Fallow_Cotton, Millet_Cotton, Pasture, Rocky_Savanna, Savanna, Savanna_Parkland, Silviculture, Soy_Corn, Soy_Cotton, and Soy_Fallow). Each time series covers 12 months (23 data points) from MOD13Q1 product, and has 4 bands (EVI, NDVI, MIR, and NIR). We use bands NDVI and EVI for faster processing.
+
+```{r, tidy = "styler"}
+library(sits)
+library(sitsdata)
+# Take only the NDVI and EVI bands
+samples_cerrado_mod13q1_2bands <- sits_select(
+    data = samples_cerrado_mod13q1, 
+    bands = c("NDVI", "EVI"))
+
+# Show the summary of the samples
+summary(samples_cerrado_mod13q1_2bands)
+```
+
+
+## Cross-validation of training sets{-}
+
+Cross-validation is a technique to estimate the inherent prediction error of a model [@Hastie2009]. Since cross-validation uses only the training samples, its results are not accuracy measures unless the samples have been carefully collected to represent the diversity of possible occurrences of classes in the study area [@Wadoux2021]. In practice, when working in large areas, it is hard to obtain random stratified samples which cover the different variations in land classes associated with the ecosystems of the study area. Thus, cross-validation should be taken as a measure of model performance on the training data and not an estimate of overall map accuracy. 
+
+Cross-validation uses part of the available samples to fit the classification model and a different part to test it. The k-fold validation method splits the data into $k$ partitions with approximately the same size and proceeds by fitting the model and testing it $k$ times. At each step, we take one distinct partition for the test and the remaining ${k-1}$ for training the model and calculate its prediction error for classifying the test partition. A simple average gives us an estimation of the expected prediction error. The recommended choices of $k$ are $5$ or $10$ [@Hastie2009].
+
+`sits_kfold_validate()` supports k-fold validation in `sits`. The result is the confusion matrix and the accuracy statistics (overall and by class). In the examples below, we use multiprocessing to speed up the results. The parameters of `sits_kfold_validate` are:
+
+1. `samples`:  training samples organized as a time series tibble;
+2. `folds`: number of folds, or how many times to split the data (default = 5);
+3. `ml_method`: ML/DL method to be used for the validation (default = random forest);
+4. `multicores`: number of cores to be used for parallel processing (default = 2).
+
+Below we show an example of cross-validation on the `samples_cerrado_mod13q1` data set. 
+
+```{r, tidy = "styler"}
+rfor_validate <- sits_kfold_validate(
+    samples = samples_cerrado_mod13q1_2bands,
+    folds = 5,
+    ml_method = sits_rfor(),
+    multicores = 5
+)
+rfor_validate
+```
+
+The results show a good validation, reaching 94% accuracy. However, this accuracy does not guarantee a good classification result. It only shows if the training data is internally consistent. In what follows, we present additional methods for improving sample quality.
 
 ## Hierarchical clustering for sample quality control{-}
 
@@ -64,17 +113,6 @@ The input data for quality assessment is a set of training samples, which are hi
 knitr::include_graphics("images/methodology_bayes_som.png")
 ```
 
-As an example, we take a set of time series from the Cerrado region of Brazil, the second largest biome in South America with an area of more than 2 million km2. This data ranges from 2000 to 2017 and includes 50,160 samples divided into 12 classes (Dense_Woodland, Dunes, Fallow_Cotton, Millet_Cotton, Pasture, Rocky_Savanna, Savanna, Savanna_Parkland, Silviculture, Soy_Corn, Soy_Cotton, and Soy_Fallow). Each time series covers 12 months (23 data points) from MOD13Q1 product, and has 4 bands (EVI, NDVI, MIR, and NIR). We use bands NDVI and EVI for faster processing.
-
-```{r, message = FALSE, tidy = "styler", warning = FALSE}
-# Take only the NDVI and EVI bands
-samples_cerrado_mod13q1_2bands <- sits_select(
-    data = samples_cerrado_mod13q1, 
-    bands = c("NDVI", "EVI"))
-
-# Show the summary of the samples
-summary(samples_cerrado_mod13q1_2bands)
-```
 
 ## Creating the SOM map{-}
 
@@ -202,7 +240,7 @@ balanced_samples <- sits_reduce_imbalance(
     n_samples_under = 1500,
     multicores = 4)
 ```
-
+a
 ```{r, tidy = "styler"}
 # Print the balanced samples
 # Some classes have more than 1500 samples due to the SOM map
