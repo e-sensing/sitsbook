@@ -11,17 +11,9 @@ Machine learning algorithms rely on training samples that are derived from "pure
 
 The `sits` package uses a *time-first, space-later* approach. Since machine learning classifiers in `sits` are mostly pixel-based, it is necessary to complement them with spatial smoothing methods. These methods improve the accuracy of land classification by incorporating spatial and contextual information into the classification process. The smoothing method available in `sits` uses an Empirical Bayes approach, adjusted to the specific properties of land classification. The assumption is that class probabilities at the local level should be similar and provide the baseline for comparison with the pixel values produced by the classifier. Based on these two elements, Bayesian smoothing adjusts the probabilities for the pixels, considering spatial dependence.  
 
-## Using non-isotropic neighbourhoods for smoothing{-}
-
-The fundamental idea behind Bayesian smoothing for land classification posits that image patches with similar characteristics usually have a dominant class. This dominant class is marked by higher average probabilities and lower variance compared to other classes. In such regions, an outlier assigned to a different class will have lower average probabilities and higher local variance. Post-processing will adjust this pixel to match the dominant class.
-
-Pixels in the border between two areas of different classes pose a challenge. Only some of their neighbours belong to the same class as the pixel. To address this issue, we employ a non-isotropic definition of a neighbourhood to estimate the prior class distribution. For instance, consider a boundary pixel with a neighborhood defined by a 7 x 7 window, located along the border between Forest and Grassland classes. To estimate the prior probability of the pixel being labelled as a Forest, we should only take into account the neighbours on one side of the border that are likely to be correctly classified as Forest. Pixels on the opposite side of the border should be disregarded, since they are unlikely to belong to the same spatial process. In practice, we use only half of the pixels in the 7 x 7 window, opting for those that have a higher probability of being named as Forest. For the prior probability of the Grassland class, we reverse the selection and only consider those on the opposite side of the border.
-
-Although this choice of neighbourhood may seem unconventional, it is consistent with the assumption of non-continuity of the spatial processes describing each class. A dense forest patch, for example, will have pixels with strong spatial autocorrelation for values of the Forest class; however, this spatial autocorrelation doesn't extend across its border with other land classes.
-
 ## Empirical Bayesian estimation{-}
 
-The Bayesian estimate is based on the probabilities produced by the classifiers. Let $\p_{i,k} \geq 0$ be the prior probability of the $i$-th pixel belonging to class $k \in \{1, \ldots, m\}$.  The probabilities $p_{i,k}$ are the classifier's output, being subject to noise, outliers, and classification errors. Our estimation aims to remove these effects and obtain values that approximate the actual class probability better. 
+The Bayesian estimate is based on the probabilities produced by the classifiers. Let $p_{i,k} \geq 0$ be the prior probability of the $i$-th pixel belonging to class $k \in \{1, \ldots, m\}$.  The probabilities $p_{i,k}$ are the classifier's output, being subject to noise, outliers, and classification errors. Our estimation aims to remove these effects and obtain values that approximate the actual class probability better. 
 
 We convert the class probability values $p_{i,k}$  to log-odds values using the logit function, to transform probability values ranging from $0$ to $1$ to values from negative infinity to infinity. The conversion from probabilities logit values is helpful to support our assumption of normal distribution for our data. 
 
@@ -39,20 +31,27 @@ x_{i,k} +
 $$
 where:
 
-\begin{itemize}
-\item $x_{i,k}$ is the logit value for pixel $i$ and class $k$.
-\item $m_{i,k}$ is the average of logit values for pixels of class $k$ 
+1. $x_{i,k}$ is the logit value for pixel $i$ and class $k$.
+2. $m_{i,k}$ is the average of logit values for pixels of class $k$ 
 in the neighborhood of pixel $i$.
-\item $s^2_{i,k}$ is the variance of logit values for pixels of class $k$ 
+3. $s^2_{i,k}$ is the variance of logit values for pixels of class $k$ 
 in the neighborhood of pixel $i$.
-\item $\sigma^2_{k}$ is the likelihood variance for class $k$, 
-an user-derived hyperparameter.
-\end{itemize}
+4. $\sigma^2_{k}$ is an user-derived hyperparameter which estimates the variance for class $k$, expressed in logits.
 
-The above equation is a weighted average between the value $x_{i,k}$ for the pixel and the mean $m_{i,k}$ for the neighboring pixels. When the variance $s^2_{i,k}$ for the neighbors is too high, the algorithm gives more weight to the pixel value $x_{i,k}$. When the variance of the likelihood $\sigma^2_k$ increases, the method gives more weight to the neighborhood mean $m_{i,k}$.
 
-However, a plain neighborhood of each pixel, based uniquely on the distance between locations, did not produce reasonable results. As explained above, we must consider non-isotropic neighborhoods.  The reason is that we want to give more weight to those neighborhood pixels with assignment classes with large probabilities as those are the ones estimated more reliably by the classification algorithm. 
+The above equation is a weighted average between the value $x_{i,k}$ for the pixel and the mean $m_{i,k}$ for the neighboring pixels. When the variance $s^2_{i,k}$ for the neighbors is too high, the algorithm gives more weight to the pixel value $x_{i,k}$. When class variance  $\sigma^2_k$ increases, the results gives more weight to the neighborhood mean $m_{i,k}$. 
 
+## Using non-isotropic neighbourhoods{-}
+
+The fundamental idea behind Bayesian smoothing for land classification is that individual pixels area related to those close to it. Each pixel usually has the same class as most of its neighbours. These closeness relations are expressed in similar values of class probability. If we find a pixel assigned to "Water" surrounded by pixels labelled as "Forest", such pixel may have been wrongly labelled. To check if the pixel has been mislabelled, we look at the class probabilities for the pixels and its neighbors. There are possible situations:
+
+1. The outlier has a class probability distribution very different from its neighbors. For example, its probability for belonging to the "Water" class is 80% while that of being a "Forest" is 20%. If we also consider that "Water" pixels have a smaller variance, since water areas have a strong signal in multispectral images, our post-processing method will not change the pixel's label.
+
+2. The outlier has a class probability distribution similar from its neighbors. Consider a case where a pixel has a 47% probability for "Water" and 43% probability for "Forest". This small difference indicates that we need to look at the neighbourhood to improve the information produced by the classifier. In these cases, the post-processing estimate may change the pixel's label.
+
+Pixels in the border between two areas of different classes pose a challenge. Only some of their neighbours belong to the same class as the pixel. To address this issue, we employ a non-isotropic definition of a neighbourhood to estimate the prior class distribution. For instance, consider a boundary pixel with a neighborhood defined by a 7 x 7 window, located along the border between Forest and Grassland classes. To estimate the prior probability of the pixel being labelled as a Forest, we should only take into account the neighbours on one side of the border that are likely to be correctly classified as Forest. Pixels on the opposite side of the border should be disregarded, since they are unlikely to belong to the same spatial process. In practice, we use only half of the pixels in the 7 x 7 window, opting for those that have a higher probability of being named as Forest. For the prior probability of the Grassland class, we reverse the selection and only consider those on the opposite side of the border.
+
+Although this choice of neighbourhood may seem unconventional, it is consistent with the assumption of non-continuity of the spatial processes describing each class. A dense forest patch, for example, will have pixels with strong spatial autocorrelation for values of the Forest class; however, this spatial autocorrelation doesn't extend across its border with other land classes.
 
 ## Effect of the hyperparameter{-}
 
@@ -73,7 +72,6 @@ We make the following recommendations for setting the $\sigma^2_{k}$ parameter:
 2. Set the $\sigma^2_{k}$ parameter with low values ($5$ or below) to reduce the neighborhood influence compared with the probabilities for each pixel of class $k$. In this way, classes with low spatial autocorrelation are more likely not to be relabeled.
 
 Consider the case of forest areas and watersheds. If an expert wishes to have compact areas classified as forests without many outliers inside them, she will set the $\sigma^2$ parameter for the class Forest to be high. For comparison, to avoid that small watersheds with few similar neighbors being relabeled, it is advisable to avoid a strong influence of the neighbors, setting $\sigma^2$ to be as low as possible. 
-
 
 ## Running Bayesian smoothing {-}
 

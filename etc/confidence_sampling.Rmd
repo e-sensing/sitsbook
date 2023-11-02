@@ -1,0 +1,76 @@
+## Improving the training set with confidence sampling{-}
+
+In the context of active learning, "confidence sampling" is a strategy where the learning algorithm informs the user about samples where it is most confident of its predictions for labeling. The goal of confidence sampling is to improve the training set by choosing  informative data points for each label. The objective is to increase the size of the training set with good quality pixels.
+
+There are four steps for confidence sampling in `sits`:
+
+1. Train an initial model.
+
+2. Use the model to make predictions on the unlabeled data points and estimate the confidence of these predictions. 
+
+3. For each label, the algorithm finds out location where the machine learning model has high confidence in choosing this label compared to all others. Confidence is determined by margin sampling, which is the difference between the first and second most probable labels. 
+
+4. Select points for increasing the training set. The selection combines high confidence based on margin samples and distributed location, taking  a minimum distance between new labels, to minimize spatial autocorrelation effects. 
+
+The `sits_confidence_sampling()` methods requires four parameters: (a) `probs_cube`, a smoothed probability cube; (b) `n`, number of suggested points per class; (c) `min_margin`, minimum margin of confidence to select a sample; (d) `sampling_window`, window size for collecting individual points. Only one pixel per sampling window is collected. 
+
+The code below shows a case study. We use the probability cube produced in the previous session to suggest new samples that will augment the training set.
+
+```{r, tidy = "styler"}
+# perform confidence sampling
+new_conf_samples <- sits_confidence_sampling(
+  probs_cube = s2_cube_bayes_v2,
+  n = 20,
+  min_margin = 0.7,
+  sampling_window = 10
+)
+new_conf_samples
+```
+The new samples contain an additional column, labelled `confidence`, which is useful to inform users of the confidence levels for each samples. When joining this set with the previous training data to obtain a new ML model, such column needs to be removed to avoid NA values in the resulting training data.
+
+```{r, tidy = "styler"}
+# remove additional column produced by confidence
+new_conf_samples <- new_conf_samples[, 
+              c("longitude", "latitude", "start_date", "end_date", "label")] 
+# get the time series for the new confidence samples
+new_conf_samples_ts <- sits_get_data(
+    cube = s2_reg_cube_ro,
+    samples = new_conf_samples)
+
+# Join the new samples with the second round 
+samples_round_3 <- dplyr::bind_rows(
+    samples_round_2,
+    new_conf_samples_ts)
+# Train an RF model
+rfor_model_v3 <- sits_train(
+    samples = samples_round_3, 
+    ml_method = sits_rfor())
+
+# Classify the small area cube
+s2_cube_probs_v3 <- sits_classify(
+    data = s2_reg_cube_ro,
+    ml_model = rfor_model_v3,
+    output_dir = "./tempdir/chp12/",
+    version = "v2",
+    memsize = 16,
+    multicores = 4)
+
+# Post-process the probability cube
+s2_cube_bayes_v3 <- sits_smooth(
+    cube = s2_cube_probs_v3,
+    output_dir = "./tempdir/chp12/",
+    version = "v2",
+    memsize = 16,
+    multicores = 4)
+
+# Label the post-processed  probability cube
+s2_cube_label_v3 <- sits_label_classification(
+    cube = s2_cube_bayes_v3,
+    output_dir = "./tempdir/chp12/",
+    version = "v2",
+    memsize = 16,
+    multicores = 4)
+
+# Plot the second version of the classified cube
+plot(s2_cube_label_v3)
+```
