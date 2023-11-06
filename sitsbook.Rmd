@@ -609,7 +609,7 @@ Package `sits` supports access to the following ARD image collections:
 4. Microsoft Planetary Computer (MPC): Open data collections of Sentinel-2/2A and Landsat-4/5/7/8/9 for the Earth's land areas. 
 5. USGS: Landsat-4/5/7/8/9 collections available in AWS, which require access payment. 
 6. Swiss Data Cube (SDC): Open data collection of Sentinel-2/2A and Landsat-8 images for Switzerland. 
-7. Harmonized Landsat-Sentinel (HLS): HLS, provided by NASA, is a collection that processes Landsat 8 and Sentinel-2 imagery to a common standard, 
+7. Harmonized Landsat-Sentinel (HLS): HLS, provided by NASA, is a collection that processes Landsat 8 and Sentinel-2 imagery to a common standard.
 
 ## Regular image data cubes{-}
 
@@ -740,9 +740,6 @@ knitr::include_graphics("images/bdc_grid.png")
 ```
 
 To access the BDC, users must provide their credentials using environment variables, as shown below. Obtaining a BDC access key is free. Users must register at the [BDC site](https://brazildatacube.dpi.inpe.br/portal/explore) to obtain the key.
-```{r,eval = FALSE}
-Sys.setenv("BDC_ACCESS_KEY" = <your_bdc_access_key>)
-```
 
 In the example below, the data cube is defined as one tile ("005004") of `CBERS-WFI-16D` collection, which holds CBERS AWFI images at 16 days resolution.
 
@@ -1041,7 +1038,7 @@ There are many options for calculating vegetation indexes using Sentinel-2 bands
 
 We first calculate the NDVI in the usual way, using bands B08 and B04.
 
-```{r, tidy="styler", eval = FALSE, echo = TRUE}
+```{r, tidy="styler", eval = TRUE, echo = TRUE}
 
 # Calculate NDVI index using bands B08 and B04
 reg_cube <- sits_apply(reg_cube,
@@ -1056,7 +1053,7 @@ plot(reg_cube, band = "NDVI", palette = "RdYlGn")
 ```
 We now compare the traditional NDVI with other vegetation index computed using red-edge bands. The example below such the NDRE1 index, obtained using bands B06 and B05. Sun et al. argue that a vegetation index built using bands B06 and B07 provides a better approximation to leaf area index estimates than NDVI [@Sun2020a]. Notice that the contrast between forests and deforested areas is more robust in the NDRE1 index than with NDVI. 
 
-```{r, tidy="styler", eval = FALSE, echo = TRUE}
+```{r, tidy="styler", eval = TRUE, echo = TRUE}
 
 # Calculate NDRE1 index using bands B06 and B05
 reg_cube <- sits_apply(reg_cube,
@@ -1076,7 +1073,7 @@ plot(reg_cube, band = "NDRE1",  palette = "RdYlGn")
 
 Band combination can also generate spectral indices for detecting degradation by fires, which are an important element in environmental degradation. Forest fires significantly impact emissions and impoverish natural ecosystems [@Nepstad1999]. Fires open the canopy, making the microclimate drier and increasing the amount of dry fuel [@Gao2020]. One well-established technique for detecting burned areas with remote sensing images is the normalized burn ratio (NBR), the difference between the near-infrared and the short wave infrared band,  calculated using bands B8A and B12.
 
-```{r, tidy="styler", eval = FALSE, echo = TRUE}
+```{r, tidy="styler", eval = TRUE, echo = TRUE}
 # Calculate the NBR index
 reg_cube <- sits_apply(reg_cube,
     NBR = (B12 - B8A)/(B12 + B8A),
@@ -1104,7 +1101,7 @@ To run the mixture model in `sits`, it is necessary to inform the values of pixe
 
 In `sits`, spectral mixture analysis is done by `sits_mixture_model()`, which has two mandatory parameters: `cube` (a data cube) and `endmembers`, a named table (or equivalent) that defines the pure pixels. The `endmembers` table must have the following named columns: (a) `type`, which defines the class associated with an endmember; (b) names, the names of the bands. Each line of the table must contain the value of each endmember for all bands (see example). To improve readability, we suggest that the `endmembers` parameters be defined as a `tribble`. A `tribble` is a `tibble` with an easier to read row-by-row layout. In the example below, we define three endmembers for classes Forest, Soil, and Water.  Note that the values for each band are expressed as integers ranging from 0 to 10,000. 
 
-```{r, tidy="styler", eval = FALSE, echo = TRUE}
+```{r, tidy="styler", eval = TRUE, echo = TRUE}
 # Define the endmembers for three classes and six bands
 em <- tibble::tribble(
     ~class,   ~B02, ~B03, ~B04, ~B8A, ~B11, ~B12,
@@ -1639,7 +1636,7 @@ balanced_samples <- sits_reduce_imbalance(
     n_samples_under = 1500,
     multicores = 4)
 ```
-a
+
 ```{r, tidy = "styler"}
 # Print the balanced samples
 # Some classes have more than 1500 samples due to the SOM map
@@ -2429,7 +2426,7 @@ def_legend <- c(
     "d2017" = colors[11], "d2018" = colors[12],
     "d2019" = colors[13], "d2020" = colors[14], 
     "d2021" = colors[15], "r2010" = "lightcyan",
-    "r2011" = "lightcyan", "r2012"= "lightcyan" 
+    "r2011" = "lightcyan", "r2012"= "lightcyan", 
     "r2013" = "lightcyan", "r2014" = "lightcyan", 
     "r2015" = "lightcyan", "r2016" = "lightcyan", 
     "r2017" = "lightcyan", "r2018" = "lightcyan", 
@@ -2693,16 +2690,10 @@ dir.create("./tempdir/chp11")
 To show how to do validation and accuracy assessment in`sits`, we show an example of land classification in the Cerrado biome, the second largest biome in Brazil with 1.9 million km$^2$. The Brazilian Cerrado is a tropical savanna ecoregion with a rich ecosystem ranging from grasslands to woodlands. It is home to more than 7000 species of plants with high levels of endemism [@Klink2005]. It includes three major types of natural vegetation: Open Cerrado, typically composed of grasses and small shrubs with a sporadic presence of small tree vegetation; Cerrado, a typical savanna formation with the presence of low, irregularly branched, thin-trunked trees; and Cerradão, areas of medium-sized trees (up to 10--12 m)  [@Del-Claro2019]. Its natural areas are being converted to agriculture at a fast pace, as it is one of the world's fast-moving agricultural frontiers [@Walter2006]. The main agricultural land uses include cattle ranching, crop farms, and planted forests. The classification follows the work by Simoes et al. [@Simoes2021].
 
 The data comprises 67 Landsat-8 tiles from the Brazil Data Cube (BDC), with 23 time steps covering 2017-08-29 to 2018-08-29. Since the data is available in the Brazil Data Cube, users should first obtain access to the BDC by obtaining an access key. After obtaining the access key, they should include their credentials using environment variables, as shown below. Obtaining a BDC access key is free. To obtain the key, users need to register at the [BDC site](https://brazildatacube.dpi.inpe.br/portal/explore).
-```{r,eval = FALSE}
-Sys.setenv(
-    "BDC_ACCESS_KEY" = <your_bdc_access_key>
-)
-```
 
 After obtaining the BDC access key, we can now create a data cube for the Cerrado biome. 
 
 ```{r, tidy = "styler", eval = FALSE}
-
 # Files are available in the Brazil Data Cube
 # 
 # Obtain the region of interest covering the Cerrado biome
@@ -3455,9 +3446,7 @@ In `sits` version 1.4.2, there is only one segmentation function available (`sit
 
 ## Simple Linear Iterative Clustering (SLIC) algorithm{-}
 
- After building the multidimensional space, we use the SLIC algorithm [Achanta2012] that clusters pixels to efficiently generate compact, nearly uniform superpixels. This algorithm has been adapted by Nowosad and Stepinski [Nowosad2022] to work with multispectral images. The `sits` implementation extends their implementation to deal with space-time data. 
-
-In `sits` 1.4.2, we provide an implementation of  Simple Linear Iterative Clustering (SLIC) algorithm. SLIC was initially proposed by Achanta el al. [@Achanta2012a] and later extended for multidimensional raster images by Nowosad and Stepinksi [@Nowosad2022]. SLIC uses spectral similarity and proximity in the image space to segment the image into superpixels. Superpixels are clusters of pixels with similar spectral responses that are close together, which correspond to coherent object parts in the image. Here's a high-level view of the extended SLIC algorithm:
+ After building the multidimensional space, we use the SLIC algorithm [Achanta2012] that clusters pixels to efficiently generate compact, nearly uniform superpixels. This algorithm has been adapted by Nowosad and Stepinski [Nowosad2022] to work with multispectral images. SLIC uses spectral similarity and proximity in the image space to segment the image into superpixels. Superpixels are clusters of pixels with similar spectral responses that are close together, which correspond to coherent object parts in the image. Here's a high-level view of the extended SLIC algorithm:
 
 1.  The algorithm starts by dividing the image into a grid, where each cell of the grid will become a superpixel.
 
@@ -3521,7 +3510,7 @@ sits_view(segments_20LMR, red = "B11", green = "B8A", blue = "B02",
 ```
 
 ```{r, echo = FALSE, out.width="90%", fig.caption = "Detail of segementation of image in Amazonia", fig.align="center"}
-knitr::include_graphics("images/view_segments_RGB_detail.png")
+knitr::include_graphics("images/segmentation_2.png")
 ```
 
 After obtaining the segments, the next step is to classify them. This is done by first training a classification model. In this case study, we will use an SVM model.
