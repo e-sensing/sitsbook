@@ -110,7 +110,7 @@
 <li><p>Uncertainty: Predictions from different models are compared in terms of their uncertainties on a pixel-by-pixel basis; predictions with lower uncertainty are chosen as the more likely ones to be valid.</p></li>
 </ul>
 <p>In what follows, we will use the same data set used in Chapter <a href="https://e-sensing.github.io/sitsbook/image-classification-in-data-cubes.html">Image classification in data cubes</a> to illustrate how to produce an ensemble prediction. We will train two models: Random Forest (RF) and Support Vector Machines (SVM), classify the cube with them, and then combine their results. We first make an RF classification</p>
-<div class="sourceCode" id="cb187"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb180"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Files are available in a local directory</span></span>
 <span><span class="va">data_dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html">system.file</a></span><span class="op">(</span><span class="st">"extdata/Rondonia-20LMR/"</span>, package <span class="op">=</span> <span class="st">"sitsdata"</span><span class="op">)</span></span>
 <span><span class="co"># Read data cube</span></span>
@@ -147,13 +147,13 @@
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">ro_cube_20LMR_rfor_class</span><span class="op">)</span></span></code></pre></div>
 <div class="figure" style="text-align: center">
-<span style="display:block;" id="fig:unnamed-chunk-211"></span>
-<img src="sitsbook_files/figure-html/unnamed-chunk-211-1.png" alt="Land classification in Rondonia using a random forest algorithm  (Source: Authors)." width="100%"><p class="caption">
+<span style="display:block;" id="fig:unnamed-chunk-176"></span>
+<img src="sitsbook_files/figure-html/unnamed-chunk-176-1.png" alt="Land classification in Rondonia using a random forest algorithm  (Source: Authors)." width="100%"><p class="caption">
 Figure 89: Land classification in Rondonia using a random forest algorithm (Source: Authors).
 </p>
 </div>
 <p>The next step is to classify the same area using an SVM algorithm, as shown below.</p>
-<div class="sourceCode" id="cb188"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb181"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># train an SVM model</span></span>
 <span><span class="va">svm_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_train.html">sits_train</a></span><span class="op">(</span><span class="va">samples_deforestation</span>, <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_svm.html">sits_svm</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co"># classify the data cube</span></span>
@@ -182,14 +182,14 @@ Figure 89: Land classification in Rondonia using a random forest algorithm (Sour
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">ro_cube_20LMR_svm_class</span><span class="op">)</span></span></code></pre></div>
 <div class="figure" style="text-align: center">
-<span style="display:block;" id="fig:unnamed-chunk-212"></span>
-<img src="sitsbook_files/figure-html/unnamed-chunk-212-1.png" alt="Land classification in Rondonia using a support vector machine (Source: Authors)." width="100%"><p class="caption">
+<span style="display:block;" id="fig:unnamed-chunk-177"></span>
+<img src="sitsbook_files/figure-html/unnamed-chunk-177-1.png" alt="Land classification in Rondonia using a support vector machine (Source: Authors)." width="100%"><p class="caption">
 Figure 90: Land classification in Rondonia using a support vector machine (Source: Authors).
 </p>
 </div>
 <p>There is a good agreement between the two results, which most of the land areas have been classified similarly. The main differences are in the “Clear_Cut_Burned_Area” and “Clear_Cut_Vegetation”. The RF algorithm tends to be more conservative and finds less areas than SVM. The reason is because RF decision-making uses values from single attributes (values of a single band in a given time instance). Since the Random Forest model is sensitive to the response of images at the end of the period, it tends to focus on values that indicate the presence of forests during the dry season. The SVM model is more balanced to the overall separation of classes in the entire attribute space. Also note that the study area presents many challenges for land classification, given the presence of wetlands, riparian forests and seasonally-flooded areas. Because of this challenge, both methods make mistakes in including flooded areas as “Clear_Cut_Vegetation” in the center-left part of the image.</p>
 <p>Given the differences and complementaries between the two predicted outcomes, combining them using <code><a href="https://rdrr.io/pkg/sits/man/sits_combine_predictions.html">sits_combine_predictions()</a></code> is useful. This function takes the following arguments: (a) <code>cubes</code>, a list of the cubes to be combined. These cubes should be probability cubes generated by which optionally may have been smoothened; (b) <code>type</code>, which indicates how to combine the probability maps. The options are <code>average</code>, which performs a weighted mean of the probabilities, and <code>uncertainty</code>, which uses the uncertainty cubes to combine the predictions; (c) <code>weights</code>, a vector of weights to be used to combine the predictions when <code>average</code> is selected; (d) <code>uncertainty_cubes</code>, a list of uncertainty cubes associated to the predictions; (e) <code>multicores</code>, number of cores to be used; (f) <code>memsize</code>, RAM used in the classification; (g) <code>output_dir</code>, the directory where the classified raster files will be written.</p>
-<div class="sourceCode" id="cb189"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb182"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Combine the two predictions by taking the average of the probabilities for each class</span></span>
 <span><span class="va">ro_cube_20LMR_average_probs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_combine_predictions.html">sits_combine_predictions</a></span><span class="op">(</span></span>
 <span>  cubes <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span><span class="va">ro_cube_20LMR_svm_bayes</span>, <span class="va">ro_cube_20LMR_rfor_bayes</span><span class="op">)</span>,</span>
@@ -214,14 +214,14 @@ Figure 90: Land classification in Rondonia using a support vector machine (Sourc
 <span>  tmap_options <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span><span class="st">"scale"</span> <span class="op">=</span> <span class="fl">0.6</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <div class="figure" style="text-align: center">
-<span style="display:block;" id="fig:unnamed-chunk-213"></span>
-<img src="sitsbook_files/figure-html/unnamed-chunk-213-1.png" alt="Land classification in Rondonia using the average of the probabilities produced by Random Forest and SVM algorithms (Source: Authors)." width="100%"><p class="caption">
+<span style="display:block;" id="fig:unnamed-chunk-178"></span>
+<img src="sitsbook_files/figure-html/unnamed-chunk-178-1.png" alt="Land classification in Rondonia using the average of the probabilities produced by Random Forest and SVM algorithms (Source: Authors)." width="100%"><p class="caption">
 Figure 91: Land classification in Rondonia using the average of the probabilities produced by Random Forest and SVM algorithms (Source: Authors).
 </p>
 </div>
 <p>Compared with the initial map, the result is more similar to the original SVM map than to the RF result, especially as regards the “Clear_Cut_Burned_Area” class. Such outcome indicates that that SVM is more confident in its predictions than RF when detecting deforestation areas associated with fires. By contrast, the misclassified areas in the center-left part of the map have been reduced. The reason is that some of these areas are indicated in one classifier but not in the other. In this case, the confidence on the deforestation results is not matched by both methods. Thus, in principle, the resulting combined map is more accurate than the individual model outcomes.</p>
 <p>A second way to combine the prediction is to use the uncertainty information associated to the probability of each pixel. In this case, the confidence in each prediction is inversely proportional to its uncertainty. For more information on how to compute the uncertainty of prediction, please refer to Chapter <a href="https://e-sensing.github.io/sitsbook/uncertainty-and-active-learning.html">Uncertainty and active learning</a>.</p>
-<div class="sourceCode" id="cb190"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb183"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Calculate the uncertainty of SVM prediction</span></span>
 <span><span class="va">ro_cube_20LMR_svm_uncert</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_uncertainty.html">sits_uncertainty</a></span><span class="op">(</span></span>
 <span>  <span class="va">ro_cube_20LMR_svm_bayes</span>,</span>
@@ -265,8 +265,8 @@ Figure 91: Land classification in Rondonia using the average of the probabilitie
 <span>  tmap_options <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span><span class="st">"scale"</span> <span class="op">=</span> <span class="fl">0.6</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <div class="figure" style="text-align: center">
-<span style="display:block;" id="fig:unnamed-chunk-214"></span>
-<img src="sitsbook_files/figure-html/unnamed-chunk-214-1.png" alt="Land classification in Rondonia using the uncertainty of the probabilities produced by Random Forest and SVM algorithms (Source: Authors)." width="100%"><p class="caption">
+<span style="display:block;" id="fig:unnamed-chunk-179"></span>
+<img src="sitsbook_files/figure-html/unnamed-chunk-179-1.png" alt="Land classification in Rondonia using the uncertainty of the probabilities produced by Random Forest and SVM algorithms (Source: Authors)." width="100%"><p class="caption">
 Figure 92: Land classification in Rondonia using the uncertainty of the probabilities produced by Random Forest and SVM algorithms (Source: Authors).
 </p>
 </div>
@@ -294,7 +294,7 @@ Figure 92: Land classification in Rondonia using the uncertainty of the probabil
 <footer class="bg-primary text-light mt-5"><div class="container"><div class="row">
 
   <div class="col-12 col-md-6 mt-3">
-    <p>"<strong><strong>sits</strong>: Satellite Image Time Series Analysis on Earth Observation Data Cubes</strong>" was written by Gilberto Camara, Rolf Simoes, Felipe Souza, Charlotte Pelletier, Alber Sanchez, Pedro R. Andrade, Karine Ferreira, Gilberto Queiroz. It was last built on 2023-11-02.</p>
+    <p>"<strong><strong>sits</strong>: Satellite Image Time Series Analysis on Earth Observation Data Cubes</strong>" was written by Gilberto Camara, Rolf Simoes, Felipe Souza, Charlotte Pelletier, Alber Sanchez, Pedro R. Andrade, Karine Ferreira, Gilberto Queiroz. It was last built on 2023-11-16.</p>
   </div>
 
   <div class="col-12 col-md-6 mt-3">

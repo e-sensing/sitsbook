@@ -19,6 +19,11 @@ output:
           google: "IBM Plex Serif"
         code_font:
           google: "IBM Plex Mono"
+  pdf_document: 
+    latex_engine: xelatex
+    toc: true
+    toc_depth: 2 
+    df_print: tibble
 documentclass: report
 link-citations: yes
 colorlinks: yes
@@ -287,17 +292,12 @@ This section gathers the publications that have used `sits` to generate their re
 
 <!--chapter:end:02-acknowledgements.Rmd-->
 
----
-output:
-  pdf_document: default
-  html_document: default
----
-
 # Introduction{-}
 
 ```{r, include = FALSE}
 source("common.R")
 dir.create("./tempdir/chp3")
+library(tibble)
 ```
 
 <a href="https://www.kaggle.com/esensing/introduction-to-sits" target="_blank"><img src="https://kaggle.com/static/images/open-in-kaggle.svg"/></a>
@@ -371,12 +371,12 @@ sits_api <- data.frame(
                "Classified map",
                "Accuracy assessment"))
 
-kableExtra::kbl(sits_api, 
+kableExtra::kbl(sits_api,
                 caption = "The sits API workflow for land classification",
-                booktabs = TRUE) %>%
-    kableExtra::kable_styling(position = "center", 
+                booktabs = TRUE) |>
+    kableExtra::kable_styling(position = "center",
                               font_size = 14,
-                              latex_options = c("scale_down", "HOLD_position")) %>% 
+                              latex_options = c("scale_down", "HOLD_position")) |>
     kableExtra::column_spec(column = 1, monospace = TRUE, color =  "RawSienna")
 ```
 
@@ -609,7 +609,7 @@ Package `sits` supports access to the following ARD image collections:
 4. Microsoft Planetary Computer (MPC): Open data collections of Sentinel-2/2A and Landsat-4/5/7/8/9 for the Earth's land areas. 
 5. USGS: Landsat-4/5/7/8/9 collections available in AWS, which require access payment. 
 6. Swiss Data Cube (SDC): Open data collection of Sentinel-2/2A and Landsat-8 images for Switzerland. 
-7. Harmonized Landsat-Sentinel (HLS): HLS, provided by NASA, is a collection that processes Landsat 8 and Sentinel-2 imagery to a common standard, 
+7. Harmonized Landsat-Sentinel (HLS): HLS, provided by NASA, is a collection that processes Landsat 8 and Sentinel-2 imagery to a common standard.
 
 ## Regular image data cubes{-}
 
@@ -1964,7 +1964,7 @@ The two main differences between transformer models and other algorithms are pos
 
 The application of attention-based models for satellite image time series analysis is proposed by Garnot et al. [@Garnot2020a] and Russwurm and Körner [@Russwurm2020]. A self-attention network can learn to focus on specific time steps and image features most relevant for distinguishing between different classes. The algorithm tries to identify which combination of individual temporal observations is most relevant to identify each class. For example, crop identification will use observations that capture the onset of the growing season, the date of maximum growth, and the end of the growing season. In the case of deforestation, the algorithm tries to identify the dates when the forest is being cut. Attention-based models are a means to identify events that characterize each land class.
 
-The first model proposed by Garnot et al. is a full transformer-based model [@Garnot2020a]. Considering that image time series classification is easier than natural language processing, Garnot et al. also propose a simplified version of the full transformer model [@Garnot2020]. This simpler model uses a reduced way to compute the attention matrix, reducing time for training and classification without loss of quality of the result. 
+The first model proposed by Garnot et al. is a full transformer-based model [@Garnot2020a]. Considering that image time series classification is easier than natural language processing, Garnot et al. also propose a simplified version of the full transformer model [@Garnot2020b]. This simpler model uses a reduced way to compute the attention matrix, reducing time for training and classification without loss of quality of the result. 
 
 In `sits`, the full transformer-based model proposed by Garnot et al. [@Garnot2020a]   is implemented using `sits_tae()`. The default parameters are those proposed by the authors. The default optimizer is the same `optim_adamw`, available in package `torchopt`.
 
@@ -1990,7 +1990,7 @@ class <- point_mt_mod13q1 %>%
     plot(bands = c("NDVI", "EVI"))
 ```
 
-Garnot and co-authors also proposed the Lightweight Temporal Self-Attention Encoder (LTAE) [@Garnot2020], which the authors claim can achieve high classification accuracy with fewer parameters compared to other neural network models. It is a good choice for applications where computational resources are limited. The `sits_lighttae()` function implements this algorithm. The default optimizer is `optim_adamw`, available in package `torchopt`. The most important parameter to be set is the learning rate `lr`. Values ranging from 0.001 to 0.005 should produce good results. See also the section below on model tuning. 
+Garnot and co-authors also proposed the Lightweight Temporal Self-Attention Encoder (LTAE) [@Garnot2020b], which the authors claim can achieve high classification accuracy with fewer parameters compared to other neural network models. It is a good choice for applications where computational resources are limited. The `sits_lighttae()` function implements this algorithm. The default optimizer is `optim_adamw`, available in package `torchopt`. The most important parameter to be set is the learning rate `lr`. Values ranging from 0.001 to 0.005 should produce good results. See also the section below on model tuning. 
 
 ```{r, tidy="styler", out.width = "80%", warning = FALSE, message = FALSE, fig.align="center", fig.cap="Training evolution of Lightweight Temporal Self-Attention model (Source: Authors)."}
 # Train a machine learning model using TAE
@@ -2494,7 +2494,7 @@ dir.create("./tempdir/ch10")
 
 ## Introduction{-}
 
-Machine learning algorithms rely on training samples that are derived from "pure" pixels, hand-picked by users to represent the desired output classes. Given the presence of mixed pixels in images regardless of resolution, and the considerable data variability within each class, these classifiers often produce results with outliers or misclassified pixels. Therefore, post-processing techniques have become crucial to refine the labels of a classified image \citep{Huang2014}. Post-processing methods reduce salt-and-pepper and border effects, where single pixels or small groups of pixels are classified differently from their larger surrounding areas; these effects leads to visual discontinuity and inconsistency. By mitigating these errors and minimizing noise, post-processing improves the quality of the initial classification results, bringing  a significant gain in the overall accuracy and interpretability of the final output \citep{Schindler2012}.
+Machine learning algorithms rely on training samples that are derived from "pure" pixels, hand-picked by users to represent the desired output classes. Given the presence of mixed pixels in images regardless of resolution, and the considerable data variability within each class, these classifiers often produce results with outliers or misclassified pixels. Therefore, post-processing techniques have become crucial to refine the labels of a classified image [Huang2014]. Post-processing methods reduce salt-and-pepper and border effects, where single pixels or small groups of pixels are classified differently from their larger surrounding areas; these effects leads to visual discontinuity and inconsistency. By mitigating these errors and minimizing noise, post-processing improves the quality of the initial classification results, bringing  a significant gain in the overall accuracy and interpretability of the final output [Schindler2012].
 
 The `sits` package uses a *time-first, space-later* approach. Since machine learning classifiers in `sits` are mostly pixel-based, it is necessary to complement them with spatial smoothing methods. These methods improve the accuracy of land classification by incorporating spatial and contextual information into the classification process. The smoothing method available in `sits` uses an Empirical Bayes approach, adjusted to the specific properties of land classification. The assumption is that class probabilities at the local level should be similar and provide the baseline for comparison with the pixel values produced by the classifier. Based on these two elements, Bayesian smoothing adjusts the probabilities for the pixels, considering spatial dependence.  
 
@@ -2508,7 +2508,7 @@ $$
     x_{i,k} = \ln \left(\frac{p_{i,k}}{1 - p_{i,k}}\right)
 $$
 
-The standard Empirical Bayesian updating \citep{Gelman2014} leads to the estimation values for posterior distribution which can be expressed as a weighted mean
+The standard Empirical Bayesian updating [Gelman2014] leads to the estimation values for posterior distribution which can be expressed as a weighted mean
 
 $$
 {E}[\mu_{i,k} | x_{i,k}] =
@@ -2631,7 +2631,7 @@ plot(cube_smooth_w7_f05_s20, labels = c("Water", "Forest"), palette = "YlGn")
 
 Bayesian smoothing has removed some of the local variability associated with misclassified pixels that differ from their neighbors. There is a side effect: the water areas surrounded by forests have not been preserved in the forest probability map. The smoothing impact is best appreciated by comparing the labeled map produced without smoothing to the one that follows the procedure, as shown below.
 
-```{r, tidy = "styler", out.width = "100%", fig.align="center", fig.cap="Final classification map after Bayesian smoothing with 7 x 7 window, using neigh_fraction = 0.5 and smoothness = 20 (Source: Authors)."}
+```{r, tidy = "styler", out.width = "100%", fig.align="center", fig.cap="Final classification map after Bayesian smoothing with 7 x 7 window, using high smoothness values (Source: Authors)."}
 # Generate the thematic map
 defor_map_w7_f05_20 <- sits_label_classification(
     cube = cube_smooth_w7_f05_s20,
@@ -3457,7 +3457,7 @@ In `sits` version 1.4.2, there is only one segmentation function available (`sit
 
  After building the multidimensional space, we use the SLIC algorithm [Achanta2012] that clusters pixels to efficiently generate compact, nearly uniform superpixels. This algorithm has been adapted by Nowosad and Stepinski [Nowosad2022] to work with multispectral images. The `sits` implementation extends their implementation to deal with space-time data. 
 
-In `sits` 1.4.2, we provide an implementation of  Simple Linear Iterative Clustering (SLIC) algorithm. SLIC was initially proposed by Achanta el al. [@Achanta2012a] and later extended for multidimensional raster images by Nowosad and Stepinksi [@Nowosad2022]. SLIC uses spectral similarity and proximity in the image space to segment the image into superpixels. Superpixels are clusters of pixels with similar spectral responses that are close together, which correspond to coherent object parts in the image. Here's a high-level view of the extended SLIC algorithm:
+In `sits` 1.4.2, we provide an implementation of  Simple Linear Iterative Clustering (SLIC) algorithm. SLIC was initially proposed by Achanta el al. [@Achanta2012] and later extended for multidimensional raster images by Nowosad and Stepinksi [@Nowosad2022]. SLIC uses spectral similarity and proximity in the image space to segment the image into superpixels. Superpixels are clusters of pixels with similar spectral responses that are close together, which correspond to coherent object parts in the image. Here's a high-level view of the extended SLIC algorithm:
 
 1.  The algorithm starts by dividing the image into a grid, where each cell of the grid will become a superpixel.
 
@@ -3864,7 +3864,7 @@ sits_colors()
 
 These colors are grouped by typical legends used by the Earth observation community, which include "IGBP", "UMD", "ESA_CCI_LC", "WORLDCOVER", "PRODES", "PRODES_VISUAL", "TERRA_CLASS", "TERRA_CLASS_PT". The following commands shows the colors associated with the IGBP legend[@Herold2009].
 
-```{r, tidy = "styler", out.width = "100%", out.height = "100%", echo = FALSE, fig.align="center", fig.cap="Default colors used in the sits package (Source: Authors)."}
+```{r, tidy = "styler", out.width = "100%", out.height = "100%", fig.align="center", fig.cap="Default colors used in the sits package (Source: Authors)."}
 # Display default `sits` colors
 sits_colors_show(legend = "IGBP")
 ```

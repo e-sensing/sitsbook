@@ -15,6 +15,10 @@ bookdown::render_book(
     )
 )
 
+rmarkdown::render_site("./docs/", 
+                       output_format = 'bookdown::pdf_book', 
+                       encoding = 'UTF-8')
+
 # 
 bookdown::render_book(
     output_format = bookdown::bs4_book(
