@@ -34,7 +34,7 @@ plot(cube_20LMR, date = "2022-07-16", red = "B11", green = "B8A", blue = "B02")
 
 ## Training data for the case study{-}
 
-This case study uses the training data set `samples_deforestation`, available in package `sitsdata`. This data set consists of 6007 samples collected from Sentinel-2 images covering the state of Rondonia. There are nine classes: "Clear_Cut_Bare_Soil", "Clear_Cut_Burned_Area", "Mountainside_Forest", "Forest", "Riparian_Forest", "Clear_Cut_Vegetation", "Water", "Wetland", and "Seasonally_Flooded". Each time series contains values from Sentinel-2/2A bands B02, B8A, B11, and indices NDVI, EVI and NBR  from 2022-01-05 to 2022-12-23 in 16-day intervals. The samples are intended to detect deforestation events and have been collected by remote sensing experts using visual interpretation. 
+This case study uses the training dataset `samples_deforestation`, available in package `sitsdata`. This dataset consists of 6007 samples collected from Sentinel-2 images covering the state of Rondonia. There are nine classes: "Clear_Cut_Bare_Soil", "Clear_Cut_Burned_Area", "Mountainside_Forest", "Forest", "Riparian_Forest", "Clear_Cut_Vegetation", "Water", "Wetland", and "Seasonally_Flooded". Each time series contains values from Sentinel-2/2A bands B02, B8A, and B11, and indices NDVI, EVI, and NBR, from 2022-01-05 to 2022-12-23 in 16-day intervals. The samples are intended to detect deforestation events and have been collected by remote sensing experts using visual interpretation. 
 
 ```{r, tidy = "styler"}
 library(sitsdata)
@@ -44,7 +44,7 @@ data("samples_deforestation")
 summary(samples_deforestation)
 ```
 
-It is helpful to plot the basic patterns associated with the samples to understand the training set better. The function `sits_patterns()` uses a generalized additive model (GAM) to predict a smooth, idealized approximation to the time series associated with each class for all bands. Since the data cube used in the classification has three bands (B02, B8A, and B11) and three indexes (NDVI, EVI, NBR), we filter the samples for these bands and indexes before showing the patterns. 
+It is helpful to plot the basic patterns associated with the samples to understand the training set better. The function `sits_patterns()` uses a generalized additive model (GAM) to predict a smooth, idealized approximation to the time series associated with each class for all bands. Since the data cube used in the classification has three bands (B02, B8A, and B11) and three indexes (NDVI, EVI, and NBR), we filter the samples for these bands and indexes before showing the patterns. 
 
 ```{r, tidy = "styler", out.width = "90%", fig.align="center", fig.cap="Patterns associated to the training samples (Source: Authors)."}
 samples_deforestation |> 
@@ -58,7 +58,7 @@ The patterns show different temporal responses for the selected classes. They ma
 
 ## Training machine learning models{-}
 
-The next step is to train a machine learning model to illustrate CPU-based classification a random forest model and a tempCNN model. We build a Random Forest model using `sits_train()` and then plot the model to find out what are the most important variables for the model.
+The next step is to train a machine learning model to illustrate CPU-based classification a random forest model and a tempCNN model. We build a random forest model using `sits_train()` and then create a plot to find out what are the most important variables for the model.
 
 ```{r, tidy = "styler", eval = FALSE, echo = TRUE}
 # Train model using Temporal CNN model
@@ -75,13 +75,17 @@ rfor_model <- readRDS("./etc/rfor_model_chp9.rds")
 ```{r, tidy = "styler", out.width = "90%", fig.align="center", fig.cap="Most relevant variables of the Random Forest model (Source: Authors)."}
 plot(rfor_model)
 ```
-The figure shows that "B11" band values in date 15 ("2022-08-17") is the most informative for the RF model, followed by "EVI" index values in date 9 ("2022-05-13"). These bands and dates represent inflection points in the image time series. 
+The figure shows that B11 band values in date 15 ("2022-08-17") is the most informative for the random forest model, followed by EVI index values in date 9 ("2022-05-13"). These bands and dates represent inflection points in the image time series. 
 
 ## Classification of machine learning models in CPUs{-}
 
-The machine learning models available in `sits` (`sits_rfor()`, `sits_svm()` and `sits_xgboost()`) use CPU-based parallel processing, which is done internally by the package. The algorithms are adaptable; the only requirement for users is to inform the configuration of their machines. Details of CPU-based parallel processing in `sits` can be found in the [Technical Annex](https://e-sensing.github.io/sitsbook/technical-annex.html).
+<!--
+achei essa frase abaixo confusa. as funcoes usam processamento paralelo mas é
+o sits que faz isto.
+-->
+The machine learning models available in `sits` (`sits_rfor()`, `sits_svm()`, and `sits_xgboost()`) use CPU-based parallel processing, which is done internally by the package. The algorithms are adaptable; the only requirement for users is to inform the configuration of their machines. Details of CPU-based parallel processing in `sits` can be found in the [Technical annex](https://e-sensing.github.io/sitsbook/technical-annex.html).
 
-To classify both data cubes and sets of time series, use `sits_classify()`, which uses parallel processing to speed up the performance, as described at the end of this Chapter. Its most relevant parameters are: (a) `data`, either a data cube or a set of time series; (b) `ml_model`, a trained model using one of the machine learning methods provided; (c) `multicores`, number of CPU cores that will be used for processing; (d) `memsize`, memory available for classification; (e) `output_dir`, directory where results will be stored; (f) `version`, for version control. To follow the processing steps, turn on the parameters `verbose` to print information and `progress` to get a progress bar. The classification result is a data cube with a set of probability layers, one for each output class. Each probability layer contains the model's assessment of how likely each pixel belongs to the related class. The probability cube can be visualized with `plot()`. 
+To classify both data cubes and sets of time series, use `sits_classify()`, which uses parallel processing to speed up the performance. Its most relevant parameters are: (a) `data`, either a data cube or a set of time series; (b) `ml_model`, a trained model using one of the machine learning methods provided; (c) `multicores`, number of CPU cores that will be used for processing; (d) `memsize`, memory available for classification; (e) `output_dir`, directory where results will be stored; (f) `version`, for version control. To follow the processing steps, turn on the parameters `verbose` to print information and `progress` to get a progress bar. The classification result is a data cube with a set of probability layers, one for each output class. Each probability layer contains the model's assessment of how likely each pixel belongs to the related class. The probability cube can be visualized with `plot()`. 
 
 ```{r, tidy = "styler", out.width = "90%", fig.align="center", fig.cap="Probabilities for class Forest"}
 
@@ -110,7 +114,14 @@ cube_20LMR_bayes <- sits_smooth(
 plot(cube_20LMR_bayes, labels = c("Forest", "Clear_Cut_Bare_Soil"),  palette = "YlGn")
 ```
 
-In general, users should perform a post-processing smoothing after obtaining the probability maps in raster format. After the post-processing operation, we apply `sits_label_classification()` to obtain a map with the most likely class for each pixel. For each pixel, the `sits_label_classification()` function takes the label with highest probability and assigns it to the resulting map. The output is a labelled map with classes. In addition, the function will remove outliers using a modal filter after if the `clean` parameter is set to `TRUE` (default value). For each pixel, the modal filter scans a neighborhood defined by `window_size` (default = 3) and assigns such pixel to the most frequent label inside the window.
+<!--
+Gilberto, achei este trecho abaixo confuso. Ele fala do pos-processamento de smoothing e que depois dele sera executado sits_label_classification(). Entretanto,
+o proprio sits_label_classification faz um pos-processamento que remove os outliers.
+A impressao que eu tenho é que esta remocao de outliers deveria ser uma funcao
+separada, ou entao nao dizer que o sits_label_classification() deveria ser feito apos o pos-processamento, pois ele é parte do pos-processamento.
+-->
+
+In general, users should perform a post-processing smoothing after obtaining the probability maps in raster format. After the post-processing operation, we apply `sits_label_classification()` to obtain a map with the most likely class for each pixel. For each pixel, the `sits_label_classification()` function takes the label with highest probability and assigns it to the resulting map. The output is a labeled map with classes. In addition, the function will remove outliers using a modal filter after if the `clean` parameter is set to `TRUE` (default value). For each pixel, the modal filter scans a neighborhood defined by `window_size` (default = 3) and assigns such pixel to the most frequent label inside the window.
 
 ```{r, tidy = "styler", out.width = "120%", fig.align="left", fig.cap="Final map of deforestation obtained by random forest model(Source: Authors)."}
 # Generate a thematic map
@@ -132,11 +143,11 @@ plot(cube_20LMR_class, tmap_options =
 
 ## Training and running deep learning models{-}
 
-The next examples shows how to run deep learning models in `sits`. This model will show how to run deep learning methods in GPUs if available. The case study uses the Temporal CNN model [@Pelletier2019], which is described in Chapter[Machine learning for data cubes](https://e-sensing.github.io/sitsbook/machine-learning-for-data-cubes.html). We first show the need for model tuning, before applying the model for data cube classification. 
+The next examples show how to run deep learning models in `sits`. The examples will show how to run deep learning methods in GPUs if available. The case study uses the Temporal CNN model [@Pelletier2019], which is described in Chapter [Machine learning for data cubes](https://e-sensing.github.io/sitsbook/machine-learning-for-data-cubes.html). We first show the need for model tuning, before applying the model for data cube classification. 
 
 ### Deep learning model tuning{-}
 
-In the example, we use `sits_tuning()` to find good hyperparameters to train the `sits_tempcnn()` algorithm for the Rondonia training data set. The hyperparameters for the `sits_tempcnn()` method include the size of the layers, convolution kernels, dropout rates, learning rate and weight decay. Please refer to description of the Temporal CNN algorithm in Chapter [Machine learning for data cubes](https://e-sensing.github.io/sitsbook/machine-learning-for-data-cubes.html) 
+In the example, we use `sits_tuning()` to find good hyperparameters to train the `sits_tempcnn()` algorithm for the Rondonia dataset. The hyperparameters for the `sits_tempcnn()` method include the size of the layers, convolution kernels, dropout rates, learning rate, and weight decay. Please refer to the description of the Temporal CNN algorithm in Chapter [Machine learning for data cubes](https://e-sensing.github.io/sitsbook/machine-learning-for-data-cubes.html) 
 
 ```{r, tidy="styler", eval = FALSE, echo = TRUE}
 tuned_tempcnn <- sits_tuning(
@@ -197,7 +208,7 @@ tcnn_model <- sits_train(
 )
 ```
 
-After training the model, we classify the data cube. If a GPU is available, users need to provide the additional parameter `gpu_memory` to the `sits_classify()` function. This information will be used by `sits` to optimize access to the GPU and speed up processing. 
+After training the model, we classify the data cube. If a GPU is available, users need to provide the additional parameter `gpu_memory` to `sits_classify()`. This information will be used by `sits` to optimize access to the GPU and speed up processing. 
 
 ```{r, tidy="styler"}
 cube_20LMR_probs_tcnn <- sits_classify(
@@ -222,7 +233,7 @@ cube_20LMR_bayes_tcnn <- sits_smooth(
     multicores = 6,
     memsize = 24
 )
-# Obtain the final labelled map
+# Obtain the final labeled map
 cube_20LMR_class_tcnn <- sits_label_classification(
     cube_20LMR_bayes_tcnn,
     output_dir = "./tempdir/chp9",
@@ -238,7 +249,7 @@ plot(cube_20LMR_class_tcnn,
 
 ## Map reclassification{-}
 
-Reclassification of a remote sensing map refers to changing the classes assigned to different pixels in the image. The purpose of reclassification is to modify the information contained in the image to better suit a specific use case. In `sits`, reclassification involves assigning new classes to pixels based on additional information from a reference map. Users define rules according to the desired outcome. These rules are then applied to the classified map. The result is a new map with updated classes.
+Reclassification of a remote sensing map refers to changing the classes assigned to different pixels in the image. The purpose of reclassification is to modify the information contained in the image to better suit a specific use case. In `sits`, reclassification involves assigning new classes to pixels based on additional information from a reference map. Users define rules according to the desired outcome. These rules are then applied to the classified map to produce a new map with updated classes.
 
 To illustrate the reclassification in `sits`, we take a classified data cube stored in the `sitsdata` package. As discussed in Chapter [Earth observation data cubes](https://e-sensing.github.io/sitsbook/earth-observation-data-cubes.html), `sits` can create a data cube from a classified image file. Users need to provide the original data source and collection, the directory where data is stored (`data_dir`), the information on how to retrieve data cube parameters from file names (`parse_info`), and the labels used in the classification. 
 
@@ -358,7 +369,7 @@ plot(ro_def_2021,
      tmap_options = list("scale" = 0.6))
 ```
 
-The reclassified map has been split into deforestation before mid-2020 (using the PRODES map) and the areas classified by `sits` that are taken as being deforested from mid-2020 to mid-2021. This allows the experts to measure how much deforestation occurred in this period according to `sits` and compare the result with the PRODES map. 
+The reclassified map has been split into deforestation before mid-2020 (using the PRODES map) and the areas classified by `sits` that are taken as being deforested from mid-2020 to mid-2021. This allows experts to measure how much deforestation occurred in this period according to `sits` and compare the result with the PRODES map. 
 
 The `sits_reclassify()` function is not restricted to comparing deforestation maps. It can be used in any case that requires masking of a result based on a reference map. 
 
