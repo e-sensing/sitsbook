@@ -7,17 +7,17 @@ dir.create("./tempdir/chp14")
 
 <a href="https://www.kaggle.com/code/esensing/object-based-image-time-series-classification" target="_blank"><img src="https://kaggle.com/static/images/open-in-kaggle.svg"/></a>
 
-Object-Based Image Analysis (OBIA) is an approach to remote sensing image analysis that partitions an image into closed segments which are then classified and analyzed. For high-resolution images (1 meter or smaller) the aim of OBIA is to create objects that represent meaningful features in the real world, like buildings, roads, fields, forests, and water bodies. In case of medium resolution images (such as Sentinel-2 or Landsat) the segments represent groups  of the image with similar spectral responses which in general do not correspond directly to individual objects in the ground. These groups of pixels are called super-pixels. In both situations, the aim of OBIA is to obtain a spatial partition of the image which can then be assigned to a single class. When applicable, OBIA reduces processing time and produces labelled maps with greater spatial consistency.
+Object-Based Image Analysis (OBIA) is an approach to remote sensing image analysis that partitions an image into closed segments which are then classified and analyzed. For high-resolution images (1 meter or smaller) the aim of OBIA is to create objects that represent meaningful features in the real world, like buildings, roads, fields, forests, and water bodies. In case of medium resolution images (such as Sentinel-2 or Landsat) the segments represent groups  of the image with similar spectral responses which in general do not correspond directly to individual objects in the ground. These groups of pixels are called super-pixels. In both situations, the aim of OBIA is to obtain a spatial partition of the image which can then be assigned to a single class. When applicable, OBIA reduces processing time and produces labeled maps with greater spatial consistency.
 
 The general sequence of the processes involved in OBIA in `sits` is:
 
-1.  Segmentation: The first step is to group together pixels that are similar based a distance metric that consider the values of all bands in all time instances. We build a multitemporal attribute space where each time/band combination is taken as an independent dimension. Thus, distance metrics for segmentation in a data cube with 10 bands and 24 time steps use a 240-dimension space.
+1.  Segmentation: The first step is to group together pixels that are similar based a distance metric that considers the values of all bands in all time instances. We build a multitemporal attribute space where each time/band combination is taken as an independent dimension. Thus, distance metrics for segmentation in a data cube with 10 bands and 24 time steps use a 240-dimension space.
 
 2.  Probability Estimation: After the image has been partitioned into distinct objects, the next step is to classify each segment. For satellite image time series, a subset of time series inside each segment is classified. 
 
-3. Labelling: Once the set of probabilities have been obtain for each time series inside a segment, they can be used for labelling. This is done by considering the median value of the probabilities for the time series inside the segment that have been classified. For each class, we take the median of the probability values. Then, median values for the classes are normalised, and the most likely value is assigned as the class for the segment. 
+3. Labeling: Once the set of probabilities have been obtained for each time series inside a segment, they can be used for labeling. This is done by considering the median value of the probabilities for the time series inside the segment that have been classified. For each class, we take the median of the probability values. Then, median values for the classes are normalised, and the most likely value is assigned as the class for the segment. 
 
-## Image segmentation in SITS{-}
+## Image segmentation in sits {-}
 
 The first step of the OBIA procedure in `sits` is to select a data cube to be segmented and function that performs the segmentation. For this purpose, `sits` provides a generic `sits_segment()` function, which allows users to select different segmentation algorithms. The `sits_segment()` function has the following parameters:
 
@@ -34,9 +34,9 @@ The first step of the OBIA procedure in `sits` is to select a data cube to be se
 
 In `sits` version 1.4.2, there is only one segmentation function available (`sits_slic`) which implements the extended version of the Simple Linear Iterative Clustering (SLIC) which is described below. In future versions of `sits`, we expect to include additional functions that support spatio-temporal segmentation.
 
-## Simple Linear Iterative Clustering (SLIC) algorithm{-}
+## Simple linear iterative clustering algorithm{-}
 
- After building the multidimensional space, we use the SLIC algorithm [Achanta2012] that clusters pixels to efficiently generate compact, nearly uniform superpixels. This algorithm has been adapted by Nowosad and Stepinski [Nowosad2022] to work with multispectral images. SLIC uses spectral similarity and proximity in the image space to segment the image into superpixels. Superpixels are clusters of pixels with similar spectral responses that are close together, which correspond to coherent object parts in the image. Here's a high-level view of the extended SLIC algorithm:
+ After building the multidimensional space, we use the Simple Linear Iterative Clustering (SLIC) algorithm [@Achanta2012] that clusters pixels to efficiently generate compact, nearly uniform superpixels. This algorithm has been adapted by Nowosad and Stepinski [@Nowosad2022] to work with multispectral images. SLIC uses spectral similarity and proximity in the image space to segment the image into superpixels. Superpixels are clusters of pixels with similar spectral responses that are close together, which correspond to coherent object parts in the image. Here's a high-level view of the extended SLIC algorithm:
 
 1.  The algorithm starts by dividing the image into a grid, where each cell of the grid will become a superpixel.
 
@@ -146,7 +146,7 @@ sits_view(
 )
 ```
 
-```{r, echo = FALSE, out.width="90%", fig.caption = "Detail of labelled segements for image in Rondonia, Brazil", fig.align="center"}
+```{r, echo = FALSE, out.width="90%", fig.caption = "Detail of labeled segements for image in Rondonia, Brazil", fig.align="center"}
 knitr::include_graphics("images/segments_20LMR.png")
 ```
 
