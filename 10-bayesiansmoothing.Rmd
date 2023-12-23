@@ -91,7 +91,7 @@ labels <- c("1" = "Water",
 # directory where the data is stored 
 data_dir <- system.file("extdata/Rondonia-20LLQ/", package = "sitsdata")
 # create a probability data cube from a file 
-probs_cube <- sits_cube(
+rondonia_20LLQ_probs <- sits_cube(
     source = "MPC",
     collection = "SENTINEL-2-L2A",
     data_dir = data_dir,
@@ -101,7 +101,7 @@ probs_cube <- sits_cube(
                    "start_date", "end_date", "band", "version"))
 
 # plot the probabilities for water and forest
-plot(probs_cube, labels = c("Water", "Forest"))
+plot(rondonia_20LLQ_probs, labels = c("Water", "Forest"))
 ```
 
 The probability map for class Forest shows high values associated with compact patches and linear stretches in riparian areas. By contrast, the probability map for class Water has mostly low values, except in a few places with a high chance of occurrence of this class. To further understand the behavior of the Bayesian estimator, it is helpful to examine the local variance associated with the logits of the probabilities. 
@@ -110,15 +110,15 @@ Our first reference is the classified map without smoothing, which shows the pre
 
 ```{r, tidy = "styler", out.width = "100%", fig.align="center", fig.cap="Classified map without smoothing (Source: Authors)."}
 # Generate the thematic map
-class_map <- sits_label_classification(
-    cube = probs_cube,
+rondonia_20LLQ_class <- sits_label_classification(
+    cube = rondonia_20LLQ_probs,
     multicores = 4,
     memsize = 12,
     output_dir = "./tempdir/chp10",
     version = "no_smooth")
 
 # Plot the result
-plot(class_map, 
+plot(rondonia_20LLQ_class, 
      tmap_options = list("scale" = 0.6))
 ```
 
@@ -131,7 +131,7 @@ The `smoothness` values for all classes aare set to the same value of $20$, whic
 ```{r, tidy = "styler", out.width = "100%", fig.align="center", fig.cap="Probability maps after bayesian smoothing (Source: Authors)."}
 # Compute Bayesian smoothing
 cube_smooth_w7_f05_s20 <- sits_smooth(
-    cube = probs_cube,
+    cube = rondonia_20LLQ_probs,
     window_size = 7,
     neigh_fraction = 0.50,
     smoothness = 20, 
@@ -168,7 +168,7 @@ In the smoothed map, the outliers have been removed by expanding forest areas. F
 smooth_water_forest <- c(5, 20, 20, 20, 5, 20)
 # Compute Bayesian smoothing
 cube_smooth_w7_f05_swf <- sits_smooth(
-    cube = probs_cube,
+    cube = rondonia_20LLQ_probs,
     window_size = 7,
     neigh_fraction = 0.5,
     smoothness = smooth_water_forest,

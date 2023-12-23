@@ -26,7 +26,7 @@ if (!requireNamespace("kableExtra", quietly = TRUE)) {
 library("kableExtra")
 
 show_table <- function(tb) {
-    kableExtra::kbl(tb) %>% 
+    kableExtra::kbl(tb) |>  
         kableExtra::kable_material()
 }
 if (!knitr:::is_html_output())

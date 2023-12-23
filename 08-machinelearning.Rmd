@@ -103,9 +103,14 @@ The SVM classifier is less stable and less robust to outliers than the random fo
 
 ## Extreme gradient boosting{-}
 
-The boosting method starts from a weak predictor and then improves performance sequentially by fitting a better model at each iteration. It fits a simple classifier to the training data and uses the residuals of the fit to build a predictor. Typically, the base classifier is a regression tree. Although random forest and boosting use trees for classification, there are significant differences. The performance of random forest generally increases with the number of trees until it becomes stable. Boosting trees apply finer divisions over previous results to improve performance [@Hastie2009]. However, this result is not generalizable since the quality of the training data set controls actual performance.
+XGBoost (eXtreme Gradient Boosting) [@Chen2016] is an implementation of gradient boosted decision trees designed for speed and performance.  It is an ensemble learning method, meaning it combines the predictions from multiple models to produce a final prediction. Xgboost builds trees one at a time, where each new tree helps to correct errors made by previously trained tree. Each tree builds a new model to correct the errors made by previous models. Using gradient descent, the algorithm iteratively adjusts the predictions of each tree by focusing on instances where previous trees made errors. Models are added sequentially until no further improvements can be made. 
 
-Gradient boosting is a variant of boosting methods that minimize the cost function by gradient descent. Extreme gradient boosting [@Chen2016], called XGBoost, efficiently approximates the gradient loss function. Some recent papers show that it outperforms random forest for remote sensing image classification [@Jafarzadeh2021]. However, this result is not generalizable since actual performance is controlled by the quality of the training data set.
+Although random forest and boosting use trees for classification, there are significant differences. While random forest builds multiple decision trees in parallel and merges them together for a more accurate and stable prediction, xgboost builds trees one at a time, where each new tree helps to correct errors made by previously trained tree. XGBoost is often preferred for its speed and performance, particularly on large datasets, and is well-suited for problems where precision is paramount. Random Forest, on the other hand, is simpler to implement, more interpretable, and can be more robust to overfitting, making it a good choice for general-purpose applications.
+
+```{r, echo = FALSE, out.width = "90%", fig.align="center", fig.cap="Flow chart of XGBoost algorithm (Source: Guo et al.,Applied Sciences, 2020. - licenced as CC-BY-SA 4.0)."}
+
+knitr::include_graphics("images/flow_chart_xgboost.png") 
+```
 
 In `sits`, the XGBoost method is implemented by the `sits_xbgoost()` function, based on `XGBoost` R package, and has five hyperparameters that require tuning. The `sits_xbgoost()` function takes the user choices as input to a cross-validation to determine suitable values for the predictor.
 
@@ -122,10 +127,10 @@ xgb_model <- sits_train(
     samples = samples_matogrosso_mod13q1, 
     ml_method = sits_xgboost(verbose = 0))
 # Classify using SVM model and plot the result
-point_class <- sits_classify(
+point_class_xgb <- sits_classify(
     data = point_mt_mod13q1, 
     ml_model = xgb_model)
-plot(point_class, bands = c("NDVI", "EVI"))
+plot(point_class_xgb, bands = c("NDVI", "EVI"))
 ```
 
 
@@ -172,8 +177,8 @@ Then, we classify a 16-year time series using the multilayer perceptron model.
 
 ```{r, tidy="styler", out.width = "90%", fig.align="center", fig.cap="Classification of time series using MLP (Source: Authors)."}
 # Classify using MLP model and plot the result
-point_mt_mod13q1 %>% 
-    sits_classify(mlp_model) %>% 
+point_mt_mod13q1 |>  
+    sits_classify(mlp_model) |>  
     plot(bands = c("NDVI", "EVI"))
 ```
 
@@ -219,8 +224,8 @@ Then, we classify a 16-year time series using the TempCNN model.
 
 ```{r, out.width = "90%", tidy="styler", fig.align="center", fig.cap="Classification of time series using TempCNN (Source: Authors)."}
 # Classify using TempCNN model and plot the result
-class <- point_mt_mod13q1 %>% 
-    sits_classify(tempcnn_model) %>% 
+class <- point_mt_mod13q1 |>  
+    sits_classify(tempcnn_model) |>  
     plot(bands = c("NDVI", "EVI"))
 ```
 
@@ -256,8 +261,8 @@ Then, we classify a 16-year time series using the ResNet model. The behavior of 
 
 ```{r, tidy="styler", out.width = "100%", fig.align="center", fig.cap="Classification of time series using ResNet (Source: Authors)."}
 # Classify using DL model and plot the result
-class <- point_mt_mod13q1 %>% 
-    sits_classify(tempcnn_model) %>% 
+class <- point_mt_mod13q1 |>  
+    sits_classify(resnet_model) |>  
     plot(bands = c("NDVI", "EVI"))
 ```
  
@@ -300,8 +305,8 @@ Then, we classify a 16-year time series using the TAE model.
 
 ```{r, tidy="styler", out.width = "100%", fig.align="center", fig.cap="Classification of time series using TAE (Source: Authors)."}
 # Classify using DL model and plot the result
-class <- point_mt_mod13q1 %>% 
-    sits_classify(tae_model) %>% 
+class <- point_mt_mod13q1 |>  
+    sits_classify(tae_model) |>  
     plot(bands = c("NDVI", "EVI"))
 ```
 
@@ -324,8 +329,8 @@ Then, we classify a 16-year time series using the LightTAE model.
 
 ```{r, tidy="styler", out.width = "100%", fig.align="center", fig.cap="Classification of time series using LightTAE (Source: Authors)."}
 # Classify using DL model and plot the result
-class <- point_mt_mod13q1 %>% 
-    sits_classify(ltae_model) %>% 
+class <- point_mt_mod13q1 |>  
+    sits_classify(ltae_model) |>  
     plot(bands = c("NDVI", "EVI"))
 ```
 

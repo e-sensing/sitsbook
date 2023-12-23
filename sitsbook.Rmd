@@ -717,17 +717,25 @@ plot(s2_L8_cube_MPC, red = "RED", green = "GREEN", blue = "BLUE",
 
 ## Assessing Digital Earth Africa{-}
 
-Digital Earth Africa (DEAFRICA) is a cloud service that provides open-access Earth observation data for the African continent. The ARD image collections in `sits` are `S2_L2A` (Sentinel-2 level 2A) and `LS8_SR` (Landsat-8). Since the STAC interface for DEAFRICA does not implement the concept of tiles, users need to specify their area of interest using the `roi` parameter. The requested `roi` produces a cube that contains three MGRS tiles ("35HLD", "35HKD", and "35HLC") covering part of South Africa. 
-```{r, tidy="styler", out.width="100%", fig.align="center", fig.cap="Sentinel-2 image in an area over South Africa."}
-dea_cube <- sits_cube(
+Digital Earth Africa (DEAFRICA) is a cloud service that provides open-access Earth observation data for the African continent. The ARD image collections in `sits` are `S2_L2A` (Sentinel-2 level 2A) and `LS8_SR` (Landsat-8). Since the STAC interface for DEAFRICA does not implement the concept of tiles, users need to specify their area of interest using the `roi` parameter. The requested `roi` produces a cube that contains one MGRS tiles ("35LPH") covering an area of Madagascar that includes the Betsiboka Estuary.  
+```{r, tidy="styler", out.width="100%", fig.align="center", fig.cap="Sentinel-2 image in an area over Madagascar."}
+dea_s2_cube <- sits_cube(
     source = "DEAFRICA",
     collection = "S2_L2A",
-    roi = c(lon_min = 24.97, lat_min = -34.30,
-            lon_max = 25.87, lat_max = -32.63),
-    bands = c("B05", "B8A", "B11"),
-    start_date = "2019-09-01",
-    end_date = "2019-10-01")
-plot(dea_cube, red = "B11", blue = "B05", green = "B8A")
+    roi = c(
+        lon_min = 46.1, lat_min = -15.6,
+        lon_max = 46.6, lat_max = -16.1
+    ),
+    bands = c(
+        "B02", "B03", "B04",
+        "B05", "B06", "B07",
+        "B08", "B8A", "B11",
+        "B12", "CLOUD"
+    ),
+    start_date = "2019-04-01",
+    end_date = "2019-11-30"
+)
+plot(dea_s2_cube, red = "B04", blue = "B02", green = "B08")
 ```
 
 ## Assessing the Brazil Data Cube{-}
@@ -930,7 +938,7 @@ In the following example, the user has created an irregular data cube from the S
 
 ```{r, tidy="styler"}
 # Creating an irregular data cube from MPC
-s2_cube <- sits_cube(
+s2_cube_rondonia <- sits_cube(
     source = "MPC",
     collection = "SENTINEL-2-L2A",
     tiles = c("20LKP", "20LLP"),
@@ -938,14 +946,14 @@ s2_cube <- sits_cube(
     start_date = as.Date("2018-07-01"),
     end_date = as.Date("2018-08-31"))
 # Show the different timelines of the cube tiles
-sits_timeline(s2_cube)
+sits_timeline(s2_cube_rondonia)
 ```
 
 
 ```{r, tidy="styler", out.width="100%", fig.align="center", fig.cap="Sentinel-2 tile 20LLP for date 2018-07-03 (Source: Authors)."}
 # plot the first image of the irregular cube
-s2_cube %>% 
-    dplyr::filter(tile == "20LLP") %>% 
+s2_cube_rondonia |>  
+    dplyr::filter(tile == "20LLP") |>  
     plot(red = "B12", green = "B8A", blue = "B05", date = "2018-07-03")
 ```
 
@@ -953,16 +961,17 @@ Because of the different acquisition orbits of the Sentinel-2 and Sentinel-2A sa
 
 ```{r, tidy="styler", message=FALSE, results='hide', out.width="100%", fig.align="center", fig.cap="Regularized image for tile Sentinel-2 tile 20LLP (Source: Authors)."}
 # Regularize the cube to 15 day intervals
-reg_cube <- sits_regularize(
-          cube       = s2_cube,
+reg_cube_rondonia <- sits_regularize(
+          cube       = s2_cube_rondonia,
           output_dir = "./tempdir/chp4",
           res        = 120,
           period     = "P15D",
           multicores = 4)
+
 # Plot the first image of the tile 20LLP of the regularized cube
 # The pixels of the regular data cube cover the full MGRS tile
-reg_cube %>% 
-    dplyr::filter(tile == "20LLP") %>% 
+reg_cube_rondonia |>
+    dplyr::filter(tile == "20LLP") |>
     plot(red = "B12", green = "B8A", blue = "B05")
 ```
 
@@ -1244,8 +1253,8 @@ The function `sits_patterns()` uses a GAM to predict an idealized approximation 
 
 ```{r, tidy="styler", out.width = "100%", fig.align="center", fig.cap="Patterns for the samples for Mato Grosso."}
 # Estimate the patterns for each class and plot them
-samples_matogrosso_mod13q1 %>% 
-    sits_patterns() %>% 
+samples_matogrosso_mod13q1 |>  
+    sits_patterns() |> 
     plot()
 ```
 
@@ -1375,7 +1384,7 @@ point_ndvi <- sits_select(point_mt_6bands, band = "NDVI")
 # Apply Savitzky Golay filter
 point_sg <- sits_sgolay(point_ndvi, length = 11)
 # Merge the point and plot the series
-sits_merge(point_sg, point_ndvi) %>% plot()
+sits_merge(point_sg, point_ndvi) |> plot()
 ```
 
 The resulting smoothed curve has both desirable and unwanted properties. From 2000 to 2008, the Savitsky-Golay filter removes noise from clouds. However, after 2010, when the region was converted to agriculture, the filter removes an important part of the natural variability from the crop cycle. Therefore, the `length` parameter is arguably too big, resulting in oversmoothing. 
@@ -1391,7 +1400,7 @@ point_ndvi <- sits_select(point_mt_6bands, band = "NDVI")
 # Apply Whitakker filter
 point_whit <- sits_whittaker(point_ndvi, lambda = 8)
 # Merge the point and plot the series
-sits_merge(point_whit, point_ndvi) %>% plot()
+sits_merge(point_whit, point_ndvi) |> plot()
 ```
 
 Similar to what is observed in the Savitsky-Golay filter, high values of the smoothing parameter `lambda` produce an over-smoothed time series that reduces the capacity of the time series to represent natural variations in crop growth. For this reason, low smoothing values are recommended when using `sits_whittaker()`.
@@ -1791,9 +1800,14 @@ The SVM classifier is less stable and less robust to outliers than the random fo
 
 ## Extreme gradient boosting{-}
 
-The boosting method starts from a weak predictor and then improves performance sequentially by fitting a better model at each iteration. It fits a simple classifier to the training data and uses the residuals of the fit to build a predictor. Typically, the base classifier is a regression tree. Although random forest and boosting use trees for classification, there are significant differences. The performance of random forest generally increases with the number of trees until it becomes stable. Boosting trees apply finer divisions over previous results to improve performance [@Hastie2009]. However, this result is not generalizable since the quality of the training data set controls actual performance.
+XGBoost (eXtreme Gradient Boosting) [@Chen2016] is an implementation of gradient boosted decision trees designed for speed and performance.  It is an ensemble learning method, meaning it combines the predictions from multiple models to produce a final prediction. Xgboost builds trees one at a time, where each new tree helps to correct errors made by previously trained tree. Each tree builds a new model to correct the errors made by previous models. Using gradient descent, the algorithm iteratively adjusts the predictions of each tree by focusing on instances where previous trees made errors. Models are added sequentially until no further improvements can be made. 
 
-Gradient boosting is a variant of boosting methods that minimize the cost function by gradient descent. Extreme gradient boosting [@Chen2016], called XGBoost, efficiently approximates the gradient loss function. Some recent papers show that it outperforms random forest for remote sensing image classification [@Jafarzadeh2021]. However, this result is not generalizable since actual performance is controlled by the quality of the training data set.
+Although random forest and boosting use trees for classification, there are significant differences. While random forest builds multiple decision trees in parallel and merges them together for a more accurate and stable prediction, xgboost builds trees one at a time, where each new tree helps to correct errors made by previously trained tree. XGBoost is often preferred for its speed and performance, particularly on large datasets, and is well-suited for problems where precision is paramount. Random Forest, on the other hand, is simpler to implement, more interpretable, and can be more robust to overfitting, making it a good choice for general-purpose applications.
+
+```{r, echo = FALSE, out.width = "90%", fig.align="center", fig.cap="Flow chart of XGBoost algorithm (Source: Guo et al.,Applied Sciences, 2020. - licenced as CC-BY-SA 4.0)."}
+
+knitr::include_graphics("images/flow_chart_xgboost.png") 
+```
 
 In `sits`, the XGBoost method is implemented by the `sits_xbgoost()` function, based on `XGBoost` R package, and has five hyperparameters that require tuning. The `sits_xbgoost()` function takes the user choices as input to a cross-validation to determine suitable values for the predictor.
 
@@ -1810,10 +1824,10 @@ xgb_model <- sits_train(
     samples = samples_matogrosso_mod13q1, 
     ml_method = sits_xgboost(verbose = 0))
 # Classify using SVM model and plot the result
-point_class <- sits_classify(
+point_class_xgb <- sits_classify(
     data = point_mt_mod13q1, 
     ml_model = xgb_model)
-plot(point_class, bands = c("NDVI", "EVI"))
+plot(point_class_xgb, bands = c("NDVI", "EVI"))
 ```
 
 
@@ -1860,8 +1874,8 @@ Then, we classify a 16-year time series using the multilayer perceptron model.
 
 ```{r, tidy="styler", out.width = "90%", fig.align="center", fig.cap="Classification of time series using MLP (Source: Authors)."}
 # Classify using MLP model and plot the result
-point_mt_mod13q1 %>% 
-    sits_classify(mlp_model) %>% 
+point_mt_mod13q1 |>  
+    sits_classify(mlp_model) |>  
     plot(bands = c("NDVI", "EVI"))
 ```
 
@@ -1907,8 +1921,8 @@ Then, we classify a 16-year time series using the TempCNN model.
 
 ```{r, out.width = "90%", tidy="styler", fig.align="center", fig.cap="Classification of time series using TempCNN (Source: Authors)."}
 # Classify using TempCNN model and plot the result
-class <- point_mt_mod13q1 %>% 
-    sits_classify(tempcnn_model) %>% 
+class <- point_mt_mod13q1 |>  
+    sits_classify(tempcnn_model) |>  
     plot(bands = c("NDVI", "EVI"))
 ```
 
@@ -1944,8 +1958,8 @@ Then, we classify a 16-year time series using the ResNet model. The behavior of 
 
 ```{r, tidy="styler", out.width = "100%", fig.align="center", fig.cap="Classification of time series using ResNet (Source: Authors)."}
 # Classify using DL model and plot the result
-class <- point_mt_mod13q1 %>% 
-    sits_classify(tempcnn_model) %>% 
+class <- point_mt_mod13q1 |>  
+    sits_classify(resnet_model) |>  
     plot(bands = c("NDVI", "EVI"))
 ```
  
@@ -1988,8 +2002,8 @@ Then, we classify a 16-year time series using the TAE model.
 
 ```{r, tidy="styler", out.width = "100%", fig.align="center", fig.cap="Classification of time series using TAE (Source: Authors)."}
 # Classify using DL model and plot the result
-class <- point_mt_mod13q1 %>% 
-    sits_classify(tae_model) %>% 
+class <- point_mt_mod13q1 |>  
+    sits_classify(tae_model) |>  
     plot(bands = c("NDVI", "EVI"))
 ```
 
@@ -2012,8 +2026,8 @@ Then, we classify a 16-year time series using the LightTAE model.
 
 ```{r, tidy="styler", out.width = "100%", fig.align="center", fig.cap="Classification of time series using LightTAE (Source: Authors)."}
 # Classify using DL model and plot the result
-class <- point_mt_mod13q1 %>% 
-    sits_classify(ltae_model) %>% 
+class <- point_mt_mod13q1 |>  
+    sits_classify(ltae_model) |>  
     plot(bands = c("NDVI", "EVI"))
 ```
 
@@ -2143,16 +2157,17 @@ The examples of this chapter use a pre-built data cube of Sentinel-2 images, ava
 
 ```{r, tidy = "styler", out.width = "90%", fig.align="center", fig.cap="Color composite image of the cube for date 2023-07-16 (Source: authors)."}
 # Files are available in a local directory 
-data_dir <- system.file("extdata/Rondonia-20LMR/", package = "sitsdata")
+data_dir <- system.file("extdata/Rondonia-20LMR/", 
+                        package = "sitsdata")
 # Read data cube
-cube_20LMR <- sits_cube(
+rondonia_20LMR <- sits_cube(
     source = "MPC",
     collection = "SENTINEL-2-L2A",
     data_dir = data_dir
 )
 
 # Plot the cube
-plot(cube_20LMR, date = "2022-07-16", red = "B11", green = "B8A", blue = "B02")
+plot(rondonia_20LMR, date = "2022-07-16", red = "B11", green = "B8A", blue = "B02")
 ```
 
 ## Training data for the case study{-}
@@ -2204,51 +2219,49 @@ The figure shows that "B11" band values in date 15 ("2022-08-17") is the most in
 
 The machine learning models available in `sits` (`sits_rfor()`, `sits_svm()` and `sits_xgboost()`) use CPU-based parallel processing, which is done internally by the package. The algorithms are adaptable; the only requirement for users is to inform the configuration of their machines. Details of CPU-based parallel processing in `sits` can be found in the [Technical Annex](https://e-sensing.github.io/sitsbook/technical-annex.html).
 
-To classify both data cubes and sets of time series, use `sits_classify()`, which uses parallel processing to speed up the performance, as described at the end of this Chapter. Its most relevant parameters are: (a) `data`, either a data cube or a set of time series; (b) `ml_model`, a trained model using one of the machine learning methods provided; (c) `multicores`, number of CPU cores that will be used for processing; (d) `memsize`, memory available for classification; (e) `output_dir`, directory where results will be stored; (f) `version`, for version control. To follow the processing steps, turn on the parameters `verbose` to print information and `progress` to get a progress bar. The classification result is a data cube with a set of probability layers, one for each output class. Each probability layer contains the model's assessment of how likely each pixel belongs to the related class. The probability cube can be visualized with `plot()`. 
+To classify both data cubes and sets of time series, use `sits_classify()`, which uses parallel processing to speed up the performance, as described at the end of this Chapter. Its most relevant parameters are: (a) `data`, either a data cube or a set of time series; (b) `ml_model`, a trained model using one of the machine learning methods provided; (c) `multicores`, number of CPU cores that will be used for processing; (d) `memsize`, memory available for classification; (e) `output_dir`, directory where results will be stored; (f) `version`, for version control. To follow the processing steps, turn on the parameters `verbose` to print information and `progress` to get a progress bar. The classification result is a data cube with a set of probability layers, one for each output class. Each probability layer contains the model's assessment of how likely each pixel belongs to the related class. The probability cube can be visualized with `plot()`. In this example, we show only the probabilities associated to label "Forest". 
 
 ```{r, tidy = "styler", out.width = "90%", fig.align="center", fig.cap="Probabilities for class Forest"}
 
 # Classify data cube to obtain a probability cube
-cube_20LMR_probs <- sits_classify(
-    data     = cube_20LMR,
+rondonia_20LMR_probs <- sits_classify(
+    data     = rondonia_20LMR,
     ml_model = rfor_model,
     output_dir = "./tempdir/chp9",
     version = "rf-raster",
     multicores = 4,
     memsize = 16)
 
-plot(cube_20LMR_probs, labels = "Forest", palette = "YlGn")
+plot(rondonia_20LMR_probs, labels = "Forest", palette = "YlGn")
 ```
 
 The probability cube provides information on the output values of the algorithm for each class. Most probability maps contain outliers or misclassified pixels. The labeled map generated from the pixel-based time series classification method exhibits several misclassified pixels, which are small patches surrounded by a different class. This occurrence of outliers is a common issue that arises due to the inherent nature of this classification approach. Regardless of their resolution, mixed pixels are prevalent in images, and each class exhibits considerable data variability. As a result, these factors can lead to outliers that are more likely to be misclassified. To overcome this limitation, `sits` employs post-processing smoothing techniques that leverage the spatial context of the probability cubes to refine the results. These techniques will be discussed in the Chapter [Bayesian smoothing for post-processing](https://e-sensing.github.io/sitsbook/bayesian-smoothing-for-post-processing.html). In what follows, we will generate the smoothed cube to illustrate the procedure. 
 
-```{r, tidy = "styler", out.width = "90%", fig.align="center", fig.cap="Smoothened probabilities for class Forest"}
+```{r, tidy = "styler", out.width = "100%", fig.align="center", fig.cap="Smoothened probabilities for class Forest"}
 # Smoothen a  probability cube
-cube_20LMR_bayes <- sits_smooth(
-    cube    = cube_20LMR_probs,
+rondonia_20LMR_bayes <- sits_smooth(
+    cube    = rondonia_20LMR_probs,
     output_dir = "./tempdir/chp9",
     version = "rf-raster",
     multicores = 4,
     memsize = 16)
-plot(cube_20LMR_bayes, labels = c("Forest", "Clear_Cut_Bare_Soil"),  palette = "YlGn")
+plot(rondonia_20LMR_bayes, labels = c("Forest"),  palette = "YlGn")
 ```
 
-In general, users should perform a post-processing smoothing after obtaining the probability maps in raster format. After the post-processing operation, we apply `sits_label_classification()` to obtain a map with the most likely class for each pixel. For each pixel, the `sits_label_classification()` function takes the label with highest probability and assigns it to the resulting map. The output is a labelled map with classes. In addition, the function will remove outliers using a modal filter after if the `clean` parameter is set to `TRUE` (default value). For each pixel, the modal filter scans a neighborhood defined by `window_size` (default = 3) and assigns such pixel to the most frequent label inside the window.
+In general, users should perform a post-processing smoothing after obtaining the probability maps in raster format. After the post-processing operation, we apply `sits_label_classification()` to obtain a map with the most likely class for each pixel. For each pixel, the `sits_label_classification()` function takes the label with highest probability and assigns it to the resulting map. The output is a labelled map with classes.
 
-```{r, tidy = "styler", out.width = "120%", fig.align="left", fig.cap="Final map of deforestation obtained by random forest model(Source: Authors)."}
+```{r, tidy = "styler", out.width = "100%", fig.align="center", fig.cap="Final map of deforestation obtained by random forest model(Source: Authors)."}
 # Generate a thematic map
-cube_20LMR_class <- sits_label_classification(
-    cube = cube_20LMR_bayes,
-    clean = TRUE,
-    window_size = 3L,
+rondonia_20LMR_class <- sits_label_classification(
+    cube = rondonia_20LMR_bayes,
     multicores = 4,
     memsize = 12,
     output_dir = "./tempdir/chp9",
     version = "rf-raster")
 
 # Plot the thematic map
-plot(cube_20LMR_class, tmap_options = 
-         list("scale" = 0.6))
+plot(rondonia_20LMR_class, tmap_options = 
+         list("scale" = 0.7))
 ```
 
 
@@ -2323,8 +2336,8 @@ tcnn_model <- sits_train(
 After training the model, we classify the data cube. If a GPU is available, users need to provide the additional parameter `gpu_memory` to the `sits_classify()` function. This information will be used by `sits` to optimize access to the GPU and speed up processing. 
 
 ```{r, tidy="styler"}
-cube_20LMR_probs_tcnn <- sits_classify(
-    cube_20LMR,
+rondonia_20LMR_probs_tcnn <- sits_classify(
+    rondonia_20LMR,
     ml_model = tcnn_model,
     output_dir = "./tempdir/chp9",
     version = "tcnn-raster",
@@ -2336,26 +2349,26 @@ cube_20LMR_probs_tcnn <- sits_classify(
 
 After classification, we can smooth the probability cube and then label the resulting smoothed probabilities to obtain a classified map. 
 
-```{r, tidy="styler", out.width = "120%", fig.align="left", fig.cap="Final map of deforestation obtained using TempCNN model (Source: Authors)."}
+```{r, tidy="styler", out.width = "100%", fig.align="center", fig.cap="Final map of deforestation obtained using TempCNN model (Source: Authors)."}
 # Smoothen the probability map 
-cube_20LMR_bayes_tcnn <- sits_smooth(
-    cube_20LMR_probs_tcnn,
+rondonia_20LMR_bayes_tcnn <- sits_smooth(
+    rondonia_20LMR_probs_tcnn,
     output_dir = "./tempdir/chp9",
     version = "tcnn-raster",
     multicores = 6,
     memsize = 24
 )
 # Obtain the final labelled map
-cube_20LMR_class_tcnn <- sits_label_classification(
-    cube_20LMR_bayes_tcnn,
+rondonia_20LMR_class_tcnn <- sits_label_classification(
+    rondonia_20LMR_bayes_tcnn,
     output_dir = "./tempdir/chp9",
     version = "tcnn-raster",
     multicores = 6,
     memsize = 24
 )
 # plot the final classification map
-plot(cube_20LMR_class_tcnn,
-     tmap_options = list("scale" = 0.6) )
+plot(rondonia_20LMR_class_tcnn,
+     tmap_options = list("scale" = 0.7) )
 ```
 
 
@@ -2368,7 +2381,7 @@ To illustrate the reclassification in `sits`, we take a classified data cube sto
 ```{r, tidy = "styler", out.width = "100%", fig.align="center", fig.cap="Original classification map (Source: Authors)."}
 # Open classification map
 data_dir <- system.file("extdata/Rondonia-Class", package = "sitsdata")
-ro_class <- sits_cube(
+rondonia_class <- sits_cube(
     source = "MPC",
     collection = "SENTINEL-2-L2A",
     data_dir = data_dir,
@@ -2383,7 +2396,7 @@ ro_class <- sits_cube(
                "7" = "Wetland")
     )
 
-plot(ro_class, 
+plot(rondonia_class, 
      tmap_options = list("scale" = 0.6))
 ```
 
@@ -2393,7 +2406,7 @@ In this example, we use as a reference the PRODES deforestation map of Amazonia 
 
 ```{r, tidy = "styler", out.width = "100%", fig.align="center", fig.cap="Deforestation map produced by sits (Source: Authors)."}
 data_dir <- system.file("extdata/PRODES", package = "sitsdata")
-prodes2021 <- sits_cube(
+prodes_2021 <- sits_cube(
     source = "USGS",
     collection = "LANDSAT-C2L2-SR",
     data_dir = data_dir,
@@ -2442,7 +2455,7 @@ def_legend <- c(
 
 Using this new legend, we can visualize the PRODES deforestation map.
 ```{r, echo = TRUE, eval = FALSE}
-sits_view(prodes2021, legend = def_legend)
+sits_view(prodes_2021, legend = def_legend)
 ```
 
 ```{r prodes, echo = FALSE, out.width="90%", fig.align="center", fig.cap="Deforestation map produced by PRODES."}
@@ -2455,9 +2468,9 @@ The `sits_reclassify()` operation requires the parameters: (a) `cube`, the class
 
 ```{r, tidy = "styler", out.width = "100%", fig.align="center", fig.cap="Deforestation map by sits masked by PRODES map (Source: Authors)."}
 # Reclassify cube
-ro_def_2021 <- sits_reclassify(
-    cube = ro_class,
-    mask = prodes2021,
+rondonia_def_2021 <- sits_reclassify(
+    cube = rondonia_class,
+    mask = prodes_2021,
     rules = list(
         "Non_Forest" = mask %in% c("NonForest", "NonForest2"),
         "Deforestation_Mask" = mask %in% c(
@@ -2477,7 +2490,7 @@ ro_def_2021 <- sits_reclassify(
     version = "reclass")
 
 # Plot the reclassified map
-plot(ro_def_2021,
+plot(rondonia_def_2021,
      tmap_options = list("scale" = 0.6))
 ```
 
@@ -2581,7 +2594,7 @@ labels <- c("1" = "Water",
 # directory where the data is stored 
 data_dir <- system.file("extdata/Rondonia-20LLQ/", package = "sitsdata")
 # create a probability data cube from a file 
-probs_cube <- sits_cube(
+rondonia_20LLQ_probs <- sits_cube(
     source = "MPC",
     collection = "SENTINEL-2-L2A",
     data_dir = data_dir,
@@ -2591,7 +2604,7 @@ probs_cube <- sits_cube(
                    "start_date", "end_date", "band", "version"))
 
 # plot the probabilities for water and forest
-plot(probs_cube, labels = c("Water", "Forest"))
+plot(rondonia_20LLQ_probs, labels = c("Water", "Forest"))
 ```
 
 The probability map for class Forest shows high values associated with compact patches and linear stretches in riparian areas. By contrast, the probability map for class Water has mostly low values, except in a few places with a high chance of occurrence of this class. To further understand the behavior of the Bayesian estimator, it is helpful to examine the local variance associated with the logits of the probabilities. 
@@ -2600,15 +2613,15 @@ Our first reference is the classified map without smoothing, which shows the pre
 
 ```{r, tidy = "styler", out.width = "100%", fig.align="center", fig.cap="Classified map without smoothing (Source: Authors)."}
 # Generate the thematic map
-class_map <- sits_label_classification(
-    cube = probs_cube,
+rondonia_20LLQ_class <- sits_label_classification(
+    cube = rondonia_20LLQ_probs,
     multicores = 4,
     memsize = 12,
     output_dir = "./tempdir/chp10",
     version = "no_smooth")
 
 # Plot the result
-plot(class_map, 
+plot(rondonia_20LLQ_class, 
      tmap_options = list("scale" = 0.6))
 ```
 
@@ -2621,7 +2634,7 @@ The `smoothness` values for all classes aare set to the same value of $20$, whic
 ```{r, tidy = "styler", out.width = "100%", fig.align="center", fig.cap="Probability maps after bayesian smoothing (Source: Authors)."}
 # Compute Bayesian smoothing
 cube_smooth_w7_f05_s20 <- sits_smooth(
-    cube = probs_cube,
+    cube = rondonia_20LLQ_probs,
     window_size = 7,
     neigh_fraction = 0.50,
     smoothness = 20, 
@@ -2658,7 +2671,7 @@ In the smoothed map, the outliers have been removed by expanding forest areas. F
 smooth_water_forest <- c(5, 20, 20, 20, 5, 20)
 # Compute Bayesian smoothing
 cube_smooth_w7_f05_swf <- sits_smooth(
-    cube = probs_cube,
+    cube = rondonia_20LLQ_probs,
     window_size = 7,
     neigh_fraction = 0.5,
     smoothness = smooth_water_forest,
@@ -2949,7 +2962,8 @@ cerrado_classif <- sits_cube(
     bands = "class",
     labels = labels,
     data_dir = data_dir,
-    parse_info = c("X1", "tile", "band", "start_date", "end_date", "version")
+    parse_info = c("X1", "tile", "band", "start_date", "end_date", "version"),
+    progress = FALSE
 )
 # Plot one tile of the classification
 plot(cerrado_classif, tiles = "044048")
@@ -3063,7 +3077,9 @@ s2_cube_ro <- sits_cube(
       tiles = "20LMR",
       bands = c("B02", "B8A", "B11", "SCL"),
       start_date = as.Date("2020-06-01"),
-      end_date = as.Date("2021-09-01"))
+      end_date = as.Date("2021-09-01"),
+      progress = FALSE
+)
 
 # Select a small area inside the tile
 roi = c(lon_max = -63.25790, lon_min = -63.6078, 
@@ -3075,7 +3091,9 @@ s2_reg_cube_ro <- sits_regularize(
   res = 20,
   roi = roi,
   period = "P16D",
-  multicores = 4)
+  multicores = 4,
+  progress = FALSE
+)
 
 plot(s2_reg_cube_ro, 
      red = "B11", 
@@ -3281,7 +3299,8 @@ data_dir <- system.file("extdata/Rondonia-20LMR/", package = "sitsdata")
 ro_cube_20LMR <- sits_cube(
     source = "MPC",
     collection = "SENTINEL-2-L2A",
-    data_dir = data_dir
+    data_dir = data_dir,
+    progress = FALSE
 )
 # train a random forest model
 rfor_model <- sits_train(samples_deforestation, sits_rfor())
@@ -3309,7 +3328,8 @@ ro_cube_20LMR_rfor_class <- sits_label_classification(
     memsize = 24,
     version = "rfor-raster"
 )
-plot(ro_cube_20LMR_rfor_class)
+plot(ro_cube_20LMR_rfor_class, 
+     tmap_options = list("scale" = 0.7))
 ```
 
 The next step is to classify the same area using an SVM algorithm, as shown below. 
@@ -3341,7 +3361,8 @@ ro_cube_20LMR_svm_class <- sits_label_classification(
     memsize = 24,
     version = "svm-raster"
 )
-plot(ro_cube_20LMR_svm_class)
+plot(ro_cube_20LMR_svm_class,
+     tmap_options = list("scale" = 0.7))
 ```
 
 There is a good agreement between the two results, which  most of the land areas have been classified similarly. The main differences are in the "Clear_Cut_Burned_Area" and "Clear_Cut_Vegetation". The RF algorithm tends to be more conservative and finds less areas than SVM. The reason is because RF decision-making uses values from single attributes (values of a single band in a given time instance). Since the Random Forest model is sensitive to the response of images at the end of the period, it tends to focus on values that indicate the presence of forests during the dry season. The SVM model is more balanced to the overall separation of classes in the entire attribute space. Also note that the study area presents many challenges for land classification, given the presence of wetlands, riparian forests and seasonally-flooded areas. Because of this challenge, both methods make mistakes in including flooded areas as "Clear_Cut_Vegetation" in the center-left part of the image. 
@@ -3368,7 +3389,7 @@ ro_cube_20LMR_average_class <- sits_label_classification(
 
 # Plot the second version of the classified cube
 plot(ro_cube_20LMR_average_class, 
-     tmap_options = list("scale" = 0.6))
+     tmap_options = list("scale" = 0.7))
 ```
 Compared with the initial map, the result is more similar to the original SVM map than to the RF result, especially as regards the  "Clear_Cut_Burned_Area" class. Such outcome indicates that that SVM is more confident in its predictions than RF when detecting deforestation areas associated with fires. By contrast, the misclassified areas in the center-left part of the map have been reduced. The reason is that some of these areas are indicated in one classifier but not in the other. In this case, the confidence on the deforestation results is not matched by both methods. Thus, in principle, the resulting combined map is more accurate than the individual model outcomes.
 
@@ -3489,7 +3510,8 @@ data_dir <- system.file("extdata/Rondonia-20LMR", package = "sitsdata")
 cube_20LMR <- sits_cube(
     source = "AWS",
     collection = "SENTINEL-2-L2A",
-    data_dir = data_dir
+    data_dir = data_dir,
+    progress = FALSE
 )
 plot(cube_20LMR, red = "B11", green = "B8A", blue = "B02", date = "2022-07-16")
 ```
@@ -3577,7 +3599,7 @@ We conclude that OBIA analysis applied to image time series is a worthy and effi
 
 # Technical Annex {-}
 
-```{r, include = FALSE}
+```{r, eval = FALSE, include = FALSE}
 source("common.R")
 sits:::.conf_set_options("tmap_legend_text_size" = 0.7)
 sits:::.conf_set_options("tmap_legend_title_size" = 0.7)
@@ -3640,7 +3662,7 @@ pred
 
 The predictors tibble is organized as a combination of the "X" and "Y" values used by machine learning algorithms. The first two columns are `sample_id` and `label`. The other columns contain the data values, organized by band and time. For machine learning methods that are not time-sensitive, such as random forest, this organization is sufficient for training. In the case of time-sensitive methods such as `tempCNN`, further arrangements are necessary to ensure the tensors have the right dimensions. Please refer to the `sits_tempcnn()` source code for an example of how to adapt the prediction table to appropriate `torch` tensor.
 
-Most algorithms require data normalization. Therefore, the `sits_predictors()` code is usually combined with methods that extract statistical information and then normalize the data, as in the example below.
+Some algorithms require data normalization. Therefore, the `sits_predictors()` code is usually combined with methods that extract statistical information and then normalize the data, as in the example below.
 
 ```{r, tidy = "styler", eval = FALSE}
  # Data normalization
@@ -3666,35 +3688,28 @@ sel <- !(train_samples$sample_id %in% test_samples$sample_id)
 train_samples <- train_samples[sel, ]
 ```
 
-<!--
-PEDRO: O trecho abaixo esta confuso porque ele fala de "`lightgbm` algorithm", mas o que existe e'
-lightgbm::lgb.train() e lgb_method(). Acho que seria melhor usar "LightGBM algorithm" ou os
-nomes das funcoes especificas. Os parametros boosting_type, objective, etc. sao da funcao lgb.train(), sendo tambem definidos na funcao lgb_method() implementada abaixo.
--->
-The parameters for the `lightgbm` algorithm, as defined in its documentation, are: (a) `boosting_type`, boosting algorithm; (b) `objective`, classification objective (c) `num_iterations`, number of runs; (d) `max_depth`, maximum tree depth; (d) `min_samples_leaf`,  minimum size of data in one leaf (to avoid overfitting); (f) `learning_rate`,  learning rate of the algorithm; (g) `n_iter_no_change`, number of successive iterations to stop training when validation metrics do not improve; (h) `validation_split`, fraction of training data to be used as validation data. 
+To include the `lightgbm` package as part of `sits`, we need to create a new training function which is compatible with the other machine learning methods of the package and will be called by `sits_train()`. For compatibility, this new function will be called `sits_lightgbm()`. Its implementation uses two functions from the `lightgbm`: (a) `lgb.Dataset()`, which transforms training and test samples into internal structures; (b) `lgb.train()`, which trains the model.
 
-The training part of the `lightgbm` algorithm uses two functions: (a) `lgb.Dataset()`, which transforms training and test samples into internal structures; (b) `lgb.train()`, which trains the model.
+The parameters of `lightgbm::lgb.train()` are: (a) `boosting_type`, boosting algorithm; (b) `objective`, classification objective (c) `num_iterations`, number of runs; (d) `max_depth`, maximum tree depth; (d) `min_samples_leaf`,  minimum size of data in one leaf (to avoid overfitting); (f) `learning_rate`,  learning rate of the algorithm; (g) `n_iter_no_change`, number of successive iterations to stop training when validation metrics do not improve; (h) `validation_split`, fraction of training data to be used as validation data. 
 
 ```{r, tidy = "styler", eval = TRUE}
 # install "lightgbm" package if not available 
 if (!require("lightgbm")) install.packages("lightgbm")
 # create a function in sits style for LightGBM algorithm
-lgb_method <- function(samples = NULL,
-                       boosting_type = "gbdt",
-                       objective = "multiclass",
-                       min_samples_leaf = 10,
-                       max_depth = 6,
-                       learning_rate = 0.1,
-                       num_iterations = 100,
-                       n_iter_no_change = 10,
-                       validation_split = 0.2, ...){
+sits_lightgbm <- function(samples = NULL,
+                          boosting_type = "gbdt",
+                          objective = "multiclass",
+                          min_samples_leaf = 10,
+                          max_depth = 6,
+                          learning_rate = 0.1,
+                          num_iterations = 100,
+                          n_iter_no_change = 10,
+                          validation_split = 0.2, ...){
 
     # function that returns MASS::lda model based on a sits sample tibble
-    result_fun <- function(samples) {
-        # Data normalization
-        ml_stats <- sits_stats(samples)
+    train_fun <- function(samples) {
+        # Extract the predictors
         train_samples <- sits_predictors(samples)
-        train_samples <- sits_pred_normalize(pred = train_samples, stats = ml_stats)
         
         # find number of labels
         labels <- sits_labels(samples)
@@ -3750,9 +3765,6 @@ lgb_method <- function(samples = NULL,
         predict_fun <- function(values) {
             # reload the model (unserialize)
             lgbm_model <- lightgbm::lgb.load(model_str = lgbm_model_string)
-            # Performs data normalization - returns only values
-            # in the prediction only values are available
-            values <- sits_pred_normalize(pred = values, stats = ml_stats)
             # predict probabilities
             prediction <- stats::predict(lgbm_model,
                                data = as.matrix(values),
@@ -3765,20 +3777,18 @@ lgb_method <- function(samples = NULL,
             return(prediction)
         }
         # Set model class
-        class(predict_fun) <- c("sits_model", class(predict_fun))
+        class(predict_fun) <- c("lightgbm_model", "sits_model", class(predict_fun))
         return(predict_fun)
     }
-    result <- sits_factory_function(samples, result_fun)
+    result <- sits_factory_function(samples, train_fun)
     return(result)
 }
 ```
 
-The above code has two nested functions: `results_fun()` and `predict_fun()`. When `lgb_method()` is called, it transforms the input samples into predictors and normalizes them. Then, it uses these predictors to train the algorithm, creating a model (`result_mlr`). This model is included as part of the function's closure and becomes available at classification time. Then the code creates `prediction_fun()`, which applies the `result_mlr` model to the input values to be classified. This is the function returned by `results_fun()` which contains all the necessary information for classification. At classification time, the model is called directly.
-
-The last lines of the code also include the convenience function `sits_factory_function()`, shown below. This function allows the model to be called either as part of `sits_train()` or to be called independently, with the same result.
+The above code has two nested functions: `train_fun()` and `predict_fun()`. When `sits_lightgbm()` is called, `train_fun()` transforms the input samples into predictors and uses them to train the algorithm, creating a model (`lgbm_model`). This model is included as part of the function's closure and becomes available at classification time. Inside `train_fun()`, we include `predict_fun()`, which applies the `lgbm_model` object to classify to the input values. The `train_fun` object is then returned as a closure, using the `sits_factory_function` constructor. This function allows the model to be called either as part of `sits_train()` or to be called independently, with the same result.
 
 ```{r, tidy = "styler", eval = FALSE}
-sits_factory_function <- function(samples, fun) {
+sits_factory_function <- function(data, fun) {
     # if no data is given, we prepare a
     # function to be called as a parameter of other functions
     if (purrr::is_null(data)) {
@@ -3790,6 +3800,16 @@ sits_factory_function <- function(samples, fun) {
     return(result)
 }
 ```
+
+As a result, the following calls are equivalent.
+
+```{r, tidy = "styler", eval = FALSE}
+# building a model using sits_train
+lgbm_model <- sits_train(samples, sits_lightgbm())
+# building a model directly
+lgbm_model <- sits_lightgbm(samples)
+```
+
 
 There is one additional requirement for the algorithm to be compatible with `sits`. Data cube processing algorithms in `sits` run in parallel. For this reason, once the classification model is trained, it is serialized, as shown in the following line. The serialized version of the model is exported to the function closure, so it can be used at classification time.
 
@@ -3826,13 +3846,13 @@ samples_2bands <- sits_select(
     bands = c("NDVI", "EVI")
 )
 # train lightGBM model
-lgb_model <- sits_train(samples_2bands, lgb_method())
+lgb_model <- sits_train(samples_2bands, sits_lightgbm())
 
 # Classify the data cube
 sinop_probs <- sits_classify(
     data = sinop, 
     ml_model = lgb_model,
-    multicores = 1,
+    multicores = 2,
     memsize = 8,
     output_dir = "./tempdir/chp15"
 )
@@ -3846,7 +3866,7 @@ sinop_bayes <- sits_smooth(
 # Label the smoothed file 
 sinop_map <- sits_label_classification(
     cube = sinop_bayes, 
-    output_dir = "./tempdir/chp3"
+    output_dir = "./tempdir/chp15"
 )
 # plot the result
 plot(sinop_map, title = "Sinop Classification Map")
@@ -3856,37 +3876,39 @@ The above example shows how it is possible to extend `sits` with new machine lea
 
 ## How colors work in sits{-}
 
-In examples provided in the book, the color legend is taken from a predefined color pallete provided by `sits`. The color definition file used by `sits` has 210 class names, which can be shown using `sits_colors()`
+In examples provided in the book, the color legend is taken from a predefined color pallete provided by `sits`. The default color definition file used by `sits` has 220 class names, which can be shown using `sits_colors()`
 
 ```{r, tidy = "styler", out.width = "100%", out.height = "100%", echo = FALSE, fig.align="center", fig.cap="Default colors used in the sits package (Source: Authors)."}
-# Display default `sits` colors
+# Point default `sits` colors
 sits_colors()
 ```
 
 These colors are grouped by typical legends used by the Earth observation community, which include "IGBP", "UMD", "ESA_CCI_LC", "WORLDCOVER", "PRODES", "PRODES_VISUAL", "TERRA_CLASS", "TERRA_CLASS_PT". The following commands shows the colors associated with the IGBP legend[@Herold2009].
 
-```{r, tidy = "styler", out.width = "100%", out.height = "100%", fig.align="center", fig.cap="Default colors used in the sits package (Source: Authors)."}
+```{r, tidy = "styler", out.width = "100%", out.height = "100%", fig.align="center", fig.cap="Colors used in the sits package to represeny IGBP legend (Source: Authors)."}
 # Display default `sits` colors
 sits_colors_show(legend = "IGBP")
 ```
 
 
-The default color table can be redefined using `sits_colors_set()`. As an example of a user-defined color table, consider a definition that covers level 1 of the Anderson Classification System used in the US National Land Cover Data, obtained by defining a new color table, as shown below. The colors can be defined by HEX values or by names accepted as R color codes.
-```{r, tidy = "styler", out.width = "80%", out.height = "80%", fig.align="center", fig.cap="Example of Anderson Land Classification Scheme use in sits (Source: Authors)."}
+The default color table can be extended using `sits_colors_set()`. As an example of a user-defined color table, consider a definition that covers level 1 of the Anderson Classification System used in the US National Land Cover Data, obtained by defining a set of colors associated to a new legend. The colors should be defined by HEX values and the color names should consist of a single string; multiple names need to be connected with an underscore("_").
+```{r, tidy = "styler", out.width = "100%", out.height = "80%", fig.align="center", fig.cap="Example of defining colors for the Anderson Land Classification Scheme(Source: Authors)."}
 # Define a color table based on the Anderson Land Classification System
 us_nlcd <- tibble::tibble(name = character(), color = character())
-us_nlcd <- us_nlcd %>% 
-  tibble::add_row(name = "Urban Built Up", color =  "#85929E") |> 
-  tibble::add_row(name = "Agricultural Land", color = "#F0B27A") |>  
+us_nlcd <- us_nlcd |>  
+  tibble::add_row(name = "Urban_Built_Up", color =  "#85929E") |> 
+  tibble::add_row(name = "Agricultural_Land", color = "#F0B27A") |>  
   tibble::add_row(name = "Rangeland", color = "#F1C40F") |> 
-  tibble::add_row(name = "Forest Land", color = "#27AE60") |>  
+  tibble::add_row(name = "Forest_Land", color = "#27AE60") |>  
   tibble::add_row(name = "Water", color = "#2980B9") |>  
   tibble::add_row(name = "Wetland", color = "#D4E6F1") |> 
-  tibble::add_row(name = "Barren Land", color = "#FDEBD0") |> 
+  tibble::add_row(name = "Barren_Land", color = "#FDEBD0") |> 
   tibble::add_row(name = "Tundra", color = "#EBDEF0") |> 
-  tibble::add_row(name = "Snow and Ice", color = "#F7F9F9")
+  tibble::add_row(name = "Snow_and_Ice", color = "#F7F9F9")
 # Load the color table into `sits`
-sits_colors_set(us_nlcd)
+sits_colors_set(colors = us_nlcd, legend = "US_NLCD")
+# Show the new legend
+sits_colors_show(legend = "US_NLCD")
 ```
 
 The original default `sits` color table can be restored using `sits_colors_reset()`. 

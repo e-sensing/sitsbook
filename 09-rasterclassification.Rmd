@@ -20,16 +20,17 @@ The examples of this chapter use a pre-built data cube of Sentinel-2 images, ava
 
 ```{r, tidy = "styler", out.width = "90%", fig.align="center", fig.cap="Color composite image of the cube for date 2023-07-16 (Source: authors)."}
 # Files are available in a local directory 
-data_dir <- system.file("extdata/Rondonia-20LMR/", package = "sitsdata")
+data_dir <- system.file("extdata/Rondonia-20LMR/", 
+                        package = "sitsdata")
 # Read data cube
-cube_20LMR <- sits_cube(
+rondonia_20LMR <- sits_cube(
     source = "MPC",
     collection = "SENTINEL-2-L2A",
     data_dir = data_dir
 )
 
 # Plot the cube
-plot(cube_20LMR, date = "2022-07-16", red = "B11", green = "B8A", blue = "B02")
+plot(rondonia_20LMR, date = "2022-07-16", red = "B11", green = "B8A", blue = "B02")
 ```
 
 ## Training data for the case study{-}
@@ -81,51 +82,49 @@ The figure shows that "B11" band values in date 15 ("2022-08-17") is the most in
 
 The machine learning models available in `sits` (`sits_rfor()`, `sits_svm()` and `sits_xgboost()`) use CPU-based parallel processing, which is done internally by the package. The algorithms are adaptable; the only requirement for users is to inform the configuration of their machines. Details of CPU-based parallel processing in `sits` can be found in the [Technical Annex](https://e-sensing.github.io/sitsbook/technical-annex.html).
 
-To classify both data cubes and sets of time series, use `sits_classify()`, which uses parallel processing to speed up the performance, as described at the end of this Chapter. Its most relevant parameters are: (a) `data`, either a data cube or a set of time series; (b) `ml_model`, a trained model using one of the machine learning methods provided; (c) `multicores`, number of CPU cores that will be used for processing; (d) `memsize`, memory available for classification; (e) `output_dir`, directory where results will be stored; (f) `version`, for version control. To follow the processing steps, turn on the parameters `verbose` to print information and `progress` to get a progress bar. The classification result is a data cube with a set of probability layers, one for each output class. Each probability layer contains the model's assessment of how likely each pixel belongs to the related class. The probability cube can be visualized with `plot()`. 
+To classify both data cubes and sets of time series, use `sits_classify()`, which uses parallel processing to speed up the performance, as described at the end of this Chapter. Its most relevant parameters are: (a) `data`, either a data cube or a set of time series; (b) `ml_model`, a trained model using one of the machine learning methods provided; (c) `multicores`, number of CPU cores that will be used for processing; (d) `memsize`, memory available for classification; (e) `output_dir`, directory where results will be stored; (f) `version`, for version control. To follow the processing steps, turn on the parameters `verbose` to print information and `progress` to get a progress bar. The classification result is a data cube with a set of probability layers, one for each output class. Each probability layer contains the model's assessment of how likely each pixel belongs to the related class. The probability cube can be visualized with `plot()`. In this example, we show only the probabilities associated to label "Forest". 
 
 ```{r, tidy = "styler", out.width = "90%", fig.align="center", fig.cap="Probabilities for class Forest"}
 
 # Classify data cube to obtain a probability cube
-cube_20LMR_probs <- sits_classify(
-    data     = cube_20LMR,
+rondonia_20LMR_probs <- sits_classify(
+    data     = rondonia_20LMR,
     ml_model = rfor_model,
     output_dir = "./tempdir/chp9",
     version = "rf-raster",
     multicores = 4,
     memsize = 16)
 
-plot(cube_20LMR_probs, labels = "Forest", palette = "YlGn")
+plot(rondonia_20LMR_probs, labels = "Forest", palette = "YlGn")
 ```
 
 The probability cube provides information on the output values of the algorithm for each class. Most probability maps contain outliers or misclassified pixels. The labeled map generated from the pixel-based time series classification method exhibits several misclassified pixels, which are small patches surrounded by a different class. This occurrence of outliers is a common issue that arises due to the inherent nature of this classification approach. Regardless of their resolution, mixed pixels are prevalent in images, and each class exhibits considerable data variability. As a result, these factors can lead to outliers that are more likely to be misclassified. To overcome this limitation, `sits` employs post-processing smoothing techniques that leverage the spatial context of the probability cubes to refine the results. These techniques will be discussed in the Chapter [Bayesian smoothing for post-processing](https://e-sensing.github.io/sitsbook/bayesian-smoothing-for-post-processing.html). In what follows, we will generate the smoothed cube to illustrate the procedure. 
 
-```{r, tidy = "styler", out.width = "90%", fig.align="center", fig.cap="Smoothened probabilities for class Forest"}
+```{r, tidy = "styler", out.width = "100%", fig.align="center", fig.cap="Smoothened probabilities for class Forest"}
 # Smoothen a  probability cube
-cube_20LMR_bayes <- sits_smooth(
-    cube    = cube_20LMR_probs,
+rondonia_20LMR_bayes <- sits_smooth(
+    cube    = rondonia_20LMR_probs,
     output_dir = "./tempdir/chp9",
     version = "rf-raster",
     multicores = 4,
     memsize = 16)
-plot(cube_20LMR_bayes, labels = c("Forest", "Clear_Cut_Bare_Soil"),  palette = "YlGn")
+plot(rondonia_20LMR_bayes, labels = c("Forest"),  palette = "YlGn")
 ```
 
-In general, users should perform a post-processing smoothing after obtaining the probability maps in raster format. After the post-processing operation, we apply `sits_label_classification()` to obtain a map with the most likely class for each pixel. For each pixel, the `sits_label_classification()` function takes the label with highest probability and assigns it to the resulting map. The output is a labelled map with classes. In addition, the function will remove outliers using a modal filter after if the `clean` parameter is set to `TRUE` (default value). For each pixel, the modal filter scans a neighborhood defined by `window_size` (default = 3) and assigns such pixel to the most frequent label inside the window.
+In general, users should perform a post-processing smoothing after obtaining the probability maps in raster format. After the post-processing operation, we apply `sits_label_classification()` to obtain a map with the most likely class for each pixel. For each pixel, the `sits_label_classification()` function takes the label with highest probability and assigns it to the resulting map. The output is a labelled map with classes.
 
-```{r, tidy = "styler", out.width = "120%", fig.align="left", fig.cap="Final map of deforestation obtained by random forest model(Source: Authors)."}
+```{r, tidy = "styler", out.width = "100%", fig.align="center", fig.cap="Final map of deforestation obtained by random forest model(Source: Authors)."}
 # Generate a thematic map
-cube_20LMR_class <- sits_label_classification(
-    cube = cube_20LMR_bayes,
-    clean = TRUE,
-    window_size = 3L,
+rondonia_20LMR_class <- sits_label_classification(
+    cube = rondonia_20LMR_bayes,
     multicores = 4,
     memsize = 12,
     output_dir = "./tempdir/chp9",
     version = "rf-raster")
 
 # Plot the thematic map
-plot(cube_20LMR_class, tmap_options = 
-         list("scale" = 0.6))
+plot(rondonia_20LMR_class, tmap_options = 
+         list("scale" = 0.7))
 ```
 
 
@@ -200,8 +199,8 @@ tcnn_model <- sits_train(
 After training the model, we classify the data cube. If a GPU is available, users need to provide the additional parameter `gpu_memory` to the `sits_classify()` function. This information will be used by `sits` to optimize access to the GPU and speed up processing. 
 
 ```{r, tidy="styler"}
-cube_20LMR_probs_tcnn <- sits_classify(
-    cube_20LMR,
+rondonia_20LMR_probs_tcnn <- sits_classify(
+    rondonia_20LMR,
     ml_model = tcnn_model,
     output_dir = "./tempdir/chp9",
     version = "tcnn-raster",
@@ -213,26 +212,26 @@ cube_20LMR_probs_tcnn <- sits_classify(
 
 After classification, we can smooth the probability cube and then label the resulting smoothed probabilities to obtain a classified map. 
 
-```{r, tidy="styler", out.width = "120%", fig.align="left", fig.cap="Final map of deforestation obtained using TempCNN model (Source: Authors)."}
+```{r, tidy="styler", out.width = "100%", fig.align="center", fig.cap="Final map of deforestation obtained using TempCNN model (Source: Authors)."}
 # Smoothen the probability map 
-cube_20LMR_bayes_tcnn <- sits_smooth(
-    cube_20LMR_probs_tcnn,
+rondonia_20LMR_bayes_tcnn <- sits_smooth(
+    rondonia_20LMR_probs_tcnn,
     output_dir = "./tempdir/chp9",
     version = "tcnn-raster",
     multicores = 6,
     memsize = 24
 )
 # Obtain the final labelled map
-cube_20LMR_class_tcnn <- sits_label_classification(
-    cube_20LMR_bayes_tcnn,
+rondonia_20LMR_class_tcnn <- sits_label_classification(
+    rondonia_20LMR_bayes_tcnn,
     output_dir = "./tempdir/chp9",
     version = "tcnn-raster",
     multicores = 6,
     memsize = 24
 )
 # plot the final classification map
-plot(cube_20LMR_class_tcnn,
-     tmap_options = list("scale" = 0.6) )
+plot(rondonia_20LMR_class_tcnn,
+     tmap_options = list("scale" = 0.7) )
 ```
 
 
@@ -245,7 +244,7 @@ To illustrate the reclassification in `sits`, we take a classified data cube sto
 ```{r, tidy = "styler", out.width = "100%", fig.align="center", fig.cap="Original classification map (Source: Authors)."}
 # Open classification map
 data_dir <- system.file("extdata/Rondonia-Class", package = "sitsdata")
-ro_class <- sits_cube(
+rondonia_class <- sits_cube(
     source = "MPC",
     collection = "SENTINEL-2-L2A",
     data_dir = data_dir,
@@ -260,7 +259,7 @@ ro_class <- sits_cube(
                "7" = "Wetland")
     )
 
-plot(ro_class, 
+plot(rondonia_class, 
      tmap_options = list("scale" = 0.6))
 ```
 
@@ -270,7 +269,7 @@ In this example, we use as a reference the PRODES deforestation map of Amazonia 
 
 ```{r, tidy = "styler", out.width = "100%", fig.align="center", fig.cap="Deforestation map produced by sits (Source: Authors)."}
 data_dir <- system.file("extdata/PRODES", package = "sitsdata")
-prodes2021 <- sits_cube(
+prodes_2021 <- sits_cube(
     source = "USGS",
     collection = "LANDSAT-C2L2-SR",
     data_dir = data_dir,
@@ -319,7 +318,7 @@ def_legend <- c(
 
 Using this new legend, we can visualize the PRODES deforestation map.
 ```{r, echo = TRUE, eval = FALSE}
-sits_view(prodes2021, legend = def_legend)
+sits_view(prodes_2021, legend = def_legend)
 ```
 
 ```{r prodes, echo = FALSE, out.width="90%", fig.align="center", fig.cap="Deforestation map produced by PRODES."}
@@ -332,9 +331,9 @@ The `sits_reclassify()` operation requires the parameters: (a) `cube`, the class
 
 ```{r, tidy = "styler", out.width = "100%", fig.align="center", fig.cap="Deforestation map by sits masked by PRODES map (Source: Authors)."}
 # Reclassify cube
-ro_def_2021 <- sits_reclassify(
-    cube = ro_class,
-    mask = prodes2021,
+rondonia_def_2021 <- sits_reclassify(
+    cube = rondonia_class,
+    mask = prodes_2021,
     rules = list(
         "Non_Forest" = mask %in% c("NonForest", "NonForest2"),
         "Deforestation_Mask" = mask %in% c(
@@ -354,7 +353,7 @@ ro_def_2021 <- sits_reclassify(
     version = "reclass")
 
 # Plot the reclassified map
-plot(ro_def_2021,
+plot(rondonia_def_2021,
      tmap_options = list("scale" = 0.6))
 ```
 
