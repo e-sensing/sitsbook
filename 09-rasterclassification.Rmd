@@ -1,7 +1,6 @@
 ```{r, include = FALSE}
 source("common.R")
 dir.create("./tempdir/chp9")
-sits:::.conf_set_options("tmap_scale" = 0.6)
 library(torch)
 library(luz)
 torch::install_torch()
@@ -80,12 +79,7 @@ The figure shows that B11 band values in date 15 ("2022-08-17") is the most info
 
 ## Classification of machine learning models in CPUs{-}
 
-<!--
-PEDRO:
-achei essa frase abaixo confusa. as funcoes usam processamento paralelo mas é
-o sits que faz isto.
--->
-The machine learning models available in `sits` (`sits_rfor()`, `sits_svm()`, and `sits_xgboost()`) use CPU-based parallel processing, which is done internally by the package. The algorithms are adaptable; the only requirement for users is to inform the configuration of their machines. Details of CPU-based parallel processing in `sits` can be found in the [Technical annex](https://e-sensing.github.io/sitsbook/technical-annex.html).
+By default, all classification algorithms in `sits` use CPU-based parallel processing, done internally by the package. The algorithms are adaptable; the only requirement for users is to inform the configuration of their machines. To achieve efficiency, `sits` implements a fault-tolerant multitasking procedure, using a cluster of independent workers linked to a virtual machine. To avoid communication overhead, all large payloads are read and stored independently; direct interaction between the main process and the workers is kept at a minimum. Details of CPU-based parallel processing in `sits` can be found in the [Technical annex](https://e-sensing.github.io/sitsbook/technical-annex.html).
 
 To classify both data cubes and sets of time series, use `sits_classify()`, which uses parallel processing to speed up the performance, as described at the end of this Chapter. Its most relevant parameters are: (a) `data`, either a data cube or a set of time series; (b) `ml_model`, a trained model using one of the machine learning methods provided; (c) `multicores`, number of CPU cores that will be used for processing; (d) `memsize`, memory available for classification; (e) `output_dir`, directory where results will be stored; (f) `version`, for version control. To follow the processing steps, turn on the parameters `verbose` to print information and `progress` to get a progress bar. The classification result is a data cube with a set of probability layers, one for each output class. Each probability layer contains the model's assessment of how likely each pixel belongs to the related class. The probability cube can be visualized with `plot()`. In this example, we show only the probabilities associated to label "Forest". 
 
@@ -129,15 +123,14 @@ rondonia_20LMR_class <- sits_label_classification(
     version = "rf-raster")
 
 # Plot the thematic map
-plot(rondonia_20LMR_class, tmap_options = 
-         list("scale" = 0.7))
+plot(rondonia_20LMR_class)
 ```
 
 
 
 ## Training and running deep learning models{-}
 
-The next examples show how to run deep learning models in `sits`. The examples will show how to run deep learning methods in GPUs if available. The case study uses the Temporal CNN model [@Pelletier2019], which is described in Chapter [Machine learning for data cubes](https://e-sensing.github.io/sitsbook/machine-learning-for-data-cubes.html). We first show the need for model tuning, before applying the model for data cube classification. 
+The next examples show how to run deep learning models in `sits`. The case study uses the Temporal CNN model [@Pelletier2019], which is described in Chapter [Machine learning for data cubes](https://e-sensing.github.io/sitsbook/machine-learning-for-data-cubes.html). We first show the need for model tuning, before applying the model for data cube classification. 
 
 ### Deep learning model tuning{-}
 
@@ -183,7 +176,7 @@ dplyr::bind_cols(cnn_params, lr_wd)
 
 ### Classification in GPUs using parallel processing{-}
 
-Deep learning time series classification methods in `sits`, which include `sits_tempcnn()`, `sits_mlp()`, `sits_resnet()`, `sits_lightae()` and `sits_tae()`, are written using the `torch` package, which is an adaptation of pyTorch to the R environment. These algorithms can use a CUDA-compatible NVDIA GPU which has been  properly configured. Please refer to the `torch` [installation guide](https://torch.mlverse.org/docs/articles/installation) for details. If no GPU is available, these algorithms will run on regular CPUs, using the same paralellization methods as traditional machine learning methods. Typically, there is a 10-fold performance increase when running `torch` based methods in GPUs relative to their processing time in GPU.
+Deep learning time series classification methods in `sits`, which include `sits_tempcnn()`, `sits_mlp()`, `sits_resnet()`, `sits_lightae()` and `sits_tae()`, are written using the `torch` package, which is an adaptation of pyTorch to the R environment. These algorithms can use a CUDA-compatible NVDIA GPU if one is available and has been  properly configured. Please refer to the `torch` [installation guide](https://torch.mlverse.org/docs/articles/installation) for details on how to configure `torch` to use GPUs. If no GPU is available, these algorithms will run on regular CPUs, using the same paralellization methods described in the  traditional machine learning methods. Typically, there is a 10-fold performance increase when running `torch` based methods in GPUs relative to their processing time in GPU.
 
 To illustrate the use of GPUs, we take the same data cube and training data used in the previous examples and use a Temporal CNN method. The first step is to obtain a deep learning model using the hyperparameters produced by the tuning procedure shown earlier. We run
 
@@ -236,8 +229,7 @@ rondonia_20LMR_class_tcnn <- sits_label_classification(
     memsize = 24
 )
 # plot the final classification map
-plot(rondonia_20LMR_class_tcnn,
-     tmap_options = list("scale" = 0.7) )
+plot(rondonia_20LMR_class_tcnn)
 ```
 
 
@@ -265,8 +257,7 @@ rondonia_class <- sits_cube(
                "7" = "Wetland")
     )
 
-plot(rondonia_class, 
-     tmap_options = list("scale" = 0.6))
+plot(rondonia_class)
 ```
 
 The above map shows the total extent of deforestation by clear cuts estimated by the `sits` random forest algorithm in an area in Rondonia, Brazil, based on a time series of Sentinel-2 images for the period 2020-06-04 to 2021-08-26. Suppose we want to estimate the deforestation that occurred from June 2020 to August 2021. We need a reference map containing information on forest cuts before 2020. 
@@ -359,8 +350,7 @@ rondonia_def_2021 <- sits_reclassify(
     version = "reclass")
 
 # Plot the reclassified map
-plot(rondonia_def_2021,
-     tmap_options = list("scale" = 0.6))
+plot(rondonia_def_2021)
 ```
 
 The reclassified map has been split into deforestation before mid-2020 (using the PRODES map) and the areas classified by `sits` that are taken as being deforested from mid-2020 to mid-2021. This allows experts to measure how much deforestation occurred in this period according to `sits` and compare the result with the PRODES map. 
