@@ -2269,7 +2269,8 @@ rondonia_20LMR_class <- sits_label_classification(
     version = "rf-raster")
 
 # Plot the thematic map
-plot(rondonia_20LMR_class)
+plot(rondonia_20LMR_class,
+     tmap_options = list("legend_text_size" = 0.7))
 ```
 
 
@@ -2357,7 +2358,7 @@ rondonia_20LMR_probs_tcnn <- sits_classify(
 
 After classification, we can smooth the probability cube and then label the resulting smoothed probabilities to obtain a classified map. 
 
-```{r, tidy="styler", out.width = "100%", fig.align="center", fig.cap="Final map of deforestation obtained using TempCNN model (Source: Authors)."}
+```{r, tidy="styler", out.width = "90%", fig.align="center", fig.cap="Final map of deforestation obtained using TempCNN model (Source: Authors)."}
 # Smoothen the probability map 
 rondonia_20LMR_bayes_tcnn <- sits_smooth(
     rondonia_20LMR_probs_tcnn,
@@ -2375,7 +2376,8 @@ rondonia_20LMR_class_tcnn <- sits_label_classification(
     memsize = 24
 )
 # plot the final classification map
-plot(rondonia_20LMR_class_tcnn)
+plot(rondonia_20LMR_class_tcnn, 
+     tmap_options = list("legend_text_size" = 0.7))
 ```
 
 
@@ -2403,7 +2405,8 @@ rondonia_class <- sits_cube(
                "7" = "Wetland")
     )
 
-plot(rondonia_class)
+plot(rondonia_class, 
+      tmap_options = list("legend_text_size" = 0.7))
 ```
 
 The above map shows the total extent of deforestation by clear cuts estimated by the `sits` random forest algorithm in an area in Rondonia, Brazil, based on a time series of Sentinel-2 images for the period 2020-06-04 to 2021-08-26. Suppose we want to estimate the deforestation that occurred from June 2020 to August 2021. We need a reference map containing information on forest cuts before 2020. 
@@ -2496,7 +2499,8 @@ rondonia_def_2021 <- sits_reclassify(
     version = "reclass")
 
 # Plot the reclassified map
-plot(rondonia_def_2021)
+plot(rondonia_def_2021,
+      tmap_options = list("legend_text_size" = 0.7))
 ```
 
 The reclassified map has been split into deforestation before mid-2020 (using the PRODES map) and the areas classified by `sits` that are taken as being deforested from mid-2020 to mid-2021. This allows experts to measure how much deforestation occurred in this period according to `sits` and compare the result with the PRODES map. 
@@ -2626,7 +2630,8 @@ rondonia_20LLQ_class <- sits_label_classification(
     version = "no_smooth")
 
 # Plot the result
-plot(rondonia_20LLQ_class)
+plot(rondonia_20LLQ_class,
+      tmap_options = list("legend_text_size" = 0.7))
 ```
 
 To remove the outliers and classification errors, we run a smoothing procedure with `sits_smooth()` with parameters: (a) `cube`, a probability cube produced by `sits_classify()`; (b) `window_size`, the local window to compute the neighborhood probabilities; (d) `neigh_fraction`, fraction of local neighbors used to calculate local statistics; (e) `smoothness`, a vector with estimates of the prior variance of each class; (f) `multicores`, number of CPU cores that will be used for processing; (g) `memsize`, memory available for classification; (h) `output_dir`, a directory where results will be stored; (i) `version`, for version control. The resulting cube can be visualized with `plot()`. In what follows, we compare the smoothing effect by varying the `window_size` and `smoothness` parameters. 
@@ -2662,7 +2667,8 @@ defor_map_w7_f05_20 <- sits_label_classification(
     output_dir = "./tempdir/chp8",
     version = "w7-f05-s20")
 
-plot(defor_map_w7_f05_20)
+plot(defor_map_w7_f05_20, 
+      tmap_options = list("legend_text_size" = 0.7))
 ```
 
 In the smoothed map, the outliers have been removed by expanding forest areas. Forests have replaced small corridors of water and soil encircled by trees. This effect is due to the high probability of forest detection in the training data. To keep the water areas and reduce the expansion of the forest area, a viable alternative is to reduce the smoothness ($\sigma^2$) for  Forest and Water classes. In this way, the local influence of the forest in the other classes is reduced. As for the water areas, since they are narrow, their neighborhoods will have many low probability values, which would reduce the expected value of the Bayesian estimator. 
@@ -2691,7 +2697,8 @@ defor_map_w7_f05_swf <- sits_label_classification(
     output_dir = "./tempdir/chp10",
     version = "w7-f05-swf")
 
-plot(defor_map_w7_f05_swf)
+plot(defor_map_w7_f05_swf, 
+      tmap_options = list("legend_text_size" = 0.7))
 ```
 
 Comparing the two maps, the narrow water streams inside the forest area have been better preserved. Small corridors between forest areas have also been maintained. For A better comparison between the two maps requires importing them into QGIS. 
@@ -3330,7 +3337,8 @@ ro_cube_20LMR_rfor_class <- sits_label_classification(
     memsize = 24,
     version = "rfor-raster"
 )
-plot(ro_cube_20LMR_rfor_class)
+plot(ro_cube_20LMR_rfor_class, 
+      tmap_options = list("legend_text_size" = 0.7))
 ```
 
 The next step is to classify the same area using an SVM algorithm, as shown below. 
@@ -3362,7 +3370,8 @@ ro_cube_20LMR_svm_class <- sits_label_classification(
     memsize = 24,
     version = "svm-raster"
 )
-plot(ro_cube_20LMR_svm_class)
+plot(ro_cube_20LMR_svm_class,  
+     tmap_options = list("legend_text_size" = 0.7))
 ```
 
 There is a good agreement between the two results, which  most of the land areas have been classified similarly. The main differences are in the "Clear_Cut_Burned_Area" and "Clear_Cut_Vegetation". The RF algorithm tends to be more conservative and finds less areas than SVM. The reason is because RF decision-making uses values from single attributes (values of a single band in a given time instance). Since the Random Forest model is sensitive to the response of images at the end of the period, it tends to focus on values that indicate the presence of forests during the dry season. The SVM model is more balanced to the overall separation of classes in the entire attribute space. Also note that the study area presents many challenges for land classification, given the presence of wetlands, riparian forests and seasonally-flooded areas. Because of this challenge, both methods make mistakes in including flooded areas as "Clear_Cut_Vegetation" in the center-left part of the image. 
@@ -3388,7 +3397,8 @@ ro_cube_20LMR_average_class <- sits_label_classification(
     multicores = 4)
 
 # Plot the second version of the classified cube
-plot(ro_cube_20LMR_average_class)
+plot(ro_cube_20LMR_average_class, 
+      tmap_options = list("legend_text_size" = 0.7))
 ```
 Compared with the initial map, the result is more similar to the original SVM map than to the RF result, especially as regards the  "Clear_Cut_Burned_Area" class. Such outcome indicates that that SVM is more confident in its predictions than RF when detecting deforestation areas associated with fires. By contrast, the misclassified areas in the center-left part of the map have been reduced. The reason is that some of these areas are indicated in one classifier but not in the other. In this case, the confidence on the deforestation results is not matched by both methods. Thus, in principle, the resulting combined map is more accurate than the individual model outcomes.
 
@@ -3432,7 +3442,8 @@ ro_cube_20LMR_uncert_class <- sits_label_classification(
     multicores = 4)
 
 # Plot the second version of the classified cube
-plot(ro_cube_20LMR_uncert_class)
+plot(ro_cube_20LMR_uncert_class, 
+     tmap_options = list("legend_text_size" = 0.7))
 ```
 
 The result of prediction combination using uncertainty is quite similar to the one produced by the average method. It shows that the SVM method has a higher confidence in its predictions. Overall, ensemble predictions are a powerful tool for improving the accuracy and robustness of machine learning models. By combining the predictions of multiple models, we can reduce errors and uncertainty and gain new insights into the underlying patterns in the data.
