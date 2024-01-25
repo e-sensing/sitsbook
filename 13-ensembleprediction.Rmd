@@ -24,7 +24,8 @@ data_dir <- system.file("extdata/Rondonia-20LMR/", package = "sitsdata")
 ro_cube_20LMR <- sits_cube(
     source = "MPC",
     collection = "SENTINEL-2-L2A",
-    data_dir = data_dir
+    data_dir = data_dir,
+    progress = FALSE
 )
 # train a random forest model
 rfor_model <- sits_train(samples_deforestation, sits_rfor())
@@ -52,7 +53,8 @@ ro_cube_20LMR_rfor_class <- sits_label_classification(
     memsize = 24,
     version = "rfor-raster"
 )
-plot(ro_cube_20LMR_rfor_class)
+plot(ro_cube_20LMR_rfor_class, 
+      tmap_options = list("legend_text_size" = 0.7))
 ```
 
 The next step is to classify the same area using an SVM algorithm, as shown below. 
@@ -84,7 +86,8 @@ ro_cube_20LMR_svm_class <- sits_label_classification(
     memsize = 24,
     version = "svm-raster"
 )
-plot(ro_cube_20LMR_svm_class)
+plot(ro_cube_20LMR_svm_class,  
+     tmap_options = list("legend_text_size" = 0.7))
 ```
 
 There is a good agreement between the two results, which  most of the land areas have been classified similarly. The main differences are in the "Clear_Cut_Burned_Area" and "Clear_Cut_Vegetation". The RF algorithm tends to be more conservative and finds less areas than SVM. The reason is because RF decision-making uses values from single attributes (values of a single band in a given time instance). Since the Random Forest model is sensitive to the response of images at the end of the period, it tends to focus on values that indicate the presence of forests during the dry season. The SVM model is more balanced to the overall separation of classes in the entire attribute space. Also note that the study area presents many challenges for land classification, given the presence of wetlands, riparian forests and seasonally-flooded areas. Because of this challenge, both methods make mistakes in including flooded areas as "Clear_Cut_Vegetation" in the center-left part of the image. 
@@ -111,7 +114,7 @@ ro_cube_20LMR_average_class <- sits_label_classification(
 
 # Plot the second version of the classified cube
 plot(ro_cube_20LMR_average_class, 
-     tmap_options = list("scale" = 0.6))
+      tmap_options = list("legend_text_size" = 0.7))
 ```
 Compared with the initial map, the result is more similar to the original SVM map than to the RF result, especially as regards the  "Clear_Cut_Burned_Area" class. Such outcome indicates that that SVM is more confident in its predictions than RF when detecting deforestation areas associated with fires. By contrast, the misclassified areas in the center-left part of the map have been reduced. The reason is that some of these areas are indicated in one classifier but not in the other. In this case, the confidence on the deforestation results is not matched by both methods. Thus, in principle, the resulting combined map is more accurate than the individual model outcomes.
 
@@ -156,7 +159,7 @@ ro_cube_20LMR_uncert_class <- sits_label_classification(
 
 # Plot the second version of the classified cube
 plot(ro_cube_20LMR_uncert_class, 
-     tmap_options = list("scale" = 0.6))
+     tmap_options = list("legend_text_size" = 0.7))
 ```
 
 The result of prediction combination using uncertainty is quite similar to the one produced by the average method. It shows that the SVM method has a higher confidence in its predictions. Overall, ensemble predictions are a powerful tool for improving the accuracy and robustness of machine learning models. By combining the predictions of multiple models, we can reduce errors and uncertainty and gain new insights into the underlying patterns in the data.

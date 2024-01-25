@@ -4,8 +4,6 @@
 source("common.R")
 dir.create("./tempdir/chp4")
 library(sits)
-sits:::.conf_set_options("tmap_legend_text_size" = 0.7)
-sits:::.conf_set_options("tmap_legend_title_size" = 0.7)
 ```
 
 <a href="https://www.kaggle.com/code/esensing/creating-data-cubes-in-sits" target="_blank"><img src="https://kaggle.com/static/images/open-in-kaggle.svg"/></a>
@@ -148,17 +146,25 @@ plot(s2_L8_cube_MPC, red = "RED", green = "GREEN", blue = "BLUE",
 
 ## Assessing Digital Earth Africa{-}
 
-Digital Earth Africa (DEAFRICA) is a cloud service that provides open-access Earth observation data for the African continent. The ARD image collections in `sits` are `S2_L2A` (Sentinel-2 level 2A) and `LS8_SR` (Landsat-8). Since the STAC interface for DEAFRICA does not implement the concept of tiles, users need to specify their area of interest using the `roi` parameter. The requested `roi` produces a cube that contains three MGRS tiles ("35HLD", "35HKD", and "35HLC") covering part of South Africa. 
-```{r, tidy="styler", out.width="100%", fig.align="center", fig.cap="Sentinel-2 image in an area over South Africa."}
-dea_cube <- sits_cube(
+Digital Earth Africa (DEAFRICA) is a cloud service that provides open-access Earth observation data for the African continent. The ARD image collections in `sits` are `S2_L2A` (Sentinel-2 level 2A) and `LS8_SR` (Landsat-8). Since the STAC interface for DEAFRICA does not implement the concept of tiles, users need to specify their area of interest using the `roi` parameter. The requested `roi` produces a cube that contains one MGRS tiles ("35LPH") covering an area of Madagascar that includes the Betsiboka Estuary.  
+```{r, tidy="styler", out.width="100%", fig.align="center", fig.cap="Sentinel-2 image in an area over Madagascar."}
+dea_s2_cube <- sits_cube(
     source = "DEAFRICA",
     collection = "S2_L2A",
-    roi = c(lon_min = 24.97, lat_min = -34.30,
-            lon_max = 25.87, lat_max = -32.63),
-    bands = c("B05", "B8A", "B11"),
-    start_date = "2019-09-01",
-    end_date = "2019-10-01")
-plot(dea_cube, red = "B11", blue = "B05", green = "B8A")
+    roi = c(
+        lon_min = 46.1, lat_min = -15.6,
+        lon_max = 46.6, lat_max = -16.1
+    ),
+    bands = c(
+        "B02", "B03", "B04",
+        "B05", "B06", "B07",
+        "B08", "B8A", "B11",
+        "B12", "CLOUD"
+    ),
+    start_date = "2019-04-01",
+    end_date = "2019-11-30"
+)
+plot(dea_s2_cube, red = "B04", blue = "B02", green = "B08")
 ```
 
 ## Assessing the Brazil Data Cube{-}
@@ -217,7 +223,7 @@ password <password>
 
 Access to images in NASA HLS is done by region of interest. The following example shows an HLS Sentinel-2 image over the Brazilian coast. 
 
-```{r, tidy="styler", out.width="100%", fig.align="center", fig.cap="Plot of Sentinel-2 image obtained from the NASA HLS collection with a single tile showing the island of Ilhabela in the Brazilian coast."}
+```{r, tidy="styler", echo = TRUE, eval = FALSE}
 # define a region of interest
 roi <- c(lon_min = -45.6422, lat_min = -24.0335,
          lon_max = -45.0840, lat_max = -23.6178)
@@ -236,9 +242,13 @@ hls_cube_s2 <- sits_cube(
 plot(hls_cube_s2, red = "RED", green = "GREEN", blue = "BLUE", date = "2020-06-20")
 ```
 
+```{r, echo = FALSE, eval = TRUE, out.width="100%", fig.align="center", fig.cap="Plot of Sentinel-2 image obtained from the NASA HLS collection for date 2020-06-15 showing the island of Ilhabela in the Brazilian coast."}
+
+knitr::include_graphics("images/hls_ilhabela_s2.png") 
+```
 Images from the HLS Landsat and Sentinel-2 collections are accessed separately and can be combined with `sits_merge()`. The script below creates an HLS Landsat cube over the same area as the Sentinel-2 cube above bands. The two cubes are then merged. 
 
-```{r, tidy="styler"}
+```{r, tidy="styler", echo = TRUE, eval = FALSE}
 # define a region of interest
 roi <- c(lon_min = -45.6422, lat_min = -24.0335,
          lon_max = -45.0840, lat_max = -23.6178)
@@ -257,6 +267,13 @@ hls_cube_l8 <- sits_cube(
 hls_cube_merged <- sits_merge(hls_cube_s2, hls_cube_l8)
 ```
 
+```{r, echo = FALSE, eval = TRUE}
+hls_cube_s2 <- readRDS(file = "./etc/hls_cube_s2.rds")
+hls_cube_l8 <- readRDS(file = "./etc/hls_cube_l8.rds")
+hls_cube_merged <- readRDS(file = "./etc/hls_cube_merged.rds")
+```
+
+
 Comparing the timelines of the original cubes and the merged one, one can see the benefits of the merged collection for time series data analysis. 
 
 ```{r, tidy="styler"}
@@ -271,7 +288,8 @@ sits_timeline(hls_cube_l8)
 # Timeline of the Landsat-8 cube
 sits_timeline(hls_cube_merged)
 ```
-```{r, tidy="styler", out.width="100%", fig.align="center", fig.cap="Plot of Landsat-8 image obtained from the NASA HLS collection with a single tile showing the island of Ilhabela in the Brazilian coast."}
+
+```{r, echo = TRUE, eval = FALSE, tidy="styler"}
 # plotting a harmonized Landsat image from the merged dataset 
 # plot the cube
 plot(hls_cube_merged, 
@@ -279,6 +297,10 @@ plot(hls_cube_merged,
      green = "GREEN", 
      blue = "BLUE", 
      date = "2020-07-11")
+```
+
+```{r, echo = FALSE, eval = TRUE, out.width="100%", fig.align="center", fig.cap="Plot of Sentinel-2 image obtained from the NASA HLS collection for date 2020-06-15 showing the island of Ilhabela in the Brazilian coast."}
+knitr::include_graphics("images/hls_ilhabela_l8.png") 
 ```
 
 ## Defining a data cube using ARD local files{-}
@@ -347,10 +369,7 @@ Rondonia_class_cube <- sits_cube(
     parse_info = c("satellite", "sensor", "tile", "start_date", "end_date", 
                    "band", "version"))
 # Plot the classified cube
-plot(Rondonia_class_cube, 
-     tmap_options = list("tmap_legend_title_size" = 1.0,
-                         "tmap_legend_text_size" = 0.7)
-)
+plot(Rondonia_class_cube)
 ```
 
 ## Regularizing data cubes{-}
@@ -361,7 +380,7 @@ In the following example, the user has created an irregular data cube from the S
 
 ```{r, tidy="styler"}
 # Creating an irregular data cube from MPC
-s2_cube <- sits_cube(
+s2_cube_rondonia <- sits_cube(
     source = "MPC",
     collection = "SENTINEL-2-L2A",
     tiles = c("20LKP", "20LLP"),
@@ -369,14 +388,14 @@ s2_cube <- sits_cube(
     start_date = as.Date("2018-07-01"),
     end_date = as.Date("2018-08-31"))
 # Show the different timelines of the cube tiles
-sits_timeline(s2_cube)
+sits_timeline(s2_cube_rondonia)
 ```
 
 
 ```{r, tidy="styler", out.width="100%", fig.align="center", fig.cap="Sentinel-2 tile 20LLP for date 2018-07-03 (Source: Authors)."}
 # plot the first image of the irregular cube
-s2_cube %>% 
-    dplyr::filter(tile == "20LLP") %>% 
+s2_cube_rondonia |>  
+    dplyr::filter(tile == "20LLP") |>  
     plot(red = "B12", green = "B8A", blue = "B05", date = "2018-07-03")
 ```
 
@@ -384,16 +403,17 @@ Because of the different acquisition orbits of the Sentinel-2 and Sentinel-2A sa
 
 ```{r, tidy="styler", message=FALSE, results='hide', out.width="100%", fig.align="center", fig.cap="Regularized image for tile Sentinel-2 tile 20LLP (Source: Authors)."}
 # Regularize the cube to 15 day intervals
-reg_cube <- sits_regularize(
-          cube       = s2_cube,
+reg_cube_rondonia <- sits_regularize(
+          cube       = s2_cube_rondonia,
           output_dir = "./tempdir/chp4",
           res        = 120,
           period     = "P15D",
           multicores = 4)
+
 # Plot the first image of the tile 20LLP of the regularized cube
 # The pixels of the regular data cube cover the full MGRS tile
-reg_cube %>% 
-    dplyr::filter(tile == "20LLP") %>% 
+reg_cube_rondonia |>
+    dplyr::filter(tile == "20LLP") |>
     plot(red = "B12", green = "B8A", blue = "B05")
 ```
 

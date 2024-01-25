@@ -1,10 +1,7 @@
 # Technical annex {-}
 
-```{r, include = FALSE}
+```{r, eval = FALSE, include = FALSE}
 source("common.R")
-sits:::.conf_set_options("tmap_legend_text_size" = 0.7)
-sits:::.conf_set_options("tmap_legend_title_size" = 0.7)
-sits:::.conf_set_options("tmap_max_cells" = 1e+09) 
 ```
 
 This Chapter contains technical details on the algorithms available in `sits`. It is intended to support those that want to understand how the package works and also want to contribute to its development.
@@ -63,7 +60,7 @@ pred
 
 The predictors tibble is organized as a combination of the "X" and "Y" values used by machine learning algorithms. The first two columns are `sample_id` and `label`. The other columns contain the data values, organized by band and time. For machine learning methods that are not time-sensitive, such as random forest, this organization is sufficient for training. In the case of time-sensitive methods such as `tempCNN`, further arrangements are necessary to ensure the tensors have the right dimensions. Please refer to the `sits_tempcnn()` source code for an example of how to adapt the prediction table to appropriate `torch` tensor.
 
-Most algorithms require data normalization. Therefore, the `sits_predictors()` code is usually combined with methods that extract statistical information and then normalize the data, as in the example below.
+Some algorithms require data normalization. Therefore, the `sits_predictors()` code is usually combined with methods that extract statistical information and then normalize the data, as in the example below.
 
 ```{r, tidy = "styler", eval = FALSE}
  # Data normalization
@@ -89,35 +86,28 @@ sel <- !(train_samples$sample_id %in% test_samples$sample_id)
 train_samples <- train_samples[sel, ]
 ```
 
-<!--
-PEDRO: O trecho abaixo esta confuso porque ele fala de "`lightgbm` algorithm", mas o que existe e'
-lightgbm::lgb.train() e lgb_method(). Acho que seria melhor usar "LightGBM algorithm" ou os
-nomes das funcoes especificas. Os parametros boosting_type, objective, etc. sao da funcao lgb.train(), sendo tambem definidos na funcao lgb_method() implementada abaixo.
--->
-The parameters for the `lightgbm` algorithm, as defined in its documentation, are: (a) `boosting_type`, boosting algorithm; (b) `objective`, classification objective (c) `num_iterations`, number of runs; (d) `max_depth`, maximum tree depth; (d) `min_samples_leaf`,  minimum size of data in one leaf (to avoid overfitting); (f) `learning_rate`,  learning rate of the algorithm; (g) `n_iter_no_change`, number of successive iterations to stop training when validation metrics do not improve; (h) `validation_split`, fraction of training data to be used as validation data. 
+To include the `lightgbm` package as part of `sits`, we need to create a new training function which is compatible with the other machine learning methods of the package and will be called by `sits_train()`. For compatibility, this new function will be called `sits_lightgbm()`. Its implementation uses two functions from the `lightgbm`: (a) `lgb.Dataset()`, which transforms training and test samples into internal structures; (b) `lgb.train()`, which trains the model.
 
-The training part of the `lightgbm` algorithm uses two functions: (a) `lgb.Dataset()`, which transforms training and test samples into internal structures; (b) `lgb.train()`, which trains the model.
+The parameters of `lightgbm::lgb.train()` are: (a) `boosting_type`, boosting algorithm; (b) `objective`, classification objective (c) `num_iterations`, number of runs; (d) `max_depth`, maximum tree depth; (d) `min_samples_leaf`,  minimum size of data in one leaf (to avoid overfitting); (f) `learning_rate`,  learning rate of the algorithm; (g) `n_iter_no_change`, number of successive iterations to stop training when validation metrics do not improve; (h) `validation_split`, fraction of training data to be used as validation data. 
 
 ```{r, tidy = "styler", eval = TRUE}
 # install "lightgbm" package if not available 
 if (!require("lightgbm")) install.packages("lightgbm")
 # create a function in sits style for LightGBM algorithm
-lgb_method <- function(samples = NULL,
-                       boosting_type = "gbdt",
-                       objective = "multiclass",
-                       min_samples_leaf = 10,
-                       max_depth = 6,
-                       learning_rate = 0.1,
-                       num_iterations = 100,
-                       n_iter_no_change = 10,
-                       validation_split = 0.2, ...){
+sits_lightgbm <- function(samples = NULL,
+                          boosting_type = "gbdt",
+                          objective = "multiclass",
+                          min_samples_leaf = 10,
+                          max_depth = 6,
+                          learning_rate = 0.1,
+                          num_iterations = 100,
+                          n_iter_no_change = 10,
+                          validation_split = 0.2, ...){
 
     # function that returns MASS::lda model based on a sits sample tibble
-    result_fun <- function(samples) {
-        # Data normalization
-        ml_stats <- sits_stats(samples)
+    train_fun <- function(samples) {
+        # Extract the predictors
         train_samples <- sits_predictors(samples)
-        train_samples <- sits_pred_normalize(pred = train_samples, stats = ml_stats)
         
         # find number of labels
         labels <- sits_labels(samples)
@@ -173,9 +163,6 @@ lgb_method <- function(samples = NULL,
         predict_fun <- function(values) {
             # reload the model (unserialize)
             lgbm_model <- lightgbm::lgb.load(model_str = lgbm_model_string)
-            # Performs data normalization - returns only values
-            # in the prediction only values are available
-            values <- sits_pred_normalize(pred = values, stats = ml_stats)
             # predict probabilities
             prediction <- stats::predict(lgbm_model,
                                data = as.matrix(values),
@@ -188,20 +175,18 @@ lgb_method <- function(samples = NULL,
             return(prediction)
         }
         # Set model class
-        class(predict_fun) <- c("sits_model", class(predict_fun))
+        class(predict_fun) <- c("lightgbm_model", "sits_model", class(predict_fun))
         return(predict_fun)
     }
-    result <- sits_factory_function(samples, result_fun)
+    result <- sits_factory_function(samples, train_fun)
     return(result)
 }
 ```
 
-The above code has two nested functions: `results_fun()` and `predict_fun()`. When `lgb_method()` is called, it transforms the input samples into predictors and normalizes them. Then, it uses these predictors to train the algorithm, creating a model (`result_mlr`). This model is included as part of the function's closure and becomes available at classification time. Then the code creates `prediction_fun()`, which applies the `result_mlr` model to the input values to be classified. This is the function returned by `results_fun()` which contains all the necessary information for classification. At classification time, the model is called directly.
-
-The last lines of the code also include the convenience function `sits_factory_function()`, shown below. This function allows the model to be called either as part of `sits_train()` or to be called independently, with the same result.
+The above code has two nested functions: `train_fun()` and `predict_fun()`. When `sits_lightgbm()` is called, `train_fun()` transforms the input samples into predictors and uses them to train the algorithm, creating a model (`lgbm_model`). This model is included as part of the function's closure and becomes available at classification time. Inside `train_fun()`, we include `predict_fun()`, which applies the `lgbm_model` object to classify to the input values. The `train_fun` object is then returned as a closure, using the `sits_factory_function` constructor. This function allows the model to be called either as part of `sits_train()` or to be called independently, with the same result.
 
 ```{r, tidy = "styler", eval = FALSE}
-sits_factory_function <- function(samples, fun) {
+sits_factory_function <- function(data, fun) {
     # if no data is given, we prepare a
     # function to be called as a parameter of other functions
     if (purrr::is_null(data)) {
@@ -213,6 +198,16 @@ sits_factory_function <- function(samples, fun) {
     return(result)
 }
 ```
+
+As a result, the following calls are equivalent.
+
+```{r, tidy = "styler", eval = FALSE}
+# building a model using sits_train
+lgbm_model <- sits_train(samples, sits_lightgbm())
+# building a model directly
+lgbm_model <- sits_lightgbm(samples)
+```
+
 
 There is one additional requirement for the algorithm to be compatible with `sits`. Data cube processing algorithms in `sits` run in parallel. For this reason, once the classification model is trained, it is serialized, as shown in the following line. The serialized version of the model is exported to the function closure, so it can be used at classification time.
 
@@ -249,13 +244,13 @@ samples_2bands <- sits_select(
     bands = c("NDVI", "EVI")
 )
 # train lightGBM model
-lgb_model <- sits_train(samples_2bands, lgb_method())
+lgb_model <- sits_train(samples_2bands, sits_lightgbm())
 
 # Classify the data cube
 sinop_probs <- sits_classify(
     data = sinop, 
     ml_model = lgb_model,
-    multicores = 1,
+    multicores = 2,
     memsize = 8,
     output_dir = "./tempdir/chp15"
 )
@@ -269,7 +264,7 @@ sinop_bayes <- sits_smooth(
 # Label the smoothed file 
 sinop_map <- sits_label_classification(
     cube = sinop_bayes, 
-    output_dir = "./tempdir/chp3"
+    output_dir = "./tempdir/chp15"
 )
 # plot the result
 plot(sinop_map, title = "Sinop Classification Map")
@@ -280,36 +275,39 @@ The above example shows how it is possible to extend `sits` with new machine lea
 ## How colors work in sits{-}
 
 In examples provided in the book, the color legend is taken from a predefined color pallete provided by `sits`. The color definition file used by `sits` has 210 class names, which can be shown using `sits_colors()`.
+In examples provided in the book, the color legend is taken from a predefined color pallete provided by `sits`. The default color definition file used by `sits` has 220 class names, which can be shown using `sits_colors()`
 
 ```{r, tidy = "styler", out.width = "100%", out.height = "100%", echo = FALSE, fig.align="center", fig.cap="Default colors used in the sits package (Source: Authors)."}
-# Display default `sits` colors
+# Point default `sits` colors
 sits_colors()
 ```
 
 These colors are grouped by typical legends used by the Earth observation community, which include "IGBP", "UMD", "ESA_CCI_LC", "WORLDCOVER", "PRODES", "PRODES_VISUAL", "TERRA_CLASS", "TERRA_CLASS_PT". The following commands shows the colors associated with the IGBP legend [@Herold2009].
 
-```{r, tidy = "styler", out.width = "100%", out.height = "100%", fig.align="center", fig.cap="Default colors used in the sits package (Source: Authors)."}
+```{r, tidy = "styler", out.width = "100%", out.height = "100%", fig.align="center", fig.cap="Colors used in the sits package to represeny IGBP legend (Source: Authors)."}
 # Display default `sits` colors
 sits_colors_show(legend = "IGBP")
 ```
 
 
-The default color table can be redefined using `sits_colors_set()`. As an example of a user-defined color table, consider a definition that covers level 1 of the Anderson Classification System used in the US National Land Cover Data, obtained by defining a new color table, as shown below. The colors can be defined by HEX values or by names accepted as R color codes.
-```{r, tidy = "styler", out.width = "80%", out.height = "80%", fig.align="center", fig.cap="Example of Anderson Land Classification Scheme use in sits (Source: Authors)."}
+The default color table can be extended using `sits_colors_set()`. As an example of a user-defined color table, consider a definition that covers level 1 of the Anderson Classification System used in the US National Land Cover Data, obtained by defining a set of colors associated to a new legend. The colors should be defined by HEX values and the color names should consist of a single string; multiple names need to be connected with an underscore("_").
+```{r, tidy = "styler", out.width = "100%", out.height = "80%", fig.align="center", fig.cap="Example of defining colors for the Anderson Land Classification Scheme(Source: Authors)."}
 # Define a color table based on the Anderson Land Classification System
 us_nlcd <- tibble::tibble(name = character(), color = character())
-us_nlcd <- us_nlcd %>% 
-  tibble::add_row(name = "Urban Built Up", color =  "#85929E") |> 
-  tibble::add_row(name = "Agricultural Land", color = "#F0B27A") |>  
+us_nlcd <- us_nlcd |>  
+  tibble::add_row(name = "Urban_Built_Up", color =  "#85929E") |> 
+  tibble::add_row(name = "Agricultural_Land", color = "#F0B27A") |>  
   tibble::add_row(name = "Rangeland", color = "#F1C40F") |> 
-  tibble::add_row(name = "Forest Land", color = "#27AE60") |>  
+  tibble::add_row(name = "Forest_Land", color = "#27AE60") |>  
   tibble::add_row(name = "Water", color = "#2980B9") |>  
   tibble::add_row(name = "Wetland", color = "#D4E6F1") |> 
-  tibble::add_row(name = "Barren Land", color = "#FDEBD0") |> 
+  tibble::add_row(name = "Barren_Land", color = "#FDEBD0") |> 
   tibble::add_row(name = "Tundra", color = "#EBDEF0") |> 
-  tibble::add_row(name = "Snow and Ice", color = "#F7F9F9")
+  tibble::add_row(name = "Snow_and_Ice", color = "#F7F9F9")
 # Load the color table into `sits`
-sits_colors_set(us_nlcd)
+sits_colors_set(colors = us_nlcd, legend = "US_NLCD")
+# Show the new legend
+sits_colors_show(legend = "US_NLCD")
 ```
 
 The original default `sits` color table can be restored using `sits_colors_reset()`. 
