@@ -3,7 +3,6 @@
 ```{r, include = FALSE}
 source("common.R")
 dir.create("./tempdir/chp3")
-library(tibble)
 ```
 
 <a href="https://www.kaggle.com/esensing/introduction-to-sits" target="_blank"><img src="https://kaggle.com/static/images/open-in-kaggle.svg"/></a>
@@ -110,7 +109,7 @@ There are two kinds of data cubes in `sits`: (a) irregular data cubes generated 
 
 The first steps in using `sits` are: (a) select an analysis-ready data image collection available in a cloud provider or stored locally using `sits_cube()`; (b) if the collection is not regular, use `sits_regularize()` to build a regular data cube.
 
-This section shows how to build a data cube from local images already organized as a regular data cube. The data cube is composed of MODIS MOD13Q1 images for the Sinop region in Mato Grosso, Brazil. All images have indexes NDVI and EVI covering a one-year period from 2013-09-14 to 2014-08-29 (we use "year-month-day" for dates). There are 23 time instances, each covering a 16-day period. This data is available in the package `sitsdata`.
+This section shows how to build a data cube from local images already organized as a regular data cube. The data cube is composed of MODIS MOD13Q1 images for the region close to the city of Sinop in Mato Grosso, Brazil. This region is one of the world's largest producers of soybeans. All images have indexes NDVI and EVI covering a one-year period from 2013-09-14 to 2014-08-29 (we use "year-month-day" for dates). There are 23 time instances, each covering a 16-day period. This data is available in the package `sitsdata`.
 
 To build a data cube from local files, users must provide information about the original source from which the data was obtained. In this case, `sits_cube()` needs the parameters:
 
@@ -120,20 +119,20 @@ To build a data cube from local files, users must provide information about the 
 (d) `parse_info`, a vector of strings stating how file names store information on "tile", "band", and "date". In this case, local images are stored in files whose names are similar to `TERRA_MODIS_012010_EVI_2014-07-28.tif`. This file represents an image obtained by the MODIS sensor onboard the TERRA satellite, covering part of tile 012010 in the EVI band for date 2014-07-28.
 
 ```{r, out.width = "100%", tidy="styler", fig.align = 'center', fig.cap="Color composite image MODIS cube for NDVI band in 2013-09-14 (Source: Authors)."}
+# load package "tibble"
+library(tibble)
 # load packages "sits" and "sitsdata"
 library(sits)
 library(sitsdata)
-# Create a data cube object based on the information about the files
-sinop <- sits_cube(
+# Create a data cube using local files
+sinop_cube <- sits_cube(
   source = "BDC", 
   collection  = "MOD13Q1-6",
   data_dir = system.file("extdata/sinop", package = "sitsdata"),  
   parse_info = c("satellite", "sensor", "tile", "band", "date")
 )
-# select bands NDVI and EVI
-sinop_2bands <- sits_select(sinop, bands = c("NDVI", "EVI"))
 # Plot the NDVI for the first date (2013-09-14)
-plot(sinop_2bands, 
+plot(sinop_cube, 
      band = "NDVI", 
      dates = "2013-09-14",
      palette = "RdYlGn")
@@ -145,24 +144,50 @@ The R object returned by `sits_cube()` contains the metadata describing the cont
 
 ```{r}
 # Show the R object that describes the data cube
-sinop_2bands
+sinop_cube
 ```
 
-Users can extract 
+The list of image files which make up the data cube is stored as a data frame in the column `file_info`, which can be displayed as follows.
+
+```{r}
+# Show the R object that describes the data cube
+sinop_cube$file_info[[1]]
+```
+
+A key attribute of a data cube is its timeline, as shown below. The command `sits_timeline()` lists the temporal references associated to `sits` objects, including samples, data cubes and models. 
+
+```{r}
+# Show the R object that describes the data cube
+sits_timeline(sinop_cube)
+```
+The timeline of the `sinop_cube` data cube has 23 intervals with a temporal difference of 16 days. The chosen dates capture the agricultural calendar in Mato Grosso, Brazil. The agricultural year starts in September-October with the sowing of the summer crop (in most case soybeans) which is harvested in February-March. Then the winter crop (mostly Corn, Cotton or Millet) is planted in March and harvested in June-July. For LULC classification, the training samples and the date cube should share a timeline with the same number of intervals and similar start and end dates.
 
 ## The time series tibble {-}
 
-To handle time series information, `sits` uses a `tibble`. Tibbles are extensions of the `data.frame` tabular data structures provided by the `tidyverse` set of packages. The example below shows a tibble with 1,218 time series obtained from MODIS MOD13Q1 images. Each series has four attributes: two bands (NIR and MIR) and two indexes (NDVI and EVI). This dataset is available in package `sitsdata`.
+To handle time series information, `sits` uses a `tibble`. Tibbles are extensions of the `data.frame` tabular data structures provided by the `tidyverse` set of packages. The example below shows a tibble with 1,837 time series obtained from MODIS MOD13Q1 images. Each series has four attributes: two bands (NIR and MIR) and two indexes (NDVI and EVI). This dataset is available in package `sitsdata`.
 
 ```{r}
 # Load the MODIS samples for Mato Grosso from the "sitsdata" package
 library(tibble)
 library(sitsdata)
 data("samples_matogrosso_mod13q1", package = "sitsdata")
-samples_matogrosso_mod13q1[1:2,]
+samples_matogrosso_mod13q1
+```
+The time series tibble contains data and metadata. The first six columns contain the metadata: spatial and temporal information, the label assigned to the sample, and the data cube from where the data has been extracted. The `time_series` column contains the time series data for each spatiotemporal location. This data is also organized as a tibble, with a column with the dates and the other columns with the values for each spectral band. The time series can be displayed by showing the `time_series` column.
+
+```{r}
+# Load the time series for MODIS samples for Mato Grosso
+samples_matogrosso_mod13q1[1,]$time_series[[1]]
 ```
 
-The time series tibble contains data and metadata. The first six columns contain the metadata: spatial and temporal information, the label assigned to the sample, and the data cube from where the data has been extracted. The `time_series` column contains the time series data for each spatiotemporal location. This data is also organized as a tibble, with a column with the dates and the other columns with the values for each spectral band. For more details on handling time series data, please see the Chapter [Working with time series](https://e-sensing.github.io/sitsbook/working-with-time-series.html).
+The distribution of samples per class can be obtained using the `summary()` command. The classification schema uses nine labels, four associated to crops ("Soy_Corn", "Soy_Cotton", "Soy_Fallow", "Soy_Millet"), two with natural vegetation ("Cerrado", "Forest") and one to pasture.
+
+```{r}
+# Load the MODIS samples for Mato Grosso from the "sitsdata" package
+summary(samples_matogrosso_mod13q1)
+```
+
+The timeline for all time series associated with the samples follows the same agricultural calendar, starting in September 14th and ending in August 28th. All samples contain 23 values, corresponding to the same temporal interval as those of the `sinop` data cube. For more details on handling time series data, please see the Chapter [Working with time series](https://e-sensing.github.io/sitsbook/working-with-time-series.html).
 
 It is helpful to plot the dispersion of the time series. In what follows, for brevity, we will filter only one label (Forest) and select one index (NDVI). Note that for filtering the label we use a function from `dplyr` package, while for selecting the index we use `sits_select()`. Figure \ref{fig:timeseriesforest}, the resulting plot, shows all the time series associated with the label Forest and index NDVI, highlighting the median and the first and third quartiles.
 
