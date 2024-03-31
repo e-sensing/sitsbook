@@ -4,9 +4,8 @@
 
 This book contains reproducible code that can be run on an R environment. There are three options to setup your working environment:
 
-1. Install R and RStudio (for standard users).
+1. Install R and RStudio and the packages required by `sits`, with specific procedures for each type of operating systems.
 2. Use a Docker image provided by the Brazil Data Cube.
-3. Install from source (for advanced users, usually contributors).
 
 ## Install sits using R and RStudio {.unnumbered}
 
@@ -14,24 +13,65 @@ The standard installation of `sits` is from the Comprehensive R Archive Network 
 
 1. Get and install base R from [CRAN](https://cran.r-project.org/).
 2. Install RStudio from the [Posit website](https://posit.co/).
-3. Run RStudio and install packages `sf` and `terra`, in this order, using the command line:
+
+### Installing in Microsoft Windows and MacOS environments{.unnumbered}
+
+Windows and MacOS users are strongly encouraged to install binary packages from CRAN. The `sits` package relies on the `sf` and `terra` packages, which require the GDAL and PROJ libraries. Run RStudio and install binary packages `sf` and `terra`, in this order:
 
 ```{r, eval = FALSE}
 install.packages("sf")
 install.packages("terra")
 ```
 
-4. Install `sits`:
+After installing the binaries for `sf` and `terra`, install `sits` as follows;
 
 ```{r, eval = FALSE}
 install.packages("sits", dependencies = TRUE)
 ```
 
-5. To run the examples in the book, please also install `sitsdata` package, which is available from GitHub. It is necessary to use package `devtools` to install `sitsdata`.
+To run the examples in the book, please also install `sitsdata` package, which is available from GitHub. It is necessary to use package `devtools` to install `sitsdata`.
 
 ```{r, eval = FALSE}
 install.packages("devtools")
 devtools::install_github("e-sensing/sitsdata")
+```
+
+ To install `sits` from source, please install [Rtools](https://cran.r-project.org/bin/windows/Rtools/) for Windows to have access to the compiling environment. For Mac, please follow the instructions available [here](https://mac.r-project.org/tools/).
+
+### Installing in Ubuntu environments{.unnumbered}
+
+For Ubuntu, the first step should be to install the latest version of the GDAL, GEOS, and PROJ4 libraries and binaries. To do so, use the repository `ubuntugis-unstable`, which should be done as follows:
+
+``` sh
+sudo add-apt-repository ppa:ubuntugis/ubuntugis-unstable
+sudo apt-get update
+sudo apt-get install libudunits2-dev libgdal-dev libgeos-dev libproj-dev 
+sudo apt-get install gdal-bin
+sudo apt-get install proj-bin
+```
+Getting an error while adding this PPA repository could be due to the absence of the package `software-properties-common`. After installing GDAL, GEOS, and PROJ4, please install packages `sf` and `terra`:
+
+```{r, eval = FALSE}
+install.packages("sf")
+install.packages("terra")
+```
+
+Then please proceed to install `sits`, which can be installed as a regular **R** package.
+
+```{r, eval = FALSE}
+install.packages("sits", dependencies = TRUE)
+```
+
+### Installing in Debian environments{.unnumbered}
+
+For Debian,  use the [rocker geospatial](https://github.com/rocker-org/geospatial) dockerfiles. 
+
+### Installing in Fedora environments
+
+In the case of Fedora, the following command installs all required dependencies:
+
+```{sh, eval = FALSE}
+sudo dnf install gdal-devel proj-devel geos-devel sqlite-devel udunits2-devel
 ```
 
 ## Using Docker images {.unnumbered}
@@ -41,46 +81,9 @@ If you are familiar with Docker, there are images for `sits` available with RStu
 - [Version for R and RStudio](https://hub.docker.com/r/brazildatacube/sits-rstudio).
 - [Version for Jupyter Notebooks](https://hub.docker.com/r/brazildatacube/sits-jupyter).
 
-On a Windows or Mac platform, install [Docker](https://docs.docker.com/desktop/install/windows-install/) and then obtain one of the two images listed above from the Brazil Data Cube. Both images contain the full `sits` running environment. 
+On a Windows or Mac platform, install [Docker](https://docs.docker.com/desktop/install/windows-install/) and then obtain one of the two images listed above from the Brazil Data Cube. Both images contain the full `sits` running environment. When GDAL is running in `docker` containers, please add the security flag `--security-opt seccomp=unconfined` on start. 
 
-## Installation from source  {.unnumbered}
-
-The `sits` package relies on the `sf` and `terra` packages, which require the GDAL and PROJ libraries. Please follow the instructions below for installing `sf` and `terra` together with GDAL, provided by Edzer Pebesma.
-
-Windows and MacOS users are strongly encouraged to install the `sf` and `terra` binary packages from CRAN. To install `sits` from source, please install [Rtools](https://cran.r-project.org/bin/windows/Rtools/) for Windows to have access to the compiling environment. For Mac, please follow the instructions available [here](https://mac.r-project.org/tools/).
-
-For Ubuntu, we recommend using the latest version of the GDAL, GEOS, and PROJ4 libraries and binaries. To do so, use the repository `ubuntugis-unstable`, which should be done as follows:
-
-``` sh
-sudo add-apt-repository ppa:ubuntugis/ubuntugis-unstable
-sudo apt-get update
-sudo apt-get install libudunits2-dev libgdal-dev libgeos-dev libproj-dev 
-sudo apt-get install gdal-bin
-sudo apt-get install proj-bin
-```
-
-Getting an error while adding this PPA repository could be due to the absence of the package `software-properties-common`. When GDAL is running in `docker` containers, please add the security flag `--security-opt seccomp=unconfined` on start. 
-
-For Debian,  use the [rocker geospatial](https://github.com/rocker-org/geospatial) dockerfiles. 
-
-In the case of Fedora, the following command installs all required dependencies:
-
-``` sh
-sudo dnf install gdal-devel proj-devel geos-devel sqlite-devel udunits2-devel
-```
-
-After installing GDAL, GEOS, and PROJ4, please install packages `sf` and `terra`, in this order.
-
-```{r, eval = FALSE}
-install.packages("sf")
-install.packages("terra")
-```
-
-After configuring GDAL, GEOS, and PROJ4, please proceed to install `sits`, which can be installed as a regular **R** package.
-
-```{r, eval = FALSE}
-install.packages("sits", dependencies = TRUE)
-```
+## Accessing the development version {.unnumbered}
 
 The source code repository of `sits` is on [GitHub](https://github.com/e-sensing/sits). There are two versions available on GitHub: `master` and `dev`. The `master` contains the current stable version, which is either the same code available in CRAN or a minor update with bug fixes. To install the `master` version, install `devtools` (if not already available) and do as follows: 
 
@@ -95,6 +98,8 @@ To install the `dev` (development) version, which contains the latest updates bu
 install.packages("devtools")
 devtools::install_github("e-sensing/sits@dev", dependencies = TRUE)
 ```
+
+## Additional requirements {.unnumbered}
 
 To run the examples in the book, please also install `sitsdata` package.
 
