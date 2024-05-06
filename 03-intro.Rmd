@@ -118,7 +118,7 @@ To build a data cube from local files, users must provide information about the 
 (c) `data_dir`, the local directory where the image files are stored; 
 (d) `parse_info`, a vector of strings stating how file names store information on "tile", "band", and "date". In this case, local images are stored in files whose names are similar to `TERRA_MODIS_012010_EVI_2014-07-28.tif`. This file represents an image obtained by the MODIS sensor onboard the TERRA satellite, covering part of tile 012010 in the EVI band for date 2014-07-28.
 
-```{r, out.width = "100%", tidy="styler", fig.align = 'center', fig.cap="Color composite image MODIS cube for NDVI band in 2013-09-14 (Source: Authors)."}
+```{r, out.width = "100%", tidy="styler", fig.align = 'center', fig.cap="False color MODIS image for NDVI band in 2013-09-14 from sinop data cube (source: Authors)."}
 # load package "tibble"
 library(tibble)
 # load packages "sits" and "sitsdata"
@@ -128,6 +128,7 @@ library(sitsdata)
 sinop_cube <- sits_cube(
   source = "BDC", 
   collection  = "MOD13Q1-6",
+  bands = c("NDVI", "EVI"),
   data_dir = system.file("extdata/sinop", package = "sitsdata"),  
   parse_info = c("satellite", "sensor", "tile", "band", "date")
 )
@@ -143,14 +144,14 @@ The aim of the `parse_info` parameter is to extract `tile`, `band`, and `date` i
 The R object returned by `sits_cube()` contains the metadata describing the contents of the data cube. It includes data source and collection, satellite, sensor, tile in the collection, bounding box, projection, and list of files. Each file refers to one band of an image at one of the temporal instances of the cube.
 
 ```{r}
-# Show the R object that describes the data cube
+# Show the description of the data cube
 sinop_cube
 ```
 
-The list of image files which make up the data cube is stored as a data frame in the column `file_info`, which can be displayed as follows.
+The list of image files which make up the data cube is stored as a data frame in the column `file_info`. For each file, `sits` stores information about spectral band, reference date, size, spatial resolution, coordinate reference system, bounding box, path to file location and cloud cover information (when available). 
 
 ```{r}
-# Show the R object that describes the data cube
+# Show information on the images files which are part of a data cube
 sinop_cube$file_info[[1]]
 ```
 
@@ -160,11 +161,13 @@ A key attribute of a data cube is its timeline, as shown below. The command `sit
 # Show the R object that describes the data cube
 sits_timeline(sinop_cube)
 ```
-The timeline of the `sinop_cube` data cube has 23 intervals with a temporal difference of 16 days. The chosen dates capture the agricultural calendar in Mato Grosso, Brazil. The agricultural year starts in September-October with the sowing of the summer crop (in most case soybeans) which is harvested in February-March. Then the winter crop (mostly Corn, Cotton or Millet) is planted in March and harvested in June-July. For LULC classification, the training samples and the date cube should share a timeline with the same number of intervals and similar start and end dates.
+The timeline of the `sinop_cube` data cube has 23 intervals with a temporal difference of 16 days. The chosen dates capture the agricultural calendar in Mato Grosso, Brazil. The agricultural year starts in September-October with the sowing of the summer crop (usually soybeans) which is harvested in February-March. Then the winter crop (mostly Corn, Cotton or Millet) is planted in March and harvested in June-July. For LULC classification, the training samples and the date cube should share a timeline with the same number of intervals and similar start and end dates.
 
 ## The time series tibble {-}
 
 To handle time series information, `sits` uses a `tibble`. Tibbles are extensions of the `data.frame` tabular data structures provided by the `tidyverse` set of packages. The example below shows a tibble with 1,837 time series obtained from MODIS MOD13Q1 images. Each series has four attributes: two bands (NIR and MIR) and two indexes (NDVI and EVI). This dataset is available in package `sitsdata`.
+
+The time series tibble contains data and metadata. The first six columns contain the metadata: spatial and temporal information, the label assigned to the sample, and the data cube from where the data has been extracted. The `time_series` column contains the time series data for each spatiotemporal location. This data is also organized as a tibble, with a column with the dates and the other columns with the values for each spectral band. 
 
 ```{r}
 # Load the MODIS samples for Mato Grosso from the "sitsdata" package
@@ -173,12 +176,16 @@ library(sitsdata)
 data("samples_matogrosso_mod13q1", package = "sitsdata")
 samples_matogrosso_mod13q1
 ```
-The time series tibble contains data and metadata. The first six columns contain the metadata: spatial and temporal information, the label assigned to the sample, and the data cube from where the data has been extracted. The `time_series` column contains the time series data for each spatiotemporal location. This data is also organized as a tibble, with a column with the dates and the other columns with the values for each spectral band. The time series can be displayed by showing the `time_series` column.
+
+The timeline for all time series associated with the samples follows the same agricultural calendar, starting in September 14th and ending in August 28th. All samples contain 23 values, corresponding to the same temporal interval as those of the `sinop` data cube. Notice that that although the years for the samples are different, the samples for a given year follow the same agricultural calendar. 
+
+The time series can be displayed by showing the `time_series` column.
 
 ```{r}
 # Load the time series for MODIS samples for Mato Grosso
 samples_matogrosso_mod13q1[1,]$time_series[[1]]
 ```
+
 
 The distribution of samples per class can be obtained using the `summary()` command. The classification schema uses nine labels, four associated to crops ("Soy_Corn", "Soy_Cotton", "Soy_Fallow", "Soy_Millet"), two with natural vegetation ("Cerrado", "Forest") and one to pasture.
 
@@ -187,29 +194,35 @@ The distribution of samples per class can be obtained using the `summary()` comm
 summary(samples_matogrosso_mod13q1)
 ```
 
-The timeline for all time series associated with the samples follows the same agricultural calendar, starting in September 14th and ending in August 28th. All samples contain 23 values, corresponding to the same temporal interval as those of the `sinop` data cube. For more details on handling time series data, please see the Chapter [Working with time series](https://e-sensing.github.io/sitsbook/working-with-time-series.html).
 
-It is helpful to plot the dispersion of the time series. In what follows, for brevity, we will filter only one label (Forest) and select one index (NDVI). Note that for filtering the label we use a function from `dplyr` package, while for selecting the index we use `sits_select()`. Figure \ref{fig:timeseriesforest}, the resulting plot, shows all the time series associated with the label Forest and index NDVI, highlighting the median and the first and third quartiles.
+It is helpful to plot the dispersion of the time series. In what follows, for brevity, we will filter only one label (Forest) and select one index (NDVI). Note that for filtering the label we use a function from `dplyr` package, while for selecting the index we use `sits_select()`. We use two different functions for selection because of they way metadata is stored in a samples files. The labels for the samples are listed in column `label` in the samples tibble, as shown above. In this case, one can use functions from the `dplyr` package to extract subsets. In particular, the function `dplyr::filter` retaining all rows that satisfy a given condition. In the above example, the result of `dplyr::filter` is the set of samples associated to the "Forest" label. The second selection involves obtaining only the values for the NDVI band. This operation requires access to the `time_series` column, which is stored as a list. In this case, selection with `dplyr::filter` will not work. To handle such cases, `sits` provides `sits_select()` to select subsets inside the `time_series` list. 
 
 ```{r, timeseriesforest, out.width = "80%", tidy="styler", fig.align = 'center', fig.cap="Joint plot of all samples in band NDVI for label Forest (Source: Authors).", strip.white = FALSE}
+# select all samples with label "Forest"
 samples_forest <- dplyr::filter(
     samples_matogrosso_mod13q1, 
     label == "Forest"
 )
+# select the NDVI band for all samples with label "Forest"
 samples_forest_ndvi <- sits_select(
     samples_forest, 
     band = "NDVI"
 )
 plot(samples_forest_ndvi)
 ```
+  
+Figure \ref{fig:timeseriesforest} shows all the time series associated with the label Forest and band NDVI (in light blue), highlighting the median (shown in dark red) and the first and third quartiles (shown in brown). The spikes are noise caused by the presence of clouds.
+
+
 
 ## Training a machine learning model {.unnumbered}
 
 The next step is to train a machine learning (ML) model using `sits_train()`. It takes two inputs, `samples` (a time series tibble) and `ml_method` (a function that implements a machine learning algorithm). The result is a model that is used for classification. Each ML algorithm requires specific parameters that are user-controllable. For novice users, `sits` provides default parameters that produce good results. Please see Chapter [Machine learning for data cubes](https://e-sensing.github.io/sitsbook/machine-learning-for-data-cubes.html) for more details.
 
-Since the time series data has four attributes (EVI, NDVI, NIR, and MIR) and the data cube images have only two, we select the NDVI and EVI values and use the resulting data for training. To build the classification model, we use a random forest model called by `sits_rfor()`.
+Since the time series data has four attributes (EVI, NDVI, NIR, and MIR) and the data cube images have only two, we select the NDVI and EVI values and use the resulting data for training. To build the classification model, we use a random forest model called by `sits_rfor()`. Results from the random forest model can vary between different runs, due to the stochastic nature of the algorithm, For this reason, in the code fragment below, we set the seed of R's pseudo-random number generation explicitly to ensure the same results are produced for documentation purposes.
 
 ```{r, out.width = "80%", tidy="styler", fig.align="center", fig.cap="Most relevant variables of trained random forest model (Source: Authors)."}
+set.seed(03022024)
 # Select the bands NDVI and EVI
 samples_2bands <- sits_select(
     data = samples_matogrosso_mod13q1, 
@@ -223,6 +236,8 @@ rf_model <- sits_train(
 # Plot the most important variables of the model
 plot(rf_model)
 ```
+
+The 
 
 ## Data cube classification {.unnumbered}
 

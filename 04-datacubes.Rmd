@@ -36,11 +36,13 @@ Package `sits` supports access to the following ARD image collections:
 
 1. Amazon Web Services (AWS): Open data Sentinel-2/2A level 2A collections for the Earth's land surface. 
 2. Brazil Data Cube (BDC): Open data collections of Sentinel-2/2A, Landsat-8, CBERS-4/4A, and MODIS images for Brazil. These collections are organized as regular data cubes. 
-3. Digital Earth Africa (DEAFRICA): Open data collections of Sentinel-2/2A and Landsat-8 for Africa.
-4. Microsoft Planetary Computer (MPC): Open data collections of Sentinel-2/2A and Landsat-4/5/7/8/9 for the Earth's land areas. 
-5. USGS: Landsat-4/5/7/8/9 collections available in AWS, which require access payment. 
-6. Swiss Data Cube (SDC): Open data collection of Sentinel-2/2A and Landsat-8 images for Switzerland. 
-7. Harmonized Landsat-Sentinel (HLS): HLS, provided by NASA, is a collection that processes Landsat 8 and Sentinel-2 imagery to a common standard.
+3. Digital Earth Africa (DEAFRICA): Open data collections of Sentinel-1 RTC, Sentinel-2/2A, Landsat-5/7/8/9 for Africa. Additional products available include ALOS_PALSAR mosaics, DEM_COP_30, NDVI_ANOMALY based on Landsat data, and monthly and daily rainfall data from CHIRPS. 
+4. Microsoft Planetary Computer (MPC): Open data collections of Sentinel-1 GRD, Sentinel-2/2A and Landsat-4/5/7/8/9 for the Earth's land areas. 
+5. Copernicus Data Space Ecosystem (CDSE): Open data collections of Sentinel-1 RTC and Sentinel-2/2A images. 
+6. Harmonized Landsat-Sentinel (HLS): HLS, provided by NASA, is an open data collection that processes Landsat 8 and Sentinel-2 imagery to a common standard.
+7. USGS: Landsat-4/5/7/8/9 collections available in AWS, which require access payment. 
+8. Swiss Data Cube (SDC): Open data collection of Sentinel-2/2A and Landsat-8 images for Switzerland. 
+
 
 ## Regular image data cubes{-}
 
@@ -104,7 +106,11 @@ plot(s2_23MMU_cube,
 
 ## Assessing Microsoft's Planetary Computer{-}
 
-Microsoft's Planetary Computer (MPC) hosts two open data collections: `SENTINEL-2-L2A` and `LANDSAT-C2-L2`. The first collection contains SENTINEL-2/2A ARD images, with the same bands and resolutions as those available in AWS (see above). The example below shows how to access the `SENTINEL-2-L2A` collection. 
+The `sits` supports access to three open data collection from Microsoft's Planetary Computer (MPC): `SENTINEL-1-GRD`, `SENTINEL-2-L2A` and `LANDSAT-C2-L2`. Also availble is access to the non-open data collection `SENTINEL-1-RTC`. 
+
+### Access to SENTINEL-2/2A images in MPC
+
+The SENTINEL-2/2A ARD images available in MPC have the same bands and resolutions as those available in AWS (see above). The example below shows how to access the `SENTINEL-2-L2A` collection. 
 
 ```{r, tidy="styler",  out.width="100%", fig.align="center", fig.cap= "Sentinel-2 image in an area of the state of Rondonia, Brazil (Source: Authors)."}
 # Create a data cube covering an area in the Brazilian Amazon
@@ -121,6 +127,8 @@ plot(s2_20LKP_cube_MPC, red = "B11", blue = "B02", green = "B8A",
      date = "2019-07-18"
 )
 ```
+
+### Access to LANDSAT-C2-L2 images in MPC
 
 The `LANDSAT-C2-L2` collection provides access to data from Landsat-4/5/7/8/9 satellites. Images from these satellites have been intercalibrated to ensure data consistency. For compatibility between the different Landsat sensors, the band names are BLUE, GREEN, RED,  NIR08,  SWIR16, and SWIR22. All images have 30 m resolution. For this collection,  tile search is not supported; the `roi` parameter should be used. The example below shows how to retrieve data from a region of interest covering the city of Brasilia in Brazil. 
 
@@ -142,6 +150,30 @@ s2_L8_cube_MPC <- sits_cube(
 plot(s2_L8_cube_MPC, red = "RED", green = "GREEN", blue = "BLUE",  
      date = "2019-06-30")
 ```
+
+### Access to SENTINEL-1-GRD images in MPC
+
+Sentinel-1 Level-1 Ground Range Detected (GRD) products consist of focused SAR data that has been detected, multi-looked and projected to ground range using the WGS84 Earth ellipsoid model. Access to Sentinel-1 GRD images can be done either by MGRS tiles or by region of interest `(roi)`. We recommend using the MGRS tiling system for specifying the area of interest, since when these images are regularized, they will be re-projected into MGRS tiles. By default, on;y images in descending orbit are selected. 
+
+The following example shows how to create a data cube of S1 GRD images over a region in Brazil. The resulting cube will not follow any specific projection and its coordinates will be states as EPSG 4326 (latitude/longitude).
+
+```{r, tidy="styler", out.width="100%", fig.align="center", fig.cap= "Landsat-8 image in an area in Northeast Brazil (Source: Authors)."}
+cube_s1_grd <-  sits_cube(
+  source = "MPC",
+  collection = "SENTINEL-1-GRD",
+  bands = c("VV"),
+  orbit = "descending",
+  tiles = c("21LUJ","21LVJ"),
+  start_date = "2021-08-01",
+  end_date = "2021-09-30"
+)
+plot(cube_s1_grd, band = "VV")
+```
+
+In areas with areas with large elevation differences, Sentinel-1 GRD images will have geomteric distortions. 
+
+### Access to SENTINEL-1-RTC images in MPC
+
 
 
 ## Assessing Digital Earth Africa{-}
