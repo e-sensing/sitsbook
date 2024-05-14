@@ -7,7 +7,7 @@ if (!file.exists("./tempdir/chp13"))
     dir.create("./tempdir/chp13")
 ```
 
-Ensemble prediction is a powerful technique for combining predictions from multiple models to produce more accurate and robust predictions. In general, ensemble predictions produce better predictions than using a single model. This is because the errors of individual models can cancel out or be reduced when combined with the predictions of other models. As a result, ensemble predictions can lead to better overall accuracy and reduce the risk of overfitting. This can be especially useful when working with complex or uncertain data. By combining the predictions of multiple models, users can identify which features or factors are most important for making accurate predictions. When using ensemble methods, choosing diverse models with different sources of error is important to ensure that the ensemble predictions are more accurate and robust.
+Ensemble prediction is a powerful technique for combining predictions from multiple models to produce more accurate and robust predictions. In general, ensemble predictions produce better predictions than using a single model. The errors of individual models can cancel out or be reduced when combined with the predictions of other models. As a result, ensemble predictions can lead to better overall accuracy and reduce the risk of overfitting. This can be especially useful when working with complex or uncertain data. By combining the predictions of multiple models, users can identify which features or factors are most important for making accurate predictions. Choosing diverse models with different sources of error is important to ensure that the ensemble predictions are more accurate and robust.
 
 The `sits` package provides `sits_combine_predictions()` to estimate ensemble predictions using probability cubes produced by `sits_classify()` and optionally post-processed with `sits_smooth()`. There are two ways to make ensemble predictions from multiple models:
 
@@ -15,7 +15,7 @@ The `sits` package provides `sits_combine_predictions()` to estimate ensemble pr
 
 * Uncertainty: Predictions from different models are compared in terms of their uncertainties on a pixel-by-pixel basis; predictions with lower uncertainty are chosen as being more likely to be valid. 
 
-In what follows, we will use the same dataset used in Chapter [Image classification in data cubes](https://e-sensing.github.io/sitsbook/image-classification-in-data-cubes.html) to illustrate how to produce an ensemble prediction. We will train two models: Random Forest (RF) and Support Vector Machines (SVM), classify the cube with them, and then combine their results. We first make an RF classification.
+In what follows, we will use the same dataset used in Chapter [Image classification in data cubes](https://e-sensing.github.io/sitsbook/image-classification-in-data-cubes.html) to illustrate how to produce an ensemble prediction. We will train two models: Random Forest (RF) and Support Vector Machines (SVM). Then we classify the cube with them, and finally we combine both results. We first make an RF classification.
 
 ```{r, tidy = "styler", out.width = "100%", fig.align="center", fig.cap= "Land classification in Rondonia using a random forest algorithm  (Source: Authors)."}
 # Files are available in a local directory 
@@ -54,10 +54,10 @@ ro_cube_20LMR_rfor_class <- sits_label_classification(
     version = "rfor-raster"
 )
 plot(ro_cube_20LMR_rfor_class, 
-      tmap_options = list("legend_text_size" = 0.7))
+      tmap_options = list(legend_text_size = 0.7))
 ```
 
-The next step is to classify the same area using an SVM algorithm, as shown below. 
+The next step is to classify the same area using SVM, as shown below. 
 
 ```{r, tidy = "styler", out.width = "100%", fig.align="center", fig.cap= "Land classification in Rondonia using a support vector machine (Source: Authors)."}
 # train an SVM model
@@ -87,14 +87,14 @@ ro_cube_20LMR_svm_class <- sits_label_classification(
     version = "svm-raster"
 )
 plot(ro_cube_20LMR_svm_class,  
-     tmap_options = list("legend_text_size" = 0.7))
+     tmap_options = list(legend_text_size = 0.7))
 ```
 
-There is a good agreement between the two results, which  most of the land areas have been classified similarly. The main differences are in the "Clear_Cut_Burned_Area" and "Clear_Cut_Vegetation". The RF algorithm tends to be more conservative and finds less areas than SVM. The reason is because RF decision-making uses values from single attributes (values of a single band in a given time instance). Since the Random Forest model is sensitive to the response of images at the end of the period, it tends to focus on values that indicate the presence of forests during the dry season. The SVM model is more balanced to the overall separation of classes in the entire attribute space. Also note that the study area presents many challenges for land classification, given the presence of wetlands, riparian forests and seasonally-flooded areas. Because of this challenge, both methods make mistakes in including flooded areas as "Clear_Cut_Vegetation" in the center-left part of the image. 
+Most of the land areas have been classified similarly, indicating a good agreement between the two results. The main differences are in the "Clear_Cut_Burned_Area" and "Clear_Cut_Vegetation". The RF algorithm tends to be more conservative and finds less areas than SVM. The reason is because RF decision-making uses values from single attributes (values of a single band in a given time instance). Since the RF model is sensitive to the response of images at the end of the period, it tends to focus on values that indicate the presence of forests during the dry season. The SVM model is more balanced to the overall separation of classes in the entire attribute space. Also note that the study area presents many challenges for land classification, given the presence of wetlands, riparian forests, and seasonally-flooded areas. Because of this challenge, both methods make mistakes in including flooded areas as "Clear_Cut_Vegetation" in the center-left part of the image. 
 
-Given the differences and complementaries between the two predicted outcomes, combining them using `sits_combine_predictions()` is useful. This function takes the following arguments: (a) `cubes`, a list of the cubes to be combined. These cubes should be probability cubes generated by which optionally may have been smoothened; (b) `type`, which indicates how to combine the probability maps. The options are `average`, which performs a weighted mean of the probabilities, and  `uncertainty`, which uses the uncertainty cubes to combine the predictions; (c) `weights`, a vector of weights to be used to combine the predictions when `average` is selected; (d) `uncertainty_cubes`, a list of uncertainty cubes associated to the predictions;  (e) `multicores`, number of cores to be used; (f) `memsize`, RAM used in the classification; (g) `output_dir`, the directory where the classified raster files will be written.
+Given the differences and complementaries between the two predicted outcomes, combining them using `sits_combine_predictions()` is useful. This function takes the following arguments: (a) `cubes`, a list of the cubes to be combined. These cubes should be probability cubes generated by `sits_classify()`, which optionally may have been smoothened; (b) `type`, which indicates how to combine the probability maps. The options are `average`, which performs a weighted mean of the probabilities, and  `uncertainty`, which uses the uncertainty cubes to combine the predictions; (c) `weights`, a vector of weights to be used to combine the predictions when `average` is selected; (d) `uncertainty_cubes`, a list of uncertainty cubes associated to the predictions;  (e) `multicores`, number of cores to be used; (f) `memsize`, RAM used in the classification; (g) `output_dir`, the directory where the classified raster files will be written.
 
-```{r, tidy = "styler", out.width = "100%", fig.align="center", fig.cap= "Land classification in Rondonia using the average of the probabilities produced by Random Forest and SVM algorithms (Source: Authors)."}
+```{r, tidy = "styler", out.width = "100%", fig.align="center", fig.cap= "Land classification in Rondonia based on averaged probabilities produced by RF and SVM (Source: Authors)."}
 # Combine the two predictions by taking the average of the probabilities for each class
 ro_cube_20LMR_average_probs <- sits_combine_predictions(
   cubes = list(ro_cube_20LMR_svm_bayes, ro_cube_20LMR_rfor_bayes),
@@ -114,13 +114,13 @@ ro_cube_20LMR_average_class <- sits_label_classification(
 
 # Plot the second version of the classified cube
 plot(ro_cube_20LMR_average_class, 
-      tmap_options = list("legend_text_size" = 0.7))
+      tmap_options = list(legend_text_size = 0.7))
 ```
-Compared with the initial map, the result is more similar to the original SVM map than to the RF result, especially as regards the  "Clear_Cut_Burned_Area" class. Such outcome indicates that that SVM is more confident in its predictions than RF when detecting deforestation areas associated with fires. By contrast, the misclassified areas in the center-left part of the map have been reduced. The reason is that some of these areas are indicated in one classifier but not in the other. In this case, the confidence on the deforestation results is not matched by both methods. Thus, in principle, the resulting combined map is more accurate than the individual model outcomes.
+Compared with the initial maps, the result is more similar to the SVM map than to the RF result, especially as regards the  "Clear_Cut_Burned_Area" class. Such outcome indicates that that SVM is more confident in its predictions than RF when detecting deforestation areas associated with fires. By contrast, the misclassified areas in the center-left part of the map have been reduced. The reason is that some of these areas are indicated in one classifier but not in the other. In this case, the confidence on the deforestation results is not matched by both methods. Thus, in principle, the combined map is more accurate than the individual outcomes.
 
 A second way to combine the prediction is to use the uncertainty information associated to the probability of each pixel. In this case, the confidence in each prediction is inversely proportional to its uncertainty. For more information on how to compute the uncertainty of prediction, please refer to Chapter [Uncertainty and active learning](https://e-sensing.github.io/sitsbook/uncertainty-and-active-learning.html). 
 
-```{r, tidy = "styler", out.width = "100%", fig.align="center", fig.cap= "Land classification in Rondonia using the uncertainty of the probabilities produced by Random Forest and SVM algorithms (Source: Authors)."}
+```{r, tidy = "styler", out.width = "100%", fig.align="center", fig.cap= "Land classification in Rondonia using the uncertainty of the probabilities produced by RF and SVM (Source: Authors)."}
 # Calculate the uncertainty of SVM prediction
 ro_cube_20LMR_svm_uncert <- sits_uncertainty(
   ro_cube_20LMR_svm_bayes,
@@ -159,7 +159,12 @@ ro_cube_20LMR_uncert_class <- sits_label_classification(
 
 # Plot the second version of the classified cube
 plot(ro_cube_20LMR_uncert_class, 
-     tmap_options = list("legend_text_size" = 0.7))
+     tmap_options = list(legend_text_size = 0.7))
 ```
 
 The result of prediction combination using uncertainty is quite similar to the one produced by the average method. It shows that the SVM method has a higher confidence in its predictions. Overall, ensemble predictions are a powerful tool for improving the accuracy and robustness of machine learning models. By combining the predictions of multiple models, we can reduce errors and uncertainty and gain new insights into the underlying patterns in the data.
+
+<!--
+PEDRO 1) Teria como calcular a acuracia dos modelos de ensemble para mostrar que eles sao melhores
+do que os modelos de RF e SVM sozinhos?
+-->
