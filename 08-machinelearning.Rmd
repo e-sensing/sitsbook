@@ -1,9 +1,11 @@
 # Machine learning for data cubes{-}
 
-```{r, echo = FALSE}
+```{r, include = FALSE, eval = TRUE, echo = FALSE}
 source("common.R")
 if (!file.exists("./tempdir/chp8"))
     dir.create("./tempdir/chp8")
+library(sits)
+library(sitsdata)
 ```
 
 <a href="https://www.kaggle.com/code/esensing/machine-learning-for-data-cubes" target="_blank"><img src="https://kaggle.com/static/images/open-in-kaggle.svg"/></a>
@@ -15,7 +17,7 @@ In `sits`, machine learning is used to classify individual time series using the
 
 1. Machine learning algorithms that do not explicitly consider the temporal structure of the time series. They treat time series as a vector in a high-dimensional feature space, taking each time series instance as independent from the others. They include random forest (`sits_rfor()`), support vector machine (`sits_svm()`), extreme gradient boosting (`sits_xgboost()`), and multilayer perceptron (`sits_mlp()`). 
 
-2. Deep learning methods where temporal relations between observed values in a time series are taken into account.  These models are specifically designed for time series. The temporal order of values in a time series is relevant for the classification model. From this class of models, `sits` supports 1D convolution neural networks  (`sits_tempcnn()`), residual 1D networks (`sits_resnet()`), and temporal attention-based encoders (`sits_tae()` and `sits_lighttae()`). 
+2. Deep learning methods where temporal relations between observed values in a time series are taken into account.  These models are specifically designed for time series. The temporal order of values in a time series is relevant for the classification model. From this class of models, `sits` supports 1D convolution neural networks  (`sits_tempcnn()`) and temporal attention-based encoders (`sits_tae()` and `sits_lighttae()`). 
 
 Based on experience with `sits`, random forest, extreme gradient boosting, and temporal deep learning models outperform SVM and multilayer perceptron models. The reason is that some dates provide more information than others in the temporal behavior of land classes. For instance, when monitoring deforestation, dates corresponding to forest removal actions are more informative than earlier or later dates. Similarly, a few dates may capture a large portion of the variation in crop mapping. Therefore, classification methods that consider the temporal order of samples are more likely to capture the seasonal behavior of image time series. Random forest and extreme gradient boosting methods that use individual measures as nodes in decision trees can also capture specific events such as deforestation.
 
@@ -27,7 +29,7 @@ The `sits_train()` function provides a standard interface to all machine learnin
 
 Since `sits` is aimed at remote sensing users who are not machine learning experts, it provides a set of default values for all classification models. These settings have been chosen based on testing by the authors. Nevertheless, users can control all parameters for each model. Novice users can rely on the default values, while experienced ones can fine-tune model parameters to meet their needs. Model tuning is discussed at the end of this Chapter. 
 
-When a set of time series organized as tibble is taken as input to the classifier, the result is the same tibble with one additional column ("predicted"), which contains the information on the labels assigned for each interval. The results can be shown in text format using the function `sits_show_prediction()` or graphically using `plot()`.
+When a set of time series organized as tibble is taken as input to the classifier, the result is the same tibble with one additional column (`predicted`), which contains the information on the labels assigned for each interval. The results can be shown in text format using the function `sits_show_prediction()` or graphically using `plot()`.
 
 ## Random forest{-}
 
@@ -99,7 +101,7 @@ point_class <- sits_classify(
 # Plot the result
 plot(point_class, bands = c("NDVI", "EVI"))
 ```
-The SVM classifier is less stable and less robust to outliers than the random forest method. In this example, it tends to misclassify some of the data. In 2008, it is likely that the correct land class was still Pasture rather than Soy_Millet as produced by the algorithm, while the Soy_Cotton class in 2012 is also inconsistent with the previous and latter classification of Soy_Corn.
+The SVM classifier is less stable and less robust to outliers than the random forest method. In this example, it tends to misclassify some of the data. In 2008, it is likely that the correct land class was still `Pasture` rather than `Soy_Millet` as produced by the algorithm, while the `Soy_Cotton` class in 2012 is also inconsistent with the previous and latter classification of `Soy_Corn`.
 
 ## Extreme gradient boosting{-}
 
@@ -146,7 +148,7 @@ The choice of the number of layers depends on the inherent separability of the d
 
 MLP models also need to include the activation function. The activation function of a node defines the output of that node given an input or set of inputs. Following standard practices [@Goodfellow2016], we use the `relu` activation function.
 
-The optimization method (`optimizer`) represents the gradient descent algorithm to be used. These methods aim to maximize an objective function by updating the parameters in the opposite direction of the gradient of the objective function [@Ruder2016]. Based on experience with image time series, we recommend to start using the default method provided by `sits`, which is `optimizer_adamw`, from package `torchopt`. Please refer to the `torchopt` package for additional information.
+The optimization method (`optimizer`) represents the gradient descent algorithm to be used. These methods aim to maximize an objective function by updating the parameters in the opposite direction of the gradient of the objective function [@Ruder2016]. Since gradient descent plays a key role in deep learning model fitting, developing optimizers is an important topic of research [@Bottou2018]. Many optimizers have been proposed in the literature, and recent results are reviewed by Schmidt et al. [@Schmidt2021]. The Adamw optimizer  provides a good baseline and reliable performance for general deep learning applications [@Kingma2017]. By default, all deep learning algorithms in `sits` use Adamw. 
 
 Another relevant parameter is the list of dropout rates (`dropout`). Dropout is a technique for randomly dropping units from the neural network during training [@Srivastava2014]. By randomly discarding some neurons, dropout reduces overfitting. Since a cascade of neural nets aims to improve learning as more data is acquired, discarding some neurons may seem like a waste of resources. In practice, dropout prevents an early convergence to a local minimum [@Goodfellow2016]. We suggest users experiment with different dropout rates, starting from small values (10-30%) and increasing as required.
 
@@ -158,16 +160,17 @@ To simplify the output, the `verbose` option has been turned off. After the mode
 set.seed(290356)
 ```
 
-```{r, tidy="styler", out.width = "80%", warning = FALSE, message = FALSE, fig.align="center", fig.cap="Evolution of training accuracy of MLP model (Source: Authors)."}
+```{r mlp, tidy="styler", out.width = "80%", warning = FALSE, message = FALSE, fig.align="center", fig.cap="Evolution of training accuracy of MLP model (Source: Authors)."}
 # Train using an MLP model
 # This is an example of how to set parameters
 # First-time users should test default options first
 mlp_model <- sits_train(
     samples = samples_matogrosso_mod13q1, 
     ml_method = sits_mlp(
+        optimizer        = torch::optim_adamw, 
         layers           = c(512, 512, 512),
         dropout_rates    = c(0.40, 0.30, 0.20),
-        epochs           = 100,
+        epochs           = 80,
         batch_size       = 64,
         verbose          = FALSE,
         validation_split = 0.2))
@@ -184,7 +187,7 @@ point_mt_mod13q1 |>
     plot(bands = c("NDVI", "EVI"))
 ```
 
-In theory, multilayer perceptron model can capture more subtle changes than random forest and XGBoost In this specific case, the result is similar to theirs. Although the model mixes the Soy_Corn and Soy_Millet classes, the distinction between their temporal signatures is quite subtle. Also, in this case, this suggests the need to improve the number of samples. In this example, the MLP model shows an increase in sensitivity compared to previous models. We recommend to compare different configurations since the MLP model is sensitive to changes in its parameters.
+In theory, multilayer perceptron model can capture more subtle changes than random forest and XGBoost In this specific case, the result is similar to theirs. Although the model mixes the `Soy_Corn` and `Soy_Millet` classes, the distinction between their temporal signatures is quite subtle. Also, in this case, this suggests the need to improve the number of samples. In this example, the MLP model shows an increase in sensitivity compared to previous models. We recommend to compare different configurations since the MLP model is sensitive to changes in its parameters.
 
 ## Temporal Convolutional Neural Network (TempCNN){-}
 
@@ -198,23 +201,23 @@ The TempCNN architecture for satellite image time series classification is propo
 knitr::include_graphics("images/tempcnn.png")
 ```
 
-The function `sits_tempcnn()` implements the model. The parameter `cnn_layers` controls the number of 1D-CNN layers and the size of the filters applied at each layer; the default values are three CNNs with 128 units. The parameter `cnn_kernels` indicates the size of the convolution kernels; the default is kernels of size 7. Activation for all 1D-CNN layers uses the "relu" function. The dropout rates for each 1D-CNN layer are controlled individually by the parameter `cnn_dropout_rates`. The `validation_split` controls the size of the test set relative to the full dataset. We recommend setting aside at least 20% of the samples for validation.
+The function `sits_tempcnn()` implements the model. The first parameter is the `optimizer` used in the backpropagation phase for gradient descent. The default is `adamw` which is considered as a stable and reliable optimization function. The parameter `cnn_layers` controls the number of 1D-CNN layers and the size of the filters applied at each layer; the default values are three CNNs with 128 units. The parameter `cnn_kernels` indicates the size of the convolution kernels; the default is kernels of size 7. Activation for all 1D-CNN layers uses the "relu" function. The dropout rates for each 1D-CNN layer are controlled individually by the parameter `cnn_dropout_rates`. The `validation_split` controls the size of the test set relative to the full dataset. We recommend setting aside at least 20% of the samples for validation.
 
 ```{r, echo = FALSE}
 set.seed(290356)
 ```
 
 
-```{r, tidy="styler", out.width = "80%", warning = FALSE, message = FALSE, fig.align="center", fig.cap="Training evolution of TempCNN model (Source: Authors)."}
+```{r tcnnex, tidy="styler", cache = TRUE, out.width = "80%", warning = FALSE, message = FALSE, fig.align="center", fig.cap="Training evolution of TempCNN model (Source: Authors)."}
 library(torchopt)
 # Train using tempCNN
 tempcnn_model <- sits_train(samples_matogrosso_mod13q1, 
                        sits_tempcnn(
-                          optimizer            = torchopt::optim_adamw,
+                          optimizer            = torch::optim_adamw,
                           cnn_layers           = c(128, 128, 128),
                           cnn_kernels          = c(7, 7, 7),
                           cnn_dropout_rates    = c(0.2, 0.2, 0.2),
-                          epochs               = 100,
+                          epochs               = 80,
                           batch_size           = 64,
                           validation_split     = 0.2,
                           verbose              = FALSE))
@@ -226,48 +229,14 @@ Then, we classify a 16-year time series using the TempCNN model.
 
 ```{r, out.width = "90%", tidy="styler", fig.align="center", fig.cap="Classification of time series using TempCNN (Source: Authors)."}
 # Classify using TempCNN model and plot the result
-class <- point_mt_mod13q1 |>  
+point_mt_mod13q1 |>  
     sits_classify(tempcnn_model) |>  
     plot(bands = c("NDVI", "EVI"))
 ```
 
-The result has important differences from the previous ones. The TempCNN model indicates the Soy_Cotton class as the most likely one in 2004. While this result is possibly wrong, it shows that the time series for 2004 is different from those of Forest and Pasture classes. One possible explanation is that there was forest degradation in 2004, leading to a signature that is a mix of forest and bare soil. In this case, including forest degradation samples could improve the training data. In our experience, TempCNN models are a reliable way of classifying image time series [@Simoes2021]. Recent work which compares different models also provides evidence that TempCNN models have satisfactory behavior, especially in the case of crop classes [@Russwurm2020].
+The result has important differences from the previous ones. The TempCNN model indicates the `Soy_Cotton` class as the most likely one in 2004. While this result is possibly wrong, it shows that the time series for 2004 is different from those of Forest and Pasture classes. One possible explanation is that there was forest degradation in 2004, leading to a signature that is a mix of forest and bare soil. In this case, including forest degradation samples could improve the training data. In our experience, TempCNN models are a reliable way of classifying image time series [@Simoes2021]. Recent work which compares different models also provides evidence that TempCNN models have satisfactory behavior, especially in the case of crop classes [@Russwurm2020].
 
-## Residual 1D CNN networks (ResNet){-}
 
-A residual 1D CNN network, also known as ResNet, is an extension of the standard 1D CNN architecture,  adding residual connections between the layers. Residual connections allow the network to learn residual mappings, which are the difference between the input and output of a layer. By adding these residual connections, the network can learn to bypass specific layers and still capture essential features in the data.
-
-The Residual Network (ResNet) for time series classification was proposed by Wang et al. [@Wang2017], based on the idea of deep residual networks for 2D image recognition [@He2016]. The ResNet architecture comprises 11 layers, with three blocks of three 1D CNN layers each (see Figure \@ref(fig:rnet)). Each block corresponds to a 1D CNN architecture. The output of each block is combined with a shortcut that links its output to its input, called a skip connection. The purpose of combining the input layer of each block with its output layer (after the convolutions) is to avoid the so-called "vanishing gradient problem". This issue occurs in deep networks as the neural network's weights are updated based on the partial derivative of the error function. If the gradient is too small, the weights will not be updated, stopping the training [@Hochreiter1998]. Skip connections aim to avoid vanishing gradients from occurring, allowing deep networks to be trained.
-
-```{r rnet, echo = FALSE, out.width = "100%", fig.align="center", fig.cap="Structure of ResNet architecture (Source: Wang et al. (2017).  Reproduction under fair use doctrine)."}
-knitr::include_graphics("images/resnet.png")
-```
-
-In `sits`, the Residual Network is implemented using `sits_resnet()`. The default parameters are those proposed by Wang et al. [@Wang2017], as implemented by Fawaz et al. [@Fawaz2019]. The first parameter is `blocks`, which controls the number of blocks and the size of filters in each block. By default, the model implements three blocks, the first with 64 filters and the others with 128. The parameter `kernels` controls the size of the kernels of the three layers inside each block. It is useful to experiment a bit with these kernel sizes in the case of satellite image time series. The default activation is "relu", which is recommended in the literature to reduce the problem of vanishing gradients. The default optimizer is `optim_adamw`, available in package `torchopt`.
-
-```{r, tidy="styler", out.width = "100%", warning = FALSE, message = FALSE, fig.align="center", fig.cap="Training evolution of ResNet model (Source: Authors)."}
-# Train using ResNet
-resnet_model <- sits_train(samples_matogrosso_mod13q1, 
-                       sits_resnet(
-                          blocks               = c(64, 128, 128),
-                          kernels              = c(7, 5, 3),
-                          epochs               = 100,
-                          batch_size           = 64,
-                          validation_split     = 0.2,
-                          verbose              = FALSE))
-# Show training evolution
-plot(resnet_model)
-```
-
-Then, we classify a 16-year time series using the ResNet model. The behavior of the ResNet model is similar to that of TempCNN, with more variability.
-
-```{r, tidy="styler", out.width = "100%", fig.align="center", fig.cap="Classification of time series using ResNet (Source: Authors)."}
-# Classify using DL model and plot the result
-class <- point_mt_mod13q1 |>  
-    sits_classify(resnet_model) |>  
-    plot(bands = c("NDVI", "EVI"))
-```
- 
 ## Attention-based models{-}
 
 Attention-based deep learning models are a class of models that use a mechanism inspired by human attention to focus on specific parts of input during processing. These models have been shown to be effective for various tasks such as machine translation, image captioning, and speech recognition.
@@ -288,15 +257,15 @@ The application of attention-based models for satellite image time series analys
 
 The first model proposed by Garnot et al. is a full transformer-based model [@Garnot2020a]. Considering that image time series classification is easier than natural language processing, Garnot et al. also propose a simplified version of the full transformer model [@Garnot2020b]. This simpler model uses a reduced way to compute the attention matrix, reducing time for training and classification without loss of quality of the result. 
 
-In `sits`, the full transformer-based model proposed by Garnot et al. [@Garnot2020a]   is implemented using `sits_tae()`. The default parameters are those proposed by the authors. The default optimizer is the same `optim_adamw`, available in package `torchopt`.
+In `sits`, the full transformer-based model proposed by Garnot et al. [@Garnot2020a]   is implemented using `sits_tae()`. The default parameters are those proposed by the authors. The default optimizer is `optim_adamw`, as also used in the `sits_tempcnn()` function.
 
-```{r, tidy="styler", out.width = "100%", warning = FALSE, message = FALSE, fig.align="center", fig.cap="Training evolution of Temporal Self-Attention model (Source: Authors)."}
+```{r tae, tidy="styler", out.width = "100%", cache = TRUE, warning = FALSE, message = FALSE, fig.align="center", fig.cap="Training evolution of Temporal Self-Attention model (Source: Authors)."}
 # Train a machine learning model using TAE
 tae_model <- sits_train(samples_matogrosso_mod13q1, 
                        sits_tae(
-                          epochs               = 150,
+                          epochs               = 80,
                           batch_size           = 64,
-                          optimizer            = torchopt::optim_adamw,
+                          optimizer            = torch::optim_adamw,
                           validation_split     = 0.2,
                           verbose              = FALSE))
 # Show training evolution
@@ -307,20 +276,20 @@ Then, we classify a 16-year time series using the TAE model.
 
 ```{r, tidy="styler", out.width = "100%", fig.align="center", fig.cap="Classification of time series using TAE (Source: Authors)."}
 # Classify using DL model and plot the result
-class <- point_mt_mod13q1 |>  
+point_mt_mod13q1 |>  
     sits_classify(tae_model) |>  
     plot(bands = c("NDVI", "EVI"))
 ```
 
-Garnot and co-authors also proposed the Lightweight Temporal Self-Attention Encoder (LTAE) [@Garnot2020b], which the authors claim can achieve high classification accuracy with fewer parameters compared to other neural network models. It is a good choice for applications where computational resources are limited. The `sits_lighttae()` function implements this algorithm. The default optimizer is `optim_adamw`, available in package `torchopt`. The most important parameter to be set is the learning rate `lr`. Values ranging from 0.001 to 0.005 should produce good results. See also the section below on model tuning. 
+Garnot and co-authors also proposed the Lightweight Temporal Self-Attention Encoder (LTAE) [@Garnot2020b], which the authors claim can achieve high classification accuracy with fewer parameters compared to other neural network models. It is a good choice for applications where computational resources are limited. The `sits_lighttae()` function implements this algorithm. The most important parameter to be set is the learning rate `lr`. Values ranging from 0.001 to 0.005 should produce good results. See also the section below on model tuning. 
 
-```{r, tidy="styler", out.width = "80%", warning = FALSE, message = FALSE, fig.align="center", fig.cap="Training evolution of Lightweight Temporal Self-Attention model (Source: Authors)."}
+```{r ltae, tidy="styler", out.width = "80%", warning = FALSE, message = FALSE, fig.align="center", fig.cap="Training evolution of Lightweight Temporal Self-Attention model (Source: Authors)."}
 # Train a machine learning model using TAE
 ltae_model <- sits_train(samples_matogrosso_mod13q1, 
                        sits_lighttae(
-                          epochs               = 150,
+                          epochs               = 80,
                           batch_size           = 64,
-                          optimizer            = torchopt::optim_adamw,
+                          optimizer            = torch::optim_adamw,
                           opt_hparams = list(lr = 0.001),
                           validation_split     = 0.2))
 # Show training evolution
@@ -331,7 +300,7 @@ Then, we classify a 16-year time series using the LightTAE model.
 
 ```{r, tidy="styler", out.width = "100%", fig.align="center", fig.cap="Classification of time series using LightTAE (Source: Authors)."}
 # Classify using DL model and plot the result
-class <- point_mt_mod13q1 |>  
+point_mt_mod13q1 |>  
     sits_classify(ltae_model) |>  
     plot(bands = c("NDVI", "EVI"))
 ```
@@ -352,7 +321,7 @@ To reduce the learning curve, `sits` provides default values for all machine lea
 
 The most straightforward approach to model tuning is to run a grid search; this involves defining a range for each hyperparameter and then testing all possible combinations. This approach leads to a combinatorial explosion and thus is not recommended. Instead, Bergstra and Bengio propose randomly chosen trials [@Bergstra2012]. Their paper shows that randomized trials are more efficient than grid search trials, selecting adequate hyperparameters at a fraction of the computational cost. The `sits_tuning()` function follows Bergstra and Bengio by using a random search on the chosen hyperparameters.
 
-Since gradient descent plays a key role in deep learning model fitting, developing optimizers is an important topic of research [@Bottou2018]. Many optimizers have been proposed in the literature, and recent results are reviewed by Schmidt et al. [@Schmidt2021]. The Adamw optimizer  provides a good baseline and reliable performance for general deep learning applications [@Kingma2017]. 
+
 
 Experiments with image time series show that other optimizers may have better performance for the specific problem of land classification. For this reason, the authors developed the  `torchopt` R package, which includes several recently proposed optimizers, including Madgrad [@Defazio2021], and Yogi [@Zaheer2018]. Using the `sits_tuning()` function allows testing these and other optimizers available in `torch` and `torch_opt` packages.  
 
@@ -361,13 +330,13 @@ The `sits_tuning()` function takes the following parameters:
 1. `samples`: Training dataset to be used by the model.
 2. `samples_validation`: Optional dataset containing time series to be used for validation. If missing, the next parameter will be used.
 3. `validation_split`: If `samples_validation` is not used, this parameter defines the proportion of time series in the training dataset to be used for validation (default is 20%).
-4. `ml_method()`: Deep learning method (either `sits_mlp()`, `sits_tempcnn()`, `sits_resnet()`, `sits_tae()` or `sits_lighttae()`).
+4. `ml_method()`: Deep learning method (either `sits_mlp()`, `sits_tempcnn()`, `sits_tae()` or `sits_lighttae()`).
 5. `params`: Defines the optimizer and its hyperparameters by calling  `sits_tuning_hparams()`, as shown in the example below. 
 6. `trials`: Number of trials to run the random search.
 7. `multicores`: Number of cores to be used for the procedure.
 8. `progress`: Show a progress bar?
 
-The `sits_tuning_hparams()` function inside `sits_tuning()` allows defining optimizers and their hyperparameters, including `lr` (learning rate), `eps` (controls numerical stability), and `weight_decay` (controls overfitting). The default values for `eps` and `weight_decay` in all `sits` deep learning functions are 1e-08  and 1e-06, respectively. The default `lr` for `sits_lighttae()` and `sits_tempcnn()` is  0.005, and for `sits_tae()` and `sits_resnet()` is 0.001. 
+The `sits_tuning_hparams()` function inside `sits_tuning()` allows defining optimizers and their hyperparameters, including `lr` (learning rate), `eps` (controls numerical stability), and `weight_decay` (controls overfitting). The default values for `eps` and `weight_decay` in all `sits` deep learning functions are 1e-08  and 1e-06, respectively. The default `lr` for `sits_lighttae()` and `sits_tempcnn()` is  0.005. 
 
 Users have different ways to randomize the hyperparameters, including: 
 
@@ -426,7 +395,7 @@ For large datasets, the tuning process is time-consuming. Despite this cost, it 
 
 The results should not be taken as an indication of which method performs better. The most crucial factor for achieving a good result is the quality of the training data [@Maxwell2018]. Experience shows that classification quality depends on the training samples and how well the model matches these samples. For examples of ML for classifying large areas, please see the papers by the authors [@Picoli2018; @Picoli2020a; @Simoes2020; @Ferreira2020a].
 
-In the specific case of satellite image time series, Russwurm et al. present a comparative study between seven deep neural networks for the classification of agricultural crops, using random forest as a baseline [@Russwurm2020]. The data is composed of Sentinel-2 images over Britanny, France. Their results indicate a slight difference between the best model (attention-based transformer model) over TempCNN, ResNet, and random forest. Attention-based models obtain accuracy ranging from 80-81%, TempCNN gets 78-80%, and random forest obtains 78%. Based on this result and also on the authors' experience, we make the following recommendations:
+In the specific case of satellite image time series, Russwurm et al. present a comparative study between seven deep neural networks for the classification of agricultural crops, using random forest as a baseline [@Russwurm2020]. The data is composed of Sentinel-2 images over Britanny, France. Their results indicate a slight difference between the best model (attention-based transformer model) over TempCNN and random forest. Attention-based models obtain accuracy ranging from 80-81%, TempCNN gets 78-80%, and random forest obtains 78%. Based on this result and also on the authors' experience, we make the following recommendations:
 
 1.  Random forest provides a good baseline for image time series classification and should be included in users' assessments. 
 

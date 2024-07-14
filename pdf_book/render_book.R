@@ -1,5 +1,5 @@
 bookdown::render_book(
-    new_session = FALSE,
+    new_session = TRUE,
     config_file = "_bookdown.yml",
     output_format =  rmarkdown::pdf_document(
         toc = TRUE,
@@ -15,12 +15,10 @@ bookdown::render_book(
     )
 )
 
-rmarkdown::render_site("./docs/", 
-                       output_format = 'bookdown::pdf_book', 
-                       encoding = 'UTF-8')
-
 # 
 bookdown::render_book(
+    new_session = TRUE,
+    config_file = "_bookdown.yml",
     output_format = bookdown::bs4_book(
         df_print = "tibble",
         theme = bookdown::bs4_book_theme(
@@ -32,4 +30,17 @@ bookdown::render_book(
         ),
     )
 )
-
+bookdown::preview_chapter(
+    input = "13-ensembleprediction.Rmd", 
+    config_file = "_bookdown.yml",
+    output_format = bookdown::bs4_book(
+        df_print = "tibble",
+        theme = bookdown::bs4_book_theme(
+            base_font = sass::font_google(
+                "IBM Plex Serif",
+                wght = c(300, 400, 600)
+            ),
+            code_font = sass::font_google("IBM Plex Mono")
+        ),
+    )
+)

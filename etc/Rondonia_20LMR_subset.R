@@ -1,22 +1,30 @@
-data_dir <- "/Users/gilbertocamara/rondonia20LMR/inst/extdata/images/"
+library(sitsdata)
+library(sits)
+sits_bands(samples_deforestation)
+data_dir <- "/Users/gilberto/rondonia20LMR/inst/extdata/images/"
 
 cube_20LMR <- sits_cube(
     source = "MPC",
     collection = "SENTINEL-2-L2A",
-    bands = c("B02", "B8A", "B11"),
+    bands = c("B02", "B8A", "B11", "NDVI", "EVI", "NBR"),
     data_dir = data_dir
 )
 
 files <- list.files(data_dir)
 
-output_dir <- "/Users/gilbertocamara/sitsdata/inst/extdata/Rondonia-20LMR/"
+files
+output_dir <- "/Users/gilberto/sitsdata/inst/extdata/Rondonia-20LMR/"
 
 new_files <- purrr::map_chr(files, function(file){
+    old_file <- paste0(data_dir, file)
     new_file <- paste0(output_dir, file)
     gdalUtilities::gdal_translate(
-        src_dataset = file,
+        src_dataset = old_file,
         dst_dataset = new_file,
-        srcwin = c(1500, 1500, 1200, 1200)
+        srcwin = c(1500, 1500, 1200, 1200),
+        co = c("COMPRESS=LZW", "PREDICTOR=2",
+               "BIGTIFF=YES", "TILED=YES",
+               "BLOCKXSIZE=512", "BLOCKYSIZE=512")
     )
     return(new_file)
 })

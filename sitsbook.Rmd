@@ -5,8 +5,8 @@ author:
 - Gilberto Camara
 - Rolf Simoes
 - Felipe Souza
-- Charlotte Pelletier
 - Felipe Menino
+- Charlotte Pelletier
 - Pedro R. Andrade
 - Karine Ferreira
 - Gilberto Queiroz
@@ -60,12 +60,14 @@ Placeholder
 
 
 ## How to use this on-line book {.unnumbered}
-## Install sits using R and RStudio {.unnumbered}
+## How to install sits using R and RStudio {.unnumbered}
+## Installing `sits` from CRAN {.unnumbered}
 ### Installing in Microsoft Windows and MacOS environments{.unnumbered}
 ### Installing in Ubuntu environments{.unnumbered}
 ### Installing in Debian environments{.unnumbered}
 ### Installing in Fedora environments
 ## Using Docker images {.unnumbered}
+## Install `sits` from CONDA {.unnumbered}
 ## Accessing the development version {.unnumbered}
 ## Additional requirements {.unnumbered}
 ## Using GPUs with `sits` {.unnumbered}
@@ -86,307 +88,24 @@ Placeholder
 
 <!--chapter:end:02-acknowledgements.Rmd-->
 
+
 # Introduction{-}
 
-```{r, include = FALSE}
-source("common.R")
-dir.create("./tempdir/chp3")
-```
+Placeholder
 
-<a href="https://www.kaggle.com/esensing/introduction-to-sits" target="_blank"><img src="https://kaggle.com/static/images/open-in-kaggle.svg"/></a>
 
 ## Why work with satellite image time series?{-}
-
-Satellite images are the most comprehensive source of data about our environment.  Covering a large area of the Earth's surface, images allow researchers to study regional and global changes. Sensors capture data in multiple spectral bands to measure the physical, chemical, and biological properties of the Earth's surface. By observing the same location multiple times, satellites provide data on changes in the environment and survey areas that are difficult to observe from the ground. Given its unique features, images offer essential information for many applications, including deforestation, crop production, food security, urban footprints, water scarcity, and land degradation.
-
-A time series is a set of data points collected at regular intervals over time. Time series data is used to analyze trends, patterns, and changes. Satellite image time series refer to time series obtained from a collection of images captured by a satellite over a period of time, typically months or years. Using time series, experts improve their understanding of ecological patterns and processes. Instead of selecting individual images from specific dates and comparing them, researchers track change continuously [@Woodcock2020]. 
-
 ## Time-first, space-later{-}
-
-"Time-first, space-later" is a concept in satellite image classification that takes time series analysis as the first step for analyzing remote sensing data, with spatial information being considered after all time series are classified. The *time-first* part brings a better understanding of changes in landscapes. Detecting and tracking seasonal and long-term trends becomes feasible, as well as identifying anomalous events or patterns in the data, such as wildfires, floods, or droughts. Each pixel in a data cube is treated as a time series, using information available in the temporal instances of the case. Time series classification is pixel-based, producing a set of labeled pixels. This result is then used as input to the *space-later* part of the method. In this phase, a smoothing algorithm improves the results of time-first classification by considering the spatial neighborhood of each pixel. The resulting map thus combines both spatial and temporal information.
-
 ## How `sits` works {.unnumbered}
-
-The `sits` package uses satellite image time series for land classification, using  a *time-first, space-later* approach. In the data preparation part, collections of big Earth observation images are organized as data cubes. Each spatial location of a data cube is associated with a time series. Locations with known labels train a machine learning algorithm, which classifies all time series of a data cube, as shown in Figure \@ref(fig:gview).
-
-```{r gview, echo = FALSE, out.width = "70%", out.height = "70%", fig.align="center", fig.cap="Using time series for land classification (Source: Authors)."}
-knitr::include_graphics("images/sits_general_view.png")
-```
-
-The package provides tools for analysis, visualization, and classification of satellite image time series. Users follow a typical workflow for a pixel-based classification:
-
-1.  Select an analysis-ready data image collection from a cloud provider such as AWS, Microsoft Planetary Computer, Digital Earth Africa, or Brazil Data Cube.
-2.  Build a regular data cube using the chosen image collection.
-3.  Obtain new bands and indices with operations on data cubes.
-4.  Extract time series samples from the data cube to be used as training data.
-5.  Perform quality control and filtering on the time series samples.
-6.  Train a machine learning model using the time series samples.
-7.  Classify the data cube using the model to get class probabilities for each pixel.
-8.  Post-process the probability cube to remove outliers.
-9.  Produce a labeled map from the post-processed probability cube.
-10. Evaluate the accuracy of the classification using best practices.
-
-Each workflow step corresponds to a function of the `sits` API, as shown in the Table below and Figure \@ref(fig:api). These functions have convenient default parameters and behaviors. A single function builds machine learning (ML) models. The classification function processes big data cubes with efficient parallel processing. Since the `sits` API is simple to learn, achieving good results do not require in-depth knowledge about machine learning and parallel processing.
-
-
-```{r, echo = FALSE}
-library(kableExtra)
-
-sits_api <- data.frame(
-    API_function = c("sits_cube()", 
-                     "sits_regularize()",
-                     "sits_apply()",
-                     "sits_get_data()",
-                     "sits_train()", 
-                     "sits_classify()", 
-                     "sits_smooth()",
-                     "sits_uncertainty()",
-                     "sits_label_classification()", 
-                     "sits_accuracy()"),
-    Inputs = c("ARD image collection", 
-               "Irregular data cube", 
-               "Regular data cube", 
-               "Data cube and sample locations",
-               "Time series and ML method", 
-               "ML classification model and regular data cube",
-               "Probability cube", 
-               "Post-processed probability cube",
-               "Post-processed probability cube",
-               "Classified map and validation samples"),
-    Output = c("Irregular data cube", 
-               "Regular data cube",
-               "Regular data cube with new bands and indices",
-               "Time series",
-               "ML classification model", 
-               "Probability cube", 
-               "Post-processed probability cube",
-               "Uncertainty cube",
-               "Classified map",
-               "Accuracy assessment"))
-
-kableExtra::kbl(sits_api,
-                caption = "The sits API workflow for land classification.",
-                booktabs = TRUE) |>
-    kableExtra::kable_styling(position = "center",
-                              font_size = 14,
-                              latex_options = c("scale_down", "HOLD_position")) |>
-    kableExtra::column_spec(column = 1, monospace = TRUE, color =  "RawSienna")
-```
-
-
-```{r api, echo = FALSE, out.width = "100%", out.height = "100%", fig.align="center", fig.cap="Main functions of the sits API (Source: Authors)."}
-
-knitr::include_graphics("images/sits_api.png") 
-```
-
-Additionally, experts can perform object-based image analysis (OBIA) with `sits`. In this case, before classifying the time series, one can use `sits_segments()` to create a set of closed polygons. These polygons are classified using a subset of the time series contained inside each segment. For details, see Chapter [Object-based time series image analysis](https://e-sensing.github.io/sitsbook/object-based-time-series-image-analysis.html).
-
 ## Land use and land cover{-}
-
-Since `sits` aims mainly to support land use and land cover classification, this section presents a short discussion on the use of these terms. The UN Food and Agriculture Organization defines land cover as "the observed biophysical cover on the Earth's surface" [@DiGregorio2016]. Land cover can be observed and mapped directly through remote sensing images. In FAO's guidelines and reports, land use is described as "the human activities or purposes for which land is managed or exploited". FAO's land use classifications include classes such as cropland and pasture. Although *land cover* and *land use* denote different approaches for describing the Earth's landscape, in practice there is considerable overlap between these concepts [@Comber2008b]. When classifying remote sensing images, natural areas are classified using land cover types (e.g, forest), while human-modified areas are described with land use classes (e.g., pasture). 
-
-One of the advantages of using image time series for land classification is its capacity of measuring changes in the landscape related to agricultural practices. For example, the time series of a vegetation index in an area of crop production will show a pattern of minima (planting and sowing stages) and maxima (flowering stage). Thus, classification schemas based on image time series data can be richer and more detailed than those associated only with land cover. In what follows, we use the term "land classification" to refer to image classification representing both land cover and land use classes.
-
 ## Classes and labels{-}
-
-In this book, we distinguish between the concepts of "class" and "label". A class denotes a group of spatial objects that share similar land cover and land use types, such as urban areas, forests, water bodies, or agricultural fields. Classes are defined based on the specific application or study being conducted, and they help to analyse the vast amount of data obtained from remote sensing imagery. A label is the assignment or identification given to a specific feature or object within an image. Labels are markers that indicate to which class a particular pixel, segment, or object belongs. Labels are essential for supervised classification methods, where a training dataset with known labels is used to train a machine learning algorithm to recognize and classify new, unlabeled data. Thus, a "class" represents the overall category or group of features, while a "label" refers to the specific assignment of a class to a particular feature or object within an image. 
-
 ## Creating a data cube {.unnumbered}
-
-There are two kinds of data cubes in `sits`: (a) irregular data cubes generated by selecting image collections on cloud providers such as AWS and Planetary Computer; (b) regular data cubes with images fully covering a chosen area, where each image has the same spectral bands and spatial resolution, and images follow a set of adjacent and regular time intervals. Machine learning applications need regular data cubes. Please refer to Chapter [Earth observation data cubes](https://e-sensing.github.io/sitsbook/earth-observation-data-cubes.html) for further details.
-
-The first steps in using `sits` are: (a) select an analysis-ready data image collection available in a cloud provider or stored locally using `sits_cube()`; (b) if the collection is not regular, use `sits_regularize()` to build a regular data cube.
-
-This section shows how to build a data cube from local images already organized as a regular data cube. The data cube is composed of MODIS MOD13Q1 images for the region close to the city of Sinop in Mato Grosso, Brazil. This region is one of the world's largest producers of soybeans. All images have indexes NDVI and EVI covering a one-year period from 2013-09-14 to 2014-08-29 (we use "year-month-day" for dates). There are 23 time instances, each covering a 16-day period. This data is available in the package `sitsdata`.
-
-To build a data cube from local files, users must provide information about the original source from which the data was obtained. In this case, `sits_cube()` needs the parameters:
-
-(a) `source`, the cloud provider from where the data has been obtained (in this case, the Brazil Data Cube "BDC");
-(b) `collection`, the collection of the cloud provider from where the images have been extracted. In this case, data comes from the MOD13Q1 collection 6; 
-(c) `data_dir`, the local directory where the image files are stored; 
-(d) `parse_info`, a vector of strings stating how file names store information on "tile", "band", and "date". In this case, local images are stored in files whose names are similar to `TERRA_MODIS_012010_EVI_2014-07-28.tif`. This file represents an image obtained by the MODIS sensor onboard the TERRA satellite, covering part of tile 012010 in the EVI band for date 2014-07-28.
-
-```{r, out.width = "100%", tidy="styler", fig.align = 'center', fig.cap="Color composite image MODIS cube for NDVI band in 2013-09-14 (Source: Authors)."}
-# load package "tibble"
-library(tibble)
-# load packages "sits" and "sitsdata"
-library(sits)
-library(sitsdata)
-# Create a data cube using local files
-sinop_cube <- sits_cube(
-  source = "BDC", 
-  collection  = "MOD13Q1-6",
-  data_dir = system.file("extdata/sinop", package = "sitsdata"),  
-  parse_info = c("satellite", "sensor", "tile", "band", "date")
-)
-# Plot the NDVI for the first date (2013-09-14)
-plot(sinop_cube, 
-     band = "NDVI", 
-     dates = "2013-09-14",
-     palette = "RdYlGn")
-```
-
-The aim of the `parse_info` parameter is to extract `tile`, `band`, and `date` information from the file name. Given the large variation in image file names generated by different produces, it includes designators such as `X1` and `X2`; these are place holders for parts of the file name that is not relevant to `sits_cube()`. 
-
-The R object returned by `sits_cube()` contains the metadata describing the contents of the data cube. It includes data source and collection, satellite, sensor, tile in the collection, bounding box, projection, and list of files. Each file refers to one band of an image at one of the temporal instances of the cube.
-
-```{r}
-# Show the R object that describes the data cube
-sinop_cube
-```
-
-The list of image files which make up the data cube is stored as a data frame in the column `file_info`, which can be displayed as follows.
-
-```{r}
-# Show the R object that describes the data cube
-sinop_cube$file_info[[1]]
-```
-
-A key attribute of a data cube is its timeline, as shown below. The command `sits_timeline()` lists the temporal references associated to `sits` objects, including samples, data cubes and models. 
-
-```{r}
-# Show the R object that describes the data cube
-sits_timeline(sinop_cube)
-```
-The timeline of the `sinop_cube` data cube has 23 intervals with a temporal difference of 16 days. The chosen dates capture the agricultural calendar in Mato Grosso, Brazil. The agricultural year starts in September-October with the sowing of the summer crop (in most case soybeans) which is harvested in February-March. Then the winter crop (mostly Corn, Cotton or Millet) is planted in March and harvested in June-July. For LULC classification, the training samples and the date cube should share a timeline with the same number of intervals and similar start and end dates.
-
 ## The time series tibble {-}
-
-To handle time series information, `sits` uses a `tibble`. Tibbles are extensions of the `data.frame` tabular data structures provided by the `tidyverse` set of packages. The example below shows a tibble with 1,837 time series obtained from MODIS MOD13Q1 images. Each series has four attributes: two bands (NIR and MIR) and two indexes (NDVI and EVI). This dataset is available in package `sitsdata`.
-
-```{r}
-# Load the MODIS samples for Mato Grosso from the "sitsdata" package
-library(tibble)
-library(sitsdata)
-data("samples_matogrosso_mod13q1", package = "sitsdata")
-samples_matogrosso_mod13q1
-```
-The time series tibble contains data and metadata. The first six columns contain the metadata: spatial and temporal information, the label assigned to the sample, and the data cube from where the data has been extracted. The `time_series` column contains the time series data for each spatiotemporal location. This data is also organized as a tibble, with a column with the dates and the other columns with the values for each spectral band. The time series can be displayed by showing the `time_series` column.
-
-```{r}
-# Load the time series for MODIS samples for Mato Grosso
-samples_matogrosso_mod13q1[1,]$time_series[[1]]
-```
-
-The distribution of samples per class can be obtained using the `summary()` command. The classification schema uses nine labels, four associated to crops ("Soy_Corn", "Soy_Cotton", "Soy_Fallow", "Soy_Millet"), two with natural vegetation ("Cerrado", "Forest") and one to pasture.
-
-```{r}
-# Load the MODIS samples for Mato Grosso from the "sitsdata" package
-summary(samples_matogrosso_mod13q1)
-```
-
-The timeline for all time series associated with the samples follows the same agricultural calendar, starting in September 14th and ending in August 28th. All samples contain 23 values, corresponding to the same temporal interval as those of the `sinop` data cube. For more details on handling time series data, please see the Chapter [Working with time series](https://e-sensing.github.io/sitsbook/working-with-time-series.html).
-
-It is helpful to plot the dispersion of the time series. In what follows, for brevity, we will filter only one label (Forest) and select one index (NDVI). Note that for filtering the label we use a function from `dplyr` package, while for selecting the index we use `sits_select()`. Figure \ref{fig:timeseriesforest}, the resulting plot, shows all the time series associated with the label Forest and index NDVI, highlighting the median and the first and third quartiles.
-
-```{r, timeseriesforest, out.width = "80%", tidy="styler", fig.align = 'center', fig.cap="Joint plot of all samples in band NDVI for label Forest (Source: Authors).", strip.white = FALSE}
-samples_forest <- dplyr::filter(
-    samples_matogrosso_mod13q1, 
-    label == "Forest"
-)
-samples_forest_ndvi <- sits_select(
-    samples_forest, 
-    band = "NDVI"
-)
-plot(samples_forest_ndvi)
-```
-
 ## Training a machine learning model {.unnumbered}
-
-The next step is to train a machine learning (ML) model using `sits_train()`. It takes two inputs, `samples` (a time series tibble) and `ml_method` (a function that implements a machine learning algorithm). The result is a model that is used for classification. Each ML algorithm requires specific parameters that are user-controllable. For novice users, `sits` provides default parameters that produce good results. Please see Chapter [Machine learning for data cubes](https://e-sensing.github.io/sitsbook/machine-learning-for-data-cubes.html) for more details.
-
-Since the time series data has four attributes (EVI, NDVI, NIR, and MIR) and the data cube images have only two, we select the NDVI and EVI values and use the resulting data for training. To build the classification model, we use a random forest model called by `sits_rfor()`.
-
-```{r, out.width = "80%", tidy="styler", fig.align="center", fig.cap="Most relevant variables of trained random forest model (Source: Authors)."}
-# Select the bands NDVI and EVI
-samples_2bands <- sits_select(
-    data = samples_matogrosso_mod13q1, 
-    bands = c("NDVI", "EVI")
-)
-# Train a random forest model
-rf_model <- sits_train(
-    samples = samples_2bands, 
-    ml_method = sits_rfor()
-)
-# Plot the most important variables of the model
-plot(rf_model)
-```
-
 ## Data cube classification {.unnumbered}
-
-After training the machine learning model, the next step is to classify the data cube using `sits_classify()`. This function produces a set of raster probability maps, one for each class. For each of these maps, the value of a pixel is proportional to the probability that it belongs to the class. This function has two mandatory parameters: `data`, the data cube or time series tibble to be classified; and `ml_model`, the trained ML model. Optional parameters include: (a) `multicores`, number of cores to be used; (b) `memsize`, RAM used in the classification; (c) `output_dir`, the directory where the classified raster files will be written. Details of the classification process are available in "Image classification in data cubes".
-
-```{r, out.width = "90%", tidy="styler", fig.align = 'center', fig.cap = "Probability map for class Forest (Source: Authors)."}
-# Classify the raster image
-sinop_probs <- sits_classify(
-    data = sinop_2bands, 
-    ml_model = rf_model,
-    multicores = 2,
-    memsize = 8,
-    output_dir = "./tempdir/chp3"
-)
-# Plot the probability cube for class Forest
-plot(sinop_probs, labels = "Forest", palette = "YlGnBu")
-```
-
-After completing the classification, we plot the probability maps for class Forest. Probability maps are helpful to visualize the degree of confidence the classifier assigns to the labels for each pixel. They can be used to produce uncertainty information and support active learning, as described in Chapter [Image classification in data cubes](https://e-sensing.github.io/sitsbook/image-classification-in-data-cubes.html).
-
 ## Spatial smoothing {.unnumbered}
-
-When working with big Earth observation data, there is much variability in each class. As a result, some pixels will be misclassified. These errors are more likely to occur in transition areas between classes. To address these problems, `sits_smooth()` takes a probability cube as input and  uses the class probabilities of each pixel's neighborhood to reduce labeling uncertainty. Plotting the smoothed probability map for class Forest shows that most outliers have been removed.
-
-```{r, out.width = "90%",  tidy="styler", fig.align = 'center', fig.cap = "Smoothed probability map for class Forest (Source: Authors)."}
-# Perform spatial smoothing
-sinop_bayes <- sits_smooth(
-    cube = sinop_probs,
-    multicores = 2,
-    memsize = 8,
-    output_dir = "./tempdir/chp3"
-)
-plot(sinop_bayes, labels = "Forest", palette = "YlGnBu")
-```
-
 ## Labeling a probability data cube {.unnumbered}
-
-After removing outliers using local smoothing, the final classification map can be obtained using `sits_label_classification()`. This function assigns each pixel to the class with the highest probability.
-
-```{r, out.width = "100%", tidy="styler", fig.cap = "Classification map for Sinop (Source: Authors).", fig.align="center"}
-# Label the probability file 
-sinop_map <- sits_label_classification(
-    cube = sinop_bayes, 
-    output_dir = "./tempdir/chp3"
-)
-plot(sinop_map, title = "Sinop Classification Map")
-```
-
-When plotting the classified map, users can control the map display by setting various options associated to `tmap_options`. These options include: (a) `scale` (default: 0.5); (b) `graticules_labels_size` (default: 0.7); (c) `legend_title_size` (default: 1.0); (d) `legend_text_size`  (default: 1.0); (e) `legend_width` (default: 0.5); (f) `legend_height` (default: 0.7);  (g) `legend_position` (default: `c("left", "bottom")`). The `scale` parameter affect all others. Users should first try to adjust it before fine-tuning the other options.
-
-The resulting classification files can be read by QGIS. Links to the associated files are available in the `sinop_map` object in the nested table `file_info`.
-
-```{r}
-# Show the location of the classification file
-sinop_map$file_info[[1]]
-```
-
-To simplify the process of importing your data to QGIS, the color palette used to display classified maps in `sits` can be exported as a QGIS style using `sits_colors_qgis`. The function takes two parameters: (a) `cube`, a classified data cube; and (b) `file`, the file where the QGIS style in XML will be written to. In this case study, it suffices to do the following command.
-
-```{r}
-# Show the location of the classification file
-sits_colors_qgis(sinop_map, file = "./tempdir/chp3/qgis_style.xml")
-```
-
-
 ## Visualization of data cubes in interactive maps {.unnumbered}
-
-In this chapter, we used `plot()` to produce a graphical display of data cubes, time series, and models. Data cubes and samples can also be shown as interactive maps using `sits_view()`. This function creates tiled overlays of different kinds of data cubes, allowing comparison between the original, intermediate and final results. It also includes background maps. The following example creates an interactive map combining the original data cube with the classified map.
-
-```{r, echo = TRUE, eval = FALSE, tidy = "styler"}
-sits_view(sinop, band = "NDVI", class_cube = sinop_map)
-```
-
-```{r, echo = FALSE, out.width="90%", fig.caption = "Leaflet visualization of classification of Sinop, MT, Brasil (Source: Authors).", fig.align="center"}
-knitr::include_graphics("images/view_sinop.png")
-```
 
 <!--chapter:end:03-intro.Rmd-->
 
@@ -402,6 +121,11 @@ Placeholder
 ## Creating data cubes{-}
 ## Assessing Amazon Web Services{-}
 ## Assessing Microsoft's Planetary Computer{-}
+### Access to SENTINEL-2/2A images in MPC
+### Access to LANDSAT-C2-L2 images in MPC
+### Access to SENTINEL-1-GRD images in MPC
+### Access to SENTINEL-1-RTC images in MPC
+### Access to Copernicus DEM 30 meter images in MPC
 ## Assessing Digital Earth Africa{-}
 ## Assessing the Brazil Data Cube{-}
 ## Accessing Harmonized Landsat-Sentinel collections {-}
@@ -473,7 +197,6 @@ Placeholder
 ## Extreme gradient boosting{-}
 ## Deep learning using multilayer perceptron{-}
 ## Temporal Convolutional Neural Network (TempCNN){-}
-## Residual 1D CNN networks (ResNet){-}
 ## Attention-based models{-}
 ## Deep learning model tuning{-}
 ## Considerations on model choice{-}
@@ -555,16 +278,347 @@ Placeholder
 
 <!--chapter:end:14-obia.Rmd-->
 
-
 # Technical annex {-}
 
-Placeholder
+```{r, eval = FALSE, include = FALSE}
+source("common.R")
+library(sits)
+library(sitsdata)
+```
 
+This Chapter contains technical details on the algorithms available in `sits`. It is intended to support those that want to understand how the package works and also want to contribute to its development.
 
 ## How parallel processing works in virtual machines with CPUs{-}
+
+This section provides an overview of how `sits_classify()`, `sits_smooth()`, and `sits_label_classification()` process images in parallel. To achieve efficiency, `sits` implements a fault-tolerant multitasking procedure for big Earth observation data classification. The learning curve is shortened as there is no need to learn how to do multiprocessing. Image classification in `sits` is done by a cluster of independent workers linked to a virtual machine. To avoid communication overhead, all large payloads are read and stored independently; direct interaction between the main process and the workers is kept at a minimum. 
+
+The classification procedure benefits from the fact that most images available in cloud collections are stored as COGs (cloud-optimized GeoTIFF). COGs are regular GeoTIFF files organized in regular square blocks to improve visualization and access for large datasets. Thus, data requests can be optimized to access only portions of the images. All cloud services supported by `sits` use COG files. The classification algorithm in `sits` uses COGs to ensure optimal data access, reducing I/O demand as much as possible.
+
+The approach for parallel processing in `sits`, depicted in Figure \@ref(fig:par), has the following steps:
+
+1. Based on the block size of individual COG files, calculate the size of each chunk that must be loaded in memory, considering the number of bands and the timeline's length. Chunk access is optimized for the efficient transfer of data blocks.
+2. Divide the total memory available by the chunk size to determine how many processes can run in parallel. 
+3. Each core processes a chunk and produces a subset of the result.
+4. Repeat the process until all chunks in the cube have been processed.
+5. Check that subimages have been produced correctly. If there is a problem with one or more subimages, run a failure recovery procedure to ensure all data is processed.
+6. After generating all subimages, join them to obtain the result.
+
+```{r par, out.width = "90%", out.height = "90%", echo = FALSE, fig.align="center", fig.cap="Parallel processing in sits (Source: Simoes et al. (2021).  Reproduction under fair use doctrine)."}
+knitr::include_graphics("images/sits_parallel.png")
+```
+
+This approach has many advantages. It has no dependencies on proprietary software and runs in any virtual machine that supports R. Processing is done in a concurrent and independent way, with no communication between workers. Failure of one worker does not cause the failure of big data processing. The software is prepared to resume classification processing from the last processed chunk, preventing failures such as memory exhaustion, power supply interruption, or network breakdown. 
+
+To reduce processing time, it is necessary to adjust `sits_classify()`, `sits_smooth()`, and `sits_label_classification()`  according to the capabilities of the host environment. The `memsize` parameter controls the size of the main memory (in GBytes) to be used for classification. A practical approach is to set `memsize` to the maximum memory available in the virtual machine for classification and to choose `multicores` as the largest number of cores available. Based on the memory available and the size of blocks in COG files, `sits` will access the images in an optimized way. In this way, `sits` tries to ensure the best possible use of the available resources. 
+
 ## Including new methods for machine learning{-}
+
+This section provides guidance for experts that want to include new methods for machine learning that work in connection with `sits`. The discussion below assumes familiarity with the R language. Developers should consult Hadley Wickham's excellent book [Advanced R](https://adv-r.hadley.nz/), especially Chapter 10 on "Function Factories". 
+
+All machine learning and deep learning algorithm in `sits` follow the same logic; all models are created by `sits_train()`. This function has two parameters: (a) `samples`, a set of time series with the training samples; (b) `ml_method`, a function that fits the model to the input data. The result is a function that is passed on to `sits_classify()` to classify time series or data cubes. The structure of `sits_train()` is simple, as shown below.
+
+```{r, tidy = "styler", eval = FALSE}
+sits_train <- function(samples, ml_method){
+    # train a ml classifier with the given data
+    result <- ml_method(samples)
+    # return a valid machine learning method
+    return(result)
+}
+```
+
+In R terms, `sits_train()` is a function factory, or a function that makes functions. Such behavior is possible because functions are first-class objects in R. In other words, they can be bound to a name in the same way that variables are. A second propriety of R is that functions capture (enclose) the environment in which they are created. In other words, when a function is returned as a result of another function, the internal variables used to create it are available inside its environment. In programming language, this technique is called "closure". 
+
+The following definition from Wikipedia captures the purpose of clousures: *"Operationally, a closure is a record storing a function together with an environment. The environment is a mapping associating each free variable of the function with the value or reference to which the name was bound when the closure was created. A closure allows the function to access those captured variables through the closure's copies of their values or references, even when the function is invoked outside their scope."*
+
+In `sits`, the properties of closures are used as a basis for making training and classification independent. The return of `sits_train()` is a model that contains information on how to classify input values, as well as information on the samples used to train the model. 
+
+To ensure all models work in the same fashion, machine learning functions in `sits` also share the same data structure for prediction. This data structure is created by `sits_predictors()`, which transforms the time series tibble into a set of values suitable for using as training data, as shown in the following example.
+
+```{r, tidy = "styler", eval = TRUE}
+data("samples_matogrosso_mod13q1", package = "sitsdata")
+pred <- sits_predictors(samples_matogrosso_mod13q1)
+pred
+```
+
+The predictors tibble is organized as a combination of the "X" and "Y" values used by machine learning algorithms. The first two columns are `sample_id` and `label`. The other columns contain the data values, organized by band and time. For machine learning methods that are not time-sensitive, such as random forest, this organization is sufficient for training. In the case of time-sensitive methods such as `tempCNN`, further arrangements are necessary to ensure the tensors have the right dimensions. Please refer to the `sits_tempcnn()` source code for an example of how to adapt the prediction table to appropriate `torch` tensor.
+
+Some algorithms require data normalization. Therefore, the `sits_predictors()` code is usually combined with methods that extract statistical information and then normalize the data, as in the example below.
+
+```{r, tidy = "styler", eval = FALSE}
+ # Data normalization
+ml_stats <- sits_stats(samples)
+# extract the training samples
+train_samples  <- sits_predictors(samples)
+# normalize the training samples
+train_samples  <- sits_pred_normalize(pred = train_samples, stats = ml_stats)
+```        
+
+The following example shows the implementation of the LightGBM algorithm, designed to efficiently handle large-scale datasets and perform fast training and inference [@Ke2017]. Gradient boosting is a machine learning technique that builds an ensemble of weak prediction models, typically decision trees, to create a stronger model. LightGBM specifically focuses on optimizing the training and prediction speed, making it particularly suitable for large datasets. The example builds a model using the `lightgbm` package.  This model will then be applied later to obtain a classification.
+
+Since LightGBM is a gradient boosting model, it uses part of the data as testing data to improve the model's performance. The split between the training and test samples is controlled by a parameter, as shown in the following code extract.
+
+```{r, tidy="styler", eval = FALSE}
+# split the data into training and validation datasets
+# create partitions different splits of the input data
+test_samples <- sits_pred_sample(train_samples,
+                                 frac = validation_split
+)
+# Remove the lines used for validation
+sel <- !(train_samples$sample_id %in% test_samples$sample_id)
+train_samples <- train_samples[sel, ]
+```
+
+To include the `lightgbm` package as part of `sits`, we need to create a new training function which is compatible with the other machine learning methods of the package and will be called by `sits_train()`. For compatibility, this new function will be called `sits_lightgbm()`. Its implementation uses two functions from the `lightgbm`: (a) `lgb.Dataset()`, which transforms training and test samples into internal structures; (b) `lgb.train()`, which trains the model.
+
+The parameters of `lightgbm::lgb.train()` are: (a) `boosting_type`, boosting algorithm; (b) `objective`, classification objective (c) `num_iterations`, number of runs; (d) `max_depth`, maximum tree depth; (d) `min_samples_leaf`,  minimum size of data in one leaf (to avoid overfitting); (f) `learning_rate`,  learning rate of the algorithm; (g) `n_iter_no_change`, number of successive iterations to stop training when validation metrics do not improve; (h) `validation_split`, fraction of training data to be used as validation data. 
+
+```{r, tidy = "styler", eval = TRUE}
+# install "lightgbm" package if not available 
+if (!require("lightgbm")) install.packages("lightgbm")
+# create a function in sits style for LightGBM algorithm
+sits_lightgbm <- function(samples = NULL,
+                          boosting_type = "gbdt",
+                          objective = "multiclass",
+                          min_samples_leaf = 10,
+                          max_depth = 6,
+                          learning_rate = 0.1,
+                          num_iterations = 100,
+                          n_iter_no_change = 10,
+                          validation_split = 0.2, ...){
+
+    # function that returns MASS::lda model based on a sits sample tibble
+    train_fun <- function(samples) {
+        # Extract the predictors
+        train_samples <- sits_predictors(samples)
+        
+        # find number of labels
+        labels <- sits_labels(samples)
+        n_labels <- length(labels)
+        # lightGBM uses numerical labels starting from 0
+        int_labels <- c(1:n_labels) - 1
+        # create a named vector with integers match the class labels
+        names(int_labels) <- labels
+        
+        # add number of classes to lightGBM params
+        # split the data into training and validation datasets
+        # create partitions different splits of the input data
+        test_samples <- sits_pred_sample(train_samples,
+                                         frac = validation_split
+        )
+        
+        # Remove the lines used for validation
+        sel <- !(train_samples$sample_id %in% test_samples$sample_id)
+        train_samples <- train_samples[sel, ]
+        
+        # transform the training data to LGBM dataset
+        lgbm_train_samples <- lightgbm::lgb.Dataset(
+            data = as.matrix(train_samples[, -2:0]),
+            label = unname(int_labels[train_samples[[2]]])
+        )
+        # transform the test data to LGBM dataset
+        lgbm_test_samples <- lightgbm::lgb.Dataset(
+            data = as.matrix(test_samples[, -2:0]),
+            label = unname(int_labels[test_samples[[2]]])
+        )
+        # set the parameters for the lightGBM training
+        lgb_params <- list(
+            boosting_type = boosting_type,
+            objective = objective,
+            min_samples_leaf = min_samples_leaf,
+            max_depth = max_depth,
+            learning_rate = learning_rate,
+            num_iterations = num_iterations,
+            n_iter_no_change = n_iter_no_change,
+            num_class = n_labels
+        )
+        # call method and return the trained model
+        lgbm_model <- lightgbm::lgb.train(
+            data    = lgbm_train_samples,
+            valids  = list(test_data = lgbm_test_samples),
+            params  = lgb_params,
+            verbose = -1,
+            ...
+        )
+        # serialize the model for parallel processing
+        lgbm_model_string <- lgbm_model$save_model_to_string(NULL)
+        # construct model predict closure function and returns
+        predict_fun <- function(values) {
+            # reload the model (unserialize)
+            lgbm_model <- lightgbm::lgb.load(model_str = lgbm_model_string)
+            # predict probabilities
+            prediction <- stats::predict(lgbm_model,
+                               data = as.matrix(values),
+                               rawscore = FALSE,
+                               reshape = TRUE
+            )
+            # adjust the names of the columns of the probs
+            colnames(prediction) <- labels
+            # retrieve the prediction results
+            return(prediction)
+        }
+        # Set model class
+        class(predict_fun) <- c("lightgbm_model", "sits_model", class(predict_fun))
+        return(predict_fun)
+    }
+    result <- sits_factory_function(samples, train_fun)
+    return(result)
+}
+```
+
+The above code has two nested functions: `train_fun()` and `predict_fun()`. When `sits_lightgbm()` is called, `train_fun()` transforms the input samples into predictors and uses them to train the algorithm, creating a model (`lgbm_model`). This model is included as part of the function's closure and becomes available at classification time. Inside `train_fun()`, we include `predict_fun()`, which applies the `lgbm_model` object to classify to the input values. The `train_fun` object is then returned as a closure, using the `sits_factory_function` constructor. This function allows the model to be called either as part of `sits_train()` or to be called independently, with the same result.
+
+```{r, tidy = "styler", eval = FALSE}
+sits_factory_function <- function(data, fun) {
+    # if no data is given, we prepare a
+    # function to be called as a parameter of other functions
+    if (purrr::is_null(data)) {
+        result <- fun
+    } else {
+        # ...otherwise compute the result on the input data
+        result <- fun(data)
+    }
+    return(result)
+}
+```
+
+As a result, the following calls are equivalent.
+
+```{r, tidy = "styler", eval = FALSE}
+# building a model using sits_train
+lgbm_model <- sits_train(samples, sits_lightgbm())
+# building a model directly
+lgbm_model <- sits_lightgbm(samples)
+```
+
+
+There is one additional requirement for the algorithm to be compatible with `sits`. Data cube processing algorithms in `sits` run in parallel. For this reason, once the classification model is trained, it is serialized, as shown in the following line. The serialized version of the model is exported to the function closure, so it can be used at classification time.
+
+```{r, tidy = "styler", eval = FALSE}
+# serialize the model for parallel processing
+lgbm_model_string <- lgbm_model$save_model_to_string(NULL)
+```
+
+During classification,  `predict_fun()` is called in parallel by each CPU. At this moment, the serialized string is transformed back into a model, which is then run to obtain the classification, as shown in the code.
+
+```{r, tidy = "styler", eval = FALSE}
+# unserialize the model
+lgbm_model <- lightgbm::lgb.load(model_str = lgbm_model_string)
+```
+
+
+Therefore, using function factories that produce closures, `sits` keeps the classification function independent of the machine learning or deep learning algorithm. This policy allows independent proposal, testing, and development of new classification methods. It also enables improvements on parallel processing methods without affecting the existing classification methods.
+
+To illustrate this separation between training and classification, the new algorithm developed in the chapter using `lightgbm` will be used to classify a data cube. The code is the same as the one in Chapter [Introduction](https://e-sensing.github.io/sitsbook/introduction.html) as an example of data cube classification, except for the use of `lgb_method()`. 
+
+```{r, tidy = "styler", eval = TRUE, out.width = "100%", fig.cap = "Classification map for Sinop using LightGBM (Source: Authors).", fig.align="center"}
+data("samples_matogrosso_mod13q1", package = "sitsdata")
+# Create a data cube using local files
+sinop <- sits_cube(
+  source = "BDC", 
+  collection  = "MOD13Q1-6",
+  data_dir = system.file("extdata/sinop", package = "sitsdata"),  
+  parse_info = c("X1", "X2", "tile", "band", "date")
+)
+# The data cube has only "NDVI" and "EVI" bands 
+# Select the bands NDVI and EVI
+samples_2bands <- sits_select(
+    data = samples_matogrosso_mod13q1, 
+    bands = c("NDVI", "EVI")
+)
+# train lightGBM model
+lgb_model <- sits_train(samples_2bands, sits_lightgbm())
+
+# Classify the data cube
+sinop_probs <- sits_classify(
+    data = sinop, 
+    ml_model = lgb_model,
+    multicores = 2,
+    memsize = 8,
+    output_dir = "./tempdir/chp15"
+)
+# Perform spatial smoothing
+sinop_bayes <- sits_smooth(
+    cube = sinop_probs,
+    multicores = 2,
+    memsize = 8,
+    output_dir = "./tempdir/chp15"
+)
+# Label the smoothed file 
+sinop_map <- sits_label_classification(
+    cube = sinop_bayes, 
+    output_dir = "./tempdir/chp15"
+)
+# plot the result
+plot(sinop_map, title = "Sinop Classification Map")
+```
+
+The above example shows how it is possible to extend `sits` with new machine learning algorithms.
+
 ## How colors work in sits{-}
+
+In examples provided in the book, the color legend is taken from a predefined color pallete provided by `sits`. The default color definition file used by `sits` has 220 class names, which can be shown using `sits_colors()`
+
+```{r, tidy = "styler", out.width = "100%", out.height = "100%", echo = FALSE, fig.align="center", fig.cap="Default colors used in the sits package (Source: Authors)."}
+# Point default `sits` colors
+sits_colors()
+```
+
+These colors are grouped by typical legends used by the Earth observation community, which include "IGBP", "UMD", "ESA_CCI_LC", "WORLDCOVER", "PRODES", "PRODES_VISUAL", "TERRA_CLASS", "TERRA_CLASS_PT". The following commands shows the colors associated with the IGBP legend [@Herold2009].
+
+```{r, tidy = "styler", out.width = "100%", out.height = "100%", fig.align="center", fig.cap="Colors used in the sits package to represeny IGBP legend (Source: Authors)."}
+# Display default `sits` colors
+sits_colors_show(legend = "IGBP")
+```
+
+
+The default color table can be extended using `sits_colors_set()`. As an example of a user-defined color table, consider a definition that covers level 1 of the Anderson Classification System used in the US National Land Cover Data, obtained by defining a set of colors associated to a new legend. The colors should be defined by HEX values and the color names should consist of a single string; multiple names need to be connected with an underscore("_").
+```{r, tidy = "styler", out.width = "100%", out.height = "80%", fig.align="center", fig.cap="Example of defining colors for the Anderson Land Classification Scheme(Source: Authors)."}
+# Define a color table based on the Anderson Land Classification System
+us_nlcd <- tibble::tibble(name = character(), color = character())
+us_nlcd <- us_nlcd |>  
+  tibble::add_row(name = "Urban_Built_Up", color =  "#85929E") |> 
+  tibble::add_row(name = "Agricultural_Land", color = "#F0B27A") |>  
+  tibble::add_row(name = "Rangeland", color = "#F1C40F") |> 
+  tibble::add_row(name = "Forest_Land", color = "#27AE60") |>  
+  tibble::add_row(name = "Water", color = "#2980B9") |>  
+  tibble::add_row(name = "Wetland", color = "#D4E6F1") |> 
+  tibble::add_row(name = "Barren_Land", color = "#FDEBD0") |> 
+  tibble::add_row(name = "Tundra", color = "#EBDEF0") |> 
+  tibble::add_row(name = "Snow_and_Ice", color = "#F7F9F9")
+# Load the color table into `sits`
+sits_colors_set(colors = us_nlcd, legend = "US_NLCD")
+# Show the new legend
+sits_colors_show(legend = "US_NLCD")
+```
+
+The original default `sits` color table can be restored using `sits_colors_reset()`. 
+
+```{r, eval = TRUE, echo = FALSE, warning = FALSE, message = FALSE} 
+# Reset the color table
+sits_colors_reset()
+```
+
+As an alternative, a legend can be used directly as a parameter to `plot()`. Please see the example provided in Section "Map Reclassification" in Chapter [Image classification in data cubes](https://e-sensing.github.io/sitsbook/image-classification-in-data-cubes.html). 
+
 ## Exporting data to JSON{-}
+
+Both the data cube and the time series tibble can be exported to exchange formats such as JSON.
+
+```{r, tidy = "styler", eval = FALSE}
+library(jsonlite)
+# Export the data cube to JSON
+jsonlite::write_json(
+  x = sinop,
+  path = "./data_cube.json",
+  pretty = TRUE)
+
+# Export the time series to JSON
+jsonlite::write_json(
+  x = samples_prodes_4classes,
+  path = "./time_series.json",
+  pretty = TRUE)
+```
+
 
 <!--chapter:end:15-annex.Rmd-->
 

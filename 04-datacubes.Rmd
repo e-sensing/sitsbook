@@ -1,14 +1,15 @@
 # Earth observation data cubes{-}
 
-```{r, include = FALSE}
+```{r, include = FALSE, eval = TRUE, echo = FALSE}
 source("common.R")
 dir.create("./tempdir/chp4")
 library(sits)
+library(sitsdata)
 ```
 
 <a href="https://www.kaggle.com/code/esensing/creating-data-cubes-in-sits" target="_blank"><img src="https://kaggle.com/static/images/open-in-kaggle.svg"/></a>
 
-## Analysis-ready data image collections{-}
+## Analysis-ready data image collectionsx
 
 Analysis-ready data (ARD) are images that are ready for analysis without the need for further preprocessing or transformation. They simplify and accelerate the analysis of Earth observation data by providing consistent and high-quality data that are standardized across different sensors and platforms. ARD data is typically provided as a collection of  files, where each pixel contains a single value for each spectral band for a given date.
 
@@ -30,25 +31,28 @@ The Landsat-4/5/7/8/9 satellites use the Worldwide Reference System (WRS-2), whi
 knitr::include_graphics("images/landsat_wrs_grid.png")
 ```
 
-## ARD image collections handled by sits{-}
+## Image collections handled by sits{-}
 
-Package `sits` supports access to the following ARD image collections:
+In version 1.5.1,`sits` supports access to the following ARD image collections:
 
 1. Amazon Web Services (AWS): Open data Sentinel-2/2A level 2A collections for the Earth's land surface. 
 2. Brazil Data Cube (BDC): Open data collections of Sentinel-2/2A, Landsat-8, CBERS-4/4A, and MODIS images for Brazil. These collections are organized as regular data cubes. 
 3. Digital Earth Africa (DEAFRICA): Open data collections of Sentinel-1 RTC, Sentinel-2/2A, Landsat-5/7/8/9 for Africa. Additional products available include ALOS_PALSAR mosaics, DEM_COP_30, NDVI_ANOMALY based on Landsat data, and monthly and daily rainfall data from CHIRPS. 
-4. Microsoft Planetary Computer (MPC): Open data collections of Sentinel-1 GRD, Sentinel-2/2A and Landsat-4/5/7/8/9 for the Earth's land areas. 
+4. Microsoft Planetary Computer (MPC): Open data collections of Sentinel-1 GRD, Sentinel-2/2A and Landsat-4/5/7/8/9 for the Earth's land areas. Also support open access to Copernicus DEM-30 and paid access to Sentinel-1 RTC collections.
+
 5. Copernicus Data Space Ecosystem (CDSE): Open data collections of Sentinel-1 RTC and Sentinel-2/2A images. 
 6. Harmonized Landsat-Sentinel (HLS): HLS, provided by NASA, is an open data collection that processes Landsat 8 and Sentinel-2 imagery to a common standard.
 7. USGS: Landsat-4/5/7/8/9 collections available in AWS, which require access payment. 
 8. Swiss Data Cube (SDC): Open data collection of Sentinel-2/2A and Landsat-8 images for Switzerland. 
+
+In additional, `sits` supports the use of Planet monthly mosaics stored as local files.
 
 
 ## Regular image data cubes{-}
 
 Machine learning and deep learning (ML/DL) classification algorithms require the input data to be consistent. The dimensionality of the data used for training the model has to be the same as that of the data to be classified. There should be no gaps and no missing values. Thus, to use ML/DL algorithms for remote sensing data, ARD image collections should be converted to regular data cubes. Adapting a previous definition by Appel and Pebesma [@Appel2019], we consider a *regular data cube*  has the following definition and properties:
 
-1. A regular data cube is a four-dimensional structure with dimensions x (longitude or easting), y (latitude or northing), time, and bands. The spatial, temporal, and attribute dimensions are independent and not interchangeable.
+1. A regular data cube is a four-dimensional data structure with dimensions x (longitude or easting), y (latitude or northing), time, and bands. The spatial, temporal, and attribute dimensions are independent and not interchangeable.
 2. The spatial dimensions refer to a coordinate system, such as the grids defined by UTM (Universal Transverse Mercator) or MGRS (Military Grid Reference System). A grid (or tile) of the grid corresponds to a unique zone of the coordinate system.
 3. The temporal dimension is a set of continuous and equally-spaced intervals. 
 4. For every combination of dimensions, a cell has a single value.
@@ -81,11 +85,11 @@ The function `sits_cube()` supports access to image collections in cloud service
 The result of `sits_cube()` is a tibble with a description of the selected images required for further processing. It does not contain the actual data, but only pointers to the images.  The attributes of individual image files can be assessed by listing the `file_info` column of the tibble. 
 
 
-## Assessing Amazon Web Services{-}
+## Amazon Web Services{-}
 
 Amazon Web Services (AWS) holds two kinds of collections: *open-data* and *requester-pays*. Open data collections can be accessed without cost. Requester-pays collections require payment from an AWS account. Currently, `sits` supports collection `SENTINEL-2-L2A` which is open data.  The bands in 10 m resolution are B02, B03, B04, and B08. The  20 m bands are B05, B06, B07, B8A, B11, and B12. Bands B01 and B09 are available at 60 m resolution. A CLOUD band is also available. The example below shows how to access one tile of the open data `SENTINEL-2-L2A` collection.  The `tiles` parameter allows selecting the desired area according to the MGRS reference system. 
 
-```{r, tidy="styler", out.width="100%", fig.align="center", fig.cap= "Sentinel-2 image in an area of the Northeastern coast of Brazil (Source: Authors)."}
+```{r, eval = FALSE, echo = TRUE, tidy="styler"}
 # Create a data cube covering an area in Brazil
 s2_23MMU_cube <- sits_cube(
     source = "AWS",
@@ -103,16 +107,20 @@ plot(s2_23MMU_cube,
 )
 ```
 
+```{r, echo = FALSE, out.width="100%", fig.align="center", fig.cap= "Sentinel-2 image in an area of the Northeastern coast of Brazil (Source: Authors)."}
+knitr::include_graphics("images/aws_s2.png")
+```
 
-## Assessing Microsoft's Planetary Computer{-}
 
-The `sits` supports access to three open data collection from Microsoft's Planetary Computer (MPC): `SENTINEL-1-GRD`, `SENTINEL-2-L2A` and `LANDSAT-C2-L2`. Also availble is access to the non-open data collection `SENTINEL-1-RTC`. 
+## Microsoft's Planetary Computer{-}
 
-### Access to SENTINEL-2/2A images in MPC
+The `sits` supports access to four open data collection from Microsoft's Planetary Computer (MPC): `SENTINEL-1-GRD`, `SENTINEL-2-L2A`, `LANDSAT-C2-L2` and `COP-DEM-GLO-30` (Copernicus Global DEM at 30 meter resolution. Also availble is access to the non-open data collection `SENTINEL-1-RTC`. 
+
+### SENTINEL-2/2A images in MPC{-}
 
 The SENTINEL-2/2A ARD images available in MPC have the same bands and resolutions as those available in AWS (see above). The example below shows how to access the `SENTINEL-2-L2A` collection. 
 
-```{r, tidy="styler",  out.width="100%", fig.align="center", fig.cap= "Sentinel-2 image in an area of the state of Rondonia, Brazil (Source: Authors)."}
+```{r, tidy="styler",  eval = FALSE}
 # Create a data cube covering an area in the Brazilian Amazon
 s2_20LKP_cube_MPC <- sits_cube(
       source = "MPC",
@@ -128,11 +136,15 @@ plot(s2_20LKP_cube_MPC, red = "B11", blue = "B02", green = "B8A",
 )
 ```
 
-### Access to LANDSAT-C2-L2 images in MPC
+```{r, echo = FALSE, out.width="100%", fig.align="center", fig.cap= "Sentinel-2 image in an area of the state of Rondonia, Brazil (Source: Authors)."}
+knitr::include_graphics("images/mpc_s2.png")
+```
+
+### LANDSAT-C2-L2 images in MPC{-}
 
 The `LANDSAT-C2-L2` collection provides access to data from Landsat-4/5/7/8/9 satellites. Images from these satellites have been intercalibrated to ensure data consistency. For compatibility between the different Landsat sensors, the band names are BLUE, GREEN, RED,  NIR08,  SWIR16, and SWIR22. All images have 30 m resolution. For this collection,  tile search is not supported; the `roi` parameter should be used. The example below shows how to retrieve data from a region of interest covering the city of Brasilia in Brazil. 
 
-```{r, tidy="styler", out.width="100%", fig.align="center", fig.cap= "Landsat-8 image in an area in Northeast Brazil (Source: Authors)."}
+```{r, tidy="styler", eval = FALSE}
 
 # Read a ROI that covers part of the Northeastern coast of Brazil
 roi <- c(lon_min = -43.5526, lat_min = -2.9644, 
@@ -151,13 +163,17 @@ plot(s2_L8_cube_MPC, red = "RED", green = "GREEN", blue = "BLUE",
      date = "2019-06-30")
 ```
 
-### Access to SENTINEL-1-GRD images in MPC
+```{r, echo = FALSE, out.width="100%", fig.align="center", fig.cap= "Landsat-8 image in an area in Northeast Brazil (Source: Authors)."}
+knitr::include_graphics("images/mpc_l8.png")
+```
 
-Sentinel-1 Level-1 Ground Range Detected (GRD) products consist of focused SAR data that has been detected, multi-looked and projected to ground range using the WGS84 Earth ellipsoid model. Access to Sentinel-1 GRD images can be done either by MGRS tiles or by region of interest `(roi)`. We recommend using the MGRS tiling system for specifying the area of interest, since when these images are regularized, they will be re-projected into MGRS tiles. By default, on;y images in descending orbit are selected. 
+### SENTINEL-1-GRD images in MPC{-}
 
-The following example shows how to create a data cube of S1 GRD images over a region in Brazil. The resulting cube will not follow any specific projection and its coordinates will be states as EPSG 4326 (latitude/longitude).
+Sentinel-1 Level-1 Ground Range Detected (GRD) products consist of focused SAR data that has been detected, multi-looked and projected to ground range using the WGS84 Earth ellipsoid model.  Access to Sentinel-1 GRD images can be done either by MGRS tiles (`tiles`) or by region of interest (`roi`). We recommend using the MGRS tiling system for specifying the area of interest, since when these images are regularized, they will be re-projected into MGRS tiles. By default, on;y images in descending orbit are selected. 
 
-```{r, tidy="styler", out.width="100%", fig.align="center", fig.cap= "Landsat-8 image in an area in Northeast Brazil (Source: Authors)."}
+The following example shows how to create a data cube of S1 GRD images over a region in Mato Grosso Brazil that is an area of the Amazon forest that has been deforested. The resulting cube will not follow any specific projection and its coordinates will be states as EPSG 4326 (latitude/longitude). 
+
+```{r, tidy="styler", cache = TRUE, out.width="100%", fig.align="center", fig.cap= "Sentinel-1 image in an area in Mato Grosso, Brazil (Source: Authors)."}
 cube_s1_grd <-  sits_cube(
   source = "MPC",
   collection = "SENTINEL-1-GRD",
@@ -167,36 +183,202 @@ cube_s1_grd <-  sits_cube(
   start_date = "2021-08-01",
   end_date = "2021-09-30"
 )
-plot(cube_s1_grd, band = "VV")
+plot(cube_s1_grd, band = "VV", palette = "Greys")
 ```
 
-In areas with areas with large elevation differences, Sentinel-1 GRD images will have geometric distortions. 
+In areas with areas with large elevation differences, Sentinel-1 GRD images will have geometric distortions. Distortions in satellite Synthetic Aperture Radar (SAR) images can be caused by several factors, including the geometry of the SAR imaging process, the movement of the satellite, and the characteristics of the target surface. The most common types of distortions include foreshortening, layover and shadoing. 
 
-### Access to SENTINEL-1-RTC images in MPC
+Foreshortening occurs when the radar signal strikes a steep terrain slope facing the radar, causing the slope to appear compressed in the image. Features like mountains can appear much steeper than they are, and their true heights can be difficult to interpret. Layover: It happens when the radar signal reaches the top of a tall feature (like a mountain or building) before it reaches the base. As a result, the top of the feature is displaced towards the radar and appears in front of its base. This results in a reversal of the order of features along the radar line-of-sight, making the image interpretation challenging. Shadowing occurs when a radar signal is obstructed by a tall object, casting a shadow on the area behind it that the radar cannot illuminate. The shadowed areas appear dark in SAR images, and no information is available from these regions, similar to optical shadows.
+
+For this reason, whenever possible, we recommend the use of RTC (radiometrically terrain corrected) images as described in the next session. 
+
+
+### SENTINEL-1-RTC images in MPC{-}
+
+A RTC (Radiometrically Terrain Corrected) SAR (Synthetic Aperture Radar) image is a processed image that has undergone corrections for both geometric distortions and radiometric distortions caused by the terrain. The purpose of RTC processing is to enhance the interpretability and usability of SAR images for various applications by providing a more accurate representation of the Earth's surface.
+
+The RTC radiometric correction accounts for variations in the radar signal's intensity due to topographic effects, antenna pattern, range spreading loss, and other radiometric distortions. The radar backscatter values are normalized to account for these variations, ensuring that the image accurately represents the reflectivity of the surface features.
+
+The terrain correction addresses geometric distortions caused by the side-looking geometry of SAR imaging, such as foreshortening, layover, and shadowing. It uses a Digital Elevation Model (DEM) to model the terrain and re-project the SAR image from the slant range (radar line-of-sight) to the ground range (true geographic coordinates). This process aligns the SAR image with the actual topography, providing a more accurate spatial representation.
+
+Using RTC SAR images in beneficial. The image is corrected for terrain-induced distortions, ensuring that features are correctly positioned relative to their true geographic locations. The radiometrics corrections provide more consistent and reliable backscatter values, which are critical for quantitative analyses and comparisons over time.
+
+In MPC, access to Sentinel-1-RTC images requires a Planetary Computer account. User will receive a  Shared Access Signature (SAS) Token from MPC that allows access to RTC data. Once a user receives a token from Microsoft, she needs to include the environment variable `MPC_TOKEN` is her `.Rprofile`. Therefore, the following example only works for users that have an SAS token.
+
+```{r, tidy="styler", cache = TRUE, out.width="100%", fig.align="center", fig.cap= "Sentinel-1-RTC image of an area in Colombia (Source: Authors)."}
+cube_s1_rtc <-  sits_cube(
+  source = "MPC",
+  collection = "SENTINEL-1-RTC",
+  bands = c("VV", "VH"),
+  orbit = "descending",
+  tiles = "18NZM",
+  start_date = "2021-08-01",
+  end_date = "2021-09-30"
+)
+plot(cube_s1_rtc, band = "VV", palette = "Greys")
+```
+The above image is from the central region of Colombia, a country with large variations in altitude due to the Andes mountains. Users are invited to compare this images with the one from the `SENTINEL-1-GRD` collection and see the significant geometrical distortions of the GRD image compared with the RTC one.
+
+### Copernicus DEM 30 meter images in MPC{-}
+
+The Copernicus digital 3levation model 30-meter global dataset (COP-DEM-GLO-30) is a high-resolution topographic data product provided by the European Space Agency (ESA) under the Copernicus Program. The vertical accuracy of the Copernicus DEM 30-meter dataset is typically within a few meters, but this can vary depending on the region and the original data sources. The primary data source for the Copernicus DEM is data from the TanDEM-X mission, designed by the German Aerospace Center (DLR). TanDEM-X provides high-resolution radar data through interferometric synthetic aperture radar (InSAR) techniques.
+
+The Copernicus DEM 30 meter is organized in a 1$^\circ$ by 1$^\circ$ grid. In `sits`, access to COP-DEM-GLO-30 images can be done either by MGRS tiles (`tiles`) or by region of interest (`roi`). In both case, the cube is retrieved based on the parts of the grid that intersect the region of interest or the chosen tiles.
+
+```{r, tidy="styler", out.width="100%", fig.align="center", fig.cap= "Copernicus 30-meter DEM of an area in Brazil (Source: Authors)."}
+cube_dem_30 <-  sits_cube(
+  source = "MPC",
+  collection = "COP-DEM-GLO-30",
+  tiles = "20LMR",
+  band = "ELEVATION"
+)
+plot(cube_dem_30, band = "ELEVATION", rev = TRUE)
+```
+
+## Copernicus Data Space Ecosystem (CDSE){-}
+
+The Copernicus Data Space Ecosystem (CDSE) is a cloud service designed to support access to Earth observation data from the Copernicus Sentinel missions and other sources. It is designed and maintained by the European Space Agency (ESA) with support from the European Commission. 
+
+Configuring user access to CDSE involves several steps to ensure proper registration, access to data, and utilization of the platform's tools and services. Visit the Copernicus Data Space Ecosystem [registration page](https://dataspace.copernicus.eu). Complete the registration form with your details, including name, email address, organization, and sector. Confirm your email address through the verification link sent to your inbox.
+
+After registration, you will need to obtain access credentials to the S3 service implemented by CDSE. To this end, visit the [CSDE S3 credentials site](https://eodata-s3keysmanager.dataspace.copernicus.eu/panel/s3-credentials). The site will request you to add a new credential. You will receive two keys: an an S3 access key and a secret access key. Take note of both and include the following lines in your `.Rprofile`:
+
+```{r, echo = TRUE, eval = FALSE}
+Sys.setenv(
+    AWS_ACCESS_KEY_ID = "your access key",
+    AWS_SECRET_ACCESS_KEY = "your secret access key"
+	AWS_S3_ENDPOINT = "eodata.dataspace.copernicus.eu",
+	AWS_VIRTUAL_HOSTING = "FALSE"
+)
+```
+
+After including these lines in your .Rprofile, restart `R` for the changes to take effect. By following these steps, users will have access to the Copernicus Data Space Ecosystem. 
+
+### SENTINEL-2/2A images in CDSE{-}
+
+CDSE hosts a global collection of Sentinel-2 Level-2A images, which are processed according to the [CEOS Analysis-Ready Data](https://ceos.org/ard/) specifications. One example is provided below, where we present a Sentinel-2 image of the Lena river delta in Siberia in summertime.
+
+```{r, echo = TRUE, eval = FALSE}
+# obtain a collection of images of a tile covering part of Lena delta
+lena_cube <- sits_cube(
+    source = "CDSE",
+    collection = "SENTINEL-2-L2A",
+    bands = c("B02", "B04", "B8A", "B11", "B12"),
+    start_date = "2023-05-01",
+    end_date = "2023-09-01",
+    tiles = c("52XDF")
+)
+# plot an image from summertime
+plot(lena_cube, date = "2023-07-06", red = "B12", green = "B8A", blue = "B04")
+```
+
+```{r, echo = FALSE, out.width="100%", fig.align="center", fig.cap= "Sentinel-2 image of the Lena river delta in summertime (Source: Authors)."}
+knitr::include_graphics("images/s2_lena_delta.png")
+```
+
+### SENTINEL-1-RTC images in CDSE{-}
+
+An important product under development at CDSE are the radiometric terrain corrected (RTC) Sentinel-1 images. in CDSE, this product is referred to as normalized terrain backscater (NRB). The S1-NRB product contains radiometrically terrain corrected (RTC) gamma nought backscatter (γ0) processed from Single Look Complex (SLC) Level-1A data. Each acquired polarization is stored in an individual binary image file. 
+
+All images are projected and gridded into the United States Military Grid Reference System (US-MGRS). The use of the US-MGRS tile grid ensures a very high level of interoperability with Sentinel-2 Level-2A ARD products making it easy to also set-up complex analysis systems that exploit both SAR and optical data.
+
+It should be noted that while speckle is inherent in SAR acquisitions, speckle filtering is not applied to the S1-NRB product in order to preserve spatial resolution.  Some applications (or processing methods) may require spatial or temporal filtering for stationary backscatter estimates. 
+
+For more details, please refer to the [S1-NRB product website](https://sentinels.copernicus.eu/web/sentinel/sentinel-1-ard-normalised-radar-backscatter-nrb-product). As of July 2024, RTC images are only available for Africa. Global coverage is expected to grow as ESA expands the S1-RTC archive. The following example shows an S1-RTC image for the Rift valley in Ethiopia.
+
+```{r, tidy = "styler", echo = TRUE, eval = FALSE}
+# retrieve a S1-RTC cube and plot
+s1_cube <- sits_cube(
+    source = "CDSE",
+    collection = "SENTINEL-1-RTC",
+    bands = c("VV", "VH"),
+    orbit = "descending",
+    start_date = "2023-01-01",
+    end_date = "2023-12-31",
+    tiles = c("37NCH")
+)
+plot(s1_cube, band = "VV", date = c("2023-03-03"), palette = "Greys")
+```
+
+```{r, echo = FALSE, out.width="100%", fig.align="center", fig.cap= "Sentinel-1-RTC image of the Rift Valley in Ethiopia (Source: Authors)."}
+knitr::include_graphics("images/s1_rtc_cdse.png")
+```
 
 
 
-## Assessing Digital Earth Africa{-}
+## Digital Earth Africa{-}
 
-Digital Earth Africa (DEAFRICA) is a cloud service that provides open-access Earth observation data for the African continent. The ARD image collections in `sits` are `S2_L2A` (Sentinel-2 level 2A) and `LS8_SR` (Landsat-8). Since the STAC interface for DEAFRICA does not implement the concept of tiles, users need to specify their area of interest using the `roi` parameter. The requested `roi` produces a cube that contains one MGRS tiles ("35LPH") covering an area of Madagascar that includes the Betsiboka Estuary.  
-```{r, tidy="styler", out.width="100%", fig.align="center", fig.cap="Sentinel-2 image in an area over Madagascar (Source: Authors)."}
+Digital Earth Africa (DEAFRICA) is a cloud service that provides open-access Earth observation data for the African continent. The ARD image collections in `sits` are:
+1. Sentinel-2 level 2A (`SENTINEL-2-L2A`), organised as MGRS tiles.
+2. Sentinel-1 radiometrically terrain corrected (`SENTINEL-1-RTC`)
+3. Landsat-5 (`LS5-SR`), Landsat-7 (`LS7-SR`), Landsat-8 (`LS8-SR`) and Landat-9 (`LS9-SR`). All Landsat collections are ARD data and are organized as WRS-2 tiles.
+4. SAR L-band images produced by PALSAR sensor onboard the Japanese ALOS satellite(`ALOS-PALSAR-MOSAIC`). Data is organized in a 5$^\circ$ by 5$^\circ$ grid with a spatial resolution of 25 meters. Images are available annually from 2007 to 2010 (ALOS/PALSAR) and from 2015 to 2022 (ALOS-2/PALSAR-2).
+5.Estimate of vegetation condition using NDVI anomalies (`NDVI-ANOMALY`) compared with the long-term baseline condition. The available measurements are "NDVI_MEAN" (mean NDVI for a month) and "NDVI-STD-ANOMALY" (standardised NDVI anomaly for a month).
+6. Rainfall information provided by Climate Hazards Group InfraRed Precipitation with Station data (CHIRPS) from University of California in Santa Barbara. There are monthly (`RAINFALL-CHIRPS-MONTHLY`) and daily (`RAINFALL-CHIRPS-DAILY`) products over Africa.
+7. Digital elevation model provided by the EC Copernicus program (`COP-DEM-30`) in 30 meter resolution organized in a 1$^\circ$ by 1$^\circ$ grid.
+
+Access to DEAFRICA Sentinel-2 images can be done wither using `tiles` or `roi` parameter. In this example, the requested `roi` produces a cube that contains one MGRS tiles (“35LPH”) covering an area of Madagascar that includes the Betsiboka Estuary.
+
+```{r, tidy="styler", eval = FALSE}
 dea_s2_cube <- sits_cube(
     source = "DEAFRICA",
-    collection = "S2_L2A",
+    collection = "SENTINEL-2-L2A",
     roi = c(
-        lon_min = 46.1, lat_min = -15.6,
-        lon_max = 46.6, lat_max = -16.1
-    ),
-    bands = c(
-        "B02", "B03", "B04",
-        "B05", "B06", "B07",
-        "B08", "B8A", "B11",
-        "B12", "CLOUD"
-    ),
+    lon_min = 46.1, lat_min = -15.6,
+    lon_max = 46.6, lat_max = -16.1
+  ),
+    bands = c("B02", "B04", "B08"),
     start_date = "2019-04-01",
-    end_date = "2019-11-30"
+    end_date = "2019-05-30"
 )
 plot(dea_s2_cube, red = "B04", blue = "B02", green = "B08")
+```
+
+```{r, echo = FALSE, out.width="100%", fig.align="center", fig.cap="Sentinel-2 image in an area over Madagascar (Source: Authors)."}
+knitr::include_graphics("images/deafrica_s2.png")
+```
+
+The next example retrieves a set of ARD Landsat-9 data, covering the Serengeti plain in Tanzania. 
+
+```{r, tidy="styler", eval = FALSE}
+dea_l9_cube <- sits_cube(
+    source = "DEAFRICA",
+    collection = "LS9-SR",
+    roi = c(
+        lon_min = 33.0, lat_min = -3.60, 
+        lon_max = 33.6, lat_max = -3.00
+    ),
+    bands = c("B04", "B05", "B06"),
+    start_date = "2023-05-01",
+    end_date = "2023-08-30"
+)
+plot(dea_l9_cube, date = "2023-06-26", 
+     red = "B06", green = "B05", blue = "B04")
+```
+
+```{r, echo = FALSE, out.width="100%", fig.align="center", fig.cap="Landsat-9 image in an area over the Serengeti in Tanzania (Source: Authors)."}
+knitr::include_graphics("images/landsat9_serengeti.png")
+```
+
+The following example shows how to retrieve a subset of the ALOS-PALSAR mosaic for year 2020, for an area near the border between Congo and Rwanda. 
+
+```{r, tidy="styler", eval = FALSE}
+dea_alos_cube <- sits_cube(
+    source = "DEAFRICA",
+    collection = "ALOS-PALSAR-MOSAIC",
+    roi = c(
+        lon_min = 28.69, lat_min = -2.35, 
+        lon_max = 29.35, lat_max = -1.56
+    ),
+    bands = c("HH", "HV"),
+    start_date = "2020-01-01",
+    end_date = "2020-12-31"
+)
+plot(dea_alos_cube,band = "HH")
+```
+
+```{r, echo = FALSE, out.width="100%", fig.align="center", fig.cap="Landsat-9 image in an area over the Serengeti in Thailand (Source: Authors)."}
+knitr::include_graphics("images/alos_palsar_hh_lake_kivu.png")
 ```
 
 ## Assessing the Brazil Data Cube{-}
@@ -214,7 +396,7 @@ To access the BDC, users must provide their credentials using environment variab
 
 In the example below, the data cube is defined as one tile ("005004") of `CBERS-WFI-16D` collection, which holds CBERS AWFI images at 16 days resolution.
 
-```{r, tidy="styler", out.width="100%", fig.align="center", fig.cap="CBERS-4 WFI image in a Cerrado area in Brazil (Source: Authors)."}
+```{r, tidy="styler", eval = FALSE}
 # Define a tile from the CBERS-4/4A AWFI collection
 cbers_tile <- sits_cube(
     source = "BDC",
@@ -231,6 +413,9 @@ plot(cbers_tile,
      date = "2021-05-09")
 ```
 
+```{r, echo = FALSE, out.width="100%", fig.align="center", fig.cap="CBERS-4 WFI image in a Cerrado area in Brazil (Source: Authors)."}
+knitr::include_graphics("images/bdc_cbers4.png")
+```
 
 
 ## Accessing Harmonized Landsat-Sentinel collections {-}
@@ -253,7 +438,19 @@ login <username>
 password <password>
 ```
 
-Access to images in NASA HLS is done by region of interest. The following example shows an HLS Sentinel-2 image over the Brazilian coast. 
+We recommend using the earthdatalogin package to create a `.netrc` file with the `earthdatalogin::edl_netrc`. This function creates a properly configured .netrc file in the user's home directory and an environment variable GDAL_HTTP_NETRC_FILE, as shown in the example.
+
+```{r, tidy = "styler", echo = TRUE, eval = FALSE}
+library(earthdatalogin)
+
+earthdatalogin::edl_netrc( 
+username = "<your user name>", 
+password = "<your password>" 
+) 
+```
+
+
+Access to images in NASA HLS is done by region of interest or by tiles. The following example shows an HLS Sentinel-2 image over the Brazilian coast. 
 
 ```{r, tidy="styler", echo = TRUE, eval = FALSE}
 # define a region of interest
@@ -335,7 +532,7 @@ plot(hls_cube_merged,
 knitr::include_graphics("images/hls_ilhabela_l8.png") 
 ```
 
-## Defining a data cube using ARD local files{-}
+## Reading Planet data as ARD local files{-}
 
 ARD images downloaded from cloud collections to a local computer are not associated with a STAC endpoint that describes them. They must be organized and named to allow `sits` to create a data cube from them. All local files have to be in the same directory and have the same spatial resolution and projection. Each file must contain a single image band for a single date. Each file name needs to include tile, date, and band information. Users must provide information about the original data source to allow `sits` to retrieve information about image attributes such as band names, missing values, etc. When working with local cubes,  `sits_cube()` needs the following parameters: 
 
@@ -346,30 +543,31 @@ ARD images downloaded from cloud collections to a local computer are not associa
 5. `parse_info`: Information to parse the file names. File names need to contain information on tile, date, and band, separated by a delimiter (usually `"_"`).
 6. `delim`: Separator character between descriptors in the file name (default is `"_"`).
 
-The example shows how to define a data cube using files from the `sitsdata` package.  The dataset contains part of tile "20LMR" of Sentinel-2 images for the period 2022-01-05 to 2021-08-26, with bands B02, B8A, and B11. Data is extracted from collection "SENTINEL-2-L2A" on Microsoft Planetary Computer ("MPC"). 
+To be able to read local files, they must belong to a collection registered by `sits`. All collections known to `sits` by default are shown using `sits_list_collections()`. To register a new collection, please see the information provided in the Technical Annex.
 
-In general, `sits` users need to match the local file names to the values provided by the `parse_info` parameter. Since the file names of this dataset use the format `SENTINEL-2_MSI_20LMR_B8A_2022-12-23.tif`, which fits the default value for `parse_info` which is `c("X1", "X2", "tile", "band", "date")` and for `delim` which is "_",  it is not necessary to set these values when creating a data cube from the local files. 
+The example shows how to define a data cube using Planet images from the `sitsdata` package.  The dataset contains monthly PlanetScope mosaics for tile "604-1043" for August to October 2022, with bands B01, B02, B04, and B04. 
+
+In general, `sits` users need to match the local file names to the values provided by the `parse_info` parameter. The file names of this dataset use the format `PLANETSCOPE_MOSAIC_604-1043_B4_2022-10-01.tif`, which fits the default value for `parse_info` which is `c("source", "collection", "tile", "band", "date")` and for `delim` which is "_",  it is not necessary to set these values when creating a data cube from the local files. 
 
 
 ```{r}
 library(sits)
 # Create a cube based on a stack of Sentinel-2 data
-data_dir <- system.file("extdata/Rondonia-20LKP", package = "sitsdata")
+data_dir <- system.file("extdata/Planet", package = "sitsdata")
 # List the first file
 list.files(data_dir)[1]
 ```
 
-```{r, tidy="styler", out.width="100%", fig.align="center", fig.cap="Sentinel-2 image over an area in Rondonia, Brazil (Source: Authors)."}
+```{r, tidy="styler", out.width="100%", fig.align="center", fig.cap="Planet image over an area in Colombia (Source: Authors)."}
 # Create a data cube from local files
-s2_cube_20LKP <- sits_cube(
-    source = "MPC",
-    collection = "SENTINEL-2-L2A",
+planet_cube <- sits_cube(
+    source = "PLANET",
+    collection = "MOSAIC",
     data_dir = data_dir
 )
 
-# Plot the band B8A in the first time instance
-plot(s2_cube_20LKP, red = "B11", green = "B8A", blue = "B02", 
-     date = "2020-07-22")
+# Plot the first instance of the Planet data in natural colors
+plot(planet_cube, red = "B3", green = "B2", blue = "B1")
 ```
 
 ## Defining a data cube using classified images{-}
@@ -406,11 +604,13 @@ plot(Rondonia_class_cube)
 
 ## Regularizing data cubes{-}
 
-ARD collections available in AWS, MPC, USGS, and DEAFRICA are not regular in space and time. Bands may have different resolutions, images may not cover the entire tile, and time intervals are irregular. For this reason, data from these collections need to be converted to regular data cubes by calling `sits_regularize()`, which uses the  *gdalcubes* package [@Appel2019]. 
+ARD collections available in AWS, MPC, USGS, and DEAFRICA are not regular in space and time. Bands may have different resolutions, images may not cover the entire tile, and time intervals are irregular. For this reason, data from these collections need to be converted to regular data cubes by calling `sits_regularize()`, which uses the  *gdalcubes* package [@Appel2019]. After obtaining a regular data cube, users can perform data analysis and classification operations, as shown in the following chapters.
+
+### Regularizing Sentinel-2 images
 
 In the following example, the user has created an irregular data cube from the Sentinel-2 collection available in Microsoft's Planetary Computer (MPC) for tiles `20LKP` and `20LLP` in the state of Rondonia, Brazil. We first build an irregular data cube using `sits_cube()`.
 
-```{r, tidy="styler"}
+```{r, cache = TRUE, tidy="styler"}
 # Creating an irregular data cube from MPC
 s2_cube_rondonia <- sits_cube(
     source = "MPC",
@@ -424,7 +624,7 @@ sits_timeline(s2_cube_rondonia)
 ```
 
 
-```{r, tidy="styler", out.width="100%", fig.align="center", fig.cap="Sentinel-2 tile 20LLP for date 2018-07-03 (Source: Authors)."}
+```{r, cache = TRUE, tidy="styler", out.width="100%", fig.align="center", fig.cap="Sentinel-2 tile 20LLP for date 2018-07-03 (Source: Authors)."}
 # plot the first image of the irregular cube
 s2_cube_rondonia |>  
     dplyr::filter(tile == "20LLP") |>  
@@ -433,7 +633,7 @@ s2_cube_rondonia |>
 
 Because of the different acquisition orbits of the Sentinel-2 and Sentinel-2A satellites, the two tiles also have different timelines. Tile `20LKP` has 12 instances, while tile `20LLP` has 24 instances for the chosen period. The function  `sits_regularize()` builds a data cube with a regular timeline and a best estimate of a valid pixel for each interval. The `period` parameter sets the time interval between two images. Values of `period` use the ISO8601 time period specification, which defines time intervals as `P[n]Y[n]M[n]D`, where "Y" stands for years, "M" for months, and "D" for days. Thus, `P1M` stands for a one-month period, `P15D` for a fifteen-day period. When joining different images to get the best image for a period, `sits_regularize()` uses an aggregation method that organizes the images for the chosen interval in order of increasing cloud cover and then selects the first cloud-free pixel. 
 
-```{r, tidy="styler", message=FALSE, results='hide', out.width="100%", fig.align="center", fig.cap="Regularized image for tile Sentinel-2 tile 20LLP (Source: Authors)."}
+```{r, cache = TRUE, tidy="styler", message=FALSE, results='hide', out.width="100%", fig.align="center", fig.cap="Regularized image for tile Sentinel-2 tile 20LLP (Source: Authors)."}
 # Regularize the cube to 15 day intervals
 reg_cube_rondonia <- sits_regularize(
           cube       = s2_cube_rondonia,
@@ -449,4 +649,5 @@ reg_cube_rondonia |>
     plot(red = "B12", green = "B8A", blue = "B05")
 ```
 
-After obtaining a regular data cube, users can perform data analysis and classification operations, as shown in the following chapters.
+### Regularizing Sentinel-1 images
+

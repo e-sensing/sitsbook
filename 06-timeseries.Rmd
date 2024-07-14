@@ -1,7 +1,10 @@
 # Working with time series{-}
 
-```{r, echo = FALSE}
+```{r, include = FALSE, eval = TRUE, echo = FALSE}
 source("common.R")
+dir.create("./tempdir/chp6")
+library(sits)
+library(sitsdata)
 ```
 
 ## Data structures for satellite time series{-}
@@ -10,7 +13,7 @@ source("common.R")
 
 The `sits` package uses sets of time series data describing properties in spatiotemporal locations of interest. For land classification, these sets consist of samples labeled by experts. The package can also be used for any type of classification, provided that the timeline and bands of the time series used for training match that of the data cubes. 
 
-In `sits`, time series are stored in a `tibble` data structure. The following code shows the first three lines of a time series tibble containing 1,882 labeled samples of land classes in Mato Grosso state of Brazil. The samples have time series extracted from the MODIS MOD13Q1 product from 2000 to 2016, provided every 16 days at 250 m resolution in the Sinusoidal projection. Based on ground surveys and high-resolution imagery, it includes samples of seven classes: Forest, Cerrado, Pasture, Soy_Fallow, Soy_Cotton, Soy_Corn, and Soy_Millet. 
+In `sits`, time series are stored in a `tibble` data structure. The following code shows the first three lines of a time series tibble containing 1,882 labeled samples of land classes in Mato Grosso state of Brazil. The samples have time series extracted from the MODIS MOD13Q1 product from 2000 to 2016, provided every 16 days at 250 m resolution in the Sinusoidal projection. Based on ground surveys and high-resolution imagery, it includes samples of seven classes: `Forest`, `Cerrado`, `Pasture`, `Soy_Fallow`, `Soy_Cotton`, `Soy_Corn`, and `Soy_Millet`. 
 
 ```{r}
 # Samples
@@ -18,7 +21,7 @@ data("samples_matogrosso_mod13q1")
 samples_matogrosso_mod13q1[1:4,]
 ```
 
-The time series tibble contains data and metadata. The first six columns contain spatial and temporal information, the label assigned to the sample, and the data cube from where the data has been extracted. The first sample has been labeled Pasture at location (-58.5631, -13.8844), being valid for the period (2006-09-14, 2007-08-29). Informing the dates where the label is valid is crucial for correct classification. In this case, the researchers labeling the samples used the agricultural calendar in Brazil. The relevant dates for other applications and other countries will likely differ from those used in the example. The `time_series` column contains the time series data for each spatiotemporal location. This data is also organized as a tibble, with a column with the dates and the other columns with the values for each spectral band. 
+The time series tibble contains data and metadata. The first six columns contain spatial and temporal information, the label assigned to the sample, and the data cube from where the data has been extracted. The first sample has been labeled `Pasture` at location (-58.5631, -13.8844), being valid for the period (2006-09-14, 2007-08-29). Informing the dates where the label is valid is crucial for correct classification. In this case, the researchers labeling the samples used the agricultural calendar in Brazil. The relevant dates for other applications and other countries will likely differ from those used in the example. The `time_series` column contains the time series data for each spatiotemporal location. This data is also organized as a tibble, with a column with the dates and the other columns with the values for each spectral band. 
 
 ## Utilities for handling time series{-}
 
@@ -28,7 +31,7 @@ The package provides functions for data manipulation and displaying information 
 summary(samples_matogrosso_mod13q1)
 ```
 
-In many cases, it is helpful to relabel the dataset. For example, there may be situations where using a smaller set of labels is desirable because samples in one label on the original set may not be distinguishable from samples with other labels. We then could use `sits_labels()<-` to assign new labels. The example below shows how to do relabeling on a time series set shown above; all samples associated with crops are grouped in a single Croplands label.
+In many cases, it is helpful to relabel the dataset. For example, there may be situations where using a smaller set of labels is desirable because samples in one label on the original set may not be distinguishable from samples with other labels. We then could use `sits_labels()<-` to assign new labels. The example below shows how to do relabeling on a time series set shown above; all samples associated with crops are grouped in a single `Croplands` label.
 ```{r, tidy = "styler"}
 # Copy the sample set for Mato Grosso 
 samples_new_labels <- samples_matogrosso_mod13q1
@@ -37,8 +40,8 @@ sits_labels(samples_new_labels)
 # Update the labels
 sits_labels(samples_new_labels) <- c("Cerrado",   "Forest",    
                                      "Pasture",   "Croplands", 
-                                     "Croplands", "Croplands",
-                                     "Croplands")
+                                     "Cropland", "Cropland",
+                                     "Cropland")
 summary(samples_new_labels)
 ```
 
@@ -55,7 +58,7 @@ samples_cerrado <- dplyr::filter(samples_ndvi,
 
 ## Time series visualisation{-}
 
-Given a few samples to display, `plot()` tries to group as many spatial locations together. In the following example, the first 12 samples labeled as Cerrado refer to the same spatial location in consecutive time periods. For this reason, these samples are plotted together.
+Given a few samples to display, `plot()` tries to group as many spatial locations together. In the following example, the first 12 samples labeled as `Cerrado` refer to the same spatial location in consecutive time periods. For this reason, these samples are plotted together.
 
 ```{r cerrado-12, fig.align="center", out.width="70%", fig.cap="Plot of the first 'Cerrado' samples (Source: Authors)." }
 # Plot the first 12 samples
@@ -96,7 +99,7 @@ samples_matogrosso_mod13q1 |>
     plot()
 ```
 
-The resulting patterns provide some insights over the time series behaviour of each class. The response of the Forest class is quite distinctive.  They also show that it should be possible to separate between the single and double cropping classes. There are similarities between the double-cropping classes (Soy_Corn and Soy_Millet) and between the Cerrado and Pasture classes. The subtle differences between class signatures provide hints at possible ways by which machine learning algorithms might distinguish between classes. One example is the difference between the middle-infrared response during the dry season (May to September) to differentiate between Cerrado and Pasture.
+The resulting patterns provide some insights over the time series behaviour of each class. The response of the Forest class is quite distinctive.  They also show that it should be possible to separate between the single and double cropping classes. There are similarities between the double-cropping classes (`Soy_Corn` and `Soy_Millet `) and between the `Cerrado` and `Pasture` classes. The subtle differences between class signatures provide hints at possible ways by which machine learning algorithms might distinguish between classes. One example is the difference between the middle-infrared response during the dry season (May to September) to differentiate between `Cerrado` and `Pasture`. 
 
 ## Geographical variability of training samples{-}
 
