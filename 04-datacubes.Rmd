@@ -9,11 +9,42 @@ library(sitsdata)
 
 <a href="https://www.kaggle.com/code/esensing/creating-data-cubes-in-sits" target="_blank"><img src="https://kaggle.com/static/images/open-in-kaggle.svg"/></a>
 
-## Analysis-ready data image collectionsx
+## Brief introduction to remote sensing images and terminology{-}
 
-Analysis-ready data (ARD) are images that are ready for analysis without the need for further preprocessing or transformation. They simplify and accelerate the analysis of Earth observation data by providing consistent and high-quality data that are standardized across different sensors and platforms. ARD data is typically provided as a collection of  files, where each pixel contains a single value for each spectral band for a given date.
+### Optical surface reflectance images{-}
 
-ARD collections are available in cloud services such as Amazon Web Service, Brazil Data Cube, Digital Earth Africa, Swiss Data Cube, and Microsoft's Planetary Computer. These collections have been processed to improve multidate comparability.  Radiance measures at the top of the atmosphere were converted to ground reflectance measures.  In general, the timelines of the images of an ARD collection are different. Images still contain cloudy or missing pixels; bands for the images in the collection may have different resolutions. Figure \@ref(fig:ardt) shows an example of the Landsat ARD image collection. 
+Optical satellite sensors are instruments onboard satellites designed to capture images of the Earth's surface using visible, near-infrared, and sometimes shortwave infrared light. These sensors detect reflected sunlight. To be useful for analysis, the signals captured by optical sensors are converted to surface reflectance values, which represent the fraction of sunlight reflected by the Earth's surface. This correction accounts for sensor characteristics, atmospheric scattering, and varying solar illumination conditions. The images are also corrected for geometric distortions caused by the sensor's angle of view. Finally, the images are accurately aligned with geographic coordinates. Additional information provided together with optical images include cloud detection masks. Pixels which are affected by clouds or shadows are marked to allow additional corrections and gap filling. 
+
+### Synthetic aperture radar (SAR) images{-}
+
+Synthetic Aperture Radar (SAR) images are acquired by satellites using a specialized radar system that sends out microwave signals. When the microwave pulses hit the Earth's surface, they are scattered in various directions. A portion of these scattered signals, known as backscatter, is reflected back towards the satellite. The SAR antenna on the satellite receives the backscattered signals. Because the satellite is moving along its orbit, it collects data from different positions, which helps in synthesizing a larger aperture than the physical size of the antenna. 
+
+The received signals are processed using complex algorithms. This processing involves combining the signals from multiple pulses and different positions to create a high-resolution image. The technique of combining these signals to simulate a larger antenna is called aperture synthesis. The processed data is then used to generate SAR images, which represent the backscatter intensity from the Earth's surface. SAR imaging has several advantages. SAR can penetrate clouds and work in all weather conditions, including rain and fog. Since SAR uses microwave signals, it does not rely on sunlight and can capture images both day and night.
+
+
+#### SAR Ground Range Detected (GRD) images{-}
+
+Sentinel-1 GRD products consist of focused SAR data that has been detected, multi-looked and projected to ground range using the WGS84 Earth ellipsoid model. GRD images are subject for variations in the radar signal's intensity due to topographic effects, antenna pattern, range spreading loss, and other radiometric distortions. The most common types of distortions include foreshortening, layover and shadowing. 
+
+Foreshortening occurs when the radar signal strikes a steep terrain slope facing the radar, causing the slope to appear compressed in the image. Features like mountains can appear much steeper than they are, and their true heights can be difficult to interpret. Layover happens when the radar signal reaches the top of a tall feature (like a mountain or building) before it reaches the base. As a result, the top of the feature is displaced towards the radar and appears in front of its base. This results in a reversal of the order of features along the radar line-of-sight, making the image interpretation challenging. Shadowing occurs when a radar signal is obstructed by a tall object, casting a shadow on the area behind it that the radar cannot illuminate. The shadowed areas appear dark in SAR images, and no information is available from these regions, similar to optical shadows.
+
+#### SAR Radiometrically Terrain Corrected (RTC) images{-}
+
+An RTC SAR image has undergone corrections for both geometric distortions and radiometric distortions caused by the terrain. The purpose of RTC processing is to enhance the interpretability and usability of SAR images for various applications by providing a more accurate representation of the Earth's surface. The radar backscatter values are normalized to account for these variations, ensuring that the image accurately represents the reflectivity of the surface features.
+
+The terrain correction addresses geometric distortions caused by the side-looking geometry of SAR imaging, such as foreshortening, layover, and shadowing. It uses a Digital Elevation Model (DEM) to model the terrain and re-project the SAR image from the slant range (radar line-of-sight) to the ground range (true geographic coordinates). This process aligns the SAR image with the actual topography, providing a more accurate spatial representation.
+
+### Analysis-ready data(ARD) definition{-}
+
+Analysis Ready Data (CEOS-ARD) are satellite data that have been processed to meet the [ARD standards](https://ceos.org/ard/) defined by the Committee on Earth Observation Satellites (CEOS). ARD data simplify and accelerate the analysis of Earth observation data by providing consistent and high-quality data that are standardized across different sensors and platforms. 
+
+ARD images processing includes geometric corrections, radiometric corrections, and sometimes atmospheric corrections. Images are georeferenced, meaning they are accurately aligned with a coordinate system. Optical ARD images include cloud and shadow masking information. These masks indicate which pixels affected by clouds or cloud shadows. For optical sensors, CEOS-ARD images have to be converted to surface reflectance values, which represent the fraction of light that is reflected by the surface. This makes the data more comparable across different times and locations.
+
+For SAR images, CEOS-ARD specification require images to undergo Radiometric Terrain Correction (RTC) and are provided in the GammaNought ($\gamma_0$) backscatter values. This value which mitigates the variations from diverse observation geometries and is recommended for most land applications. 
+
+## Analysis-ready data image collections
+
+ARD images are available from various satellite platforms, including Landsat, Sentinel, and commercial satellites. This provides a wide range of spatial, spectral, and temporal resolutions to suit different applications. They are organised as a collection of  files, where each pixel contains a single value for each spectral band for a given date. These collections are available in cloud services such as Brazil Data Cube, Digital Earth Africa, and Microsoft's Planetary Computer. In general, the timelines of the images of an ARD collection are different. Images still contain cloudy or missing pixels; bands for the images in the collection may have different resolutions. Figure \@ref(fig:ardt) shows an example of the Landsat ARD image collection. 
 
 ```{r ardt, echo = FALSE, out.width="80%", fig.align="center", fig.cap="ARD image collection (Source: USGS. Reproduction based on fair use doctrine)."}
 knitr::include_graphics("images/usgs_ard_tile.png")
@@ -33,19 +64,18 @@ knitr::include_graphics("images/landsat_wrs_grid.png")
 
 ## Image collections handled by sits{-}
 
-In version 1.5.1,`sits` supports access to the following ARD image collections:
+In version 1.5.1,`sits` supports access to the following ARD image cloud providers:
 
 1. Amazon Web Services (AWS): Open data Sentinel-2/2A level 2A collections for the Earth's land surface. 
-2. Brazil Data Cube (BDC): Open data collections of Sentinel-2/2A, Landsat-8, CBERS-4/4A, and MODIS images for Brazil. These collections are organized as regular data cubes. 
+2. Brazil Data Cube (BDC): Open data collections of Sentinel-2/2A, Landsat-8, CBERS-4/4A, and MOD13Q1 products for Brazil. These collections are organized as regular data cubes. 
 3. Digital Earth Africa (DEAFRICA): Open data collections of Sentinel-1 RTC, Sentinel-2/2A, Landsat-5/7/8/9 for Africa. Additional products available include ALOS_PALSAR mosaics, DEM_COP_30, NDVI_ANOMALY based on Landsat data, and monthly and daily rainfall data from CHIRPS. 
-4. Microsoft Planetary Computer (MPC): Open data collections of Sentinel-1 GRD, Sentinel-2/2A and Landsat-4/5/7/8/9 for the Earth's land areas. Also support open access to Copernicus DEM-30 and paid access to Sentinel-1 RTC collections.
-
+4. Microsoft Planetary Computer (MPC): Open data collections of Sentinel-1 GRD, Sentinel-2/2A,  Landsat-4/5/7/8/9 images for the Earth's land areas. Also supported are Copernicus DEM-30 and MOD13Q1, MOD10A1 and MOD09A1 products. Sentinel-1 RTC collections are acessible but require payment.
 5. Copernicus Data Space Ecosystem (CDSE): Open data collections of Sentinel-1 RTC and Sentinel-2/2A images. 
 6. Harmonized Landsat-Sentinel (HLS): HLS, provided by NASA, is an open data collection that processes Landsat 8 and Sentinel-2 imagery to a common standard.
 7. USGS: Landsat-4/5/7/8/9 collections available in AWS, which require access payment. 
 8. Swiss Data Cube (SDC): Open data collection of Sentinel-2/2A and Landsat-8 images for Switzerland. 
 
-In additional, `sits` supports the use of Planet monthly mosaics stored as local files.
+In addition, `sits` supports the use of Planet monthly mosaics stored as local files. For a detailed description of the providers and collections supported by `sits`, please run `sits_list_collections()`.
 
 
 ## Regular image data cubes{-}
@@ -53,7 +83,7 @@ In additional, `sits` supports the use of Planet monthly mosaics stored as local
 Machine learning and deep learning (ML/DL) classification algorithms require the input data to be consistent. The dimensionality of the data used for training the model has to be the same as that of the data to be classified. There should be no gaps and no missing values. Thus, to use ML/DL algorithms for remote sensing data, ARD image collections should be converted to regular data cubes. Adapting a previous definition by Appel and Pebesma [@Appel2019], we consider a *regular data cube*  has the following definition and properties:
 
 1. A regular data cube is a four-dimensional data structure with dimensions x (longitude or easting), y (latitude or northing), time, and bands. The spatial, temporal, and attribute dimensions are independent and not interchangeable.
-2. The spatial dimensions refer to a coordinate system, such as the grids defined by UTM (Universal Transverse Mercator) or MGRS (Military Grid Reference System). A grid (or tile) of the grid corresponds to a unique zone of the coordinate system.
+2. The spatial dimensions refer to a coordinate system, such as the grids defined by UTM (Universal Transverse Mercator) or MGRS (Military Grid Reference System). A grid (or tile) of the grid corresponds to a unique zone of the coordinate system. A data cube may span various tiles and UTM zones.
 3. The temporal dimension is a set of continuous and equally-spaced intervals. 
 4. For every combination of dimensions, a cell has a single value.
 
@@ -63,7 +93,7 @@ All cells of a data cube have the same spatiotemporal extent. The spatial resolu
 knitr::include_graphics("images/datacube_conception.png")
 ```
 
-Currently, the only cloud service that provides regular data cubes by default is the Brazil Data Cube (BDC). ARD collections available in AWS, MPC, USGS, and DEAFRICA are not regular in space and time. Bands may have different resolutions, images may not cover the entire time, and time intervals may be irregular. For this reason, subsets of these collections need to be converted to regular data cubes before further processing. To produce data cubes for machine-learning data analysis, users should first create an irregular data cube from an ARD collection and then use `sits_regularize()`, as described below.
+Currently, the only cloud service that provides regular data cubes by default is the Brazil Data Cube (BDC). ARD collections available in other cloud services are not regular in space and time. Bands may have different resolutions, images may not cover the entire time, and time intervals may be irregular. For this reason, subsets of these collections need to be converted to regular data cubes before further processing. To produce data cubes for machine-learning data analysis, users should first create an irregular data cube from an ARD collection and then use `sits_regularize()`, as described below.
 
 ## Creating data cubes{-}
 
@@ -79,8 +109,9 @@ The function `sits_cube()` supports access to image collections in cloud service
 4. `tiles`: Set of tiles of image collection reference system. Either `tiles` or `roi` should be specified. 
 5. `roi`: A region of interest. Either: (a) a named vector (`lon_min`, `lon_max`, `lat_min`, `lat_max`) in WGS 84 coordinates; or (b) an `sf` object.  All images intersecting the convex hull of the `roi` are selected. 
 6. `bands`: Optional parameter with the bands to be used. If missing, all bands from the collection are used.
-7. `start_date`: The initial date for the temporal interval containing the time series of images.
-8. `end_date`: The final date for the temporal interval containing the time series of images.
+7. `orbit`: Optional parameter required only for Sentinel-1 images.
+8. `start_date`: The initial date for the temporal interval containing the time series of images.
+9. `end_date`: The final date for the temporal interval containing the time series of images.
 
 The result of `sits_cube()` is a tibble with a description of the selected images required for further processing. It does not contain the actual data, but only pointers to the images.  The attributes of individual image files can be assessed by listing the `file_info` column of the tibble. 
 
@@ -114,7 +145,7 @@ knitr::include_graphics("images/aws_s2.png")
 
 ## Microsoft's Planetary Computer{-}
 
-The `sits` supports access to four open data collection from Microsoft's Planetary Computer (MPC): `SENTINEL-1-GRD`, `SENTINEL-2-L2A`, `LANDSAT-C2-L2` and `COP-DEM-GLO-30` (Copernicus Global DEM at 30 meter resolution. Also availble is access to the non-open data collection `SENTINEL-1-RTC`. 
+The `sits` supports access to three open data collection from Microsoft's Planetary Computer (MPC): `SENTINEL-1-GRD`, `SENTINEL-2-L2A`, `LANDSAT-C2-L2`. It also allows access to `COP-DEM-GLO-30` (Copernicus Global DEM at 30 meter resolution) and `MOD13Q1-6.1`(version 6.1 of the MODIS MOD13Q1 product). Access to the non-open data collection `SENTINEL-1-RTC` is available for users that have registration in MPC. 
 
 ### SENTINEL-2/2A images in MPC{-}
 
@@ -169,9 +200,9 @@ knitr::include_graphics("images/mpc_l8.png")
 
 ### SENTINEL-1-GRD images in MPC{-}
 
-Sentinel-1 Level-1 Ground Range Detected (GRD) products consist of focused SAR data that has been detected, multi-looked and projected to ground range using the WGS84 Earth ellipsoid model.  Access to Sentinel-1 GRD images can be done either by MGRS tiles (`tiles`) or by region of interest (`roi`). We recommend using the MGRS tiling system for specifying the area of interest, since when these images are regularized, they will be re-projected into MGRS tiles. By default, on;y images in descending orbit are selected. 
+Access to Sentinel-1 GRD images can be done either by MGRS tiles (`tiles`) or by region of interest (`roi`). We recommend using the MGRS tiling system for specifying the area of interest, since when these images are regularized, they will be re-projected into MGRS tiles. By default, only images in descending orbit are selected. 
 
-The following example shows how to create a data cube of S1 GRD images over a region in Mato Grosso Brazil that is an area of the Amazon forest that has been deforested. The resulting cube will not follow any specific projection and its coordinates will be states as EPSG 4326 (latitude/longitude). 
+The following example shows how to create a data cube of S1 GRD images over a region in Mato Grosso Brazil that is an area of the Amazon forest that has been deforested. The resulting cube will not follow any specific projection and its coordinates will be stated as EPSG 4326 (latitude/longitude). Its geometry is derived from the SAR slant-range perspective; thus, it will appear included in relation to the Earth's longitude. 
 
 ```{r, tidy="styler", cache = TRUE, out.width="100%", fig.align="center", fig.cap= "Sentinel-1 image in an area in Mato Grosso, Brazil (Source: Authors)."}
 cube_s1_grd <-  sits_cube(
@@ -186,24 +217,12 @@ cube_s1_grd <-  sits_cube(
 plot(cube_s1_grd, band = "VV", palette = "Greys")
 ```
 
-In areas with areas with large elevation differences, Sentinel-1 GRD images will have geometric distortions. Distortions in satellite Synthetic Aperture Radar (SAR) images can be caused by several factors, including the geometry of the SAR imaging process, the movement of the satellite, and the characteristics of the target surface. The most common types of distortions include foreshortening, layover and shadoing. 
-
-Foreshortening occurs when the radar signal strikes a steep terrain slope facing the radar, causing the slope to appear compressed in the image. Features like mountains can appear much steeper than they are, and their true heights can be difficult to interpret. Layover: It happens when the radar signal reaches the top of a tall feature (like a mountain or building) before it reaches the base. As a result, the top of the feature is displaced towards the radar and appears in front of its base. This results in a reversal of the order of features along the radar line-of-sight, making the image interpretation challenging. Shadowing occurs when a radar signal is obstructed by a tall object, casting a shadow on the area behind it that the radar cannot illuminate. The shadowed areas appear dark in SAR images, and no information is available from these regions, similar to optical shadows.
-
-For this reason, whenever possible, we recommend the use of RTC (radiometrically terrain corrected) images as described in the next session. 
+As explained earlier in this chapter, in areas with areas with large elevation differences, Sentinel-1 GRD images will have geometric distortions. For this reason, whenever possible, we recommend the use of RTC (radiometrically terrain corrected) images as described in the next session. 
 
 
 ### SENTINEL-1-RTC images in MPC{-}
 
-A RTC (Radiometrically Terrain Corrected) SAR (Synthetic Aperture Radar) image is a processed image that has undergone corrections for both geometric distortions and radiometric distortions caused by the terrain. The purpose of RTC processing is to enhance the interpretability and usability of SAR images for various applications by providing a more accurate representation of the Earth's surface.
-
-The RTC radiometric correction accounts for variations in the radar signal's intensity due to topographic effects, antenna pattern, range spreading loss, and other radiometric distortions. The radar backscatter values are normalized to account for these variations, ensuring that the image accurately represents the reflectivity of the surface features.
-
-The terrain correction addresses geometric distortions caused by the side-looking geometry of SAR imaging, such as foreshortening, layover, and shadowing. It uses a Digital Elevation Model (DEM) to model the terrain and re-project the SAR image from the slant range (radar line-of-sight) to the ground range (true geographic coordinates). This process aligns the SAR image with the actual topography, providing a more accurate spatial representation.
-
-Using RTC SAR images in beneficial. The image is corrected for terrain-induced distortions, ensuring that features are correctly positioned relative to their true geographic locations. The radiometrics corrections provide more consistent and reliable backscatter values, which are critical for quantitative analyses and comparisons over time.
-
-In MPC, access to Sentinel-1-RTC images requires a Planetary Computer account. User will receive a  Shared Access Signature (SAS) Token from MPC that allows access to RTC data. Once a user receives a token from Microsoft, she needs to include the environment variable `MPC_TOKEN` is her `.Rprofile`. Therefore, the following example only works for users that have an SAS token.
+In MPC, access to Sentinel-1-RTC images requires a Planetary Computer account. User will receive a  Shared Access Signature (SAS) Token from MPC that allows access to RTC data. Once a user receives a token from Microsoft, she needs to include the environment variable `MPC_TOKEN` in her `.Rprofile`. Therefore, the following example only works for users that have an SAS token.
 
 ```{r, tidy="styler", cache = TRUE, out.width="100%", fig.align="center", fig.cap= "Sentinel-1-RTC image of an area in Colombia (Source: Authors)."}
 cube_s1_rtc <-  sits_cube(
@@ -221,7 +240,7 @@ The above image is from the central region of Colombia, a country with large var
 
 ### Copernicus DEM 30 meter images in MPC{-}
 
-The Copernicus digital 3levation model 30-meter global dataset (COP-DEM-GLO-30) is a high-resolution topographic data product provided by the European Space Agency (ESA) under the Copernicus Program. The vertical accuracy of the Copernicus DEM 30-meter dataset is typically within a few meters, but this can vary depending on the region and the original data sources. The primary data source for the Copernicus DEM is data from the TanDEM-X mission, designed by the German Aerospace Center (DLR). TanDEM-X provides high-resolution radar data through interferometric synthetic aperture radar (InSAR) techniques.
+The Copernicus digital elevation model 30-meter global dataset (COP-DEM-GLO-30) is a high-resolution topographic data product provided by the European Space Agency (ESA) under the Copernicus Program. The vertical accuracy of the Copernicus DEM 30-meter dataset is typically within a few meters, but this can vary depending on the region and the original data sources. The primary data source for the Copernicus DEM is data from the TanDEM-X mission, designed by the German Aerospace Center (DLR). TanDEM-X provides high-resolution radar data through interferometric synthetic aperture radar (InSAR) techniques.
 
 The Copernicus DEM 30 meter is organized in a 1$^\circ$ by 1$^\circ$ grid. In `sits`, access to COP-DEM-GLO-30 images can be done either by MGRS tiles (`tiles`) or by region of interest (`roi`). In both case, the cube is retrieved based on the parts of the grid that intersect the region of interest or the chosen tiles.
 
@@ -241,14 +260,14 @@ The Copernicus Data Space Ecosystem (CDSE) is a cloud service designed to suppor
 
 Configuring user access to CDSE involves several steps to ensure proper registration, access to data, and utilization of the platform's tools and services. Visit the Copernicus Data Space Ecosystem [registration page](https://dataspace.copernicus.eu). Complete the registration form with your details, including name, email address, organization, and sector. Confirm your email address through the verification link sent to your inbox.
 
-After registration, you will need to obtain access credentials to the S3 service implemented by CDSE. To this end, visit the [CSDE S3 credentials site](https://eodata-s3keysmanager.dataspace.copernicus.eu/panel/s3-credentials). The site will request you to add a new credential. You will receive two keys: an an S3 access key and a secret access key. Take note of both and include the following lines in your `.Rprofile`:
+After registration, you will need to obtain access credentials to the S3 service implemented by CDSE, which can be obtained using the [CSDE S3 credentials site](https://eodata-s3keysmanager.dataspace.copernicus.eu/panel/s3-credentials). The site will request you to add a new credential. You will receive two keys: an an S3 access key and a secret access key. Take note of both and include the following lines in your `.Rprofile`.
 
 ```{r, echo = TRUE, eval = FALSE}
 Sys.setenv(
     AWS_ACCESS_KEY_ID = "your access key",
     AWS_SECRET_ACCESS_KEY = "your secret access key"
-	AWS_S3_ENDPOINT = "eodata.dataspace.copernicus.eu",
-	AWS_VIRTUAL_HOSTING = "FALSE"
+	  AWS_S3_ENDPOINT = "eodata.dataspace.copernicus.eu",
+	  AWS_VIRTUAL_HOSTING = "FALSE"
 )
 ```
 
@@ -280,9 +299,7 @@ knitr::include_graphics("images/s2_lena_delta.png")
 
 An important product under development at CDSE are the radiometric terrain corrected (RTC) Sentinel-1 images. in CDSE, this product is referred to as normalized terrain backscater (NRB). The S1-NRB product contains radiometrically terrain corrected (RTC) gamma nought backscatter (γ0) processed from Single Look Complex (SLC) Level-1A data. Each acquired polarization is stored in an individual binary image file. 
 
-All images are projected and gridded into the United States Military Grid Reference System (US-MGRS). The use of the US-MGRS tile grid ensures a very high level of interoperability with Sentinel-2 Level-2A ARD products making it easy to also set-up complex analysis systems that exploit both SAR and optical data.
-
-It should be noted that while speckle is inherent in SAR acquisitions, speckle filtering is not applied to the S1-NRB product in order to preserve spatial resolution.  Some applications (or processing methods) may require spatial or temporal filtering for stationary backscatter estimates. 
+All images are projected and gridded into the United States Military Grid Reference System (US-MGRS). The use of the US-MGRS tile grid ensures a very high level of interoperability with Sentinel-2 Level-2A ARD products making it easy to also set-up complex analysis systems that exploit both SAR and optical data. While speckle is inherent in SAR acquisitions, speckle filtering is not applied to the S1-NRB product in order to preserve spatial resolution.  Some applications (or processing methods) may require spatial or temporal filtering for stationary backscatter estimates. 
 
 For more details, please refer to the [S1-NRB product website](https://sentinels.copernicus.eu/web/sentinel/sentinel-1-ard-normalised-radar-backscatter-nrb-product). As of July 2024, RTC images are only available for Africa. Global coverage is expected to grow as ESA expands the S1-RTC archive. The following example shows an S1-RTC image for the Rift valley in Ethiopia.
 
@@ -303,7 +320,6 @@ plot(s1_cube, band = "VV", date = c("2023-03-03"), palette = "Greys")
 ```{r, echo = FALSE, out.width="100%", fig.align="center", fig.cap= "Sentinel-1-RTC image of the Rift Valley in Ethiopia (Source: Authors)."}
 knitr::include_graphics("images/s1_rtc_cdse.png")
 ```
-
 
 
 ## Digital Earth Africa{-}
@@ -383,7 +399,7 @@ knitr::include_graphics("images/alos_palsar_hh_lake_kivu.png")
 
 ## Assessing the Brazil Data Cube{-}
 
-The [Brazil Data Cube](http://brazildatacube.org/en) (BDC) is built by Brazil’s National Institute for Space Research (INPE), to provide regular EO data cubes from CBERS, LANDSAT, SENTINEL-2, and TERRA/MODIS satellites for environmental applications. The collections available in the BDC are: `LANDSAT-OLI-16D` (Landsat-8 OLI, 30 m resolution, 16-day intervals),  `SENTINEL-2-16D` (Sentinel-2A and 2B MSI images at 10 m resolution, 16-day intervals), `CBERS-WFI-16D` (CBERS 4 WFI, 64 m resolution, 16-day intervals), `CBERS-WFI-8D`(CBERS 4 and 4A WFI images, 64m resolution, 8-day intervals) `CBERS-MUX-2M` (CBERS 4/4A MUX, 20 m resolution, two-month intervals), and `MOD13Q1-6` (MODIS MOD13SQ1 product, collection 6, 250 m resolution, 16-day intervals). For more details, use `sits_list_collections(source = "BDC")`.
+The [Brazil Data Cube](http://brazildatacube.org/en) (BDC) is built by Brazil’s National Institute for Space Research (INPE), to provide regular EO data cubes from CBERS, LANDSAT, SENTINEL-2, and TERRA/MODIS satellites for environmental applications. The collections available in the BDC are: `LANDSAT-OLI-16D` (Landsat-8 OLI, 30 m resolution, 16-day intervals),  `SENTINEL-2-16D` (Sentinel-2A and 2B MSI images at 10 m resolution, 16-day intervals), `CBERS-WFI-16D` (CBERS 4 WFI, 64 m resolution, 16-day intervals), `CBERS-WFI-8D`(CBERS 4 and 4A WFI images, 64m resolution, 8-day intervals), and `MOD13Q1-6.1` (MODIS MOD13SQ1 product, collection 6, 250 m resolution, 16-day intervals). For more details, use `sits_list_collections(source = "BDC")`.
 
 The BDC uses three hierarchical grids based on the Albers Equal Area projection and SIRGAS 2000 datum. The large grid has tiles of 4224.4 $\times4$ 224.4 km^2^ and is used for CBERS-4 AWFI collections at 64 m resolution; each CBERS-4 AWFI tile contains images of 6600 $\times$ 6600 pixels. The medium grid is used for Landsat-8 OLI collections at 30 m resolution; tiles have an extension of 211.2 $\times$ 211.2 km^2^, and each image has 7040 $\times$ 7040 pixels. The small grid covers 105.6 $\times$ 105.6 km^2^ and is used for Sentinel-2 MSI collections at 10 m resolutions; each image has 10560 $\times$ 10560 pixels. The data cubes in the BDC are regularly spaced in time and cloud-corrected [@Ferreira2020a]. 
 
@@ -392,9 +408,7 @@ The BDC uses three hierarchical grids based on the Albers Equal Area projection 
 knitr::include_graphics("images/bdc_grid.png")
 ```
 
-To access the BDC, users must provide their credentials using environment variables, as shown below. Obtaining a BDC access key is free. Users must register at the [BDC site](https://brazildatacube.dpi.inpe.br/portal/explore) to obtain a key.
-
-In the example below, the data cube is defined as one tile ("005004") of `CBERS-WFI-16D` collection, which holds CBERS AWFI images at 16 days resolution.
+To access the BDC, users must provide their credentials using environment variables, as shown below. Obtaining a BDC access key is free. Users must register at the [BDC site](https://brazildatacube.dpi.inpe.br/portal/explore) to obtain a key. In the example below, the data cube is defined as one tile ("005004") of `CBERS-WFI-16D` collection, which holds CBERS AWFI images at 16 days resolution.
 
 ```{r, tidy="styler", eval = FALSE}
 # Define a tile from the CBERS-4/4A AWFI collection
@@ -649,5 +663,55 @@ reg_cube_rondonia |>
     plot(red = "B12", green = "B8A", blue = "B05")
 ```
 
-### Regularizing Sentinel-1 images
+### Regularizing Sentinel-1 images and merging with Sentinel-2
 
+Because of their acquisition mode, SAR images are usually stored following their geometry of acquisition, which is inclined with respect to the Earth. This is the case of GRD and RTC collections available in Microsoft Planetary Computer. To allow easier use of Sentinel-1 data and to merge them with Sentinel-2 images, regularization in sits reprojects SAR data to the MGRS grid, as shown in the following example.
+
+```{r, cache = TRUE, tidy="styler", message=FALSE, results='hide', out.width="100%", fig.align="center", fig.cap="Original Sentinel-1 image covering tile 22LBL (Source: Authors)."}
+# create an RTC cube from MPC collection for a region in Mato Grosso, Brazil.
+cube_s1_rtc <-  sits_cube(
+    source = "MPC",
+    collection = "SENTINEL-1-RTC",
+    bands = c("VV", "VH"),
+    orbit = "descending",
+    tiles = c("22LBL"),
+    start_date = "2021-07-01",
+    end_date = "2021-09-30"
+)
+plot(cube_s1_rtc, band = "VH", palette = "Greys", scale = 0.7)
+```
+
+After creating an irregular data cube from the data available in MPC, we use `sits_regularize()` to produce a SAR data cube that matches MGRS tile "22LBL". 
+
+```{r, cache = TRUE, tidy="styler", message=FALSE, results='hide', out.width="100%", fig.align="center", fig.cap="Regular Sentinel-1 image covering tile 22LBL (Source: Authors)."}
+
+# define the output directory
+dir.create("./tempdir/chp4/sar")
+# create a regular RTC cube from MPC collection for a tile 22LBL.
+cube_s1_reg <- sits_regularize(
+    cube = cube_s1_rtc,
+    period = "P16D",
+    res = 40,
+    tiles = c("22LBL"),
+    memsize = 12,
+    multicores = 6,
+    output_dir = "./tempdir/chp4/sar"
+)
+plot(cube_s1_rtc, band = "VH", palette = "Greys", scale = 0.7)
+```
+
+The next step is to produce a regular Sentinel-2 data cube for the same tile and regularize it.
+
+```{r, cache = TRUE, tidy="styler", message=FALSE, results='hide', out.width="100%", fig.align="center", fig.cap="Regular Sentinel-1 image covering tile 22LBL (Source: Authors)."}
+
+# define the output directory
+cube_s2 <-  sits_cube(
+    source = "MPC",
+    collection = "SENTINEL-2-L2A",
+    bands = c("B02", "B8A", "B11", "CLOUD"),
+    tiles = c("22LBL"),
+    start_date = "2021-07-01",
+    end_date = "2021-09-30"
+)
+plot(cube_s2, red = "B11", green = "B8A", blue = "B02", date = "2021-07-07")
+```
