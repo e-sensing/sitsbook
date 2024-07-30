@@ -127,7 +127,7 @@ library(sitsdata)
 # Create a data cube using local files
 sinop_cube <- sits_cube(
   source = "BDC", 
-  collection  = "MOD13Q1-6",
+  collection  = "MOD13Q1-6.1",
   bands = c("NDVI", "EVI"),
   data_dir = system.file("extdata/sinop", package = "sitsdata"),  
   parse_info = c("satellite", "sensor", "tile", "band", "date")
@@ -285,8 +285,6 @@ sinop_map <- sits_label_classification(
 plot(sinop_map, title = "Sinop Classification Map")
 ```
 
-When plotting the classified map, users can control the map display by setting various options associated to `tmap_options`. These options include: (a) `scale` (default: 0.5); (b) `graticules_labels_size` (default: 0.7); (c) `legend_title_size` (default: 1.0); (d) `legend_text_size`  (default: 1.0); (e) `legend_width` (default: 0.5); (f) `legend_height` (default: 0.7);  (g) `legend_position` (default: `c("left", "bottom")`). The `scale` parameter affect all others. Users should first try to adjust it before fine-tuning the other options.
-
 The resulting classification files can be read by QGIS. Links to the associated files are available in the `sinop_map` object in the nested table `file_info`.
 
 ```{r}
@@ -301,10 +299,35 @@ To simplify the process of importing your data to QGIS, the color palette used t
 sits_colors_qgis(sinop_map, file = "./tempdir/chp3/qgis_style.xml")
 ```
 
+## Plotting{-}
+
+The `plot()` function produces a graphical display of data cubes, time series, models, and SOM maps. For each type of data, there is a dedicated version of the `plot()` function. See `?plot.sits` for details. Plotting of time series, models and SOM outputs uses the `ggplot2` package; maps are plotted using the `tmap` package. When plotting images and classified maps, users can control the output with three main parameters:
+
+1. `pallete`: color scheme to be used for false color maps, which should be one of the `RColorBrewer` palettes. These palettes have been designed to be effective for map display by Prof Cynthia Brewer as described at the [Brewer website](http://colorbrewer2.org). To see the available palettes, please run `RColorBrewer::display.brewer.all(type = "seq")` and `RColorBrewer::display.brewer.all(type = "div")`. By default, optical images use the `RdYlGn` scheme, SAR images use `Greys`, and DEM cubes use `Spectral`. 
+2. `rev`: whether the color palette should be reversed; `TRUE` for DEM cubes, and `FALSE` otherwise.
+3. `scale`: global scale parameter used by `tmap`. All font sizes, symbol sizes, border widths, and line widths are controlled by this value. Default is 0.75; users should vary this parameter and see the results.
+4. `style`: method to process the color scale in `tmap`. Options are "cont", "order", and "log10". The first maps the values of col to a smooth gradient, the second maps the order of values of col to a smooth gradient, and the third uses a logarithmic transformation.
+5. `max_cog_size`: for cloud-oriented geotiff files (COG), sets the maximum number of lines or columns of the COG overview to be used for plotting. 
+
+COG overviews are reduced-resolution versions of the main image, stored within the same file. Overviews allow for quick rendering at lower zoom levels, improving performance when dealing with large images. Usually, a single GeoTIFF will have many overviews, to match different zoom levels. The parameter `max_cog_size` controls the size of the overview which will be used for visualisation.
+
+The following optional parameters are available to allow for detailed control over the plot output:
+
+1. `first_quantile`: 1st quantile for stretching images (default = 0.05)
+2. `last_quantile`: last quantile for stretching images (default = 0.95)
+3. `graticules_labels_size`: size of coordinates labels (default = 0.8)
+4. `legend_title_size`: relative size of legend title (default = 1.0)
+5. `legend_text_size`: relative size of legend text (default = 1.0)
+6. `legend_bg_color`: color of legend background (default = "white")
+7. `legend_bg_alpha`: legend opacity (default = 0.5)
+8. `legend_width`: relative width of legend (default = 1.0)
+9. `legend_position`: 2D position of legend (default = c("left", "bottom"))
+10. `legend_height`: relative height of legend (default = 1.0)
+
 
 ## Visualization of data cubes in interactive maps {.unnumbered}
 
-In this chapter, we used `plot()` to produce a graphical display of data cubes, time series, and models. Data cubes and samples can also be shown as interactive maps using `sits_view()`. This function creates tiled overlays of different kinds of data cubes, allowing comparison between the original, intermediate and final results. It also includes background maps. The following example creates an interactive map combining the original data cube with the classified map.
+ Data cubes and samples can also be shown as interactive maps using `sits_view()`. This function creates tiled overlays of different kinds of data cubes, allowing comparison between the original, intermediate and final results. It also includes background maps. The following example creates an interactive map combining the original data cube with the classified map.
 
 ```{r, echo = TRUE, eval = FALSE, tidy = "styler"}
 sits_view(sinop, band = "NDVI", class_cube = sinop_map)

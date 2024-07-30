@@ -566,15 +566,9 @@ The example shows how to define a data cube using Planet images from the `sitsda
 In general, `sits` users need to match the local file names to the values provided by the `parse_info` parameter. The file names of this dataset use the format `PLANETSCOPE_MOSAIC_604-1043_B4_2022-10-01.tif`, which fits the default value for `parse_info` which is `c("source", "collection", "tile", "band", "date")` and for `delim` which is "_",  it is not necessary to set these values when creating a data cube from the local files. 
 
 
-```{r}
-library(sits)
-# Create a cube based on a stack of Sentinel-2 data
-data_dir <- system.file("extdata/Planet", package = "sitsdata")
-# List the first file
-list.files(data_dir)[1]
-```
-
 ```{r, tidy="styler", out.width="100%", fig.align="center", fig.cap="Planet image over an area in Colombia (Source: Authors)."}
+# Define the directory where Planet files are stored
+data_dir <- system.file("extdata/Planet", package = "sitsdata")
 # Create a data cube from local files
 planet_cube <- sits_cube(
     source = "PLANET",
@@ -712,7 +706,7 @@ plot(cube_s1_reg, band = "VH", palette = "Greys", scale = 0.7,
 ```
 
 ```{r, out.width="100%", fig.align="center", fig.cap="Regular Sentinel-1 image covering tile 22LBL (Source: Authors)."}
-knitr::include_graphics("./images/cube_s1_rtc_tile_22BL_reg_rgb.png") 
+knitr::include_graphics("./images/cube_s1_rtc_tile_22LBL_reg_rgb.png") 
 ```
 The next step is to produce a regular Sentinel-2 data cube for the same tile and regularize it. The cube below defines an irregular data cube retrieved from Planetary Computer. 
 
@@ -786,13 +780,13 @@ cube_s1_s2 <- sits_merge(cube_s2_reg, cube_s1_reg)
 plot(cube_s1_s2, red = "B11", green = "B8A", blue = "VH")
 ```
 
-## Merging multitemporal data cubes with base information 
+## Combining multitemporal data cubes with digital elevation models
 
 In many applications, especially in regions with large topographical, soil or climatic variations, is is useful to merge multitemporal data cubes with base information such as digital elevation models (DEM). Merging multitemporal satellite images with digital elevation models (DEMs) offers several advantages that enhance the analysis and interpretation of geospatial data. Elevation data provides an additional to the two-dimensional satellite images, which help to distinguish land use and land cover classes which are impacted by altitude gradients.  One example is the capacity to distinguish between low-altitude and high-altitude forests. In case where topography changes significantly, DEM information can improve the accuracy of classification algorithms.
 
 As an example of DEM integation in a data cube, we will consider an agricultural region of Chile which is located in a narrow area close to the Andes. There is a steep gradient so that the cube benefits from the inclusion of the DEM.
 
-```{r, echo = TRUE, eval = FALSE}
+```{r, echo = TRUE, eval = TRUE, out.width="100%", fig.align="center", fig.cap="Sentinel-2 image covering tile 19HBA (Source: Authors)."}
 s2_cube_19HBA <- sits_cube(
   source = "MPC",
   collection = "SENTINEL-2-L2A",
@@ -804,18 +798,16 @@ s2_cube_19HBA <- sits_cube(
 plot(s2_cube_19HBA, red = "B12", green = "B8A", blue = "B04")
 ```
 
-```{r, out.width="100%", fig.align="center", fig.cap="Sentinel-2 image covering tile 19HBA (Source: Authors)."}
-knitr::include_graphics("./images/s2_tile_19HBA.png") 
-```
-
 Then, we produce a regular data cube to use for classification. In this example, we will use a reduced resolution (30 meters) to expedite processing. In practice, a resolution of 10 meters is recommended.
 
-```{r, echo = TRUE, eval = FALSE}
+```{r, echo = TRUE, eval = TRUE}
+if (!file.exists("./tempdir/chp4/s2_19HBA"))
+    dir.create("./tempdir/chp4/s2_19HBA")
 s2_cube_19HBA_reg <- sits_regularize(
   cube = s2_cube_19HBA,
   period = "P16D",
   res = 30,
-  output_dir = ".tempdir/s2_19HBA"
+  output_dir = "./tempdir/chp4/s2_19HBA"
 )
 ```
 
@@ -823,7 +815,7 @@ s2_cube_19HBA_reg <- sits_regularize(
 The next step is recover the DEM for the area. For this purpose, we will use the Copernicus Global DEM-30, and select the area covered by the tile. As explained in the MPC access section above, the Copernicus DEM tiles are stored as 1$^\circ$ by 1$^\circ$ grid. For them to match an MGRS tile, they have to be regularized in a similar way as the Sentinel-1 images, as shown below. To select a DEM, no temporal information is required.
 
 
-```{r}
+```{r, echo = TRUE, eval = TRUE}
 # obtain the DEM cube for 
 dem_cube_19HBA <- sits_cube(
   source = "MPC",
@@ -831,6 +823,42 @@ dem_cube_19HBA <- sits_cube(
   bands = "ELEVATION",
   tiles = "19HBA"
 )
+```
+
+
+After obtaining the 1$^\circ$ by 1$^\circ$ data cube covering the selected tile, the next step is to regularize it. This is done using the `sits_regularize()` function. This function will produce a DEM which matches exactly the chosen tile. 
+
+```{r, echo = TRUE, eval = TRUE, out_width = "100%", fig.cap="Copernicus DEM-30 covering tile 19HBA (Source: Authors)."}
+if (!file.exists("./tempdir/chp4/dem_19HBA"))
+    dir.create("./tempdir/chp4/dem_19HBA")
+# obtain the DEM cube for 
+dem_cube_19HBA_reg <- sits_regularize(
+  cube = dem_cube_19HBA,
+  res = 30,
+  bands = "ELEVATION",
+  tiles = "19HBA",
+  output_dir = "./tempdir/chp4/dem_19HBA"
+)
 # plot the DEM reversing the palette 
-plot(dem_cube_19HBA, band = "ELEVATION", palette = "RdYlGn", rev = TRUE)
+plot(dem_cube_19HBA_reg, band = "ELEVATION", style = "cont", palette = "Spectral", rev = TRUE)
+```
+
+After obtaining regular data cubes from satellite images and from DEMs, there are two ways to combine them. One option is to take the DEM band as a multitemporal information, and duplicate this band for every time step so that the DEM becomes one additional time series. The alternative is to use DEMs as base cubes, and take them as a single additional band. These options are discusses in what follows.
+
+## Merging multitemporal data cubes with DEM
+
+There are two ways to combine multitemporal data cubes with DEM data. The first method takes the DEM as a base information, which is used in combination with the multispectral time series. For exemple, consider a situation of a data cube with 10 bands and 23 time steps, which has a 230-dimensional space. Adding DEM as a base cube will include one dimension to the attribute space. This combination is supported by function `sits_add_base_cube`. In the resulting cube, the information on the image time series and that of the DEM are stored separately. The data cube metadata will now include a column called `base_info`. 
+
+```{r, echo = TRUE, eval = TRUE}
+merged_cube_base <- sits_add_base_cube(s2_cube_19HBA_reg, dem_cube_19HBA_reg)
+merged_cube_base$base_info[[1]]
+```
+
+Although this combination is conceptually simple, it has drawbacks. Since the attribute space now mixes times series with fixed-time information, the only applicable classification method is random forests. Because of the way random forest works, not all attributes are used by every decision tree. During the training of each tree, at each node, a random subset of features is selected, and the best split is chosen based on this subset rather than all features. Thus, there may be a significant number of decision trees that do use the DEM attribute. As a result, the effect of the DEM information may be underestimated. 
+
+The alternative is to combine the image data cube and the DEM using `sits_merge`. In this case, the DEM becomes another band. Although it may look peculiar to replicate the DEM many time to build an artificial time series, there are many advantages in doing so. All classification algorithms available in `sits` (including the deep learning ones) can be used to classify the resulting cube. For cases where the DEM information is particularly important, such organisation places DEM data at a par with other spectral bands. Users are encouraged to compare the results obtained by direct merging of DEM with spectral bands with the method where DEM is taken as a base cube. 
+
+```{r, echo = TRUE, eval = TRUE}
+merged_cube <- sits_merge(s2_cube_19HBA_reg, dem_cube_19HBA_reg)
+merged_cube$file_info[[1]]
 ```

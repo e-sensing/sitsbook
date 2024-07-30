@@ -2,6 +2,9 @@
 
 ```{r, echo = FALSE, include = FALSE}
 source("common.R")
+```
+
+```{r}
 # Create a directory to store files
 if (!file.exists("./tempdir/chp13"))
     dir.create("./tempdir/chp13")
@@ -15,9 +18,11 @@ The `sits` package provides `sits_combine_predictions()` to estimate ensemble pr
 
 * Uncertainty: Predictions from different models are compared in terms of their uncertainties on a pixel-by-pixel basis; predictions with lower uncertainty are chosen as being more likely to be valid. 
 
-In what follows, we will use the same dataset used in Chapter [Image classification in data cubes](https://e-sensing.github.io/sitsbook/image-classification-in-data-cubes.html) to illustrate how to produce an ensemble prediction. We will train three models: Random Forests (RF), Light Temporal Attention Encoder (LTAE), and Temporal Convolution Neural Networks (TempCNN), classify the cube with them, and then combine their results. The example uses three spectral indexes as attributes. We first run the RF classification.
+In what follows, we will use the same sample dataset and data cube used in Chapter [Image classification in data cubes](https://e-sensing.github.io/sitsbook/image-classification-in-data-cubes.html) to illustrate how to produce an ensemble prediction. The dataset `samples_deforestation_rondonia` consists of 6007 samples collected from Sentinel-2 images covering the state of Rondonia. Each time series contains values from all Sentinel-2/2A spectral bands for year 2022 in 16-day intervals. The data cube is a subset of the Sentinel-2 tile "20LMR" which contains all spectral bands, plus spectral indices "NVDI", "EVI" and "NBR" for the year 2022. 
 
-```{r, tidy = "styler", echo = TRUE, eval = FALSE}
+The first step is to recover the data cube which is available in the `sitsdata` package, and to select only the spectral bands. 
+
+```{r, tidy = "styler", echo = TRUE, eval = TRUE, out.width="100%", fig.align="center", fig.cap= "Subset of Sentinel-2 tile 20LMR (Source: Authors)."}
 # Files are available in a local directory 
 data_dir <- system.file("extdata/Rondonia-20LMR/", package = "sitsdata")
 # Read data cube
@@ -26,9 +31,21 @@ ro_cube_20LMR <- sits_cube(
     collection = "SENTINEL-2-L2A",
     data_dir = data_dir
 )
-# train a random forest model
-rfor_model <- sits_train(samples_deforestation, sits_rfor())
+# reduce the number of bands
+ro_cube_20LMR <- sits_select(
+  data = ro_cube_20LMR,
+  bands = c("B02", "B03", "B04", "B05", "B06", "B07", "B08", "B11", "B12", "B8A")
+)
+# plot one time step of the cube
+plot(ro_cube_20LMR, red = "B11", green = "B8A", blue = "B02", date = "2022-08-17")
+```
 
+We will train three models: Random Forests (RF), Light Temporal Attention Encoder (LTAE), and Temporal Convolution Neural Networks (TempCNN), classify the cube with them, and then combine their results. The example uses all spectral bands. We first run the RF classification.
+
+```{r, tidy = "styler", echo = TRUE, eval = FALSE}
+# train a random forest model
+rfor_model <- sits_train(samples_deforestation_rondonia, sits_rfor())
+# classify the data cube
 ro_cube_20LMR_rfor_probs <- sits_classify(
     ro_cube_20LMR, 
     rfor_model,
@@ -52,9 +69,9 @@ summary(ro_cube_20LMR_rfor_variance)
 
 
 ```{r, tidy = "styler", echo = FALSE, eval = TRUE}
-labels <- sits_labels(samples_deforestation_rodonia)
+labels <- sits_labels(samples_deforestation_rondonia)
 names(labels) <- seq_len(length(labels))
-data_dir <- "/users/gilberto/sitsbook/tempdir/chp13"
+data_dir <- "./tempdir/chp13"
 
 ro_cube_20LMR_rfor_probs <- sits_cube(
     source = "MPC", 
@@ -82,15 +99,15 @@ ro_cube_20LMR_rfor_bayes <- sits_smooth(
     ro_cube_20LMR_rfor_probs,
     output_dir = "./tempdir/chp13", 
     smoothness = c(  
-      "Clear_Cut_Bare_Soil" = 5.5, 
+      "Clear_Cut_Bare_Soil" = 5.25, 
       "Clear_Cut_Burned_Area" = 15.0, 
       "Clear_Cut_Vegetation" =  12.0, 
       "Forest" = 1.8, 
       "Mountainside_Forest" = 6.5,
       "Riparian_Forest" = 6.0, 
       "Seasonally_Flooded" = 3.5,
-      "Water" = 2.0, 
-      "Wetland" = 8.0),
+      "Water" = 1.5, 
+      "Wetland" = 5.5),
     multicores = 6,
     memsize = 24,
     version = "rfor"
@@ -111,7 +128,7 @@ ro_cube_20LMR_rfor_bayes <- sits_cube(
     data_dir = data_dir, 
     bands = "bayes",
     labels = labels,
-    version = "rfor"
+    version = "rfor-raster"
 )
 ro_cube_20LMR_rfor_class <- sits_cube(
     source = "MPC", 
@@ -119,7 +136,7 @@ ro_cube_20LMR_rfor_class <- sits_cube(
     data_dir = data_dir, 
     bands = "class",
     labels = labels,
-    version = "rfor"
+    version = "rfor-raster"
 )
 ```
 
@@ -157,7 +174,7 @@ ro_cube_20LMR_tcnn_variance <- sits_variance(
 summary(ro_cube_20LMR_tcnn_variance)
 ```
 
-```{r, tidy = "styler", echo = TRUE, eval = FALSE}}
+```{r, tidy = "styler", echo = TRUE, eval = FALSE}
 ro_cube_20LMR_tcnn_bayes <- sits_smooth(
     ro_cube_20LMR_tcnn_probs,
     output_dir = "./tempdir/chp13", 
@@ -186,7 +203,7 @@ ro_cube_20LMR_tcnn_class <- sits_label_classification(
 ```
 
 ```{r, tidy = "styler", echo = FALSE, eval = TRUE}
-labels <- sits_labels(samples_deforestation)
+labels <- sits_labels(samples_deforestation_rondonia)
 names(labels) <- seq_len(length(labels))
 data_dir <- "./tempdir/chp13"
 
@@ -225,7 +242,7 @@ plot(ro_cube_20LMR_tcnn_class,
 The third model is the Light Temporal Attention Encoder (LTAE), which has been discussed. 
 ```{r, tidy = "styler", echo = TRUE, eval = FALSE}
 # train a tempcnn model
-ltae_model <- sits_train(samples_indices, sits_lighttae())
+ltae_model <- sits_train(samples_deforestation_rondonia, sits_lighttae())
 
 # classify the data cube
 ro_cube_20LMR_ltae_probs <- sits_classify(
@@ -238,9 +255,34 @@ ro_cube_20LMR_ltae_probs <- sits_classify(
     version = "ltae"
 )
 
-ro_cube_20LMR_ltae_bayes <- sits_smooth(
+ro_cube_20LMR_ltae_variance <- sits_variance(
     ro_cube_20LMR_ltae_probs,
+    window_size = 9,
     output_dir = "./tempdir/chp13", 
+    multicores = 6,
+    memsize = 24,
+    version = "ltae"
+)
+summary(ro_cube_20LMR_ltae_variance)
+```
+We use the same rationale for selecting the `smoothness` parameter for the Bayesian smoothing operation as in the cases above.
+
+
+```{r, tidy = "styler", echo = TRUE, eval = FALSE}
+ro_cube_20LMR_ltae_bayes <- sits_smooth(
+    ro_cube_20LMR_tcnn_probs,
+    output_dir = "./tempdir/chp13", 
+    window_size = 11,
+    smoothness = c(  
+      "Clear_Cut_Bare_Soil" = 2.3, 
+      "Clear_Cut_Burned_Area" = 18.0, 
+      "Clear_Cut_Vegetation" =  20.0, 
+      "Forest" = 5.0, 
+      "Mountainside_Forest" = 3.0,
+      "Riparian_Forest" = 30.0, 
+      "Seasonally_Flooded" = 30.0,
+      "Water" = 22.3, 
+      "Wetland" = 2.5),
     multicores = 2,
     memsize = 6,
     version = "ltae"
