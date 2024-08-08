@@ -21,9 +21,9 @@ Given a set of training samples, experts should first perform a cross-validation
 
 The examples of this chapter use two datasets: 
 
-1. `cerrado_2classes`: a set of time series for the Cerrado region of Brazil, the second largest biome in South America with an area of more than 2 million km^2. The data contains 746 samples divided into 2 classes (`Cerrado` and `Pasture`). Each time series covers 12 months (23 data points) from MOD13Q1 product, and has 2 bands (EVI, and NDVI).
+-  `cerrado_2classes`: a set of time series for the Cerrado region of Brazil, the second largest biome in South America with an area of more than 2 million km^2. The data contains 746 samples divided into 2 classes (`Cerrado` and `Pasture`). Each time series covers 12 months (23 data points) from MOD13Q1 product, and has 2 bands (EVI, and NDVI).
 
-2. `samples_cerrado_mod13q1`: a set of time series from the Cerrado region of Brazil. The data ranges from 2000 to 2017 and includes 50,160 samples divided into 12 classes (`Dense_Woodland`, `Dunes`, `Fallow_Cotton`,  `Millet_Cotton`, `Pasture`, `Rocky_Savanna`, `Savanna`, `Savanna_Parkland`, `Silviculture`, `Soy_Corn`, `Soy_Cotton`, and  `Soy_Fallow`). Each time series covers 12 months (23 data points) from MOD13Q1 product, and has 4 bands (EVI, NDVI, MIR, and NIR). We use bands NDVI and EVI for faster processing.
+- `samples_cerrado_mod13q1`: a set of time series from the Cerrado region of Brazil. The data ranges from 2000 to 2017 and includes 50,160 samples divided into 12 classes (`Dense_Woodland`, `Dunes`, `Fallow_Cotton`,  `Millet_Cotton`, `Pasture`, `Rocky_Savanna`, `Savanna`, `Savanna_Parkland`, `Silviculture`, `Soy_Corn`, `Soy_Cotton`, and  `Soy_Fallow`). Each time series covers 12 months (23 data points) from MOD13Q1 product, and has 4 bands (EVI, NDVI, MIR, and NIR). We use bands NDVI and EVI for faster processing.
 
 ```{r, tidy = "styler"}
 library(sits)
@@ -65,13 +65,15 @@ rfor_validate
 
 The results show a good validation, reaching 94% accuracy. However, this accuracy does not guarantee a good classification result. It only shows if the training data is internally consistent. In what follows, we present additional methods for improving sample quality.
 
+The cross-validation results have to be interpreted carefully. Cross-validation measures how well the model fits the training data. Using these results to measure classification accuracy is only valid if the training data is a good sample of the entire dataset. In practice, training data is subject to various sources of bias. In most cases of land classification, some classes are much more frequent than others, and as such, the training dataset will be imbalanced. For large areas, regional differences in soil and climate condition will lead the same classes to have different spectral responses. When collecting samples for large areas, field analysts may be restricted to areas where they have access (e.g., along roads). An additional problem is that of mixed pixels. Expert interpreters tend to select samples that stand out in fieldwork or reference images. Border pixels are unlikely to be chosen as part of the training data. For all these reasons, cross-validation results should not be considered indicative of accuracy measurement over the entire dataset. 
+
 ## Hierarchical clustering for sample quality control{-}
 
 The package provides two clustering methods to assess sample quality: Agglomerative Hierarchical Clustering (AHC) and Self-organizing Maps (SOM). These methods have different computational complexities. AHC has a computational complexity of $\mathcal{O}(n^2)$, given the number of time series $n$, whereas SOM complexity is linear. For large data, AHC requires substantial memory and running time; in these cases, SOM is recommended. This section describes how to run AHC in `sits`. The SOM-based technique is presented in the next section.
 
 AHC computes the dissimilarity between any two elements from a dataset. Depending on the distance functions and linkage criteria, the algorithm decides which two clusters are merged at each iteration. This approach is helpful for exploring samples due to its visualization power and ease of use [@Keogh2003]. In `sits`, AHC is implemented using `sits_cluster_dendro()`.
 
-```{r, tidy = "styler", cache = TRUE, fig.align="center", out.width="90%", fig.cap="Example of hierarchical clustering for a two class set of time series (Source: Authors).", message=FALSE}
+```{r, tidy = "styler", cache = TRUE, fig.align="center", out.width="90%", fig.cap="Example of hierarchical clustering for a two class set of time series (source: authors).", message=FALSE}
 # Take a set of patterns for 2 classes
 # Create a dendrogram, plot, and get the optimal cluster based on ARI index
 clusters <- sits_cluster_dendro(
@@ -123,20 +125,9 @@ knitr::include_graphics("./images/methodology_bayes_som.png")
 
 ## Creating the SOM map{-}
 
-To perform the SOM-based quality assessment, the first step is to run `sits_som_map()`, which uses the `kohonen` R package to compute a SOM grid [@Wehrens2018], controlled by five parameters. The grid size is given by `grid_xdim` and `grid_ydim`. The starting learning rate is `alpha`, which decreases during the interactions. To measure the separation between samples, use `distance` (either "dtw" or "euclidean"). The number of iterations is set by `rlen`. For more details, please consult `?kohonen::supersom`.
+To perform the SOM-based quality assessment, the first step is to run `sits_som_map()`, which uses the `kohonen` R package to compute a SOM grid [@Wehrens2018], controlled by five parameters. The grid size is given by `grid_xdim` and `grid_ydim`. The starting learning rate is `alpha`, which decreases during the interactions. To measure the separation between samples, use `distance` (either "dtw" or "euclidean"). The number of iterations is set by `rlen`. When using `sits_som_map()` in machines which have multiprocessing support for the OpenMP protocol, setting the laerning mode parameter `mode` to "patch" improves processing time. In MacOS and Windows, please use "online". 
 
-
-```{r, tidy = "styler", echo = FALSE, eval = TRUE,  message = FALSE, warning = FALSE, cache = TRUE}
-# Clustering time series using SOM
-som_cluster <- sits_som_map(samples_cerrado_mod13q1_2bands,
-    grid_xdim = 15,
-    grid_ydim = 15,
-    alpha = 1.0,
-    distance = "dtw",
-    rlen = 20,
-    mode = "pbatch")
-```
-
+We suggest using the Dynamic Time Warping ("dtw") metric as the distance measure. It is a technique used to measure the similarity between two temporal sequences that may vary in speed or timing [@Berndt1994]. The core idea of DTW is to find the optimal alignment between two sequences by allowing non-linear mapping of one sequence onto another. In time series analysis, DTW matches two series slightly out of sync. This property is useful in land use studies for matching time series of agricultural areas [@Maus2015].
 
 ```{r, tidy = "styler", echo = TRUE, eval = FALSE}
 # Clustering time series using SOM
@@ -148,7 +139,16 @@ som_cluster <- sits_som_map(samples_cerrado_mod13q1_2bands,
     rlen = 20)
 ```
 
-```{r, tidy = "styler", out.width = "100%", fig.cap = "SOM map for the Cerrado samples (Source: Authors)."}
+```{r, tidy = "styler", echo = FALSE, eval = TRUE}
+# Recover SOM cluster from RDS file
+library(sits)
+library(kohonen)
+som_cluster <- readRDS(file = "./etc/som_cluster.rds")
+```
+
+
+
+```{r, tidy = "styler", out.width = "100%", fig.cap = "SOM map for the Cerrado samples (source: authors)."}
 # Plot the SOM map
 plot(som_cluster)
 ```
@@ -170,7 +170,7 @@ som_eval
 
 Many labels are associated with clusters where there are some samples with a different label. Such confusion between labels arises because sample labeling is subjective and can be biased. In many cases, interpreters use high-resolution data to identify samples. However, the actual images to be classified are captured by satellites with lower resolution. In our case study, a MOD13Q1 image has pixels with 250 m resolution. As such, the correspondence between labeled locations in high-resolution images and mid to low-resolution images is not direct. The confusion by sample label can be visualized in a bar plot using `plot()`, as shown below. The bar plot shows some confusion between the labels associated with the natural vegetation typical of the Brazilian Cerrado (`Savanna`, `Savanna_Parkland`, `Rocky_Savanna`). This mixture is due to the large variability of the natural vegetation of the Cerrado biome, which makes it difficult to draw sharp boundaries between classes. Some confusion is also visible between the agricultural classes. The `Millet_Cotton` class is a particularly difficult one since many of the samples assigned to this class are confused with `Soy_Cotton` and `Fallow_Cotton`. 
 
-```{r, out.width = "90%", fig.align="center", fig.cap="Confusion between classes as measured by SOM (Source: Authors)."}
+```{r, out.width = "90%", fig.align="center", fig.cap="Confusion between classes as measured by SOM (source: authors)."}
 # Plot the confusion between clusters
 plot(som_eval)
 ```
@@ -205,14 +205,9 @@ All samples of the class which had the highest confusion with others(`Millet_Cot
 
 ```{r, tidy = "styler", eval = TRUE, echo = FALSE, cache = TRUE, message = FALSE, warning = FALSE}
 # Evaluate the mixture in the SOM clusters of new samples
-new_cluster <- sits_som_map(
-   data = new_samples,
-   grid_xdim = 15,
-   grid_ydim = 15,
-   alpha = 1.0,
-   rlen = 20,
-   distance = "dtw",
-   mode = "pbatch")
+library(sits)
+library(kohonen)
+new_cluster <- readRDS("./etc/new_cluster.rds")
 ```
 
 ```{r, tidy = "styler", eval = FALSE, echo = TRUE}
@@ -226,7 +221,7 @@ new_cluster <- sits_som_map(
    distance = "dtw")
 ```
 
-```{r, out.width="90%", fig.align="center", fig.cap="Cluster confusion plot for samples cleaned by SOM (Source: Authors)."}
+```{r, out.width="90%", fig.align="center", fig.cap="Cluster confusion plot for samples cleaned by SOM (source: authors)."}
 new_cluster_mixture <- sits_som_evaluate_cluster(new_cluster)
 # Plot the mixture information.
 plot(new_cluster_mixture)
@@ -234,26 +229,6 @@ plot(new_cluster_mixture)
 
 As expected, the new confusion map shows a significant improvement over the previous one. This result should be interpreted carefully since it may be due to different effects. The most direct interpretation is that `Millet_Cotton` and `Silviculture` cannot be easily separated from the other classes, given the current attributes (a time series of NDVI and EVI indices from MODIS images). In such situations, users should consider improving the number of samples from the less represented classes, including more MODIS bands, or working with higher resolution satellites. The results of the SOM method should be interpreted based on the users' understanding of the ecosystems and agricultural practices of the study region. 
 
-A further comparison between the original and clean samples is to run a 5-fold validation on the original and the cleaned sample sets using `sits_kfold_validate()` and a random forest model. The SOM procedure improves the validation results from 95% on the original dataset to 99% in the cleaned one. This improvement should not be interpreted as providing a better fit for the final map accuracy. A 5-fold validation procedure only measures how well the machine learning model fits the samples; it is not an accuracy assessment of classification results. The result only indicates that the training set after the SOM sample removal procedure is more internally consistent than the original one. For more details on accuracy measures, please see Chapter [Validation and accuracy measurements](https://e-sensing.github.io/sitsbook/validation-and-accuracy-measurements.html).
-
-```{r, tidy = "styler", cache = TRUE, message = FALSE, warning = FALSE}
-# Run a k-fold validation
-assess_orig <- sits_kfold_validate(
-    samples = samples_cerrado_mod13q1_2bands, 
-    folds = 5,
-    ml_method = sits_rfor())
-# Print summary 
-summary(assess_orig)
-```
-
-```{r, tidy = "styler", cache = TRUE, message = FALSE, warning = FALSE}
-assess_new <- sits_kfold_validate(
-    samples = new_samples,
-    folds = 5,
-    ml_method = sits_rfor())
-# Print summary 
-summary(assess_new)
-```
 
 The SOM-based analysis discards samples that can be confused with samples of other classes. After removing noisy samples or uncertain classes, the dataset obtains a better validation score since there is less confusion between classes. Users should analyse the results with care. Not all discarded samples are low-quality ones. Confusion between samples of different classes can result from inconsistent labeling or from the lack of capacity of satellite data to distinguish between chosen classes. When many samples are discarded, as in the current example, revising the whole classification schema is advisable. The aim of selecting training data should always be to match the reality on the ground to the power of remote sensing data to identify differences. No analysis procedure can replace actual user experience and knowledge of the study region. 
 
@@ -267,13 +242,20 @@ To perform undersampling, `sits_reduce_imbalance()` builds a SOM map for each ma
 
 The `sits_reduce_imbalance()` algorithm has two parameters: `n_samples_over` and `n_samples_under`. The first parameter indicates the minimum number of samples per class. All classes with samples less than its value are oversampled. The second parameter controls the maximum number of samples per class; all classes with more samples than its value are undersampled. The following example uses `sits_reduce_imbalance()` with the Cerrado samples. We generate a balanced dataset where all classes have a minimum of 1000 and and a maximum of 1500 samples. We use `sits_som_evaluate_cluster()` to estimate the confusion between classes of the balanced dataset.
 
-```{r, tidy = "styler", cache = TRUE}
+```{r, tidy = "styler", eval = FALSE, echo = TRUE}
 # Reducing imbalances in the Cerrado dataset
 balanced_samples <- sits_reduce_imbalance(
     samples = samples_cerrado_mod13q1_2bands,
     n_samples_over = 1000,
     n_samples_under = 1500,
     multicores = 4)
+```
+
+```{r, tidy = "styler", eval = TRUE, echo = FALSE}
+# Reducing imbalances in the Cerrado dataset
+library(sits)
+library(kohonen)
+balanced_samples <- readRDS("./etc/balanced_samples.rds")
 ```
 
 ```{r, tidy = "styler"}
@@ -283,27 +265,23 @@ balanced_samples <- sits_reduce_imbalance(
 summary(balanced_samples)
 ```
 
-```{r, tidy = "styler", cache = TRUE, eval = TRUE, echo = FALSE, message = FALSE, warning = FALSE}
+```{r, tidy = "styler",  eval = FALSE, echo = TRUE}
 # Clustering time series using SOM
 som_cluster_bal <- sits_som_map(
     data = balanced_samples,
-    grid_xdim = 10,
-    grid_ydim = 10,
+    grid_xdim = 15,
+    grid_ydim = 15,
     alpha = 1.0,
     distance = "dtw",
     rlen = 20,
     mode = "pbatch")
 ```
 
-```{r, tidy = "styler", eval = FALSE, echo = TRUE}
+```{r, tidy = "styler", eval = TRUE, echo = FALSE}
 # Clustering time series using SOM
-som_cluster_bal <- sits_som_map(
-    data = balanced_samples,
-    grid_xdim = 10,
-    grid_ydim = 10,
-    alpha = 1.0,
-    distance = "dtw",
-    rlen = 20)
+library(sits)
+library(kohonen)
+som_cluster_bal <- readRDS("./etc/som_cluster_bal.rds")
 ```
 
 ```{r}
@@ -311,7 +289,7 @@ som_cluster_bal <- sits_som_map(
 som_eval <- sits_som_evaluate_cluster(som_cluster_bal)
 ```
 
-```{r seval, fig.align="center", out.width="90%", fig.cap="Confusion by cluster for the balanced dataset (Source: Authors)."}
+```{r seval, fig.align="center", out.width="90%", fig.cap="Confusion by cluster for the balanced dataset (source: authors)."}
 # Show the result
 plot(som_eval) 
 ```

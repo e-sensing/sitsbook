@@ -1,55 +1,7 @@
 # Improving the quality of training samples{-}
 
 
-```
-## SITS - satellite image time series analysis.
-```
 
-```
-## Loaded sits v1.5.1.
-##         See ?sits for help, citation("sits") for use in publication.
-##         Documentation avaliable in https://e-sensing.github.io/sitsbook/.
-```
-
-```
-## Loaded sitsdata data sets v1.2. Use citation("sitsdata") for use in publication.
-```
-
-```
-## Loading required package: proxy
-```
-
-```
-## 
-## Attaching package: 'proxy'
-```
-
-```
-## The following objects are masked from 'package:stats':
-## 
-##     as.dist, dist
-```
-
-```
-## The following object is masked from 'package:base':
-## 
-##     as.matrix
-```
-
-```
-## Loading required package: dtw
-```
-
-```
-## Loaded dtw v1.23-1. See ?dtw for help, citation("dtw") for use in publication.
-```
-
-```
-## dtwclust:
-## Setting random number generator to L'Ecuyer-CMRG (see RNGkind()).
-## To read the included vignettes type: browseVignettes("dtwclust").
-## See news(package = "dtwclust") after package updates.
-```
 
 <a href="https://www.kaggle.com/code/esensing/improving-quality-of-training-samples" target="_blank"><img src="https://kaggle.com/static/images/open-in-kaggle.svg"/></a>
 
@@ -64,9 +16,9 @@ Given a set of training samples, experts should first perform a cross-validation
 
 The examples of this chapter use two datasets: 
 
-1. `cerrado_2classes`: a set of time series for the Cerrado region of Brazil, the second largest biome in South America with an area of more than 2 million km^2. The data contains 746 samples divided into 2 classes (`Cerrado` and `Pasture`). Each time series covers 12 months (23 data points) from MOD13Q1 product, and has 2 bands (EVI, and NDVI).
+-  `cerrado_2classes`: a set of time series for the Cerrado region of Brazil, the second largest biome in South America with an area of more than 2 million km^2. The data contains 746 samples divided into 2 classes (`Cerrado` and `Pasture`). Each time series covers 12 months (23 data points) from MOD13Q1 product, and has 2 bands (EVI, and NDVI).
 
-2. `samples_cerrado_mod13q1`: a set of time series from the Cerrado region of Brazil. The data ranges from 2000 to 2017 and includes 50,160 samples divided into 12 classes (`Dense_Woodland`, `Dunes`, `Fallow_Cotton`,  `Millet_Cotton`, `Pasture`, `Rocky_Savanna`, `Savanna`, `Savanna_Parkland`, `Silviculture`, `Soy_Corn`, `Soy_Cotton`, and  `Soy_Fallow`). Each time series covers 12 months (23 data points) from MOD13Q1 product, and has 4 bands (EVI, NDVI, MIR, and NIR). We use bands NDVI and EVI for faster processing.
+- `samples_cerrado_mod13q1`: a set of time series from the Cerrado region of Brazil. The data ranges from 2000 to 2017 and includes 50,160 samples divided into 12 classes (`Dense_Woodland`, `Dunes`, `Fallow_Cotton`,  `Millet_Cotton`, `Pasture`, `Rocky_Savanna`, `Savanna`, `Savanna_Parkland`, `Silviculture`, `Soy_Corn`, `Soy_Cotton`, and  `Soy_Fallow`). Each time series covers 12 months (23 data points) from MOD13Q1 product, and has 4 bands (EVI, NDVI, MIR, and NIR). We use bands NDVI and EVI for faster processing.
 
 
 ``` r
@@ -132,95 +84,97 @@ rfor_validate
 #> 
 #>                   Reference
 #> Prediction         Pasture Dense_Woodland Rocky_Savanna Savanna_Parkland
-#>   Pasture             6618             23             9                5
-#>   Dense_Woodland       496           9674           604                0
-#>   Rocky_Savanna          8             62          7309               27
-#>   Savanna_Parkland       4              0            50             2641
-#>   Savanna               56            200            33               26
+#>   Pasture             6628             27            11                3
+#>   Dense_Woodland       494           9672           605                0
+#>   Rocky_Savanna          8             69          7317               27
+#>   Savanna_Parkland       2              0            41             2642
+#>   Savanna               47            191            31               27
 #>   Dunes                  0              0             0                0
-#>   Soy_Corn               9              0             0                0
+#>   Soy_Corn              10              0             0                0
 #>   Soy_Cotton             1              0             0                0
-#>   Soy_Fallow            11              0             0                0
+#>   Soy_Fallow            12              0             0                0
 #>   Fallow_Cotton          3              0             0                0
-#>   Silviculture           0              7             0                0
+#>   Silviculture           1              7             0                0
 #>   Millet_Cotton          0              0             0                0
 #>                   Reference
 #> Prediction         Savanna Dunes Soy_Corn Soy_Cotton Soy_Fallow Fallow_Cotton
-#>   Pasture              114     0       36         12         25            41
-#>   Dense_Woodland       138     0        3          2          1             0
-#>   Rocky_Savanna          9     0        0          0          0             0
-#>   Savanna_Parkland      15     0        1          0          1             1
-#>   Savanna             8896     0        9          0          1             0
+#>   Pasture              114     0       38         10         23            37
+#>   Dense_Woodland       134     0        2          0          2             0
+#>   Rocky_Savanna          8     0        0          0          0             0
+#>   Savanna_Parkland      17     0        1          0          1             0
+#>   Savanna             8899     0        8          1          0             0
 #>   Dunes                  0   550        0          0          0             0
-#>   Soy_Corn               0     0     4851         58        355             8
-#>   Soy_Cotton             0     0       40       4041          0            19
-#>   Soy_Fallow             0     0       29          0       1710             1
-#>   Fallow_Cotton          0     0        2          3          5           555
+#>   Soy_Corn               0     0     4854         60        362             6
+#>   Soy_Cotton             0     0       40       4041          0            28
+#>   Soy_Fallow             0     0       27          0       1706             1
+#>   Fallow_Cotton          0     0        1          2          4           554
 #>   Silviculture           0     0        0          0          0             0
-#>   Millet_Cotton          0     0        0          8          0             5
+#>   Millet_Cotton          0     0        0         10          0             4
 #>                   Reference
 #> Prediction         Silviculture Millet_Cotton
-#>   Pasture                     1             1
-#>   Dense_Woodland            102             0
+#>   Pasture                     2             1
+#>   Dense_Woodland            105             0
 #>   Rocky_Savanna               0             0
 #>   Savanna_Parkland            0             0
-#>   Savanna                     8             0
+#>   Savanna                    11             0
 #>   Dunes                       0             0
-#>   Soy_Corn                    0             3
-#>   Soy_Cotton                  0            21
+#>   Soy_Corn                    0             2
+#>   Soy_Cotton                  0            20
 #>   Soy_Fallow                  0             0
-#>   Fallow_Cotton               0            20
-#>   Silviculture              312             0
-#>   Millet_Cotton               0           271
+#>   Fallow_Cotton               0            23
+#>   Silviculture              305             0
+#>   Millet_Cotton               0           270
 #> 
 #> Overall Statistics
 #>                             
-#>  Accuracy : 0.9455          
-#>    95% CI : (0.9435, 0.9475)
+#>  Accuracy : 0.9457          
+#>    95% CI : (0.9437, 0.9477)
 #>                             
-#>     Kappa : 0.9365          
+#>     Kappa : 0.9367          
 #> 
 #> Statistics by Class:
 #> 
 #>                           Class: Pasture Class: Dense_Woodland
-#> Prod Acc (Sensitivity)            0.9184                0.9707
-#> Specificity                       0.9938                0.9665
-#> User Acc (Pos Pred Value)         0.9612                0.8779
-#> Neg Pred Value                    0.9864                0.9925
-#> F1 score                          0.9393                0.9219
+#> Prod Acc (Sensitivity)            0.9198                0.9705
+#> Specificity                       0.9938                0.9666
+#> User Acc (Pos Pred Value)         0.9614                0.8782
+#> Neg Pred Value                    0.9866                0.9925
+#> F1 score                          0.9401                0.9220
 #>                           Class: Rocky_Savanna Class: Savanna_Parkland
-#> Prod Acc (Sensitivity)                  0.9131                  0.9785
-#> Specificity                             0.9975                  0.9985
-#> User Acc (Pos Pred Value)               0.9857                  0.9735
-#> Neg Pred Value                          0.9837                  0.9988
-#> F1 score                                0.9480                  0.9760
+#> Prod Acc (Sensitivity)                  0.9141                  0.9789
+#> Specificity                             0.9973                  0.9987
+#> User Acc (Pos Pred Value)               0.9849                  0.9771
+#> Neg Pred Value                          0.9839                  0.9988
+#> F1 score                                0.9482                  0.9780
 #>                           Class: Savanna Class: Dunes Class: Soy_Corn
-#> Prod Acc (Sensitivity)            0.9699            1          0.9759
-#> Specificity                       0.9919            1          0.9904
-#> User Acc (Pos Pred Value)         0.9639            1          0.9181
-#> Neg Pred Value                    0.9933            1          0.9973
-#> F1 score                          0.9669            1          0.9461
+#> Prod Acc (Sensitivity)            0.9702            1          0.9765
+#> Specificity                       0.9923            1          0.9903
+#> User Acc (Pos Pred Value)         0.9657            1          0.9169
+#> Neg Pred Value                    0.9933            1          0.9974
+#> F1 score                          0.9680            1          0.9457
 #>                           Class: Soy_Cotton Class: Soy_Fallow
-#> Prod Acc (Sensitivity)               0.9799            0.8151
-#> Specificity                          0.9982            0.9991
-#> User Acc (Pos Pred Value)            0.9803            0.9766
-#> Neg Pred Value                       0.9982            0.9920
-#> F1 score                             0.9801            0.8885
+#> Prod Acc (Sensitivity)               0.9799            0.8132
+#> Specificity                          0.9981            0.9992
+#> User Acc (Pos Pred Value)            0.9785            0.9771
+#> Neg Pred Value                       0.9982            0.9919
+#> F1 score                             0.9792            0.8876
 #>                           Class: Fallow_Cotton Class: Silviculture
-#> Prod Acc (Sensitivity)                  0.8810              0.7376
-#> Specificity                             0.9993              0.9999
-#> User Acc (Pos Pred Value)               0.9439              0.9781
-#> Neg Pred Value                          0.9985              0.9978
-#> F1 score                                0.9113              0.8410
+#> Prod Acc (Sensitivity)                  0.8794              0.7210
+#> Specificity                             0.9993              0.9998
+#> User Acc (Pos Pred Value)               0.9438              0.9744
+#> Neg Pred Value                          0.9985              0.9976
+#> F1 score                                0.9104              0.8288
 #>                           Class: Millet_Cotton
-#> Prod Acc (Sensitivity)                  0.8576
+#> Prod Acc (Sensitivity)                  0.8544
 #> Specificity                             0.9997
-#> User Acc (Pos Pred Value)               0.9542
+#> User Acc (Pos Pred Value)               0.9507
 #> Neg Pred Value                          0.9991
-#> F1 score                                0.9033
+#> F1 score                                0.9000
 ```
 
 The results show a good validation, reaching 94% accuracy. However, this accuracy does not guarantee a good classification result. It only shows if the training data is internally consistent. In what follows, we present additional methods for improving sample quality.
+
+The cross-validation results have to be interpreted carefully. Cross-validation measures how well the model fits the training data. Using these results to measure classification accuracy is only valid if the training data is a good sample of the entire dataset. In practice, training data is subject to various sources of bias. In most cases of land classification, some classes are much more frequent than others, and as such, the training dataset will be imbalanced. For large areas, regional differences in soil and climate condition will lead the same classes to have different spectral responses. When collecting samples for large areas, field analysts may be restricted to areas where they have access (e.g., along roads). An additional problem is that of mixed pixels. Expert interpreters tend to select samples that stand out in fieldwork or reference images. Border pixels are unlikely to be chosen as part of the training data. For all these reasons, cross-validation results should not be considered indicative of accuracy measurement over the entire dataset. 
 
 ## Hierarchical clustering for sample quality control{-}
 
@@ -241,8 +195,8 @@ clusters <- sits_cluster_dendro(
 ```
 
 <div class="figure" style="text-align: center">
-<img src="07-clustering_files/figure-html/unnamed-chunk-4-1.png" alt="Example of hierarchical clustering for a two class set of time series (Source: Authors)." width="90%" />
-<p class="caption">(\#fig:unnamed-chunk-4)Example of hierarchical clustering for a two class set of time series (Source: Authors).</p>
+<img src="07-clustering_files/figure-html/unnamed-chunk-4-1.png" alt="Example of hierarchical clustering for a two class set of time series (source: authors)." width="90%" />
+<p class="caption">(\#fig:unnamed-chunk-4)Example of hierarchical clustering for a two class set of time series (source: authors).</p>
 </div>
 
 The `sits_cluster_dendro()` function has one mandatory parameter (`samples`), with the samples to be evaluated. Optional parameters include `bands`, `dist_method`, and `linkage`. The `dist_method` parameter specifies how to calculate the distance between two time series. We recommend a metric that uses dynamic time warping (DTW) [@Petitjean2012], as DTW is a reliable method for measuring differences between satellite image time series [@Maus2016]. The options available in `sits` are based on those provided by package `dtwclust`, which include `dtw_basic`, `dtw_lb`, and `dtw2`. Please check `?dtwclust::tsclust` for more information on DTW distances.
@@ -291,25 +245,23 @@ sits_cluster_frequency(clean)
 `sits` provides a clustering technique based on self-organizing maps (SOM) as an alternative to hierarchical clustering for quality control of training samples. SOM is a dimensionality reduction technique [@Kohonen1990], where high-dimensional data is mapped into a two-dimensional map, keeping the topological relations between data patterns. As shown in Figure \@ref(fig:som2d), the SOM 2D map is composed of units called neurons. Each neuron has a weight vector, with the same dimension as the training samples. At the start, neurons are assigned a small random value and then trained by competitive learning. The algorithm computes the distances of each member of the training set to all neurons and finds the neuron closest to the input, called the best matching unit.
 
 <div class="figure" style="text-align: center">
-<img src="images/som_structure.png" alt="SOM 2D map creation (Source: Santos et al. (2021). Reproduction under fair use doctrine)." width="90%" height="90%" />
+<img src="./images/som_structure.png" alt="SOM 2D map creation (Source: Santos et al. (2021). Reproduction under fair use doctrine)." width="90%" height="90%" />
 <p class="caption">(\#fig:som2d)SOM 2D map creation (Source: Santos et al. (2021). Reproduction under fair use doctrine).</p>
 </div>
 
 The input data for quality assessment is a set of training samples, which are high-dimensional data; for example, a time series with 25 instances of 4 spectral bands has 100 dimensions. When projecting a high-dimensional dataset into a 2D SOM map, the units of the map (called neurons) compete for each sample. Each time series will be mapped to one of the neurons. Since the number of neurons is smaller than the number of classes, each neuron will be associated with many time series. The resulting 2D map will be a set of clusters. Given that SOM preserves the topological structure of neighborhoods in multiple dimensions, clusters that contain training samples with a given label will usually be neighbors in 2D space. The neighbors of each neuron of a SOM map provide information on intraclass and interclass variability, which is used to detect noisy samples. The methodology of using SOM for sample quality assessment is discussed in detail in the reference paper [@Santos2021a].
 
 <div class="figure" style="text-align: center">
-<img src="images/methodology_bayes_som.png" alt="Using SOM for class noise reduction (Source: Santos et al. (2021). Reproduction under fair use doctrine)." width="90%" height="90%" />
+<img src="./images/methodology_bayes_som.png" alt="Using SOM for class noise reduction (Source: Santos et al. (2021). Reproduction under fair use doctrine)." width="90%" height="90%" />
 <p class="caption">(\#fig:unnamed-chunk-7)Using SOM for class noise reduction (Source: Santos et al. (2021). Reproduction under fair use doctrine).</p>
 </div>
 
 
 ## Creating the SOM map{-}
 
-To perform the SOM-based quality assessment, the first step is to run `sits_som_map()`, which uses the `kohonen` R package to compute a SOM grid [@Wehrens2018], controlled by five parameters. The grid size is given by `grid_xdim` and `grid_ydim`. The starting learning rate is `alpha`, which decreases during the interactions. To measure the separation between samples, use `distance` (either "dtw" or "euclidean"). The number of iterations is set by `rlen`. For more details, please consult `?kohonen::supersom`.
+To perform the SOM-based quality assessment, the first step is to run `sits_som_map()`, which uses the `kohonen` R package to compute a SOM grid [@Wehrens2018], controlled by five parameters. The grid size is given by `grid_xdim` and `grid_ydim`. The starting learning rate is `alpha`, which decreases during the interactions. To measure the separation between samples, use `distance` (either "dtw" or "euclidean"). The number of iterations is set by `rlen`. When using `sits_som_map()` in machines which have multiprocessing support for the OpenMP protocol, setting the laerning mode parameter `mode` to "patch" improves processing time. In MacOS and Windows, please use "online". 
 
-
-
-
+We suggest using the Dynamic Time Warping ("dtw") metric as the distance measure. It is a technique used to measure the similarity between two temporal sequences that may vary in speed or timing [@Berndt1994]. The core idea of DTW is to find the optimal alignment between two sequences by allowing non-linear mapping of one sequence onto another. In time series analysis, DTW matches two series slightly out of sync. This property is useful in land use studies for matching time series of agricultural areas [@Maus2015].
 
 
 ``` r
@@ -324,14 +276,18 @@ som_cluster <- sits_som_map(samples_cerrado_mod13q1_2bands,
 ```
 
 
+
+
+
+
 ``` r
 # Plot the SOM map
 plot(som_cluster)
 ```
 
 <div class="figure">
-<img src="07-clustering_files/figure-html/unnamed-chunk-10-1.png" alt="SOM map for the Cerrado samples (Source: Authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-10)SOM map for the Cerrado samples (Source: Authors).</p>
+<img src="07-clustering_files/figure-html/unnamed-chunk-10-1.png" alt="SOM map for the Cerrado samples (source: authors)." width="100%" />
+<p class="caption">(\#fig:unnamed-chunk-10)SOM map for the Cerrado samples (source: authors).</p>
 </div>
 
 The output of the `sits_som_map()` is a list with three elements: (a) `data`, the original set of time series with two additional columns for each time series: `id_sample` (the original id of each sample) and `id_neuron` (the id of the neuron to which it belongs); (b) `labelled_neurons`, a tibble with information on the neurons. For each neuron, it gives the prior and posterior probabilities of all labels which occur in the samples assigned to it; and (c) the SOM grid. To plot the SOM grid, use `plot()`. The neurons are labelled using majority voting.
@@ -351,20 +307,20 @@ som_eval
 ```
 
 ```
-#> # A tibble: 69 × 4
+#> # A tibble: 66 × 4
 #>    id_cluster cluster        class          mixture_percentage
 #>         <int> <chr>          <chr>                       <dbl>
-#>  1          1 Dense_Woodland Dense_Woodland           78.2    
-#>  2          1 Dense_Woodland Pasture                   5.55   
-#>  3          1 Dense_Woodland Rocky_Savanna             8.90   
-#>  4          1 Dense_Woodland Savanna                   3.87   
+#>  1          1 Dense_Woodland Dense_Woodland           79.6    
+#>  2          1 Dense_Woodland Pasture                   5.44   
+#>  3          1 Dense_Woodland Rocky_Savanna             8.20   
+#>  4          1 Dense_Woodland Savanna                   3.20   
 #>  5          1 Dense_Woodland Silviculture              3.48   
-#>  6          1 Dense_Woodland Soy_Corn                  0.00834
-#>  7          1 Dense_Woodland Soy_Cotton                0.00834
-#>  8          1 Dense_Woodland Soy_Fallow                0.00834
-#>  9          2 Dunes          Dunes                   100      
-#> 10          3 Fallow_Cotton  Fallow_Cotton            50.9    
-#> # ℹ 59 more rows
+#>  6          1 Dense_Woodland Soy_Corn                  0.0607 
+#>  7          1 Dense_Woodland Soy_Fallow                0.00868
+#>  8          2 Dunes          Dunes                   100      
+#>  9          3 Fallow_Cotton  Fallow_Cotton            45.3    
+#> 10          3 Fallow_Cotton  Millet_Cotton            20.3    
+#> # ℹ 56 more rows
 ```
 
 Many labels are associated with clusters where there are some samples with a different label. Such confusion between labels arises because sample labeling is subjective and can be biased. In many cases, interpreters use high-resolution data to identify samples. However, the actual images to be classified are captured by satellites with lower resolution. In our case study, a MOD13Q1 image has pixels with 250 m resolution. As such, the correspondence between labeled locations in high-resolution images and mid to low-resolution images is not direct. The confusion by sample label can be visualized in a bar plot using `plot()`, as shown below. The bar plot shows some confusion between the labels associated with the natural vegetation typical of the Brazilian Cerrado (`Savanna`, `Savanna_Parkland`, `Rocky_Savanna`). This mixture is due to the large variability of the natural vegetation of the Cerrado biome, which makes it difficult to draw sharp boundaries between classes. Some confusion is also visible between the agricultural classes. The `Millet_Cotton` class is a particularly difficult one since many of the samples assigned to this class are confused with `Soy_Cotton` and `Fallow_Cotton`. 
@@ -376,8 +332,8 @@ plot(som_eval)
 ```
 
 <div class="figure" style="text-align: center">
-<img src="07-clustering_files/figure-html/unnamed-chunk-12-1.png" alt="Confusion between classes as measured by SOM (Source: Authors)." width="90%" />
-<p class="caption">(\#fig:unnamed-chunk-12)Confusion between classes as measured by SOM (Source: Authors).</p>
+<img src="07-clustering_files/figure-html/unnamed-chunk-12-1.png" alt="Confusion between classes as measured by SOM (source: authors)." width="90%" />
+<p class="caption">(\#fig:unnamed-chunk-12)Confusion between classes as measured by SOM (source: authors).</p>
 </div>
 
 ## Detecting noisy samples using SOM{-}
@@ -409,19 +365,18 @@ summary(new_samples)
 ```
 
 ```
-#> # A tibble: 10 × 3
-#>    label            count    prop
-#>    <chr>            <int>   <dbl>
-#>  1 Dense_Woodland    8703 0.219  
-#>  2 Dunes              550 0.0138 
-#>  3 Fallow_Cotton       68 0.00171
-#>  4 Pasture           5608 0.141  
-#>  5 Rocky_Savanna     5865 0.147  
-#>  6 Savanna           7836 0.197  
-#>  7 Savanna_Parkland  2039 0.0513 
-#>  8 Soy_Corn          4169 0.105  
-#>  9 Soy_Cotton        3555 0.0894 
-#> 10 Soy_Fallow        1379 0.0347
+#> # A tibble: 9 × 3
+#>   label            count   prop
+#>   <chr>            <int>  <dbl>
+#> 1 Dense_Woodland    8612 0.216 
+#> 2 Dunes              550 0.0138
+#> 3 Pasture           5252 0.132 
+#> 4 Rocky_Savanna     6110 0.153 
+#> 5 Savanna           7559 0.189 
+#> 6 Savanna_Parkland  2064 0.0517
+#> 7 Soy_Corn          4640 0.116 
+#> 8 Soy_Cotton        3830 0.0959
+#> 9 Soy_Fallow        1306 0.0327
 ```
 
 All samples of the class which had the highest confusion with others(`Millet_Cotton`) have been removed. Most samples of class `Silviculture` (planted forests) have also been removed since they have been confused with natural forests and woodlands in the SOM map. Further analysis includes calculating the SOM map and confusion matrix for the new set, as shown in the following example. 
@@ -449,50 +404,12 @@ plot(new_cluster_mixture)
 ```
 
 <div class="figure" style="text-align: center">
-<img src="07-clustering_files/figure-html/unnamed-chunk-16-1.png" alt="Cluster confusion plot for samples cleaned by SOM (Source: Authors)." width="90%" />
-<p class="caption">(\#fig:unnamed-chunk-16)Cluster confusion plot for samples cleaned by SOM (Source: Authors).</p>
+<img src="07-clustering_files/figure-html/unnamed-chunk-16-1.png" alt="Cluster confusion plot for samples cleaned by SOM (source: authors)." width="90%" />
+<p class="caption">(\#fig:unnamed-chunk-16)Cluster confusion plot for samples cleaned by SOM (source: authors).</p>
 </div>
 
 As expected, the new confusion map shows a significant improvement over the previous one. This result should be interpreted carefully since it may be due to different effects. The most direct interpretation is that `Millet_Cotton` and `Silviculture` cannot be easily separated from the other classes, given the current attributes (a time series of NDVI and EVI indices from MODIS images). In such situations, users should consider improving the number of samples from the less represented classes, including more MODIS bands, or working with higher resolution satellites. The results of the SOM method should be interpreted based on the users' understanding of the ecosystems and agricultural practices of the study region. 
 
-A further comparison between the original and clean samples is to run a 5-fold validation on the original and the cleaned sample sets using `sits_kfold_validate()` and a random forest model. The SOM procedure improves the validation results from 95% on the original dataset to 99% in the cleaned one. This improvement should not be interpreted as providing a better fit for the final map accuracy. A 5-fold validation procedure only measures how well the machine learning model fits the samples; it is not an accuracy assessment of classification results. The result only indicates that the training set after the SOM sample removal procedure is more internally consistent than the original one. For more details on accuracy measures, please see Chapter [Validation and accuracy measurements](https://e-sensing.github.io/sitsbook/validation-and-accuracy-measurements.html).
-
-
-``` r
-# Run a k-fold validation
-assess_orig <- sits_kfold_validate(
-  samples = samples_cerrado_mod13q1_2bands,
-  folds = 5,
-  ml_method = sits_rfor()
-)
-# Print summary
-summary(assess_orig)
-```
-
-```
-#> Overall Statistics                            
-#>  Accuracy : 0.9457          
-#>    95% CI : (0.9436, 0.9476)
-#>     Kappa : 0.9366
-```
-
-
-``` r
-assess_new <- sits_kfold_validate(
-  samples = new_samples,
-  folds = 5,
-  ml_method = sits_rfor()
-)
-# Print summary
-summary(assess_new)
-```
-
-```
-#> Overall Statistics                            
-#>  Accuracy : 0.9932          
-#>    95% CI : (0.9923, 0.9939)
-#>     Kappa : 0.9919
-```
 
 The SOM-based analysis discards samples that can be confused with samples of other classes. After removing noisy samples or uncertain classes, the dataset obtains a better validation score since there is less confusion between classes. Users should analyse the results with care. Not all discarded samples are low-quality ones. Confusion between samples of different classes can result from inconsistent labeling or from the lack of capacity of satellite data to distinguish between chosen classes. When many samples are discarded, as in the current example, revising the whole classification schema is advisable. The aim of selecting training data should always be to match the reality on the ground to the power of remote sensing data to identify differences. No analysis procedure can replace actual user experience and knowledge of the study region. 
 
@@ -518,6 +435,8 @@ balanced_samples <- sits_reduce_imbalance(
 ```
 
 
+
+
 ``` r
 # Print the balanced samples
 # Some classes have more than 1500 samples due to the SOM map
@@ -529,34 +448,35 @@ summary(balanced_samples)
 #> # A tibble: 12 × 3
 #>    label            count   prop
 #>    <chr>            <int>  <dbl>
-#>  1 Dense_Woodland    1600 0.0976
+#>  1 Dense_Woodland    1596 0.0974
 #>  2 Dunes             1000 0.0610
 #>  3 Fallow_Cotton     1000 0.0610
 #>  4 Millet_Cotton     1000 0.0610
-#>  5 Pasture           1596 0.0973
-#>  6 Rocky_Savanna     1452 0.0885
-#>  7 Savanna           1596 0.0973
-#>  8 Savanna_Parkland  1536 0.0937
+#>  5 Pasture           1592 0.0971
+#>  6 Rocky_Savanna     1476 0.0901
+#>  7 Savanna           1600 0.0976
+#>  8 Savanna_Parkland  1564 0.0954
 #>  9 Silviculture      1000 0.0610
-#> 10 Soy_Corn          1584 0.0966
-#> 11 Soy_Cotton        1556 0.0949
-#> 12 Soy_Fallow        1480 0.0902
+#> 10 Soy_Corn          1588 0.0969
+#> 11 Soy_Cotton        1568 0.0957
+#> 12 Soy_Fallow        1404 0.0857
 ```
-
-
 
 
 ``` r
 # Clustering time series using SOM
 som_cluster_bal <- sits_som_map(
   data = balanced_samples,
-  grid_xdim = 10,
-  grid_ydim = 10,
+  grid_xdim = 15,
+  grid_ydim = 15,
   alpha = 1.0,
   distance = "dtw",
-  rlen = 20
+  rlen = 20,
+  mode = "pbatch"
 )
 ```
+
+
 
 
 ``` r
@@ -571,8 +491,8 @@ plot(som_eval)
 ```
 
 <div class="figure" style="text-align: center">
-<img src="07-clustering_files/figure-html/seval-1.png" alt="Confusion by cluster for the balanced dataset (Source: Authors)." width="90%" />
-<p class="caption">(\#fig:seval)Confusion by cluster for the balanced dataset (Source: Authors).</p>
+<img src="07-clustering_files/figure-html/seval-1.png" alt="Confusion by cluster for the balanced dataset (source: authors)." width="90%" />
+<p class="caption">(\#fig:seval)Confusion by cluster for the balanced dataset (source: authors).</p>
 </div>
 
 As shown in Figure \@ref(fig:seval), the balanced dataset shows less confusion per label than the unbalanced one. In this case, many classes that were confused with others in the original confusion map are now better represented. Reducing sample imbalance should be tried as an alternative to reducing the number of samples of the classes using SOM. In general, users should balance their training data for better performance. 

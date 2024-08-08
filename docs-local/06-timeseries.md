@@ -1,55 +1,6 @@
 # Working with time series{-}
 
 
-```
-## SITS - satellite image time series analysis.
-```
-
-```
-## Loaded sits v1.5.1.
-##         See ?sits for help, citation("sits") for use in publication.
-##         Documentation avaliable in https://e-sensing.github.io/sitsbook/.
-```
-
-```
-## Loaded sitsdata data sets v1.2. Use citation("sitsdata") for use in publication.
-```
-
-```
-## Loading required package: proxy
-```
-
-```
-## 
-## Attaching package: 'proxy'
-```
-
-```
-## The following objects are masked from 'package:stats':
-## 
-##     as.dist, dist
-```
-
-```
-## The following object is masked from 'package:base':
-## 
-##     as.matrix
-```
-
-```
-## Loading required package: dtw
-```
-
-```
-## Loaded dtw v1.23-1. See ?dtw for help, citation("dtw") for use in publication.
-```
-
-```
-## dtwclust:
-## Setting random number generator to L'Ecuyer-CMRG (see RNGkind()).
-## To read the included vignettes type: browseVignettes("dtwclust").
-## See news(package = "dtwclust") after package updates.
-```
 
 ## Data structures for satellite time series{-}
 
@@ -136,7 +87,7 @@ summary(samples_new_labels)
 #> 5 Pasture     344 0.187
 ```
 
-Since metadata and the embedded time series use the tibble data format, the functions from `dplyr`, `tidyr`, and `purrr` packages of the `tidyverse` [@Wickham2017] can be used to process the data. For example, the following code uses `sits_select()` to get a subset of the sample dataset with two bands (NDVI and EVI) and then uses the `dplyr::filter()` to select the samples labeled as Cerrado. 
+Since metadata and the embedded time series use the tibble data format, the functions from `dplyr`, `tidyr`, and `purrr` packages of the `tidyverse` [@Wickham2017] can be used to process the data. For example, the following code uses `sits_select()` to get a subset of the sample dataset with two bands (NDVI and EVI) and then uses the `dplyr::filter()` to select the samples labeled as `Cerrado`. 
 
 
 ``` r
@@ -162,8 +113,8 @@ plot(samples_cerrado[1:12, ])
 ```
 
 <div class="figure" style="text-align: center">
-<img src="06-timeseries_files/figure-html/cerrado-12-1.png" alt="Plot of the first 'Cerrado' samples (Source: Authors)." width="70%" />
-<p class="caption">(\#fig:cerrado-12)Plot of the first 'Cerrado' samples (Source: Authors).</p>
+<img src="06-timeseries_files/figure-html/cerrado-12-1.png" alt="Plot of the first 'Cerrado' samples (source: authors)." width="70%" />
+<p class="caption">(\#fig:cerrado-12)Plot of the first 'Cerrado' samples (source: authors).</p>
 </div>
 
 For many samples, the default visualization combines all samples together in a single temporal interval, even if they belong to different years. This plot shows the spread of values for the time series of each band. The strong red line in the plot indicates the median of the values, while the two orange lines are the first and third interquartile ranges. See `?sits::plot` for more details on data visualization in  `sits`.
@@ -175,8 +126,8 @@ plot(samples_cerrado)
 ```
 
 <div class="figure" style="text-align: center">
-<img src="06-timeseries_files/figure-html/unnamed-chunk-6-1.png" alt="Plot of all Cerrado samples (Source: Authors)." width="70%" />
-<p class="caption">(\#fig:unnamed-chunk-6)Plot of all Cerrado samples (Source: Authors).</p>
+<img src="06-timeseries_files/figure-html/unnamed-chunk-6-1.png" alt="Plot of all Cerrado samples (source: authors)." width="70%" />
+<p class="caption">(\#fig:unnamed-chunk-6)Plot of all Cerrado samples (source: authors).</p>
 </div>
 
 To see the spatial distribution of the samples, use `sits_view()` to create an interactive plot. The spatial visulisation is useful to show where the data has been collected. 
@@ -186,7 +137,7 @@ To see the spatial distribution of the samples, use `sits_view()` to create an i
 sits_view(samples_matogrosso_mod13q1)
 ```
 
-<img src="images/view_samples.png" width="90%" style="display: block; margin: auto;" />
+<img src="./images/view_samples.png" width="90%" style="display: block; margin: auto;" />
 
 ## Visualizing sample patterns{-}
 
@@ -207,8 +158,8 @@ samples_matogrosso_mod13q1 |>
 ```
 
 <div class="figure" style="text-align: center">
-<img src="06-timeseries_files/figure-html/unnamed-chunk-9-1.png" alt="Patterns for the samples for Mato Grosso (Source: Authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-9)Patterns for the samples for Mato Grosso (Source: Authors).</p>
+<img src="06-timeseries_files/figure-html/unnamed-chunk-9-1.png" alt="Patterns for the samples for Mato Grosso (source: authors)." width="100%" />
+<p class="caption">(\#fig:unnamed-chunk-9)Patterns for the samples for Mato Grosso (source: authors).</p>
 </div>
 
 The resulting patterns provide some insights over the time series behaviour of each class. The response of the Forest class is quite distinctive.  They also show that it should be possible to separate between the single and double cropping classes. There are similarities between the double-cropping classes (`Soy_Corn` and `Soy_Millet `) and between the `Cerrado` and `Pasture` classes. The subtle differences between class signatures provide hints at possible ways by which machine learning algorithms might distinguish between classes. One example is the difference between the middle-infrared response during the dry season (May to September) to differentiate between `Cerrado` and `Pasture`. 
@@ -240,8 +191,8 @@ plot(distances)
 ```
 
 <div class="figure">
-<img src="06-timeseries_files/figure-html/unnamed-chunk-10-1.png" alt="Distribution of sample-to-sample and sample-to-prediction distances (Source: Authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-10)Distribution of sample-to-sample and sample-to-prediction distances (Source: Authors).</p>
+<img src="06-timeseries_files/figure-html/unnamed-chunk-10-1.png" alt="Distribution of sample-to-sample and sample-to-prediction distances (source: authors)." width="100%" />
+<p class="caption">(\#fig:unnamed-chunk-10)Distribution of sample-to-sample and sample-to-prediction distances (source: authors).</p>
 </div>
 The plot shows a mismatch between the sample-to-sample and the sample-to-prediction distributions. Most samples are closer to each other than they are close to the location where values need to be predicted. In this case, there are many areas where few or no samples have been collected and where the prediction uncertainty will be higher. In this and similar cases, improving the distribution of training samples is always welcome. If that is not possible, areas with insufficient samples could have lower accuracy. This information must be reported to potential users of classification results. 
 
@@ -250,10 +201,10 @@ The plot shows a mismatch between the sample-to-sample and the sample-to-predict
 
 To get a set of time series in `sits`, first create a regular data cube and then request one or more time series from the cube using `sits_get_data()`.  This function uses two mandatory parameters: `cube` and `samples`. The `cube` indicates the data cube from which the time series will be extracted.  The `samples` parameter accepts the following data types: 
 
-1. A data.frame with information on `latitude` and `longitude` (mandatory), `start_date`, `end_date`, and `label` for each sample point.
-2. A csv file with columns `latitude`, `longitude`, `start_date`, `end_date`, and `label`.
-3. A shapefile containing either `POINT`or `POLYGON` geometries. See details below.
-4. An `sf` object (from the `sf` package) with `POINT` or `POLYGON` geometry information. See details below.
+- A data.frame with information on `latitude` and `longitude` (mandatory), `start_date`, `end_date`, and `label` for each sample point.
+- A csv file with columns `latitude`, `longitude`, `start_date`, `end_date`, and `label`.
+- A shapefile containing either `POINT`or `POLYGON` geometries. See details below.
+- An `sf` object (from the `sf` package) with `POINT` or `POLYGON` geometry information. See details below.
 
 In the example below, given a data cube, the user provides the latitude and longitude of the desired location. Since the bands, start date, and end date of the time series are missing, `sits` obtains them from the data cube. The result is a tibble with one time series that can be visualized using `plot()`.
 
@@ -263,7 +214,7 @@ In the example below, given a data cube, the user provides the latitude and long
 data_dir <- system.file("extdata/sinop", package = "sitsdata")
 raster_cube <- sits_cube(
   source     = "BDC",
-  collection = "MOD13Q1-6",
+  collection = "MOD13Q1-6.1",
   data_dir   = data_dir,
   parse_info = c("satellite", "sensor", "tile", "band", "date")
 )
@@ -280,8 +231,8 @@ plot(series)
 ```
 
 <div class="figure" style="text-align: center">
-<img src="06-timeseries_files/figure-html/unnamed-chunk-11-1.png" alt="NDVI and EVI time series fetched from local raster cube (Source: Authors)." width="90%" />
-<p class="caption">(\#fig:unnamed-chunk-11)NDVI and EVI time series fetched from local raster cube (Source: Authors).</p>
+<img src="06-timeseries_files/figure-html/unnamed-chunk-11-1.png" alt="NDVI and EVI time series fetched from local raster cube (source: authors)." width="90%" />
+<p class="caption">(\#fig:unnamed-chunk-11)NDVI and EVI time series fetched from local raster cube (source: authors).</p>
 </div>
 
 A useful case is when a set of labeled samples can be used as a training dataset. In this case, trusted observations are usually labeled and commonly stored in plain text files in comma-separated values (csv) or using shapefiles (shp). 
@@ -323,11 +274,11 @@ points[1:3, ]
 
 ```
 #> # A tibble: 3 × 7
-#>   longitude latitude start_date end_date   label    cube      time_series      
-#>       <dbl>    <dbl> <date>     <date>     <chr>    <chr>     <list>           
-#> 1     -55.8    -11.7 2013-09-14 2014-08-29 Cerrado  MOD13Q1-6 <tibble [23 × 3]>
-#> 2     -55.8    -11.7 2013-09-14 2014-08-29 Cerrado  MOD13Q1-6 <tibble [23 × 3]>
-#> 3     -55.7    -11.7 2013-09-14 2014-08-29 Soy_Corn MOD13Q1-6 <tibble [23 × 3]>
+#>   longitude latitude start_date end_date   label    cube        time_series
+#>       <dbl>    <dbl> <date>     <date>     <chr>    <chr>       <list>     
+#> 1     -55.8    -11.7 2013-09-14 2014-08-29 Cerrado  MOD13Q1-6.1 <tibble>   
+#> 2     -55.8    -11.7 2013-09-14 2014-08-29 Cerrado  MOD13Q1-6.1 <tibble>   
+#> 3     -55.7    -11.7 2013-09-14 2014-08-29 Soy_Corn MOD13Q1-6.1 <tibble>
 ```
 
 Users can also specify samples by providing shapefiles or `sf` objects containing `POINT` or `POLYGON` geometries. The geographical location is inferred from the geometries associated with the shapefile or `sf` object. For files containing points, the geographical location is obtained directly. For polygon geometries, the parameter `n_sam_pol` (defaults to 20) determines the number of samples to be extracted from each polygon. The temporal information can be provided explicitly by the user; if absent, it is inferred from the data cube. If label information is available in the shapefile or `sf` object, the parameter `label_attr` is compulsory to indicate which column contains the label associated with each time series.
@@ -344,7 +295,7 @@ sf_shape <- sf::st_read(shp_file)
 
 ```
 #> Reading layer `mt' from data source 
-#>   `/Library/Frameworks/R.framework/Versions/4.4-arm64/Resources/library/sits/extdata/shapefiles/mato_grosso/mt.shp' 
+#>   `/Library/Frameworks/R.framework/Versions/4.4-x86_64/Resources/library/sits/extdata/shapefiles/mato_grosso/mt.shp' 
 #>   using driver `ESRI Shapefile'
 #> Simple feature collection with 1 feature and 3 fields
 #> Geometry type: MULTIPOLYGON
@@ -358,7 +309,7 @@ sf_shape <- sf::st_read(shp_file)
 # Create a data cube based on MOD13Q1 collection from BDC
 modis_cube <- sits_cube(
   source      = "BDC",
-  collection  = "MOD13Q1-6",
+  collection  = "MOD13Q1-6.1",
   bands       = c("NDVI", "EVI"),
   roi         = sf_shape,
   start_date  = "2020-06-01",
@@ -398,8 +349,8 @@ sits_merge(point_sg, point_ndvi) |> plot()
 ```
 
 <div class="figure" style="text-align: center">
-<img src="06-timeseries_files/figure-html/unnamed-chunk-16-1.png" alt="Savitzky-Golay filter applied on a multi-year NDVI time series (Source: Authors)." width="90%" />
-<p class="caption">(\#fig:unnamed-chunk-16)Savitzky-Golay filter applied on a multi-year NDVI time series (Source: Authors).</p>
+<img src="06-timeseries_files/figure-html/unnamed-chunk-16-1.png" alt="Savitzky-Golay filter applied on a multi-year NDVI time series (source: authors)." width="90%" />
+<p class="caption">(\#fig:unnamed-chunk-16)Savitzky-Golay filter applied on a multi-year NDVI time series (source: authors).</p>
 </div>
 
 The resulting smoothed curve has both desirable and unwanted properties. From 2000 to 2008, the Savitsky-Golay filter removes noise from clouds. However, after 2010, when the region was converted to agriculture, the filter removes an important part of the natural variability from the crop cycle. Therefore, the `length` parameter is arguably too big, resulting in oversmoothing. 
@@ -419,8 +370,8 @@ sits_merge(point_whit, point_ndvi) |> plot()
 ```
 
 <div class="figure" style="text-align: center">
-<img src="06-timeseries_files/figure-html/unnamed-chunk-17-1.png" alt="Whittaker filter applied on a one-year NDVI time series (Source: Authors)." width="90%" />
-<p class="caption">(\#fig:unnamed-chunk-17)Whittaker filter applied on a one-year NDVI time series (Source: Authors).</p>
+<img src="06-timeseries_files/figure-html/unnamed-chunk-17-1.png" alt="Whittaker filter applied on a one-year NDVI time series (source: authors)." width="90%" />
+<p class="caption">(\#fig:unnamed-chunk-17)Whittaker filter applied on a one-year NDVI time series (source: authors).</p>
 </div>
 
 Similar to what is observed in the Savitsky-Golay filter, high values of the smoothing parameter `lambda` produce an over-smoothed time series that reduces the capacity of the time series to represent natural variations in crop growth. For this reason, low smoothing values are recommended when using `sits_whittaker()`.

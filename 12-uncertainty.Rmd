@@ -52,7 +52,7 @@ $$
 The margin of confidence sampling is the difference between the two most confident predictions, expressed from 0% (no uncertainty) to 100% (maximum uncertainty). Let $P_1(i)$ and $P_2(i)$ be the two higher class probabilities for pixel $i$. Then, the margin of confidence is expressed as 
 
 $$
-\theta_{MC} = 1 - P_1(i) - P_2(i).
+\theta_{MC} = 1 - (P_1(i) - P_2(i)).
 $$
 
 The ratio of confidence is the measure of the ratio between the two most confident predictions, expressed in a range from 0% (no uncertainty) to 100% (maximum uncertainty). Let $P_1(i)$ and $P_2(i)$ be the two higher class probabilities for pixel $i$. Then, the ratio of confidence is expressed as 
@@ -75,7 +75,7 @@ The study area is close to the Samuel Hydroelectric Dam, located on the Madeira 
 
 The first step is to produce a regular data cube for the chosen area from 2020-06-01 to 2021-09-01. To reduce processing time and storage, we use only three bands (B02, B8A, and B11) plus the cloud band, and take a small area inside the tile. After obtaining a regular cube, we plot the study area in two dates during the temporal interval of the data cube. The first image is taken at the beginning of the dry season in 2020-07-04, when the inundation area of the dam was covered by shallow water. 
 
-```{r, tidy = "styler", out.width = "100%", fig.align="center", fig.cap="Area in Rondonia near Samuel dam (Source: Authors)."}
+```{r, tidy = "styler", out.width = "100%", fig.align="center", fig.cap="Area in Rondonia near Samuel dam (source: authors)."}
 # Select a S2 tile
 s2_cube_ro <- sits_cube(
       source = "AWS",
@@ -110,7 +110,7 @@ plot(s2_reg_cube_ro,
 
 The second image is from 2020-11-09 and shows that most of the inundation area dries during the dry season. In early November 2020, after the end of the dry season, the inundation area is dry and has a response similar to bare soil and burned areas. The Madeira River can be seen running through the dried inundation area. 
 
-```{r, tidy = "styler", out.width = "100%", fig.align="center", fig.cap="Area in Rondonia near Samuel dam in November 2021 (Source: Authors)."}
+```{r, tidy = "styler", out.width = "100%", fig.align="center", fig.cap="Area in Rondonia near Samuel dam in November 2021 (source: authors)."}
 plot(s2_reg_cube_ro, 
      red = "B11", 
      green = "B8A", 
@@ -120,13 +120,13 @@ plot(s2_reg_cube_ro,
 
 The third image is from 2021-08-08. In early August 2021, after the wet season, the inundation area is again covered by a shallow water layer. Several burned and clear-cut areas can also be seen in the August 2021 image compared with the July 2020 one. Given the contrast between the wet and dry seasons, correct land classification of this area is hard. 
 
-```{r, tidy = "styler", out.width = "100%", fig.align="center", fig.cap="Area in Rondonia near Samuel dam in August 2021 (Source: Authors)."}
+```{r, tidy = "styler", out.width = "100%", fig.align="center", fig.cap="Area in Rondonia near Samuel dam in August 2021 (source: authors)."}
 plot(s2_reg_cube_ro, red = "B11", green = "B8A", blue = "B02", date = "2021-08-08")
 ```
 
 The next step is to classify this study area using a training set with 480 times series collected over the state of Rondonia (Brazil) for detecting deforestation. The training set uses 4 classes (`Burned_Area`, `Forest`,` `Highly_Degraded`, and `Cleared_Area`). The cube is classified using a Random Forest model, post-processed by Bayesian smoothing, and then labeled.
 
-```{r, tidy = "styler", out.width = "100%", fig.align="center", fig.cap="Classified map for area in Rondonia near Samuel dam (Source: Authors)."}
+```{r, tidy = "styler", out.width = "100%", fig.align="center", fig.cap="Classified map for area in Rondonia near Samuel dam (source: authors)."}
 library(sitsdata)
 # Load the training set
 data("samples_prodes_4classes")
@@ -167,7 +167,7 @@ plot(s2_cube_label)
 
 The resulting map correctly identifies the forest area and the deforestation. However, it wrongly classifies the area covered by the Samuel hydroelectric dam. The reason is the lack of samples for classes related to surface water and wetlands. To improve the classification, we need to improve our samples. To do that, the first step is to calculate the uncertainty of the classification.
 
-```{r, tidy = "styler", out.width = "100%", fig.align="center", fig.cap= "Uncertainty map for classification in Rondonia near Samuel dam (Source: Authors)."}
+```{r, tidy = "styler", out.width = "100%", fig.align="center", fig.cap= "Uncertainty map for classification in Rondonia near Samuel dam (source: authors)."}
 # Calculate the uncertainty cube
 s2_cube_uncert <- sits_uncertainty(
     cube = s2_cube_bayes,
@@ -194,7 +194,7 @@ sits_view(new_samples)
 ```
 
 
-```{r, tidy = "styler", echo = FALSE, eval = TRUE, out.width = "100%", fig.align="center", fig.cap= "Location of uncertain pixel for classification in Rondonia near Samuel dam (Source: Authors)."}
+```{r, tidy = "styler", echo = FALSE, eval = TRUE, out.width = "100%", fig.align="center", fig.cap= "Location of uncertain pixel for classification in Rondonia near Samuel dam (source: authors)."}
 # Calculate the uncertainty cube
 new_samples <- sits_uncertainty_sampling(
     uncert_cube = s2_cube_uncert,
@@ -207,7 +207,7 @@ knitr::include_graphics("./images/samuel_dam.png")
 
 The visualization shows that the samples are located in the areas covered by the Samuel data. Thus, we designate these samples as Wetlands. A more detailed evaluation, which is recommended in practice, requires analysing these samples with an exploration software such as QGIS and individually labeling each sample. In our case, we will take a direct approach for illustration purposes.
 
-```{r, tidy = "styler", out.width = "100%", fig.align="center", fig.cap= "New land classification in Rondonia near Samuel dam (Source: Authors)."}
+```{r, tidy = "styler", out.width = "100%", fig.align="center", fig.cap= "New land classification in Rondonia near Samuel dam (source: authors)."}
 # Label the new samples
 new_samples$label <- "Wetland"
 # Obtain the time series from the regularized cube 
@@ -256,7 +256,7 @@ plot(s2_cube_label_v2)
 
 The results show a significant quality gain over the earlier classification. There are still some areas of confusion in the exposed soils inside the inundation area, some of which have been classified as burned areas. It is also useful to show the uncertainty map associated with the second model. 
 
-```{r, tidy = "styler", out.width = "100%", fig.align="center", fig.cap= "Uncertainty map for classification in Rondonia near Samuel dam - improved model (Source: Authors)."}
+```{r, tidy = "styler", out.width = "100%", fig.align="center", fig.cap= "Uncertainty map for classification in Rondonia near Samuel dam - improved model (source: authors)."}
 # Calculate the uncertainty cube
 s2_cube_uncert_v2 <- sits_uncertainty(
     cube = s2_cube_bayes_v2,

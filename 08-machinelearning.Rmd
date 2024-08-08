@@ -15,13 +15,13 @@ library(sitsdata)
 Machine learning classification is a type of supervised learning in which an algorithm is trained to predict which  class an input data point belongs to.  The goal of machine learning models is to approximate a function $y = f(x)$ that maps an input $x$ to a class $y$. A model defines a mapping $y = f(x;\theta)$ and learns the value of the parameters $\theta$ that result in the best function approximation [@Goodfellow2016]. The difference between the different algorithms is their approach to building the mapping that classifies the input data.  
 In `sits`, machine learning is used to classify individual time series using the `time-first` approach. The package includes two kinds of methods for time series classification: 
 
-1. Machine learning algorithms that do not explicitly consider the temporal structure of the time series. They treat time series as a vector in a high-dimensional feature space, taking each time series instance as independent from the others. They include random forest (`sits_rfor()`), support vector machine (`sits_svm()`), extreme gradient boosting (`sits_xgboost()`), and multilayer perceptron (`sits_mlp()`). 
+- Machine learning algorithms that do not explicitly consider the temporal structure of the time series. They treat time series as a vector in a high-dimensional feature space, taking each time series instance as independent from the others. They include random forest (`sits_rfor()`), support vector machine (`sits_svm()`), extreme gradient boosting (`sits_xgboost()`), and multilayer perceptron (`sits_mlp()`). 
 
-2. Deep learning methods where temporal relations between observed values in a time series are taken into account.  These models are specifically designed for time series. The temporal order of values in a time series is relevant for the classification model. From this class of models, `sits` supports 1D convolution neural networks  (`sits_tempcnn()`) and temporal attention-based encoders (`sits_tae()` and `sits_lighttae()`). 
+- Deep learning methods where temporal relations between observed values in a time series are taken into account.  These models are specifically designed for time series. The temporal order of values in a time series is relevant for the classification model. From this class of models, `sits` supports 1D convolution neural networks  (`sits_tempcnn()`) and temporal attention-based encoders (`sits_tae()` and `sits_lighttae()`). 
 
 Based on experience with `sits`, random forest, extreme gradient boosting, and temporal deep learning models outperform SVM and multilayer perceptron models. The reason is that some dates provide more information than others in the temporal behavior of land classes. For instance, when monitoring deforestation, dates corresponding to forest removal actions are more informative than earlier or later dates. Similarly, a few dates may capture a large portion of the variation in crop mapping. Therefore, classification methods that consider the temporal order of samples are more likely to capture the seasonal behavior of image time series. Random forest and extreme gradient boosting methods that use individual measures as nodes in decision trees can also capture specific events such as deforestation.
 
-The following examples show how to train machine learning methods and apply them to classify a single time series. We use the set `samples_matogrosso_mod13q1`, containing time series samples from the Brazilian Mato Grosso state obtained from the MODIS MOD13Q1 product. It has 1,892 samples and nine classes (Cerrado, Forest, Pasture, Soy_Corn, Soy_Cotton, Soy_Fallow, Soy_Millet). Each time series covers 12 months (23 data points) with six bands (NDVI, EVI, BLUE, RED, NIR, MIR). The samples are arranged along an agricultural year, starting in September and ending in August. The dataset was used in the paper "Big Earth observation time series analysis for monitoring Brazilian agriculture" [@Picoli2018], being available in the R package `sitsdata`.
+The following examples show how to train machine learning methods and apply them to classify a single time series. We use the set `samples_matogrosso_mod13q1`, containing time series samples from the Brazilian Mato Grosso state obtained from the MODIS MOD13Q1 product. It has 1,892 samples and nine classes (`Cerrado`, `Forest`, `Pasture`, `Soy_Corn`, `Soy_Cotton`, `Soy_Fallow`, `Soy_Millet`). Each time series covers 12 months (23 data points) with six bands (NDVI, EVI, BLUE, RED, NIR, MIR). The samples are arranged along an agricultural year, starting in September and ending in August. The dataset was used in the paper "Big Earth observation time series analysis for monitoring Brazilian agriculture" [@Picoli2018], being available in the R package `sitsdata`.
 
 ## Common interface to machine learning and deep learning models{-}
 
@@ -46,7 +46,7 @@ knitr::include_graphics("./images/random_forest.png")
 set.seed(290356)
 ```
 
-```{r, tidy="styler",out.width = "90%", fig.align="center", fig.cap="Most important variables in random forest model (Source: Authors)."}
+```{r, tidy="styler",out.width = "90%", fig.align="center", fig.cap="Most important variables in random forest model (source: authors)."}
 # Train the Mato Grosso samples with random forest model
 rfor_model <- sits_train(
     samples = samples_matogrosso_mod13q1, 
@@ -58,7 +58,7 @@ plot(rfor_model)
 The most important explanatory variables are the NIR (near infrared) band on date 17 (2007-05-25) and the MIR (middle infrared) band on date 22 (2007-08-13). The NIR value at the end of May captures the growth of the second crop for double cropping classes.  Values of the MIR band at the end of the period (late July to late August) capture bare soil signatures to distinguish between agricultural and natural classes. This corresponds to summertime when the ground is drier after harvesting crops.
 
 
-```{r, tidy="styler",out.width = "90%", fig.align="center", fig.cap="Classification of time series using random forest (Source: Authors)."}
+```{r, tidy="styler",out.width = "90%", fig.align="center", fig.cap="Classification of time series using random forest (source: authors)."}
 # Classify using random forest model and plot the result
 point_class <- sits_classify(
     data = point_mt_mod13q1, 
@@ -89,7 +89,7 @@ set.seed(290356)
 ```
 
 
-```{r, tidy="styler", out.width = "90%", fig.align="center", fig.cap="Classification of time series using SVM (Source: Authors)."}
+```{r, tidy="styler", out.width = "90%", fig.align="center", fig.cap="Classification of time series using SVM (source: authors)."}
 # Train an SVM model
 svm_model <- sits_train(
     samples = samples_matogrosso_mod13q1, 
@@ -125,7 +125,7 @@ set.seed(290356)
 ```
 
 
-```{r, tidy="styler", out.width = "90%", fig.align="center", fig.cap="Classification of time series using XGBoost (Source: Authors)."}
+```{r, tidy="styler", out.width = "90%", fig.align="center", fig.cap="Classification of time series using XGBoost (source: authors)."}
 # Train using  XGBoost
 xgb_model <- sits_train(
     samples = samples_matogrosso_mod13q1, 
@@ -160,7 +160,7 @@ To simplify the output, the `verbose` option has been turned off. After the mode
 set.seed(290356)
 ```
 
-```{r mlp, tidy="styler", out.width = "80%", warning = FALSE, message = FALSE, fig.align="center", fig.cap="Evolution of training accuracy of MLP model (Source: Authors)."}
+```{r mlp, tidy="styler", out.width = "80%", warning = FALSE, message = FALSE, fig.align="center", fig.cap="Evolution of training accuracy of MLP model (source: authors)."}
 # Train using an MLP model
 # This is an example of how to set parameters
 # First-time users should test default options first
@@ -180,7 +180,7 @@ plot(mlp_model)
 
 Then, we classify a 16-year time series using the multilayer perceptron model.
 
-```{r, tidy="styler", out.width = "90%", fig.align="center", fig.cap="Classification of time series using MLP (Source: Authors)."}
+```{r, tidy="styler", out.width = "90%", fig.align="center", fig.cap="Classification of time series using MLP (source: authors)."}
 # Classify using MLP model and plot the result
 point_mt_mod13q1 |>  
     sits_classify(mlp_model) |>  
@@ -208,13 +208,13 @@ set.seed(290356)
 ```
 
 
-```{r tcnnex, tidy="styler", cache = TRUE, out.width = "80%", warning = FALSE, message = FALSE, fig.align="center", fig.cap="Training evolution of TempCNN model (Source: Authors)."}
+```{r tcnnex, tidy="styler", cache = TRUE, out.width = "80%", warning = FALSE, message = FALSE, fig.align="center", fig.cap="Training evolution of TempCNN model (source: authors)."}
 library(torchopt)
 # Train using tempCNN
 tempcnn_model <- sits_train(samples_matogrosso_mod13q1, 
                        sits_tempcnn(
                           optimizer            = torch::optim_adamw,
-                          cnn_layers           = c(128, 128, 128),
+                          cnn_layers           = c(256, 256, 256),
                           cnn_kernels          = c(7, 7, 7),
                           cnn_dropout_rates    = c(0.2, 0.2, 0.2),
                           epochs               = 80,
@@ -227,7 +227,7 @@ plot(tempcnn_model)
 
 Then, we classify a 16-year time series using the TempCNN model.
 
-```{r, out.width = "90%", tidy="styler", fig.align="center", fig.cap="Classification of time series using TempCNN (Source: Authors)."}
+```{r, out.width = "90%", tidy="styler", fig.align="center", fig.cap="Classification of time series using TempCNN (source: authors)."}
 # Classify using TempCNN model and plot the result
 point_mt_mod13q1 |>  
     sits_classify(tempcnn_model) |>  
@@ -259,7 +259,7 @@ The first model proposed by Garnot et al. is a full transformer-based model [@Ga
 
 In `sits`, the full transformer-based model proposed by Garnot et al. [@Garnot2020a]   is implemented using `sits_tae()`. The default parameters are those proposed by the authors. The default optimizer is `optim_adamw`, as also used in the `sits_tempcnn()` function.
 
-```{r tae, tidy="styler", out.width = "100%", cache = TRUE, warning = FALSE, message = FALSE, fig.align="center", fig.cap="Training evolution of Temporal Self-Attention model (Source: Authors)."}
+```{r tae, tidy="styler", out.width = "100%", cache = TRUE, warning = FALSE, message = FALSE, fig.align="center", fig.cap="Training evolution of Temporal Self-Attention model (source: authors)."}
 # Train a machine learning model using TAE
 tae_model <- sits_train(samples_matogrosso_mod13q1, 
                        sits_tae(
@@ -274,7 +274,7 @@ plot(tae_model)
 
 Then, we classify a 16-year time series using the TAE model. 
 
-```{r, tidy="styler", out.width = "100%", fig.align="center", fig.cap="Classification of time series using TAE (Source: Authors)."}
+```{r, tidy="styler", out.width = "100%", fig.align="center", fig.cap="Classification of time series using TAE (source: authors)."}
 # Classify using DL model and plot the result
 point_mt_mod13q1 |>  
     sits_classify(tae_model) |>  
@@ -283,7 +283,7 @@ point_mt_mod13q1 |>
 
 Garnot and co-authors also proposed the Lightweight Temporal Self-Attention Encoder (LTAE) [@Garnot2020b], which the authors claim can achieve high classification accuracy with fewer parameters compared to other neural network models. It is a good choice for applications where computational resources are limited. The `sits_lighttae()` function implements this algorithm. The most important parameter to be set is the learning rate `lr`. Values ranging from 0.001 to 0.005 should produce good results. See also the section below on model tuning. 
 
-```{r ltae, tidy="styler", out.width = "80%", warning = FALSE, message = FALSE, fig.align="center", fig.cap="Training evolution of Lightweight Temporal Self-Attention model (Source: Authors)."}
+```{r ltae, tidy="styler", out.width = "80%", warning = FALSE, message = FALSE, fig.align="center", fig.cap="Training evolution of Lightweight Temporal Self-Attention model (source: authors)."}
 # Train a machine learning model using TAE
 ltae_model <- sits_train(samples_matogrosso_mod13q1, 
                        sits_lighttae(
@@ -298,7 +298,7 @@ plot(ltae_model)
 
 Then, we classify a 16-year time series using the LightTAE model. 
 
-```{r, tidy="styler", out.width = "100%", fig.align="center", fig.cap="Classification of time series using LightTAE (Source: Authors)."}
+```{r, tidy="styler", out.width = "100%", fig.align="center", fig.cap="Classification of time series using LightTAE (source: authors)."}
 # Classify using DL model and plot the result
 point_mt_mod13q1 |>  
     sits_classify(ltae_model) |>  
@@ -327,25 +327,25 @@ Experiments with image time series show that other optimizers may have better pe
 
 The `sits_tuning()` function takes the following parameters:
 
-1. `samples`: Training dataset to be used by the model.
-2. `samples_validation`: Optional dataset containing time series to be used for validation. If missing, the next parameter will be used.
-3. `validation_split`: If `samples_validation` is not used, this parameter defines the proportion of time series in the training dataset to be used for validation (default is 20%).
-4. `ml_method()`: Deep learning method (either `sits_mlp()`, `sits_tempcnn()`, `sits_tae()` or `sits_lighttae()`).
-5. `params`: Defines the optimizer and its hyperparameters by calling  `sits_tuning_hparams()`, as shown in the example below. 
-6. `trials`: Number of trials to run the random search.
-7. `multicores`: Number of cores to be used for the procedure.
-8. `progress`: Show a progress bar?
+- `samples`: Training dataset to be used by the model.
+- `samples_validation`: Optional dataset containing time series to be used for validation. If missing, the next parameter will be used.
+- `validation_split`: If `samples_validation` is not used, this parameter defines the proportion of time series in the training dataset to be used for validation (default is 20%).
+- `ml_method()`: Deep learning method (either `sits_mlp()`, `sits_tempcnn()`, `sits_tae()` or `sits_lighttae()`).
+- `params`: Defines the optimizer and its hyperparameters by calling  `sits_tuning_hparams()`, as shown in the example below. 
+- `trials`: Number of trials to run the random search.
+- `multicores`: Number of cores to be used for the procedure.
+- `progress`: Show a progress bar?
 
 The `sits_tuning_hparams()` function inside `sits_tuning()` allows defining optimizers and their hyperparameters, including `lr` (learning rate), `eps` (controls numerical stability), and `weight_decay` (controls overfitting). The default values for `eps` and `weight_decay` in all `sits` deep learning functions are 1e-08  and 1e-06, respectively. The default `lr` for `sits_lighttae()` and `sits_tempcnn()` is  0.005. 
 
 Users have different ways to randomize the hyperparameters, including: 
 
-1. `choice()` (a list of options);
-2. `uniform` (a uniform distribution); 
-3. `randint` (random integers from a uniform distribution);
-4. `normal(mean, sd)` (normal distribution);
-5. `beta(shape1, shape2)` (beta distribution);
-6. `loguniform(max, min)` (loguniform distribution). 
+- `choice()` (a list of options);
+- `uniform` (a uniform distribution); 
+- `randint` (random integers from a uniform distribution);
+- `normal(mean, sd)` (normal distribution);
+- `beta(shape1, shape2)` (beta distribution);
+- `loguniform(max, min)` (loguniform distribution). 
 
 We suggest to use the log-uniform distribution to search over a wide range of values that span several orders of magnitude. This is common for hyperparameters like learning rates, which can vary from very small values (e.g., 0.0001) to larger values (e.g., 1.0) in a logarithmic manner. By default, `sits_tuning()` uses a loguniform distribution between 10^-2 and 10^-4 for the learning rate and the same distribution between 10^-2 and 10^-8 for the weight decay.
 
@@ -397,12 +397,12 @@ The results should not be taken as an indication of which method performs better
 
 In the specific case of satellite image time series, Russwurm et al. present a comparative study between seven deep neural networks for the classification of agricultural crops, using random forest as a baseline [@Russwurm2020]. The data is composed of Sentinel-2 images over Britanny, France. Their results indicate a slight difference between the best model (attention-based transformer model) over TempCNN and random forest. Attention-based models obtain accuracy ranging from 80-81%, TempCNN gets 78-80%, and random forest obtains 78%. Based on this result and also on the authors' experience, we make the following recommendations:
 
-1.  Random forest provides a good baseline for image time series classification and should be included in users' assessments. 
+-  Random forest provides a good baseline for image time series classification and should be included in users' assessments. 
 
-2.  XGBoost is a worthy alternative to random forest. In principle, XGBoost is more sensitive to data variations at the cost of possible overfitting.
+-  XGBoost is a worthy alternative to random forest. In principle, XGBoost is more sensitive to data variations at the cost of possible overfitting.
 
-3.  TempCNN is a reliable model with reasonable training time, which is close to the state-of-the-art in deep learning classifiers for image time series.
+- TempCNN is a reliable model with reasonable training time, which is close to the state-of-the-art in deep learning classifiers for image time series.
 
-4.  Attention-based models (TAE and LightTAE) can achieve the best overall performance with  well-designed and balanced training sets and hyperparameter tuning. 
+- Attention-based models (TAE and LightTAE) can achieve the best overall performance with  well-designed and balanced training sets and hyperparameter tuning. 
 
-5. The best means of improving classification performance is to provide an accurate and reliable training dataset. Each class should have enough samples to account for spatial and temporal variability. 
+The best means of improving classification performance is to provide an accurate and reliable training dataset. Accuracy improvements resulting from using deep learning methods instead of random forest of xgboost are on the order of 3-5%, while gains when using good training data improve results by 10-30%. As a basic rule, make sure you have good quality samples before training and classification.

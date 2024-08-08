@@ -45,7 +45,7 @@ sits_labels(samples_new_labels) <- c("Cerrado",   "Forest",
 summary(samples_new_labels)
 ```
 
-Since metadata and the embedded time series use the tibble data format, the functions from `dplyr`, `tidyr`, and `purrr` packages of the `tidyverse` [@Wickham2017] can be used to process the data. For example, the following code uses `sits_select()` to get a subset of the sample dataset with two bands (NDVI and EVI) and then uses the `dplyr::filter()` to select the samples labeled as Cerrado. 
+Since metadata and the embedded time series use the tibble data format, the functions from `dplyr`, `tidyr`, and `purrr` packages of the `tidyverse` [@Wickham2017] can be used to process the data. For example, the following code uses `sits_select()` to get a subset of the sample dataset with two bands (NDVI and EVI) and then uses the `dplyr::filter()` to select the samples labeled as `Cerrado`. 
 
 ```{r, tidy="styler", message = FALSE}
 # Select NDVI band
@@ -60,14 +60,14 @@ samples_cerrado <- dplyr::filter(samples_ndvi,
 
 Given a few samples to display, `plot()` tries to group as many spatial locations together. In the following example, the first 12 samples labeled as `Cerrado` refer to the same spatial location in consecutive time periods. For this reason, these samples are plotted together.
 
-```{r cerrado-12, fig.align="center", out.width="70%", fig.cap="Plot of the first 'Cerrado' samples (Source: Authors)." }
+```{r cerrado-12, fig.align="center", out.width="70%", fig.cap="Plot of the first 'Cerrado' samples (source: authors)." }
 # Plot the first 12 samples
 plot(samples_cerrado[1:12,])
 ```
 
 For many samples, the default visualization combines all samples together in a single temporal interval, even if they belong to different years. This plot shows the spread of values for the time series of each band. The strong red line in the plot indicates the median of the values, while the two orange lines are the first and third interquartile ranges. See `?sits::plot` for more details on data visualization in  `sits`.
 
-```{r fig.align="center", out.width="70%", fig.cap="Plot of all Cerrado samples (Source: Authors)."}
+```{r fig.align="center", out.width="70%", fig.cap="Plot of all Cerrado samples (source: authors)."}
 # Plot all cerrado samples together
 plot(samples_cerrado)
 ```
@@ -92,7 +92,7 @@ $$
 
 The function `sits_patterns()` uses a GAM to predict an idealized approximation to the time series associated with each class for all bands. The resulting patterns can be viewed using `plot()`.
 
-```{r, tidy="styler", out.width = "100%", fig.align="center", fig.cap="Patterns for the samples for Mato Grosso (Source: Authors)."}
+```{r, tidy="styler", out.width = "100%", fig.align="center", fig.cap="Patterns for the samples for Mato Grosso (source: authors)."}
 # Estimate the patterns for each class and plot them
 samples_matogrosso_mod13q1 |>  
     sits_patterns() |> 
@@ -109,7 +109,7 @@ Meyer and Pebesma propose using a spatial distance distribution plot, which disp
 
 `sits` implements spatial distance distribution plots with the `sits_geo_dist()` function. This function gets a training data in the `samples` parameter, and the study area in the `roi` parameter expressed as an `sf` object. Additional parameters are `n` (maximum number of samples for each distribution) and `crs` (coordinate reference system for the samples). By default, `n` is 1000, and `crs` is "EPSG:4326". The example below shows how to use `sits_geo_dist()`. 
 
-```{r, tidy = "styler", out.width = "100%", message = FALSE, warning = FALSE, fig.cap = "Distribution of sample-to-sample and sample-to-prediction distances (Source: Authors)."}
+```{r, tidy = "styler", out.width = "100%", message = FALSE, warning = FALSE, fig.cap = "Distribution of sample-to-sample and sample-to-prediction distances (source: authors)."}
 # Read a shapefile for the state of Mato Grosso, Brazil
 mt_shp <- system.file("extdata/shapefiles/mato_grosso/mt.shp",
                       package = "sits")
@@ -130,14 +130,14 @@ The plot shows a mismatch between the sample-to-sample and the sample-to-predict
 
 To get a set of time series in `sits`, first create a regular data cube and then request one or more time series from the cube using `sits_get_data()`.  This function uses two mandatory parameters: `cube` and `samples`. The `cube` indicates the data cube from which the time series will be extracted.  The `samples` parameter accepts the following data types: 
 
-1. A data.frame with information on `latitude` and `longitude` (mandatory), `start_date`, `end_date`, and `label` for each sample point.
-2. A csv file with columns `latitude`, `longitude`, `start_date`, `end_date`, and `label`.
-3. A shapefile containing either `POINT`or `POLYGON` geometries. See details below.
-4. An `sf` object (from the `sf` package) with `POINT` or `POLYGON` geometry information. See details below.
+- A data.frame with information on `latitude` and `longitude` (mandatory), `start_date`, `end_date`, and `label` for each sample point.
+- A csv file with columns `latitude`, `longitude`, `start_date`, `end_date`, and `label`.
+- A shapefile containing either `POINT`or `POLYGON` geometries. See details below.
+- An `sf` object (from the `sf` package) with `POINT` or `POLYGON` geometry information. See details below.
 
 In the example below, given a data cube, the user provides the latitude and longitude of the desired location. Since the bands, start date, and end date of the time series are missing, `sits` obtains them from the data cube. The result is a tibble with one time series that can be visualized using `plot()`.
 
-```{r, tidy="styler", fig.align="center", out.width="90%", fig.cap="NDVI and EVI time series fetched from local raster cube (Source: Authors).", message = FALSE}
+```{r, tidy="styler", fig.align="center", out.width="90%", fig.cap="NDVI and EVI time series fetched from local raster cube (source: authors).", message = FALSE}
 # Obtain a raster cube based on local files
 data_dir <- system.file("extdata/sinop", package = "sitsdata")
 raster_cube <- sits_cube(
@@ -191,7 +191,7 @@ sf_shape <- sf::st_read(shp_file)
 # Create a data cube based on MOD13Q1 collection from BDC
 modis_cube <- sits_cube(
     source      = "BDC",
-    collection  = "MOD13Q1-6",
+    collection  = "MOD13Q1-6.1",
     bands       = c("NDVI", "EVI"),
     roi         = sf_shape,
     start_date  = "2020-06-01", 
@@ -218,7 +218,7 @@ The literature on satellite image time series has several applications of filter
 The Savitzky-Golay filter fits a successive array of $2n+1$ adjacent data points with a $d$-degree polynomial through linear least squares. The main parameters for the filter are the polynomial degree ($d$) and the length of the window data points ($n$). It generally produces smoother results for a larger value of $n$ and/or a smaller value of $d$ [@Chen2004]. The optimal value for these two parameters can vary from case to case. In `sits`, the parameter `order` sets the order of the polynomial (default = 3), the parameter `length` sets the size of the temporal window (default = 5), and the parameter `scaling` sets the temporal expansion (default = 1). The following example shows the effect of Savitsky-Golay filter on a point extracted from the MOD13Q1 product, ranging from 2000-02-18 to 2018-01-01.
 
 
-```{r, fig.align="center", out.width="90%", fig.cap="Savitzky-Golay filter applied on a multi-year NDVI time series (Source: Authors)."}
+```{r, fig.align="center", out.width="90%", fig.cap="Savitzky-Golay filter applied on a multi-year NDVI time series (source: authors)."}
 
 # Take NDVI band of the first sample dataset
 point_ndvi <- sits_select(point_mt_6bands, band = "NDVI")
@@ -234,7 +234,7 @@ The resulting smoothed curve has both desirable and unwanted properties. From 20
 
 The Whittaker smoother attempts to fit a curve representing the raw data, but is penalized if subsequent points vary too much [@Atzberger2011]. The Whittaker filter balances the residual to the original data and the smoothness of the fitted curve. The filter has one parameter: $\lambda{}$ that works as a smoothing weight parameter. The following example shows the effect of the Whittaker filter on a point extracted from the MOD13Q1 product, ranging from 2000-02-18 to 2018-01-01. The `lambda` parameter controls the smoothing of the filter. By default, it is set to 0.5, a small value. The example shows the effect of a larger smoothing parameter.
 
-```{r, fig.align="center", out.width="90%", fig.cap="Whittaker filter applied on a one-year NDVI time series (Source: Authors)."}
+```{r, fig.align="center", out.width="90%", fig.cap="Whittaker filter applied on a one-year NDVI time series (source: authors)."}
 
 # Take NDVI band of the first sample dataset
 point_ndvi <- sits_select(point_mt_6bands, band = "NDVI")

@@ -1,55 +1,6 @@
 # Machine learning for data cubes{-}
 
 
-```
-## SITS - satellite image time series analysis.
-```
-
-```
-## Loaded sits v1.5.1.
-##         See ?sits for help, citation("sits") for use in publication.
-##         Documentation avaliable in https://e-sensing.github.io/sitsbook/.
-```
-
-```
-## Loaded sitsdata data sets v1.2. Use citation("sitsdata") for use in publication.
-```
-
-```
-## Loading required package: proxy
-```
-
-```
-## 
-## Attaching package: 'proxy'
-```
-
-```
-## The following objects are masked from 'package:stats':
-## 
-##     as.dist, dist
-```
-
-```
-## The following object is masked from 'package:base':
-## 
-##     as.matrix
-```
-
-```
-## Loading required package: dtw
-```
-
-```
-## Loaded dtw v1.23-1. See ?dtw for help, citation("dtw") for use in publication.
-```
-
-```
-## dtwclust:
-## Setting random number generator to L'Ecuyer-CMRG (see RNGkind()).
-## To read the included vignettes type: browseVignettes("dtwclust").
-## See news(package = "dtwclust") after package updates.
-```
 
 <a href="https://www.kaggle.com/code/esensing/machine-learning-for-data-cubes" target="_blank"><img src="https://kaggle.com/static/images/open-in-kaggle.svg"/></a>
 
@@ -58,13 +9,13 @@
 Machine learning classification is a type of supervised learning in which an algorithm is trained to predict which  class an input data point belongs to.  The goal of machine learning models is to approximate a function $y = f(x)$ that maps an input $x$ to a class $y$. A model defines a mapping $y = f(x;\theta)$ and learns the value of the parameters $\theta$ that result in the best function approximation [@Goodfellow2016]. The difference between the different algorithms is their approach to building the mapping that classifies the input data.  
 In `sits`, machine learning is used to classify individual time series using the `time-first` approach. The package includes two kinds of methods for time series classification: 
 
-1. Machine learning algorithms that do not explicitly consider the temporal structure of the time series. They treat time series as a vector in a high-dimensional feature space, taking each time series instance as independent from the others. They include random forest (`sits_rfor()`), support vector machine (`sits_svm()`), extreme gradient boosting (`sits_xgboost()`), and multilayer perceptron (`sits_mlp()`). 
+- Machine learning algorithms that do not explicitly consider the temporal structure of the time series. They treat time series as a vector in a high-dimensional feature space, taking each time series instance as independent from the others. They include random forest (`sits_rfor()`), support vector machine (`sits_svm()`), extreme gradient boosting (`sits_xgboost()`), and multilayer perceptron (`sits_mlp()`). 
 
-2. Deep learning methods where temporal relations between observed values in a time series are taken into account.  These models are specifically designed for time series. The temporal order of values in a time series is relevant for the classification model. From this class of models, `sits` supports 1D convolution neural networks  (`sits_tempcnn()`) and temporal attention-based encoders (`sits_tae()` and `sits_lighttae()`). 
+- Deep learning methods where temporal relations between observed values in a time series are taken into account.  These models are specifically designed for time series. The temporal order of values in a time series is relevant for the classification model. From this class of models, `sits` supports 1D convolution neural networks  (`sits_tempcnn()`) and temporal attention-based encoders (`sits_tae()` and `sits_lighttae()`). 
 
 Based on experience with `sits`, random forest, extreme gradient boosting, and temporal deep learning models outperform SVM and multilayer perceptron models. The reason is that some dates provide more information than others in the temporal behavior of land classes. For instance, when monitoring deforestation, dates corresponding to forest removal actions are more informative than earlier or later dates. Similarly, a few dates may capture a large portion of the variation in crop mapping. Therefore, classification methods that consider the temporal order of samples are more likely to capture the seasonal behavior of image time series. Random forest and extreme gradient boosting methods that use individual measures as nodes in decision trees can also capture specific events such as deforestation.
 
-The following examples show how to train machine learning methods and apply them to classify a single time series. We use the set `samples_matogrosso_mod13q1`, containing time series samples from the Brazilian Mato Grosso state obtained from the MODIS MOD13Q1 product. It has 1,892 samples and nine classes (Cerrado, Forest, Pasture, Soy_Corn, Soy_Cotton, Soy_Fallow, Soy_Millet). Each time series covers 12 months (23 data points) with six bands (NDVI, EVI, BLUE, RED, NIR, MIR). The samples are arranged along an agricultural year, starting in September and ending in August. The dataset was used in the paper "Big Earth observation time series analysis for monitoring Brazilian agriculture" [@Picoli2018], being available in the R package `sitsdata`.
+The following examples show how to train machine learning methods and apply them to classify a single time series. We use the set `samples_matogrosso_mod13q1`, containing time series samples from the Brazilian Mato Grosso state obtained from the MODIS MOD13Q1 product. It has 1,892 samples and nine classes (`Cerrado`, `Forest`, `Pasture`, `Soy_Corn`, `Soy_Cotton`, `Soy_Fallow`, `Soy_Millet`). Each time series covers 12 months (23 data points) with six bands (NDVI, EVI, BLUE, RED, NIR, MIR). The samples are arranged along an agricultural year, starting in September and ending in August. The dataset was used in the paper "Big Earth observation time series analysis for monitoring Brazilian agriculture" [@Picoli2018], being available in the R package `sitsdata`.
 
 ## Common interface to machine learning and deep learning models{-}
 
@@ -79,7 +30,7 @@ When a set of time series organized as tibble is taken as input to the classifie
 Random forest is a machine learning algorithm that uses an ensemble learning method for classification tasks. The algorithm consists of multiple decision trees, each trained on a different subset of the training data and with a different subset of features. To make a prediction, each decision tree in the forest independently classifies the input data. The final prediction is made based on the majority vote of all the decision trees. The randomness in the algorithm comes from the random subsets of data and features used to train each decision tree, which helps to reduce overfitting and improve the accuracy of the model. This classifier measures the importance of each feature in the classification task, which can be helpful in feature selection and data visualization. Pelletier et al.  discuss the robustness of random forest method for satellite image time series classification [@Pelletier2016]. 
 
 <div class="figure" style="text-align: center">
-<img src="images/random_forest.png" alt="Random forest algorithm (Source: Venkata Jagannath in Wikipedia - licenced as CC-BY-SA 4.0)." width="90%" />
+<img src="./images/random_forest.png" alt="Random forest algorithm (Source: Venkata Jagannath in Wikipedia - licenced as CC-BY-SA 4.0)." width="90%" />
 <p class="caption">(\#fig:unnamed-chunk-2)Random forest algorithm (Source: Venkata Jagannath in Wikipedia - licenced as CC-BY-SA 4.0).</p>
 </div>
 
@@ -99,8 +50,8 @@ plot(rfor_model)
 ```
 
 <div class="figure" style="text-align: center">
-<img src="08-machinelearning_files/figure-html/unnamed-chunk-4-1.png" alt="Most important variables in random forest model (Source: Authors)." width="90%" />
-<p class="caption">(\#fig:unnamed-chunk-4)Most important variables in random forest model (Source: Authors).</p>
+<img src="08-machinelearning_files/figure-html/unnamed-chunk-4-1.png" alt="Most important variables in random forest model (source: authors)." width="90%" />
+<p class="caption">(\#fig:unnamed-chunk-4)Most important variables in random forest model (source: authors).</p>
 </div>
 
 The most important explanatory variables are the NIR (near infrared) band on date 17 (2007-05-25) and the MIR (middle infrared) band on date 22 (2007-08-13). The NIR value at the end of May captures the growth of the second crop for double cropping classes.  Values of the MIR band at the end of the period (late July to late August) capture bare soil signatures to distinguish between agricultural and natural classes. This corresponds to summertime when the ground is drier after harvesting crops.
@@ -117,8 +68,8 @@ plot(point_class, bands = c("NDVI", "EVI"))
 ```
 
 <div class="figure" style="text-align: center">
-<img src="08-machinelearning_files/figure-html/unnamed-chunk-5-1.png" alt="Classification of time series using random forest (Source: Authors)." width="90%" />
-<p class="caption">(\#fig:unnamed-chunk-5)Classification of time series using random forest (Source: Authors).</p>
+<img src="08-machinelearning_files/figure-html/unnamed-chunk-5-1.png" alt="Classification of time series using random forest (source: authors)." width="90%" />
+<p class="caption">(\#fig:unnamed-chunk-5)Classification of time series using random forest (source: authors).</p>
 </div>
 
 The result shows that the area started as a forest in 2000, was deforested from 2004 to 2005, used as pasture from 2006 to 2007, and for double-cropping agriculture from 2009 onwards. This behavior is consistent with expert evaluation of land change process in this region of Amazonia.
@@ -130,7 +81,7 @@ Random forest is robust to outliers and can deal with irrelevant inputs [@Hastie
 The support vector machine (SVM) classifier is a generalization of a linear classifier that finds an optimal separation hyperplane that minimizes misclassification [@Cortes1995]. Since a set of samples with $n$ features defines an n-dimensional feature space, hyperplanes are linear ${(n-1)}$-dimensional boundaries that define linear partitions in that space. If the classes are linearly separable on the feature space, there will be an optimal solution defined by the maximal margin hyperplane, which is the separating hyperplane that is farthest from the training observations [@James2013]. The maximal margin is computed as the smallest distance from the observations to the hyperplane. The solution for the hyperplane coefficients depends only on the samples that define the maximum margin criteria, the so-called support vectors.
 
 <div class="figure" style="text-align: center">
-<img src="images/svm_margin.png" alt="Maximum-margin hyperplane and margins for an SVM trained with samples from two classes. Samples on the margin are called the support vectors. (Source: Larhmam in Wikipedia - licensed as CC-BY-SA-4.0)." width="50%" />
+<img src="./images/svm_margin.png" alt="Maximum-margin hyperplane and margins for an SVM trained with samples from two classes. Samples on the margin are called the support vectors. (Source: Larhmam in Wikipedia - licensed as CC-BY-SA-4.0)." width="50%" />
 <p class="caption">(\#fig:unnamed-chunk-6)Maximum-margin hyperplane and margins for an SVM trained with samples from two classes. Samples on the margin are called the support vectors. (Source: Larhmam in Wikipedia - licensed as CC-BY-SA-4.0).</p>
 </div>
 
@@ -160,8 +111,8 @@ plot(point_class, bands = c("NDVI", "EVI"))
 ```
 
 <div class="figure" style="text-align: center">
-<img src="08-machinelearning_files/figure-html/unnamed-chunk-8-1.png" alt="Classification of time series using SVM (Source: Authors)." width="90%" />
-<p class="caption">(\#fig:unnamed-chunk-8)Classification of time series using SVM (Source: Authors).</p>
+<img src="08-machinelearning_files/figure-html/unnamed-chunk-8-1.png" alt="Classification of time series using SVM (source: authors)." width="90%" />
+<p class="caption">(\#fig:unnamed-chunk-8)Classification of time series using SVM (source: authors).</p>
 </div>
 The SVM classifier is less stable and less robust to outliers than the random forest method. In this example, it tends to misclassify some of the data. In 2008, it is likely that the correct land class was still `Pasture` rather than `Soy_Millet` as produced by the algorithm, while the `Soy_Cotton` class in 2012 is also inconsistent with the previous and latter classification of `Soy_Corn`.
 
@@ -172,7 +123,7 @@ XGBoost (eXtreme Gradient Boosting) [@Chen2016] is an implementation of gradient
 Although random forest and boosting use trees for classification, there are significant differences. While random forest builds multiple decision trees in parallel and merges them together for a more accurate and stable prediction, XGBoost builds trees one at a time, where each new tree helps to correct errors made by previously trained tree. XGBoost is often preferred for its speed and performance, particularly on large datasets, and is well-suited for problems where precision is paramount. Random Forest, on the other hand, is simpler to implement, more interpretable, and can be more robust to overfitting, making it a good choice for general-purpose applications.
 
 <div class="figure" style="text-align: center">
-<img src="images/flow_chart_xgboost.png" alt="Flow chart of XGBoost algorithm (Source: Guo et al., Applied Sciences, 2020. - licenced as CC-BY-SA 4.0)." width="90%" />
+<img src="./images/flow_chart_xgboost.png" alt="Flow chart of XGBoost algorithm (Source: Guo et al., Applied Sciences, 2020. - licenced as CC-BY-SA 4.0)." width="90%" />
 <p class="caption">(\#fig:unnamed-chunk-9)Flow chart of XGBoost algorithm (Source: Guo et al., Applied Sciences, 2020. - licenced as CC-BY-SA 4.0).</p>
 </div>
 
@@ -201,8 +152,8 @@ plot(point_class_xgb, bands = c("NDVI", "EVI"))
 ```
 
 <div class="figure" style="text-align: center">
-<img src="08-machinelearning_files/figure-html/unnamed-chunk-11-1.png" alt="Classification of time series using XGBoost (Source: Authors)." width="90%" />
-<p class="caption">(\#fig:unnamed-chunk-11)Classification of time series using XGBoost (Source: Authors).</p>
+<img src="08-machinelearning_files/figure-html/unnamed-chunk-11-1.png" alt="Classification of time series using XGBoost (source: authors)." width="90%" />
+<p class="caption">(\#fig:unnamed-chunk-11)Classification of time series using XGBoost (source: authors).</p>
 </div>
 
 
@@ -248,8 +199,8 @@ plot(mlp_model)
 ```
 
 <div class="figure" style="text-align: center">
-<img src="08-machinelearning_files/figure-html/mlp-1.png" alt="Evolution of training accuracy of MLP model (Source: Authors)." width="80%" />
-<p class="caption">(\#fig:mlp)Evolution of training accuracy of MLP model (Source: Authors).</p>
+<img src="08-machinelearning_files/figure-html/mlp-1.png" alt="Evolution of training accuracy of MLP model (source: authors)." width="80%" />
+<p class="caption">(\#fig:mlp)Evolution of training accuracy of MLP model (source: authors).</p>
 </div>
 
 Then, we classify a 16-year time series using the multilayer perceptron model.
@@ -263,8 +214,8 @@ point_mt_mod13q1 |>
 ```
 
 <div class="figure" style="text-align: center">
-<img src="08-machinelearning_files/figure-html/unnamed-chunk-13-1.png" alt="Classification of time series using MLP (Source: Authors)." width="90%" />
-<p class="caption">(\#fig:unnamed-chunk-13)Classification of time series using MLP (Source: Authors).</p>
+<img src="08-machinelearning_files/figure-html/unnamed-chunk-13-1.png" alt="Classification of time series using MLP (source: authors)." width="90%" />
+<p class="caption">(\#fig:unnamed-chunk-13)Classification of time series using MLP (source: authors).</p>
 </div>
 
 In theory, multilayer perceptron model can capture more subtle changes than random forest and XGBoost In this specific case, the result is similar to theirs. Although the model mixes the `Soy_Corn` and `Soy_Millet` classes, the distinction between their temporal signatures is quite subtle. Also, in this case, this suggests the need to improve the number of samples. In this example, the MLP model shows an increase in sensitivity compared to previous models. We recommend to compare different configurations since the MLP model is sensitive to changes in its parameters.
@@ -278,7 +229,7 @@ TempCNN applies one-dimensional convolutions on the input sequence to capture te
 The TempCNN architecture for satellite image time series classification is proposed by Pelletier et al. [@Pelletier2019].  It has three 1D convolutional layers and a final softmax layer for classification (see Figure \@ref(fig:tcnn)). The authors combine different methods to avoid overfitting and reduce the vanishing gradient effect, including dropout, regularization, and batch normalization. In the TempCNN reference paper [@Pelletier2019], the authors favourably compare their model with the Recurrent Neural Network proposed by Russwurm and Körner [@Russwurm2018]. Figure \@ref(fig:tcnn) shows the architecture of the TempCNN model.
 
 <div class="figure" style="text-align: center">
-<img src="images/tempcnn.png" alt="Structure of tempCNN architecture (Source: Pelletier et al. (2019). Reproduction under fair use doctrine). " width="100%" />
+<img src="./images/tempcnn.png" alt="Structure of tempCNN architecture (Source: Pelletier et al. (2019). Reproduction under fair use doctrine). " width="100%" />
 <p class="caption">(\#fig:tcnn)Structure of tempCNN architecture (Source: Pelletier et al. (2019). Reproduction under fair use doctrine). </p>
 </div>
 
@@ -295,7 +246,7 @@ tempcnn_model <- sits_train(
   samples_matogrosso_mod13q1,
   sits_tempcnn(
     optimizer            = torch::optim_adamw,
-    cnn_layers           = c(128, 128, 128),
+    cnn_layers           = c(256, 256, 256),
     cnn_kernels          = c(7, 7, 7),
     cnn_dropout_rates    = c(0.2, 0.2, 0.2),
     epochs               = 80,
@@ -309,8 +260,8 @@ plot(tempcnn_model)
 ```
 
 <div class="figure" style="text-align: center">
-<img src="08-machinelearning_files/figure-html/tcnnex-1.png" alt="Training evolution of TempCNN model (Source: Authors)." width="80%" />
-<p class="caption">(\#fig:tcnnex)Training evolution of TempCNN model (Source: Authors).</p>
+<img src="08-machinelearning_files/figure-html/tcnnex-1.png" alt="Training evolution of TempCNN model (source: authors)." width="80%" />
+<p class="caption">(\#fig:tcnnex)Training evolution of TempCNN model (source: authors).</p>
 </div>
 
 Then, we classify a 16-year time series using the TempCNN model.
@@ -324,8 +275,8 @@ point_mt_mod13q1 |>
 ```
 
 <div class="figure" style="text-align: center">
-<img src="08-machinelearning_files/figure-html/unnamed-chunk-15-1.png" alt="Classification of time series using TempCNN (Source: Authors)." width="90%" />
-<p class="caption">(\#fig:unnamed-chunk-15)Classification of time series using TempCNN (Source: Authors).</p>
+<img src="08-machinelearning_files/figure-html/unnamed-chunk-15-1.png" alt="Classification of time series using TempCNN (source: authors)." width="90%" />
+<p class="caption">(\#fig:unnamed-chunk-15)Classification of time series using TempCNN (source: authors).</p>
 </div>
 
 The result has important differences from the previous ones. The TempCNN model indicates the `Soy_Cotton` class as the most likely one in 2004. While this result is possibly wrong, it shows that the time series for 2004 is different from those of Forest and Pasture classes. One possible explanation is that there was forest degradation in 2004, leading to a signature that is a mix of forest and bare soil. In this case, including forest degradation samples could improve the training data. In our experience, TempCNN models are a reliable way of classifying image time series [@Simoes2021]. Recent work which compares different models also provides evidence that TempCNN models have satisfactory behavior, especially in the case of crop classes [@Russwurm2020].
@@ -371,8 +322,8 @@ plot(tae_model)
 ```
 
 <div class="figure" style="text-align: center">
-<img src="08-machinelearning_files/figure-html/tae-1.png" alt="Training evolution of Temporal Self-Attention model (Source: Authors)." width="100%" />
-<p class="caption">(\#fig:tae)Training evolution of Temporal Self-Attention model (Source: Authors).</p>
+<img src="08-machinelearning_files/figure-html/tae-1.png" alt="Training evolution of Temporal Self-Attention model (source: authors)." width="100%" />
+<p class="caption">(\#fig:tae)Training evolution of Temporal Self-Attention model (source: authors).</p>
 </div>
 
 Then, we classify a 16-year time series using the TAE model. 
@@ -386,8 +337,8 @@ point_mt_mod13q1 |>
 ```
 
 <div class="figure" style="text-align: center">
-<img src="08-machinelearning_files/figure-html/unnamed-chunk-16-1.png" alt="Classification of time series using TAE (Source: Authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-16)Classification of time series using TAE (Source: Authors).</p>
+<img src="08-machinelearning_files/figure-html/unnamed-chunk-16-1.png" alt="Classification of time series using TAE (source: authors)." width="100%" />
+<p class="caption">(\#fig:unnamed-chunk-16)Classification of time series using TAE (source: authors).</p>
 </div>
 
 Garnot and co-authors also proposed the Lightweight Temporal Self-Attention Encoder (LTAE) [@Garnot2020b], which the authors claim can achieve high classification accuracy with fewer parameters compared to other neural network models. It is a good choice for applications where computational resources are limited. The `sits_lighttae()` function implements this algorithm. The most important parameter to be set is the learning rate `lr`. Values ranging from 0.001 to 0.005 should produce good results. See also the section below on model tuning. 
@@ -410,8 +361,8 @@ plot(ltae_model)
 ```
 
 <div class="figure" style="text-align: center">
-<img src="08-machinelearning_files/figure-html/ltae-1.png" alt="Training evolution of Lightweight Temporal Self-Attention model (Source: Authors)." width="80%" />
-<p class="caption">(\#fig:ltae)Training evolution of Lightweight Temporal Self-Attention model (Source: Authors).</p>
+<img src="08-machinelearning_files/figure-html/ltae-1.png" alt="Training evolution of Lightweight Temporal Self-Attention model (source: authors)." width="80%" />
+<p class="caption">(\#fig:ltae)Training evolution of Lightweight Temporal Self-Attention model (source: authors).</p>
 </div>
 
 Then, we classify a 16-year time series using the LightTAE model. 
@@ -425,8 +376,8 @@ point_mt_mod13q1 |>
 ```
 
 <div class="figure" style="text-align: center">
-<img src="08-machinelearning_files/figure-html/unnamed-chunk-17-1.png" alt="Classification of time series using LightTAE (Source: Authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-17)Classification of time series using LightTAE (Source: Authors).</p>
+<img src="08-machinelearning_files/figure-html/unnamed-chunk-17-1.png" alt="Classification of time series using LightTAE (source: authors)." width="100%" />
+<p class="caption">(\#fig:unnamed-chunk-17)Classification of time series using LightTAE (source: authors).</p>
 </div>
 
 The behaviour of both `sits_tae()` and `sits_lighttae()` is similar to that of `sits_tempcnn()`. It points out the possible need for more classes and training data to better represent the transition period between 2004 and 2010. One possibility is that the training data associated with the Pasture class is only consistent with the time series between the years 2005 to 2008. However, the transition from Forest to Pasture in 2004 and from Pasture to Agriculture in 2009-2010 is subject to uncertainty since the classifiers do not agree on the resulting classes. In general, deep learning temporal-aware models are more sensitive to class variability than random forest and extreme gradient boosters. 
@@ -451,25 +402,25 @@ Experiments with image time series show that other optimizers may have better pe
 
 The `sits_tuning()` function takes the following parameters:
 
-1. `samples`: Training dataset to be used by the model.
-2. `samples_validation`: Optional dataset containing time series to be used for validation. If missing, the next parameter will be used.
-3. `validation_split`: If `samples_validation` is not used, this parameter defines the proportion of time series in the training dataset to be used for validation (default is 20%).
-4. `ml_method()`: Deep learning method (either `sits_mlp()`, `sits_tempcnn()`, `sits_tae()` or `sits_lighttae()`).
-5. `params`: Defines the optimizer and its hyperparameters by calling  `sits_tuning_hparams()`, as shown in the example below. 
-6. `trials`: Number of trials to run the random search.
-7. `multicores`: Number of cores to be used for the procedure.
-8. `progress`: Show a progress bar?
+- `samples`: Training dataset to be used by the model.
+- `samples_validation`: Optional dataset containing time series to be used for validation. If missing, the next parameter will be used.
+- `validation_split`: If `samples_validation` is not used, this parameter defines the proportion of time series in the training dataset to be used for validation (default is 20%).
+- `ml_method()`: Deep learning method (either `sits_mlp()`, `sits_tempcnn()`, `sits_tae()` or `sits_lighttae()`).
+- `params`: Defines the optimizer and its hyperparameters by calling  `sits_tuning_hparams()`, as shown in the example below. 
+- `trials`: Number of trials to run the random search.
+- `multicores`: Number of cores to be used for the procedure.
+- `progress`: Show a progress bar?
 
 The `sits_tuning_hparams()` function inside `sits_tuning()` allows defining optimizers and their hyperparameters, including `lr` (learning rate), `eps` (controls numerical stability), and `weight_decay` (controls overfitting). The default values for `eps` and `weight_decay` in all `sits` deep learning functions are 1e-08  and 1e-06, respectively. The default `lr` for `sits_lighttae()` and `sits_tempcnn()` is  0.005. 
 
 Users have different ways to randomize the hyperparameters, including: 
 
-1. `choice()` (a list of options);
-2. `uniform` (a uniform distribution); 
-3. `randint` (random integers from a uniform distribution);
-4. `normal(mean, sd)` (normal distribution);
-5. `beta(shape1, shape2)` (beta distribution);
-6. `loguniform(max, min)` (loguniform distribution). 
+- `choice()` (a list of options);
+- `uniform` (a uniform distribution); 
+- `randint` (random integers from a uniform distribution);
+- `normal(mean, sd)` (normal distribution);
+- `beta(shape1, shape2)` (beta distribution);
+- `loguniform(max, min)` (loguniform distribution). 
 
 We suggest to use the log-uniform distribution to search over a wide range of values that span several orders of magnitude. This is common for hyperparameters like learning rates, which can vary from very small values (e.g., 0.0001) to larger values (e.g., 1.0) in a logarithmic manner. By default, `sits_tuning()` uses a loguniform distribution between 10^-2 and 10^-4 for the learning rate and the same distribution between 10^-2 and 10^-8 for the weight decay.
 
@@ -534,12 +485,12 @@ The results should not be taken as an indication of which method performs better
 
 In the specific case of satellite image time series, Russwurm et al. present a comparative study between seven deep neural networks for the classification of agricultural crops, using random forest as a baseline [@Russwurm2020]. The data is composed of Sentinel-2 images over Britanny, France. Their results indicate a slight difference between the best model (attention-based transformer model) over TempCNN and random forest. Attention-based models obtain accuracy ranging from 80-81%, TempCNN gets 78-80%, and random forest obtains 78%. Based on this result and also on the authors' experience, we make the following recommendations:
 
-1.  Random forest provides a good baseline for image time series classification and should be included in users' assessments. 
+-  Random forest provides a good baseline for image time series classification and should be included in users' assessments. 
 
-2.  XGBoost is a worthy alternative to random forest. In principle, XGBoost is more sensitive to data variations at the cost of possible overfitting.
+-  XGBoost is a worthy alternative to random forest. In principle, XGBoost is more sensitive to data variations at the cost of possible overfitting.
 
-3.  TempCNN is a reliable model with reasonable training time, which is close to the state-of-the-art in deep learning classifiers for image time series.
+- TempCNN is a reliable model with reasonable training time, which is close to the state-of-the-art in deep learning classifiers for image time series.
 
-4.  Attention-based models (TAE and LightTAE) can achieve the best overall performance with  well-designed and balanced training sets and hyperparameter tuning. 
+- Attention-based models (TAE and LightTAE) can achieve the best overall performance with  well-designed and balanced training sets and hyperparameter tuning. 
 
-5. The best means of improving classification performance is to provide an accurate and reliable training dataset. Each class should have enough samples to account for spatial and temporal variability. 
+The best means of improving classification performance is to provide an accurate and reliable training dataset. Accuracy improvements resulting from using deep learning methods instead of random forest of xgboost are on the order of 3-5%, while gains when using good training data improve results by 10-30%. As a basic rule, make sure you have good quality samples before training and classification.

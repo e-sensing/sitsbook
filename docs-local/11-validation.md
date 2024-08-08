@@ -3,251 +3,158 @@
 
 
 
-## Case study{-}
+## Introduction{-}
 
-To show how to do validation and accuracy assessment in`sits`, we show an example of land classification in the Cerrado biome, the second largest biome in Brazil with 1.9 million km$^2$. The Brazilian Cerrado is a tropical savanna ecoregion with a rich ecosystem ranging from grasslands to woodlands. It is home to more than 7000 species of plants with high levels of endemism [@Klink2005]. It includes three major types of natural vegetation: Open Cerrado, typically composed of grasses and small shrubs with a sporadic presence of small tree vegetation; Cerrado, a typical savanna formation with the presence of low, irregularly branched, thin-trunked trees; and Cerradão, areas of medium-sized trees (up to 10--12 m)  [@Del-Claro2019]. Its natural areas are being converted to agriculture at a fast pace, as it is one of the world's fast-moving agricultural frontiers [@Walter2006]. The main agricultural land uses include cattle ranching, crop farms, and planted forests. The classification follows the work by Simoes et al. [@Simoes2021].
+Statistically robust and transparent approaches for assessing accuracy and estimating the area of change are essential to maintain the integrity of land change information. The `sits` packages supports a set of “good practice” recommendations for designing and implementing an accuracy assessment of a change map and estimating the area based on reference sample data. These recommendations address three major components: sampling design, response design, and analysis [@Olofsson2014].
+.
+The sampling design is implemented as a random stratified approach, ensure that every land use and land cover class in the population is included in the sample. Design-based inference methods provide support for sampling designs that provide making unbiased estimates. Each of the evaluation samples needs to be evaluated accurately, using high-quality reference data, ideally collected through field visits or high-resolution imagery, to validate classifications. In this way, we obtain a “reference classification” which is more accurate than the map classification being evaluated. 
 
-The data comprises 67 Landsat-8 tiles from the Brazil Data Cube (BDC), with 23 time steps covering 2017-08-29 to 2018-08-29. Since the data is available in the Brazil Data Cube, users should first obtain access to the BDC by obtaining an access key. After obtaining the access key, they should include their credentials using environment variables, as shown below. Obtaining a BDC access key is free. To obtain the key, users need to register at the [BDC site](https://brazildatacube.dpi.inpe.br/portal/explore).
+The accuracy assessment is reported as an error matrix in terms of the proportion of area and estimates of overall accuracy, user’s accuracy and producer’s accuracy. Based on the error matrix, it is possible to estimate the proportion of each class and to adjust for classification errors. The estimated area includes confidence intervals.  
 
-After obtaining the BDC access key, we can now create a data cube for the Cerrado biome. 
+## Example data set{-} 
 
+Our study area is the state of Rondonia (RO) in the Brazilian Amazon, which has a total area of \SI{237576}{\kilo\metre\squared}. According to official Brazilian government statistics, as of 2021, there are \SI{125752.41}{\kilo\metre\squared} of tropical forests in RO, which corresponds to 53\% of the state's total area. Significant human occupation started in 1970, led by settlement projects promoted by then Brazil's military government [@Alves2003]. Small and large-scale cattle ranching occupies most deforested areas. Deforestation in Rondonia is highly fragmented, partly due to the original occupation by small settlers. Such fragmentation poses considerable challenges for automated methods to distinguish between clear-cut and highly degraded areas. While visual interpreters rely upon experience and field knowledge, researchers must carefully train automated methods to achieve the same distinction.
 
-``` r
-# Files are available in the Brazil Data Cube
-#
-# Obtain the region of interest covering the Cerrado biome
-roi_cerrado_shp <- system.file(
-  "extdata/shapefiles/cerrado_border/cerrado_border.shp",
-  package = "sitsdata"
-)
-# Read the shapefile as an object of the "sf" package
-roi_cerrado <- sf::st_read(roi_cerrado_shp, quiet = TRUE)
-# Create a data cube for the entire Cerrado biome
-cerrado_cube <- sits_cube(
-  source = "BDC",
-  collection = "LANDSAT-OLI-16D",
-  roi = roi_cerrado,
-  start_date = "2017-08-29",
-  end_date = "2018-08-29",
-  multicores = 3
-)
-```
+We used Sentinel-2 and Sentinel-2A ARD (analysis ready) images from 2022-01-01 to 2022-12-31. Using all 10 spectral bands, we produced a regular data cube with a 16-day interval, with 23 instances per year. The best pixels for each period were selected to obtain as low cloud cover as possible. Persistent cloud cover pixels remaining in each period are then temporally interpolated to obtain estimated values. As a result, each pixel is associated with a valid time series. To fully cover RO, we used 41 MGRS tiles; the final data cube has 1.1 TB.  
 
-To classify the Cerrado, we use a training dataset produced by Simoes et al. [@Simoes2021]. The authors carried out a systematic sampling using a $5 \times 5$ km grid throughout the Cerrado biome, collecting 85,026 samples. The training data labels were extracted from three sources: the 2018 pastureland map from Parente et al. [@Parente2019], MapBiomas Collection 5 for 2018 [@SouzaJr2020], and Brazil's National Mapping Agency IBGE land maps for 2016--2018. Out of the 85,026 samples, the authors selected those without disagreement between the labels assigned by the three sources. The final training set consists of 48,850 points from which the authors extracted the time series using the Landsat-8 data cube available in the BDC. The classes for this training set are: `Annual Crop`, `Cerradao`,  `Cerrado`, `Open Cerrado`, `Nat_NonVeg (Dunes)`, `Pasture`, `Perennial_Crop`, `Silviculture (Planted Forests)`, `Sugarcane`, and `Water`.
+The work considered nine LUCC classes: (a) stable  natural land cover, including \textit{Natural Forest} and \textit{Water Bodies}; (b) events associated with clear-cuts, including \textit{Clear Cut with Vegetation}, \textit{Clear Cut with Bare Soil}, and \textit{Clear Cut with Burned Area}; (c) natural areas with seasonal variability, including \textit{Wetlands}, \textit{Seasonally-flooded Forest}, and \textit{Riparian Forest}; (d) stable forest areas subject to topographic effects, including \textit{Mountainside Forest}.  
 
-The dataset is available in the package `sitsdata` as `samples_cerrado_lc8`. 
+In this chapter, we will take the classification map as our starting point for accuracy assessment. This map can be retrieved from the `sitsdata` package as follows.
 
 
 ``` r
-library(sitsdata)
-data("samples_cerrado_lc8")
-# Show the class distribution in the new training set
-summary(samples_cerrado_lc8)
-```
-
-```
-#> # A tibble: 10 × 3
-#>    label          count     prop
-#>    <chr>          <int>    <dbl>
-#>  1 Annual_Crop     6887 0.141   
-#>  2 Cerradao        4211 0.0862  
-#>  3 Cerrado        16251 0.333   
-#>  4 Nat_NonVeg        38 0.000778
-#>  5 Open_Cerrado    5658 0.116   
-#>  6 Pasture        12894 0.264   
-#>  7 Perennial_Crop    68 0.00139 
-#>  8 Silviculture     805 0.0165  
-#>  9 Sugarcane       1775 0.0363  
-#> 10 Water            263 0.00538
-```
-
-## Cross-validation of training set{-}
-
-
-
-The first step in analysing the results is to perform cross-validation. Since the dataset is big and highly imbalanced, we use `sits_reduce_imbalance()` to reduce the size and produce a smaller, more balanced sample dataset for the validation examples.
-
-
-``` r
-# Reduce imbalance in the dataset
-# Maximum number of samples per class will be 1000
-# Minimum number of samples per class will be 500
-samples_cerrado_bal <- sits_reduce_imbalance(
-  samples = samples_cerrado_lc8,
-  n_samples_over = 500,
-  n_samples_under = 1000,
-  multicores = 4
+# define the classes of the probability cube
+labels <- c(
+  "1" = "Clear_Cut_Bare_Soil",
+  "2" = "Clear_Cut_Burned_Area",
+  "3" = "Mountainside_Forest",
+  "4" = "Forest",
+  "5" = "Riparian_Forest",
+  "6" = "Clear_Cut_Vegetation",
+  "7" = "Water",
+  "8" = "Seasonally_Flooded",
+  "9" = "Wetland"
 )
 
-# Show new sample distribution
-summary(samples_cerrado_bal)
-```
-
-
-```
-#> # A tibble: 10 × 3
-#>    label          count   prop
-#>    <chr>          <int>  <dbl>
-#>  1 Annual_Crop     1000 0.124 
-#>  2 Cerradao         884 0.110 
-#>  3 Cerrado          980 0.121 
-#>  4 Nat_NonVeg       500 0.0619
-#>  5 Open_Cerrado     960 0.119 
-#>  6 Pasture          972 0.120 
-#>  7 Perennial_Crop   500 0.0619
-#>  8 Silviculture     805 0.0997
-#>  9 Sugarcane        972 0.120 
-#> 10 Water            500 0.0619
-```
-
-The following code does a five-fold validation using the random forest algorithm. 
-
-
-``` r
-# Perform a five-fold validation for the Cerrado dataset
-# Random forest machine learning method using default parameters
-val_rfor <- sits_kfold_validate(
-  samples = samples_cerrado_bal,
-  folds = 5,
-  ml_method = sits_rfor(),
-  multicores = 5
+# directory where the data is stored
+data_dir <- system.file("extdata/Rondonia-Class-2022-Mosaic/", package = "sitsdata")
+# create a probability data cube from a file
+rondonia_2022_class <- sits_cube(
+  source = "MPC",
+  collection = "SENTINEL-2-L2A",
+  data_dir = data_dir,
+  bands = "class",
+  labels = labels,
+  version = "mosaic"
 )
 
-# Print the validation statistics
-summary(val_rfor)
+# plot the classification map
+plot(rondonia_2022_class)
 ```
-
-```
-#> Overall Statistics                            
-#>  Accuracy : 0.8785          
-#>    95% CI : (0.8712, 0.8855)
-#>     Kappa : 0.864
-```
-
-One useful function of `sits` is the capacity to compare different validation methods and store them in an XLS file for further analysis. The following example shows how to do this using the Cerrado dataset. We take the models: random forest (`sits_rfor()`), extreme gradient boosting (`sits_xgboost()`), temporal CNN (`sits_tempcnn()`), and lightweight temporal attention encoder (`sits_lighttae()`). After computing the confusion matrix and the statistics for each model, we also store the result in a list. When the calculation is finished, the function `sits_to_xlsx()` writes all the results in an Excel-compatible spreadsheet. 
-
-
-``` r
-# Compare different models for the Cerrado dataset
-# Create a list to store the results
-results <- list()
-# Give a name to the results of the random forest model (see above)
-val_rfor$name <- "rfor"
-# Store the rfor results in a list
-results[[length(results) + 1]] <- val_rfor
-# Extreme Gradient Boosting
-val_xgb <- sits_kfold_validate(
-  samples = samples_cerrado_bal,
-  ml_method = sits_xgboost(),
-  folds = 5,
-  multicores = 5
-)
-# Give a name to the SVM model
-val_xgb$name <- "xgboost"
-# store the results in a list
-results[[length(results) + 1]] <- val_xgb
-# Temporal CNN
-val_tcnn <- sits_kfold_validate(
-  samples = samples_cerrado_bal,
-  ml_method = sits_tempcnn(
-    optimizer = torch::optim_adamw,
-    opt_hparams = list(lr = 0.001)
-  ),
-  folds = 5,
-  multicores = 5
-)
-# Give a name to the result
-val_tcnn$name <- "TempCNN"
-# store the results in a list
-results[[length(results) + 1]] <- val_tcnn
-# Light TAE
-val_ltae <- sits_kfold_validate(
-  samples = samples_cerrado_bal,
-  ml_method = sits_lighttae(
-    optimizer = torch::optim_adamw,
-    opt_hparams = list(lr = 0.001)
-  ),
-  folds = 5,
-  multicores = 5
-)
-# Give a name to the result
-val_ltae$name <- "LightTAE"
-# store the results in a list
-results[[length(results) + 1]] <- val_ltae
-# Save to an XLS file
-xlsx_file <- "./model_comparison.xlsx"
-
-sits_to_xlsx(results, file = xlsx_file)
-```
-
-The resulting Excel file can be opened with R or using spreadsheet programs. Figure \@ref(fig:xls) shows a printout of what is read by Excel. Each sheet corresponds to the output of one model. For simplicity, we show only the result of TempCNN, which has an overall accuracy of 90%. 
 
 <div class="figure" style="text-align: center">
-<img src="images/k_fold_validation_xlsx.png" alt="Result of 5-fold cross-validation of Mato Grosso data using LightTAE (Source: Authors)." width="90%" height="90%" />
-<p class="caption">(\#fig:xls)Result of 5-fold cross-validation of Mato Grosso data using LightTAE (Source: Authors).</p>
+<img src="11-validation_files/figure-html/unnamed-chunk-2-1.png" alt="Classified mosaic for land cover in Rondonia, Brazil for 2022 (source: authors)." width="100%" />
+<p class="caption">(\#fig:unnamed-chunk-2)Classified mosaic for land cover in Rondonia, Brazil for 2022 (source: authors).</p>
 </div>
 
-The scores for overall accuracy are similar between the models. However, the models have significant differences, as shown by comparing their F1 scores below.    
+
+
+## Stratified sampling design and allocation{-} 
+
+The sampling design outlines the method for selecting a subset of the map, which serves as the foundation for the accuracy assessment. The subset needs to satisfy a compromise between statistical and practical consideration. The subset needs to provide enough data for statistically-valid quality assessment, and also ensure that each element of the the sample can be evaluated correctly. Selection of the sample size thus combines an expected level of user's accuracy for each class with a viable choice of size and location. 
+
+Following the recommended best practices for estimating accuracy of LUCC maps [@Olofsson2014], `sits` uses Cochran's method for stratified random sampling [@Cochran1977]. The method divides the population into homogeneous subgroups, or strata, and then applying random sampling within each stratum. In the case of LUCC, we take the classification map as the basis for the stratification. The area occupied by each class is considered as an homogeneous subgroup. Cochran's method for stratified random sampling helps to increase the precision of the estimates by reducing the overall variance, particularly when there is significant variability between strata but relatively less variability within each stratum.
+
+To determine the overall number of samples to measure accuracy, we use the following formula [@Cochran1977]:
+
+$$
+n = \left( \frac{\sum_{i=1}^L W_i S_i}{S(\hat{O})} \right)^2
+$$
+where
+
+- $L$ is the number of classes
+- $S(\hat{O})$ is the expected standard error of the accuracy estimate
+- $S_i$ is the standard deviation of the estimated area for class $i$
+- $W_i$ is is the mapped proportion of area of class $i$
+
+The standard deviation per class (stratum) is estimated based on the expected user's accuracy $U_i$ for each class as 
+
+$$
+S_i = \sqrt{U_i(1 - U_i)}
+$$
+
+Therefore, the total number of samples depends on the assumptions about the user's accuracies $U_i$ and the expected standard error $S(\hat{O})$. Once the sample size is estimated, there are several methods for allocating samples per class[@Olofsson2014]. One option is proportional allocation, when sample size in each stratum is proportional to the stratum’s size in the population. In land use mapping, some classes often have small areas compared to the more frequent ones. Using proportional allocation, rare classes will have small sample sizes decreasing their accuracy. Another option is equal allocation, where all classes will have the same number of samples; however, equal allocation may fail to capture the natural variation of classes with large areas.
+
+As alternatives to proportional and equal allocation, [@Olofsson2014] suggests ad-hoc approaches where each class is assigned a minimum number of samples. He proposes three allocations where 50, 75 and 100 sample units are allocated to the less common classes, and proportional allocation is used for more frequent ones. These allocation methods should be considered as suggestions, and users should be flexible to select alternative sampling designs. 
+
+The allocation methods proposed by [@Olofsson2014] are supported by function `sits_sampling_design()`, which has the following parameters:
+
+- `cube`: a classified data cube;
+- `expected_ua`: a named vector with the expected user's accuracies for each class;
+- `alloc_options`: fixed sample allocation for rare classes;
+- `std_err`: expected standard error of the accuracy estimate;
+- `rare_class_prop`: proportional area limit to determine which are the rare classes.
+
+In the case of Rondonia, the following sampling design was adopted.
 
 
 ``` r
-model_acc <- tibble::tibble(
-  "Random Forest" = val_rfor$overall[["Accuracy"]],
-  "XGBoost"       = val_xgb$overall[["Accuracy"]],
-  "TempCNN"       = val_tcnn$overall[["Accuracy"]],
-  "LightTAE"      = val_ltae$overall[["Accuracy"]]
+ro_sampling_design <- sits_sampling_design(
+  cube = rondonia_2022_class,
+  expected_ua = c(
+    "Clear_Cut_Bare_Soil" = 0.75,
+    "Clear_Cut_Burned_Area" = 0.70,
+    "Mountainside_Forest" = 0.70,
+    "Forest" = 0.70,
+    "Riparian_Forest" = 0.70,
+    "Clear_Cut_Vegetation" = 0.70,
+    "Water" = 0.70,
+    "Seasonally_Flooded" = 0.70,
+    "Wetland" = 0.70
+  ),
+  alloc_options = c(120, 100),
+  std_err = 0.01,
+  rare_class_prop = 0.1
 )
-
-options(digits = 3)
-model_acc
-```
-
-
-```
-#> # A tibble: 1 × 4
-#>   `Random Forest` XGBoost TempCNN LightTAE
-#>             <dbl>   <dbl>   <dbl>    <dbl>
-#> 1           0.879   0.889   0.897    0.894
-```
-
-The table below shows the F1-scores of all classes for each model, as produced by the k-fold validation. The F1-scores are the harmonic mean between user's accuracy and precision accuracy for each class. The results show that, although deep learning models such TempCNN and LightTAE have similar overall accuracies to random forest or XGBoost, their F1-scores per class are generally better.  
-
-
-``` r
-f1_score_rfor <- unname(val_rfor$byClass[, "F1"])
-f1_score_xgb <- unname(val_xgb$byClass[, "F1"])
-f1_score_tcnn <- unname(val_tcnn$byClass[, "F1"])
-f1_score_ltae <- unname(val_ltae$byClass[, "F1"])
-
-f1_scores <- tibble::tibble(
-  "Classes"  = sits_labels(samples_cerrado_bal),
-  "RandFor"  = f1_score_rfor,
-  "XGBoost"  = f1_score_xgb,
-  "TempCNN"  = f1_score_tcnn,
-  "LightTAE" = f1_score_ltae
-)
-
-f1_scores
+# show sampling desing
+ro_sampling_design
 ```
 
 ```
-#> # A tibble: 10 × 5
-#>    Classes        RandFor XGBoost TempCNN LightTAE
-#>    <chr>            <dbl>   <dbl>   <dbl>    <dbl>
-#>  1 Annual_Crop      0.909   0.903   0.924    0.912
-#>  2 Cerradao         0.878   0.889   0.877    0.882
-#>  3 Cerrado          0.746   0.759   0.755    0.748
-#>  4 Nat_NonVeg       0.823   0.835   0.838    0.833
-#>  5 Open_Cerrado     0.824   0.847   0.854    0.859
-#>  6 Pasture          0.917   0.933   0.947    0.931
-#>  7 Perennial_Crop   0.999   0.999   0.998    1    
-#>  8 Silviculture     0.977   0.976   0.990    0.995
-#>  9 Sugarcane        0.998   0.998   1        0.998
-#> 10 Water            0.890   0.911   0.945    0.936
+#>                       prop        expected_ua std_dev equal alloc_120 alloc_100
+#> Clear_Cut_Bare_Soil   0.3841309   0.75        0.433   223   487       546      
+#> Clear_Cut_Burned_Area 0.004994874 0.7         0.458   223   120       100      
+#> Clear_Cut_Vegetation  0.009201698 0.7         0.458   223   120       100      
+#> Forest                0.538726    0.7         0.458   223   684       765      
+#> Mountainside_Forest   0.004555433 0.7         0.458   223   120       100      
+#> Riparian_Forest       0.005482552 0.7         0.458   223   120       100      
+#> Seasonally_Flooded    0.007677294 0.7         0.458   223   120       100      
+#> Water                 0.007682599 0.7         0.458   223   120       100      
+#> Wetland               0.03754864  0.7         0.458   223   120       100      
+#>                       alloc_prop
+#> Clear_Cut_Bare_Soil   772       
+#> Clear_Cut_Burned_Area 10        
+#> Clear_Cut_Vegetation  19        
+#> Forest                1083      
+#> Mountainside_Forest   9         
+#> Riparian_Forest       11        
+#> Seasonally_Flooded    15        
+#> Water                 15        
+#> Wetland               76
 ```
+The next step is to chose one of the options for sampling design to generate a set of points for stratified sampling. These points can then be used for accuracy assessment. This is achieved by function `sits_stratified_sampling()` which takes the following parameters: 
 
-The cross-validation results have to be interpreted carefully. Cross-validation measures how well the model fits the training data. Using these results to measure classification accuracy is only valid if the training data is a good sample of the entire dataset. In practice, training data is subject to various sources of bias. In most cases of land classification, some classes are much more frequent than others, and as such, the training dataset will be imbalanced. For large areas, regional differences in soil and climate condition will lead the same classes to have different spectral responses. When collecting samples for large areas, field analysts may be restricted to areas where they have access (e.g., along roads). An additional problem is that of mixed pixels. Expert interpreters tend to select samples that stand out in fieldwork or reference images. Border pixels are unlikely to be chosen as part of the training data. For all these reasons, cross-validation results should not be considered indicative of accuracy measurement over the entire dataset. 
+- `cube`: a classified data cube;
+- `sampling_design`: the output of function `sits_sampling_design()`;
+- `alloc`: one of the sampling allocation options produced by `sits_sampling_design()`;
+- `overhead`: additional proportion of number of samples per class (see below);
+- `multicores`:  number of cores to run the function in parallel;
+- `shp_file`: name of shapefile to save results for later use (optional);
+- `progress`: show progress bar?
 
+The output of the function is CSV file with points with location (latitude and longitude) and class assigned in the map. Using this CSV file (or the optional shapefile) users can visualize the points in a standard GIS such as QGIS. For each point, they will indicate what is the correct class. In this way, they will obtain a confusion matrix which will be used for accuracy assessment. The `overhead` parameter is useful for users to discard border or doubtful pixels where the interpreter cannot be confident of her class assignment. By discarding points whose attribution is uncertain, they will improve the quality of the assessment. 
+
+After all sampling points are labelled in QGIS (or similar), users should produce a CSV file, a SHP file, a data frame, or an `sf` object,  with at least three columns: `latitude`, `longitude` and `label`. See the next section for an example on how to use this data set for accuracay assessment.
 
 ## Accuracy assessment of classified images{-}
 
@@ -265,168 +172,114 @@ $$
 
 This unbiased area estimator includes the effect of false negatives (omission error) while not considering the effect of false positives (commission error). The area estimates also allow for an unbiased estimate of the user's and producer's accuracy for each class. Following Olofsson et al. @Olofsson2013, we provide the 95% confidence interval for $\hat{A_j}$. 
 
-To produce the adjusted area estimates, `sits_accuracy()` must get the classified image together with a csv file containing a set of well-selected labeled points. The csv file should have the same format as the one used to obtain samples, as discussed earlier.
+To produce the adjusted area estimates for classified maps, `sits_accuracy()` uses the following parameters:
 
-The labeled points should be based on a random stratified sample. All areas associated with each class should contribute to the test data used for accuracy assessment. 
+- `data`: a classified data cube;
+- `validation`:  a CSV file, SHP file, GPKG file, `sf` object or data frame containing at least three columns: `latitude`, `longitude` and `label`, containing a set of well-selected labeled points obtained from the samples suggested by `sits_stratified_sample()`.  
 
-Because of the biases inherent in cross-validation of training data, an independent validation dataset should be used to measure classification accuracy. In this case study, Simoes et al.  did a systematic sampling of the Cerrado biome using a $20 \times 20$ km grid with a total of 5,402 points [@Simoes2021]. These samples are independent of the training set used in the classification. They were interpreted by five specialists using high-resolution images from the same period of the classification. This resulted in 5,286 evaluation samples thus distributed: `Annual Crop` (553), `Cerrado` (3,155), `Natural Non Vegetated` (44), `Pasture` (1,246), `Perennial Crop` (38), `Silviculture` (94), `Sugarcane` (77), and `Water` (79). This dataset is available in package `sitsdata`, as described below. In this validation file, all samples belonging to classes `Cerrado`, `Open Cerrado`, and `Cerradao`  (`Woody Savanna`) have been grouped together in a single class. 
+In the example below, we use a validation set produced by the researchers which produced the Rondonia data set, described above. We selected this data set both to serve as an example of `sits_accuracy()` and to illustrate the pitfalls of using visual interpretation of results of image time series classification. In this case, the validation team used an image from a single date late in 2022 to assess the results. This choice is not adequate for assessing results of time series classification. In many cases, including the example used in this chapter, the training set includes transitional classes such as `Clear_Cut_Burned_Area` and `Clear_Cut_Vegetation`. The associated samples refer to events that occur in specific times of the year. An area may start the year as a `Forest` land cover, only to be cut and burned during the peak of the dry season and later be completely clean. The classifier will recognize the signs of burned area and will signal that such event occurred. When using only a single date to evaluate the classification results, this correct estimate by the classifier will be missed by the interpreter. For this reason, the results shown below are merely illustrative and do not reflect a correct accuracy assessment. 
 
-The first step is to obtain the classification map. The code for the full classification of the Cerrado biome, using the TempCNN algorithm, is shown below. Because of the large data size, the code will not be executed. 
-
-
-``` r
-# This code shows the classification of the Cerrado biome
-# It is included for information purposes
-# It takes a long time to run
-tcnn_model <- sits_train(
-  samples = samples_cerrado_lc8,
-  ml_method = sits_tempcnn()
-)
-
-# Using the tempCNN model to classify the Cerrado
-# This example should be run on a large virtual machine
-cerrado_probs_cube <- sits_classify(
-  cube = cerrado_cube,
-  ml_model = tcnn_model,
-  memsize = 128,
-  multicores = 64,
-  output_dir = "./tempdir/chp11"
-)
-
-cerrado_bayes_cube <- sits_smooth(
-  cube = cerrado_probs_cube,
-  memsize = 128,
-  multicores = 64,
-  output_dir = "./tempdir/chp11"
-)
-
-cerrado_classif <- sits_label_classification(
-  cube = cerrado_bayes_cube,
-  memsize = 128,
-  multicores = 64,
-  output_dir = "./tempdir/chp11"
-)
-```
-
-Since the above code is included for information only, we use the labeled cube available in the `sitsdata` package to perform the accuracy assessment. First, we retrieve the metadata for the cube.
-
-
-``` r
-# Retrieve the metadata for the classified cube
-# The files are stored in the sitsdata package
-data_dir <- system.file("extdata/Cerrado", package = "sitsdata")
-# labels for the classification
-labels <- c(
-  "1" = "Annual_Crop", "2" = "Cerrado", "3" = "Cerrado", "4" = "Nat_NonVeg",
-  "5" = "Cerrado", "6" = "Pasture", "7" = "Perennial_Crop",
-  "8" = "Silviculture", "9" = "Sugarcane", "10" = "Water"
-)
-# Read the cube metadata
-cerrado_classif <- sits_cube(
-  source = "USGS",
-  collection = "LANDSAT-C2L2-SR",
-  bands = "class",
-  labels = labels,
-  data_dir = data_dir,
-  parse_info = c("X1", "tile", "band", "start_date", "end_date", "version"),
-  progress = FALSE
-)
-# Plot one tile of the classification
-plot(cerrado_classif, tiles = "044048")
-```
-
-<div class="figure" style="text-align: center">
-<img src="11-validation_files/figure-html/unnamed-chunk-14-1.png" alt="Classification of tile 044048 from the Landsat data cube for the Brazilian Cerrado in 2017/2018 (Source: Authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-14)Classification of tile 044048 from the Landsat data cube for the Brazilian Cerrado in 2017/2018 (Source: Authors).</p>
-</div>
-The next step is to provide a csv file with the validation points, as described above.
+The validation team used QGIS to produce a CSV file with validation data, which is then used to assess the area accuracy using the best practices recommended by @Olofsson2014. 
 
 
 ``` r
 # Get ground truth points
-valid_csv <- system.file("extdata/csv/cerrado_lc8_validation.csv",
+valid_csv <- system.file("extdata/Rondonia-Class-2022-Mosaic/rondonia_samples_validation.csv",
   package = "sitsdata"
 )
 # Calculate accuracy according to Olofsson's method
-area_acc <- sits_accuracy(cerrado_classif,
-  validation_csv = valid_csv
+area_acc <- sits_accuracy(rondonia_2022_class,
+  validation = valid_csv,
+  multicores = 4
 )
 # Print the area estimated accuracy
 area_acc
 ```
 
+```
+#> Area Weighted Statistics
+#> Overall Accuracy = 0.84
+#> 
+#> Area-Weighted Users and Producers Accuracy
+#>                       User Producer
+#> Clear_Cut_Bare_Soil   0.82     1.00
+#> Clear_Cut_Burned_Area 0.88     0.08
+#> Mountainside_Forest   0.69     0.05
+#> Forest                0.85     1.00
+#> Riparian_Forest       0.66     0.58
+#> Clear_Cut_Vegetation  0.82     0.24
+#> Water                 0.97     0.67
+#> Seasonally_Flooded    0.86     0.68
+#> Wetland               0.87     0.69
+#> 
+#> Mapped Area x Estimated Area (ha)
+#>                       Mapped Area (ha) Error-Adjusted Area (ha)
+#> Clear_Cut_Bare_Soil          9537617.8                7787913.8
+#> Clear_Cut_Burned_Area         124018.1                1383784.0
+#> Mountainside_Forest           113107.2                1665469.0
+#> Forest                      13376070.4               11377193.6
+#> Riparian_Forest               136126.7                 155704.6
+#> Clear_Cut_Vegetation          228469.7                 766171.1
+#> Water                         190751.9                 275599.8
+#> Seasonally_Flooded            190620.2                 241225.8
+#> Wetland                       932298.3                1176018.6
+#>                       Conf Interval (ha)
+#> Clear_Cut_Bare_Soil            321996.87
+#> Clear_Cut_Burned_Area          278746.61
+#> Mountainside_Forest            299925.62
+#> Forest                         333181.28
+#> Riparian_Forest                 60452.25
+#> Clear_Cut_Vegetation           186476.04
+#> Water                           78786.79
+#> Seasonally_Flooded              58098.50
+#> Wetland                        163726.86
+```
+
+The confusion matrix is also available, as follows.
+
+
+``` r
+area_acc$error_matrix
+```
 
 ```
-#> $error_matrix
-#>                 
-#>                  Annual_Crop Cerrado Nat_NonVeg Pasture Perennial_Crop
-#>   Annual_Crop            469      13          0      47              0
-#>   Cerrado                  4    2813          0     191              3
-#>   Nat_NonVeg               0       2         43       0              0
-#>   Pasture                 67     287          0     999              5
-#>   Perennial_Crop           0      23          0       2             26
-#>   Silviculture             0      16          0       2              4
-#>   Sugarcane               13       0          0       5              0
-#>   Water                    0       1          1       0              0
-#>                 
-#>                  Silviculture Sugarcane Water
-#>   Annual_Crop               0         2     0
-#>   Cerrado                  12         2     4
-#>   Nat_NonVeg                0         0     2
-#>   Pasture                   3         2     4
-#>   Perennial_Crop            2         0     0
-#>   Silviculture             77         0     0
-#>   Sugarcane                 0        71     0
-#>   Water                     0         0    69
-#> 
-#> $area_pixels
-#>    Annual_Crop        Cerrado     Nat_NonVeg        Pasture Perennial_Crop 
-#>       3.12e+07       2.02e+08       9.97e+05       1.09e+08       1.62e+06 
-#>   Silviculture      Sugarcane          Water 
-#>       6.96e+06       1.06e+07       1.42e+07 
-#> 
-#> $error_ajusted_area
-#>    Annual_Crop        Cerrado     Nat_NonVeg        Pasture Perennial_Crop 
-#>       3.47e+07       2.14e+08       1.11e+06       9.58e+07       1.67e+06 
-#>   Silviculture      Sugarcane          Water 
-#>       6.51e+06       8.84e+06       1.44e+07 
-#> 
-#> $stderr_prop
-#>    Annual_Crop        Cerrado     Nat_NonVeg        Pasture Perennial_Crop 
-#>       0.002328       0.004194       0.000542       0.004386       0.000735 
-#>   Silviculture      Sugarcane          Water 
-#>       0.001060       0.001282       0.000931 
-#> 
-#> $stderr_area
-#>    Annual_Crop        Cerrado     Nat_NonVeg        Pasture Perennial_Crop 
-#>         876650        1579665         204161        1651840         276851 
-#>   Silviculture      Sugarcane          Water 
-#>         399372         483007         350471 
-#> 
-#> $conf_interval
-#>    Annual_Crop        Cerrado     Nat_NonVeg        Pasture Perennial_Crop 
-#>        1718233        3096142         400156        3237606         542628 
-#>   Silviculture      Sugarcane          Water 
-#>         782769         946693         686924 
-#> 
-#> $accuracy
-#> $accuracy$user
-#>    Annual_Crop        Cerrado     Nat_NonVeg        Pasture Perennial_Crop 
-#>          0.883          0.929          0.915          0.731          0.491 
-#>   Silviculture      Sugarcane          Water 
-#>          0.778          0.798          0.972 
-#> 
-#> $accuracy$producer
-#>    Annual_Crop        Cerrado     Nat_NonVeg        Pasture Perennial_Crop 
-#>          0.794          0.880          0.820          0.830          0.474 
-#>   Silviculture      Sugarcane          Water 
-#>          0.831          0.954          0.956 
-#> 
-#> $accuracy$overall
-#> [1] 0.861
-#> 
-#> 
-#> attr(,"class")
-#> [1] "sits_area_assessment" "list"
+#>                        
+#>                         Clear_Cut_Bare_Soil Clear_Cut_Burned_Area
+#>   Clear_Cut_Bare_Soil                   415                    65
+#>   Clear_Cut_Burned_Area                   1                    42
+#>   Mountainside_Forest                     1                     0
+#>   Forest                                  0                     0
+#>   Riparian_Forest                         4                     0
+#>   Clear_Cut_Vegetation                    1                    17
+#>   Water                                   0                     0
+#>   Seasonally_Flooded                      0                     0
+#>   Wetland                                 0                     2
+#>                        
+#>                         Mountainside_Forest Forest Riparian_Forest
+#>   Clear_Cut_Bare_Soil                     0      0               0
+#>   Clear_Cut_Burned_Area                   0      0               0
+#>   Mountainside_Forest                    22      9               0
+#>   Forest                                 95    680               3
+#>   Riparian_Forest                         4      5             111
+#>   Clear_Cut_Vegetation                    0      0               0
+#>   Water                                   0      0               3
+#>   Seasonally_Flooded                      0      0               1
+#>   Wetland                                 0      0               1
+#>                        
+#>                         Clear_Cut_Vegetation Water Seasonally_Flooded Wetland
+#>   Clear_Cut_Bare_Soil                     10     3                  1      15
+#>   Clear_Cut_Burned_Area                    1     0                  1       3
+#>   Mountainside_Forest                      0     0                  0       0
+#>   Forest                                  19     2                  0       3
+#>   Riparian_Forest                         43     0                  0       0
+#>   Clear_Cut_Vegetation                    82     0                  0       0
+#>   Water                                    0   121                  1       0
+#>   Seasonally_Flooded                       0     1                118      18
+#>   Wetland                                  4     0                  6      88
 ```
-This example shows that it is important to correct area estimates in land classification to reduce the bias effect of misclassification and to consider the different producer's accuracies associated with each class. It also shows that actual overall accuracy is generally lower than the result of cross-validation.  
+
+These results show the challenges of conducting validation assessments with image time series. While stable classes like `Forest` and `Clear_Cut_Bare_Soil` exhibit high user's accuracy (UA) and producer's accuracy (PA), the transitional classes (`Clear_Cut_Burned_Area` and `Clear_Cut_Vegetation`) have low PA. This discrepancy is not a true reflection of classification accuracy, but rather a result of inadequate visual interpretation practices. As mentioned earlier, the visual interpretation for quality assessment utilised only a single date, a method traditionally used for single images, but ineffective for image time series.
+
+A detailed examination of the confusion matrix reveals a clear distinction between natural areas (e.g., `Forest` and `Riparian_Forest`) and areas associated with deforestation (e.g., `Clear_Cut_Bare_Soil` and `Clear_Cut_Burned_Area`). The low producer's accuracy values for transitional classes `Clear_Cut_Burned_Area` and `Clear_Cut_Vegetation` are artefacts of the validation procedure. Validation relied on only one date near the end of the calendar year, causing transitional classes to be overlooked.
+
+This chapter provides an example of the recommended statistical methods for designing stratified samples for accuracy assessment. However, these sampling methods depend on perfect or near-perfect validation by end-users. Ensuring best practices in accuracy assessment involves a well-designed sample set and a sample interpretation that aligns with the classifier's training set.

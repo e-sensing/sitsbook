@@ -8,13 +8,13 @@
 <meta name="author" content="Gilberto Camara">
 <meta name="author" content="Rolf Simoes">
 <meta name="author" content="Felipe Souza">
+<meta name="author" content="Felipe Menino">
 <meta name="author" content="Charlotte Pelletier">
-<meta name="author" content="Alber Sanchez">
 <meta name="author" content="Pedro R. Andrade">
 <meta name="author" content="Karine Ferreira">
 <meta name="author" content="Gilberto Queiroz">
 <meta name="description" content="This Chapter discusses how to classify data cubes by providing a step-by-step example. Our study area is the state of Rondonia, Brazil, which underwent substantial deforestation in the last...">
-<meta name="generator" content="bookdown 0.36 with bs4_book()">
+<meta name="generator" content="bookdown 0.39 with bs4_book()">
 <meta property="og:title" content="Classification of raster data cubes | sits: Satellite Image Time Series Analysis on Earth Observation Data Cubes">
 <meta property="og:type" content="book">
 <meta property="og:image" content="/images/cover_sits_book.png">
@@ -25,9 +25,9 @@
 <meta name="twitter:image" content="/images/cover_sits_book.png">
 <!-- JS --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/6.4.6/fuse.js" integrity="sha512-zv6Ywkjyktsohkbp9bb45V6tEMoWhzFzXis+LrMehmJZZSys19Yxf1dopHx7WzIKxr5tK2dVcYmaCk2uqdjF4A==" crossorigin="anonymous"></script><script src="https://kit.fontawesome.com/6ecbd6c532.js" crossorigin="anonymous"></script><script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="libs/bootstrap-4.6.0/bootstrap.min.css" rel="stylesheet">
-<script src="libs/bootstrap-4.6.0/bootstrap.bundle.min.js"></script><link href="libs/IBM_Plex_Serif-0.4.7/font.css" rel="stylesheet">
-<link href="libs/IBM_Plex_Mono-0.4.7/font.css" rel="stylesheet">
-<script src="libs/bs3compat-0.6.0/transition.js"></script><script src="libs/bs3compat-0.6.0/tabs.js"></script><script src="libs/bs3compat-0.6.0/bs3compat.js"></script><link href="libs/bs4_book-1.0.0/bs4_book.css" rel="stylesheet">
+<script src="libs/bootstrap-4.6.0/bootstrap.bundle.min.js"></script><link href="libs/IBM_Plex_Serif-0.4.9/font.css" rel="stylesheet">
+<link href="libs/IBM_Plex_Mono-0.4.9/font.css" rel="stylesheet">
+<script src="libs/bs3compat-0.8.0/transition.js"></script><script src="libs/bs3compat-0.8.0/tabs.js"></script><script src="libs/bs3compat-0.8.0/bs3compat.js"></script><link href="libs/bs4_book-1.0.0/bs4_book.css" rel="stylesheet">
 <script src="libs/bs4_book-1.0.0/bs4_book.js"></script><script src="libs/kePrint-0.0.1/kePrint.js"></script><link href="libs/lightable-0.0.1/lightable.css" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/autocomplete.js/0.38.0/autocomplete.jquery.min.js" integrity="sha512-GU9ayf+66Xx2TmpxqJpliWbT5PiGYxpaG8rfnBEk1LL8l1KGkRShhngwdXK1UgqhAzWpZHSiYPc09/NwDQIGyg==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js" integrity="sha512-5CYOlHXGh6QpOFA/TeTylKLWfB3ftPsde7AnmhuitiTX4K5SqCLBeKro6sPS8ilsz1Q4NRx3v8Ko2IBiszzdww==" crossorigin="anonymous"></script><!-- CSS --><style type="text/css">
     
@@ -38,6 +38,7 @@
     div.csl-bib-body { }
     div.csl-entry {
       clear: both;
+          margin-bottom: 0em;
         }
     .hanging div.csl-entry {
       margin-left:2em;
@@ -109,7 +110,7 @@
 <h2>Data cube for case study<a class="anchor" aria-label="anchor" href="#data-cube-for-case-study"><i class="fas fa-link"></i></a>
 </h2>
 <p>The examples of this chapter use a pre-built data cube of Sentinel-2 images, available in the package <code>sitsdata</code>. These images are from the <code>SENTINEL-2-L2A</code> collection in Microsoft Planetary Computer (<code>MPC</code>). The data consists of bands BO2, B8A, and B11, and indexes NDVI, EVI and NBR in a small area of <span class="math inline">\(1200 \times 1200\)</span> pixels in the state of Rondonia. As explained in Chapter <a href="https://e-sensing.github.io/sitsbook/earth-observation-data-cubes.html">Earth observation data cubes</a>, we must inform <code>sits</code> how to parse these file names to obtain tile, date, and band information. Image files are named according to the convention “satellite_ sensor_tile_band_date” (e.g., <code>SENTINEL-2_MSI_20LKP_BO2_2020_06_04.tif</code>) which is the default format in <code>sits</code>.</p>
-<div class="sourceCode" id="cb129"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb175"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Files are available in a local directory</span></span>
 <span><span class="va">data_dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html">system.file</a></span><span class="op">(</span><span class="st">"extdata/Rondonia-20LMR/"</span>,</span>
 <span>  package <span class="op">=</span> <span class="st">"sitsdata"</span></span>
@@ -122,25 +123,25 @@
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Plot the cube</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">rondonia_20LMR</span>, date <span class="op">=</span> <span class="st">"2022-07-16"</span>, red <span class="op">=</span> <span class="st">"B11"</span>, green <span class="op">=</span> <span class="st">"B8A"</span>, blue <span class="op">=</span> <span class="st">"B02"</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">rondonia_20LMR</span>, date <span class="op">=</span> <span class="st">"2022-07-16"</span>, band <span class="op">=</span> <span class="st">"NDVI"</span><span class="op">)</span></span></code></pre></div>
 <div class="figure" style="text-align: center">
-<span style="display:block;" id="fig:unnamed-chunk-129"></span>
-<img src="sitsbook_files/figure-html/unnamed-chunk-129-1.png" alt="Color composite image of the cube for date 2023-07-16 (Source: authors)." width="90%"><p class="caption">
-Figure 64: Color composite image of the cube for date 2023-07-16 (Source: authors).
+<span style="display:block;" id="fig:unnamed-chunk-2"></span>
+<img src="09-rasterclassification_files/figure-html/unnamed-chunk-2-1.png" alt="Color composite image of the cube for date 2023-07-16 (source: authors)." width="90%"><p class="caption">
+Figure 44: Color composite image of the cube for date 2023-07-16 (source: authors).
 </p>
 </div>
 </div>
 <div id="training-data-for-the-case-study" class="section level2 unnumbered">
 <h2>Training data for the case study<a class="anchor" aria-label="anchor" href="#training-data-for-the-case-study"><i class="fas fa-link"></i></a>
 </h2>
-<p>This case study uses the training dataset <code>samples_deforestation</code>, available in package <code>sitsdata</code>. This dataset consists of 6007 samples collected from Sentinel-2 images covering the state of Rondonia. There are nine classes: “Clear_Cut_Bare_Soil”, “Clear_Cut_Burned_Area”, “Mountainside_Forest”, “Forest”, “Riparian_Forest”, “Clear_Cut_Vegetation”, “Water”, “Wetland”, and “Seasonally_Flooded”. Each time series contains values from Sentinel-2/2A bands B02, B8A, and B11, and indices NDVI, EVI, and NBR, from 2022-01-05 to 2022-12-23 in 16-day intervals. The samples are intended to detect deforestation events and have been collected by remote sensing experts using visual interpretation.</p>
-<div class="sourceCode" id="cb130"><pre class="downlit sourceCode r">
+<p>This case study uses the training dataset <code>samples_deforestation_rondonia</code>, available in package <code>sitsdata</code>. This dataset consists of 6007 samples collected from Sentinel-2 images covering the state of Rondonia. There are nine classes: <code>Clear_Cut_Bare_Soil</code>, <code>Clear_Cut_Burned_Area</code>, <code>Mountainside_Forest</code>, <code>Forest</code>, <code>Riparian_Forest</code>, <code>Clear_Cut_Vegetation</code>, <code>Water</code>, <code>Wetland</code>, and <code>Seasonally_Flooded</code>. Each time series contains values from Sentinel-2/2A bands B02, B03, B04, B05, B06, B07, B8A, B08, B11 and B12, from 2022-01-05 to 2022-12-23 in 16-day intervals. The samples are intended to detect deforestation events and have been collected by remote sensing experts using visual interpretation. f</p>
+<div class="sourceCode" id="cb176"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/e-sensing/sitsdata/">sitsdata</a></span><span class="op">)</span></span>
 <span><span class="co"># Obtain the samples</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html">data</a></span><span class="op">(</span><span class="st">"samples_deforestation"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html">data</a></span><span class="op">(</span><span class="st">"samples_deforestation_rondonia"</span><span class="op">)</span></span>
 <span><span class="co"># Show the contents of the samples</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html">summary</a></span><span class="op">(</span><span class="va">samples_deforestation</span><span class="op">)</span></span></code></pre></div>
-<pre class="sourceCode"><code>#&gt; # A tibble: 9 × 3
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html">summary</a></span><span class="op">(</span><span class="va">samples_deforestation_rondonia</span><span class="op">)</span></span></code></pre></div>
+<pre><code>#&gt; # A tibble: 9 × 3
 #&gt;   label                 count   prop
 #&gt;   &lt;chr&gt;                 &lt;int&gt;  &lt;dbl&gt;
 #&gt; 1 Clear_Cut_Bare_Soil     944 0.157 
@@ -152,46 +153,48 @@ Figure 64: Color composite image of the cube for date 2023-07-16 (Source: author
 #&gt; 7 Seasonally_Flooded      731 0.122 
 #&gt; 8 Water                   109 0.0181
 #&gt; 9 Wetland                 215 0.0358</code></pre>
-<p>It is helpful to plot the basic patterns associated with the samples to understand the training set better. The function <code><a href="https://rdrr.io/pkg/sits/man/sits_patterns.html">sits_patterns()</a></code> uses a generalized additive model (GAM) to predict a smooth, idealized approximation to the time series associated with each class for all bands. Since the data cube used in the classification has three bands (B02, B8A, and B11) and three indexes (NDVI, EVI, and NBR), we filter the samples for these bands and indexes before showing the patterns.</p>
-<div class="sourceCode" id="cb132"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">samples_deforestation</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_select.html">sits_select</a></span><span class="op">(</span>bands <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"NDVI"</span>, <span class="st">"EVI"</span>, <span class="st">"NBR"</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<p>It is helpful to plot the basic patterns associated with the samples to understand the training set better. The function <code><a href="https://rdrr.io/pkg/sits/man/sits_patterns.html">sits_patterns()</a></code> uses a generalized additive model (GAM) to predict a smooth, idealized approximation to the time series associated with each class for all bands. Since the data cube used in the classification has 10 bands we filter the samples for bands B02, B8A, and B11 before showing the patterns.</p>
+<div class="sourceCode" id="cb178"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">samples_deforestation_rondonia</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_select.html">sits_select</a></span><span class="op">(</span>bands <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"B02"</span>, <span class="st">"B8A"</span>, <span class="st">"B11"</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_patterns.html">sits_patterns</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 <div class="figure" style="text-align: center">
-<span style="display:block;" id="fig:unnamed-chunk-131"></span>
-<img src="sitsbook_files/figure-html/unnamed-chunk-131-1.png" alt="Patterns associated to the training samples (Source: Authors)." width="90%"><p class="caption">
-Figure 65: Patterns associated to the training samples (Source: Authors).
+<span style="display:block;" id="fig:unnamed-chunk-4"></span>
+<img src="09-rasterclassification_files/figure-html/unnamed-chunk-4-1.png" alt="Patterns associated to the training samples (source: authors)." width="90%"><p class="caption">
+Figure 41: Patterns associated to the training samples (source: authors).
 </p>
 </div>
-<p>The patterns show different temporal responses for the selected classes. They match the typical behavior of deforestation in the Amazon. In most cases, the forest is cut at the start of the dry season (May/June). At the end of the dry season, some clear-cut areas are burned to clean the remains; this action is reflected in the steep fall of the response of NBR values of burned area samples after August. The areas where native trees have been cut but some vegatation remain (“Clear_Cut_Vegetation”) have values in the NBR band that increase during the period. This is a sign of mixed pixels, which combine forest remains with bare soil.</p>
+<p>The patterns show different temporal responses for the selected classes. They match the typical behavior of deforestation in the Amazon. In most cases, the forest is cut at the start of the dry season (May/June). At the end of the dry season, some clear-cut areas are burned to clean the remains; this action is reflected in the steep fall of the response of B11 values of burned area samples after August. (….) The areas where native trees have been cut but some vegatation remain (“Clear_Cut_Vegetation”) have values in the B8A band that increase during the period.</p>
 </div>
 <div id="training-machine-learning-models" class="section level2 unnumbered">
 <h2>Training machine learning models<a class="anchor" aria-label="anchor" href="#training-machine-learning-models"><i class="fas fa-link"></i></a>
 </h2>
-<p>The next step is to train a machine learning model to illustrate CPU-based classification a random forest model and a tempCNN model. We build a random forest model using <code><a href="https://rdrr.io/pkg/sits/man/sits_train.html">sits_train()</a></code> and then create a plot to find out what are the most important variables for the model.</p>
-<div class="sourceCode" id="cb133"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Train model using Temporal CNN model</span></span>
+<p>The next step is to train a machine learning model to illustrate CPU-based classification. We build a random forest model using <code><a href="https://rdrr.io/pkg/sits/man/sits_train.html">sits_train()</a></code> and then create a plot to find out what are the most important variables for the model.</p>
+<div class="sourceCode" id="cb179"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># set the seed to get the same result</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span><span class="op">(</span><span class="fl">03022024</span><span class="op">)</span></span>
+<span><span class="co"># Train model using Temporal CNN model</span></span>
 <span><span class="va">rfor_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_train.html">sits_train</a></span><span class="op">(</span></span>
-<span>  <span class="va">samples_deforestation</span>,</span>
+<span>  <span class="va">samples_deforestation_rondonia</span>,</span>
 <span>  ml_method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_rfor.html">sits_rfor</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb134"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb180"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">rfor_model</span><span class="op">)</span></span></code></pre></div>
 <div class="figure" style="text-align: center">
-<span style="display:block;" id="fig:unnamed-chunk-134"></span>
-<img src="sitsbook_files/figure-html/unnamed-chunk-134-1.png" alt="Most relevant variables of the Random Forest model (Source: Authors)." width="90%"><p class="caption">
-Figure 66: Most relevant variables of the Random Forest model (Source: Authors).
+<span style="display:block;" id="fig:unnamed-chunk-6"></span>
+<img src="09-rasterclassification_files/figure-html/unnamed-chunk-6-1.png" alt="Most relevant variables of the Random Forest model (source: authors)." width="90%"><p class="caption">
+Figure 36: Most relevant variables of the Random Forest model (source: authors).
 </p>
 </div>
-<p>The figure shows that B11 band values in date 15 (“2022-08-17”) is the most informative for the random forest model, followed by EVI index values in date 9 (“2022-05-13”). These bands and dates represent inflection points in the image time series.</p>
+<p>The figure shows that EVI index values on dates 9 (“2022-05-13”) and 15 (“2022-08-17”) are the most informative variables for the random forest model. These bands and dates represent inflection points in the image time series.</p>
 </div>
 <div id="classification-of-machine-learning-models-in-cpus" class="section level2 unnumbered">
 <h2>Classification of machine learning models in CPUs<a class="anchor" aria-label="anchor" href="#classification-of-machine-learning-models-in-cpus"><i class="fas fa-link"></i></a>
 </h2>
 <p>By default, all classification algorithms in <code>sits</code> use CPU-based parallel processing, done internally by the package. The algorithms are adaptable; the only requirement for users is to inform the configuration of their machines. To achieve efficiency, <code>sits</code> implements a fault-tolerant multitasking procedure, using a cluster of independent workers linked to a virtual machine. To avoid communication overhead, all large payloads are read and stored independently; direct interaction between the main process and the workers is kept at a minimum. Details of CPU-based parallel processing in <code>sits</code> can be found in the <a href="https://e-sensing.github.io/sitsbook/technical-annex.html">Technical annex</a>.</p>
 <p>To classify both data cubes and sets of time series, use <code><a href="https://rdrr.io/pkg/sits/man/sits_classify.html">sits_classify()</a></code>, which uses parallel processing to speed up the performance, as described at the end of this Chapter. Its most relevant parameters are: (a) <code>data</code>, either a data cube or a set of time series; (b) <code>ml_model</code>, a trained model using one of the machine learning methods provided; (c) <code>multicores</code>, number of CPU cores that will be used for processing; (d) <code>memsize</code>, memory available for classification; (e) <code>output_dir</code>, directory where results will be stored; (f) <code>version</code>, for version control. To follow the processing steps, turn on the parameters <code>verbose</code> to print information and <code>progress</code> to get a progress bar. The classification result is a data cube with a set of probability layers, one for each output class. Each probability layer contains the model’s assessment of how likely each pixel belongs to the related class. The probability cube can be visualized with <code><a href="https://rdrr.io/r/graphics/plot.default.html">plot()</a></code>. In this example, we show only the probabilities associated to label “Forest”.</p>
-<div class="sourceCode" id="cb135"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb181"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Classify data cube to obtain a probability cube</span></span>
 <span><span class="va">rondonia_20LMR_probs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_classify.html">sits_classify</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="va">rondonia_20LMR</span>,</span>
@@ -204,13 +207,13 @@ Figure 66: Most relevant variables of the Random Forest model (Source: Authors).
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">rondonia_20LMR_probs</span>, labels <span class="op">=</span> <span class="st">"Forest"</span>, palette <span class="op">=</span> <span class="st">"YlGn"</span><span class="op">)</span></span></code></pre></div>
 <div class="figure" style="text-align: center">
-<span style="display:block;" id="fig:unnamed-chunk-135"></span>
-<img src="sitsbook_files/figure-html/unnamed-chunk-135-1.png" alt="Probabilities for class Forest" width="90%"><p class="caption">
-Figure 67: Probabilities for class Forest
+<span style="display:block;" id="fig:unnamed-chunk-7"></span>
+<img src="09-rasterclassification_files/figure-html/unnamed-chunk-7-1.png" alt="Probabilities for class Forest  (source: authors)." width="90%"><p class="caption">
+Figure 14: Probabilities for class Forest (source: authors).
 </p>
 </div>
 <p>The probability cube provides information on the output values of the algorithm for each class. Most probability maps contain outliers or misclassified pixels. The labeled map generated from the pixel-based time series classification method exhibits several misclassified pixels, which are small patches surrounded by a different class. This occurrence of outliers is a common issue that arises due to the inherent nature of this classification approach. Regardless of their resolution, mixed pixels are prevalent in images, and each class exhibits considerable data variability. As a result, these factors can lead to outliers that are more likely to be misclassified. To overcome this limitation, <code>sits</code> employs post-processing smoothing techniques that leverage the spatial context of the probability cubes to refine the results. These techniques will be discussed in the Chapter <a href="https://e-sensing.github.io/sitsbook/bayesian-smoothing-for-post-processing.html">Bayesian smoothing for post-processing</a>. In what follows, we will generate the smoothed cube to illustrate the procedure.</p>
-<div class="sourceCode" id="cb136"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb182"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Smoothen a  probability cube</span></span>
 <span><span class="va">rondonia_20LMR_bayes</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_smooth.html">sits_smooth</a></span><span class="op">(</span></span>
 <span>  cube <span class="op">=</span> <span class="va">rondonia_20LMR_probs</span>,</span>
@@ -221,13 +224,13 @@ Figure 67: Probabilities for class Forest
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">rondonia_20LMR_bayes</span>, labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"Forest"</span><span class="op">)</span>, palette <span class="op">=</span> <span class="st">"YlGn"</span><span class="op">)</span></span></code></pre></div>
 <div class="figure" style="text-align: center">
-<span style="display:block;" id="fig:unnamed-chunk-136"></span>
-<img src="sitsbook_files/figure-html/unnamed-chunk-136-1.png" alt="Smoothened probabilities for class Forest" width="100%"><p class="caption">
-Figure 68: Smoothened probabilities for class Forest
+<span style="display:block;" id="fig:unnamed-chunk-8"></span>
+<img src="09-rasterclassification_files/figure-html/unnamed-chunk-8-1.png" alt="Smoothened probabilities for class Forest  (source: authors)." width="100%"><p class="caption">
+Figure 15: Smoothened probabilities for class Forest (source: authors).
 </p>
 </div>
 <p>In general, users should perform a post-processing smoothing after obtaining the probability maps in raster format. After the post-processing operation, we apply <code><a href="https://rdrr.io/pkg/sits/man/sits_label_classification.html">sits_label_classification()</a></code> to obtain a map with the most likely class for each pixel. For each pixel, the <code><a href="https://rdrr.io/pkg/sits/man/sits_label_classification.html">sits_label_classification()</a></code> function takes the label with highest probability and assigns it to the resulting map. The output is a labelled map with classes.</p>
-<div class="sourceCode" id="cb137"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb183"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Generate a thematic map</span></span>
 <span><span class="va">rondonia_20LMR_class</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_label_classification.html">sits_label_classification</a></span><span class="op">(</span></span>
 <span>  cube <span class="op">=</span> <span class="va">rondonia_20LMR_bayes</span>,</span>
@@ -242,23 +245,23 @@ Figure 68: Smoothened probabilities for class Forest
 <span>  tmap_options <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span><span class="st">"legend_text_size"</span> <span class="op">=</span> <span class="fl">0.7</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <div class="figure" style="text-align: center">
-<span style="display:block;" id="fig:unnamed-chunk-137"></span>
-<img src="sitsbook_files/figure-html/unnamed-chunk-137-1.png" alt="Final map of deforestation obtained by random forest model(Source: Authors)." width="100%"><p class="caption">
-Figure 69: Final map of deforestation obtained by random forest model(Source: Authors).
+<span style="display:block;" id="fig:unnamed-chunk-9"></span>
+<img src="09-rasterclassification_files/figure-html/unnamed-chunk-9-1.png" alt="Final map of deforestation obtained by random forest model(source: authors)." width="100%"><p class="caption">
+Figure 16: Final map of deforestation obtained by random forest model(source: authors).
 </p>
 </div>
 </div>
 <div id="training-and-running-deep-learning-models" class="section level2 unnumbered">
 <h2>Training and running deep learning models<a class="anchor" aria-label="anchor" href="#training-and-running-deep-learning-models"><i class="fas fa-link"></i></a>
 </h2>
-<p>The next examples show how to run deep learning models in <code>sits</code>. The case study uses the Temporal CNN model <span class="citation"><a href="references.html#ref-Pelletier2019">[58]</a></span>, which is described in Chapter <a href="https://e-sensing.github.io/sitsbook/machine-learning-for-data-cubes.html">Machine learning for data cubes</a>. We first show the need for model tuning, before applying the model for data cube classification.</p>
+<p>The next examples show how to run deep learning models in <code>sits</code>. The case study uses the Temporal CNN model <span class="citation"><a href="references.html#ref-Pelletier2019">[65]</a></span>, which is described in Chapter <a href="https://e-sensing.github.io/sitsbook/machine-learning-for-data-cubes.html">Machine learning for data cubes</a>. We first show the need for model tuning, before applying the model for data cube classification.</p>
 <div id="deep-learning-model-tuning-1" class="section level3 unnumbered">
 <h3>Deep learning model tuning<a class="anchor" aria-label="anchor" href="#deep-learning-model-tuning-1"><i class="fas fa-link"></i></a>
 </h3>
 <p>In the example, we use <code><a href="https://rdrr.io/pkg/sits/man/sits_tuning.html">sits_tuning()</a></code> to find good hyperparameters to train the <code><a href="https://rdrr.io/pkg/sits/man/sits_tempcnn.html">sits_tempcnn()</a></code> algorithm for the Rondonia dataset. The hyperparameters for the <code><a href="https://rdrr.io/pkg/sits/man/sits_tempcnn.html">sits_tempcnn()</a></code> method include the size of the layers, convolution kernels, dropout rates, learning rate, and weight decay. Please refer to the description of the Temporal CNN algorithm in Chapter <a href="https://e-sensing.github.io/sitsbook/machine-learning-for-data-cubes.html">Machine learning for data cubes</a></p>
-<div class="sourceCode" id="cb138"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb184"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">tuned_tempcnn</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_tuning.html">sits_tuning</a></span><span class="op">(</span></span>
-<span>  samples <span class="op">=</span> <span class="va">samples_deforestation</span>,</span>
+<span>  samples <span class="op">=</span> <span class="va">samples_deforestation_rondonia</span>,</span>
 <span>  ml_method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_tempcnn.html">sits_tempcnn</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  params <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_tuning_hparams.html">sits_tuning_hparams</a></span><span class="op">(</span></span>
 <span>    cnn_layers <span class="op">=</span> <span class="fu">choice</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">256</span>, <span class="fl">256</span>, <span class="fl">256</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">128</span>, <span class="fl">128</span>, <span class="fl">128</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">64</span>, <span class="fl">64</span>, <span class="fl">64</span><span class="op">)</span><span class="op">)</span>,</span>
@@ -267,7 +270,7 @@ Figure 69: Final map of deforestation obtained by random forest model(Source: Au
 <span>      <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">0.15</span>, <span class="fl">0.15</span>, <span class="fl">0.15</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">0.2</span>, <span class="fl">0.2</span>, <span class="fl">0.2</span><span class="op">)</span>,</span>
 <span>      <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">0.3</span>, <span class="fl">0.3</span>, <span class="fl">0.3</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">0.4</span>, <span class="fl">0.4</span>, <span class="fl">0.4</span><span class="op">)</span></span>
 <span>    <span class="op">)</span>,</span>
-<span>    optimizer <span class="op">=</span> <span class="fu">torchopt</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/pkg/torchopt/man/optim_adamw.html">optim_adamw</a></span>,</span>
+<span>    optimizer <span class="op">=</span> <span class="fu">torch</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/pkg/torch/man/optim_adamw.html">optim_adamw</a></span>,</span>
 <span>    opt_hparams <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span></span>
 <span>      lr <span class="op">=</span> <span class="fu">loguniform</span><span class="op">(</span><span class="fl">10</span><span class="op">^</span><span class="op">-</span><span class="fl">2</span>, <span class="fl">10</span><span class="op">^</span><span class="op">-</span><span class="fl">4</span><span class="op">)</span>,</span>
 <span>      weight_decay <span class="op">=</span> <span class="fu">loguniform</span><span class="op">(</span><span class="fl">10</span><span class="op">^</span><span class="op">-</span><span class="fl">2</span>, <span class="fl">10</span><span class="op">^</span><span class="op">-</span><span class="fl">8</span><span class="op">)</span></span>
@@ -277,7 +280,7 @@ Figure 69: Final map of deforestation obtained by random forest model(Source: Au
 <span>  multicores <span class="op">=</span> <span class="fl">4</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p>The result of <code><a href="https://rdrr.io/pkg/sits/man/sits_tuning.html">sits_tuning()</a></code> is tibble with different values of accuracy, kappa, decision matrix, and hyperparameters. The five best results obtain accuracy values between 0.939 and 0.908, as shown below. The best result is obtained by a learning rate of 3.76e-04 and a weight decay of 1.5e-04, and three CNN layers of size 256, kernel size of 5, and dropout rates of 0.2.</p>
-<div class="sourceCode" id="cb139"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb185"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Obtain accuracy, kappa, cnn_layers, cnn_kernels, and cnn_dropout_rates the best result</span></span>
 <span><span class="va">cnn_params</span> <span class="op">&lt;-</span> <span class="va">tuned_tempcnn</span><span class="op">[</span><span class="fl">1</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"accuracy"</span>, <span class="st">"kappa"</span>, <span class="st">"cnn_layers"</span>, <span class="st">"cnn_kernels"</span>, <span class="st">"cnn_dropout_rates"</span><span class="op">)</span>, <span class="op">]</span></span>
 <span><span class="co"># Learning rates and weight decay are organized as a list</span></span>
@@ -289,19 +292,19 @@ Figure 69: Final map of deforestation obtained by random forest model(Source: Au
 <span><span class="op">)</span></span>
 <span><span class="co"># Print the best parameters</span></span>
 <span><span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/bind_cols.html">bind_cols</a></span><span class="op">(</span><span class="va">cnn_params</span>, <span class="va">lr_wd</span><span class="op">)</span></span></code></pre></div>
-<pre class="sourceCode"><code>#&gt; # A tibble: 1 × 7
-#&gt;   accuracy kappa cnn_layers       cnn_kernels cnn_dropout_rates  lr_best  wd_best
-#&gt;      &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;            &lt;chr&gt;       &lt;chr&gt;                &lt;dbl&gt;    &lt;dbl&gt;
-#&gt; 1    0.939 0.929 c(256, 256, 256) c(5, 5, 5)  c(0.2, 0.2, 0.2)  0.000376 0.000153</code></pre>
+<pre><code>#&gt; # A tibble: 1 × 7
+#&gt;   accuracy kappa cnn_layers       cnn_kernels cnn_dropout_rates  lr_best wd_best
+#&gt;      &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;            &lt;chr&gt;       &lt;chr&gt;                &lt;dbl&gt;   &lt;dbl&gt;
+#&gt; 1    0.939 0.929 c(256, 256, 256) c(5, 5, 5)  c(0.2, 0.2, 0.2)  0.000376 1.53e-4</code></pre>
 </div>
 <div id="classification-in-gpus-using-parallel-processing" class="section level3 unnumbered">
 <h3>Classification in GPUs using parallel processing<a class="anchor" aria-label="anchor" href="#classification-in-gpus-using-parallel-processing"><i class="fas fa-link"></i></a>
 </h3>
-<p>Deep learning time series classification methods in <code>sits</code>, which include <code><a href="https://rdrr.io/pkg/sits/man/sits_tempcnn.html">sits_tempcnn()</a></code>, <code><a href="https://rdrr.io/pkg/sits/man/sits_mlp.html">sits_mlp()</a></code>, <code><a href="https://rdrr.io/pkg/sits/man/sits_resnet.html">sits_resnet()</a></code>, <code>sits_lightae()</code> and <code><a href="https://rdrr.io/pkg/sits/man/sits_tae.html">sits_tae()</a></code>, are written using the <code>torch</code> package, which is an adaptation of pyTorch to the R environment. These algorithms can use a CUDA-compatible NVDIA GPU if one is available and has been properly configured. Please refer to the <code>torch</code> <a href="https://torch.mlverse.org/docs/articles/installation">installation guide</a> for details on how to configure <code>torch</code> to use GPUs. If no GPU is available, these algorithms will run on regular CPUs, using the same paralellization methods described in the traditional machine learning methods. Typically, there is a 10-fold performance increase when running <code>torch</code> based methods in GPUs relative to their processing time in GPU.</p>
+<p>Deep learning time series classification methods in <code>sits</code>, which include <code><a href="https://rdrr.io/pkg/sits/man/sits_tempcnn.html">sits_tempcnn()</a></code>, <code><a href="https://rdrr.io/pkg/sits/man/sits_mlp.html">sits_mlp()</a></code>, <code>sits_lightae()</code> and <code><a href="https://rdrr.io/pkg/sits/man/sits_tae.html">sits_tae()</a></code>, are written using the <code>torch</code> package, which is an adaptation of pyTorch to the R environment. These algorithms can use a CUDA-compatible NVDIA GPU if one is available and has been properly configured. Please refer to the <code>torch</code> <a href="https://torch.mlverse.org/docs/articles/installation">installation guide</a> for details on how to configure <code>torch</code> to use GPUs. If no GPU is available, these algorithms will run on regular CPUs, using the same paralellization methods described in the traditional machine learning methods. Typically, there is a 10-fold performance increase when running <code>torch</code> based methods in GPUs relative to their processing time in GPU.</p>
 <p>To illustrate the use of GPUs, we take the same data cube and training data used in the previous examples and use a Temporal CNN method. The first step is to obtain a deep learning model using the hyperparameters produced by the tuning procedure shown earlier. We run</p>
-<div class="sourceCode" id="cb141"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb187"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">tcnn_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_train.html">sits_train</a></span><span class="op">(</span></span>
-<span>  <span class="va">samples_deforestation</span>,</span>
+<span>  <span class="va">samples_deforestation_rondonia</span>,</span>
 <span>  <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_tempcnn.html">sits_tempcnn</a></span><span class="op">(</span></span>
 <span>    cnn_layers <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">256</span>, <span class="fl">256</span>, <span class="fl">256</span><span class="op">)</span>,</span>
 <span>    cnn_kernels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">5</span>, <span class="fl">5</span>, <span class="fl">5</span><span class="op">)</span>,</span>
@@ -313,7 +316,7 @@ Figure 69: Final map of deforestation obtained by random forest model(Source: Au
 <span>  <span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p>After training the model, we classify the data cube. If a GPU is available, users need to provide the additional parameter <code>gpu_memory</code> to <code><a href="https://rdrr.io/pkg/sits/man/sits_classify.html">sits_classify()</a></code>. This information will be used by <code>sits</code> to optimize access to the GPU and speed up processing.</p>
-<div class="sourceCode" id="cb142"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb188"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rondonia_20LMR_probs_tcnn</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_classify.html">sits_classify</a></span><span class="op">(</span></span>
 <span>  <span class="va">rondonia_20LMR</span>,</span>
 <span>  ml_model <span class="op">=</span> <span class="va">tcnn_model</span>,</span>
@@ -324,7 +327,7 @@ Figure 69: Final map of deforestation obtained by random forest model(Source: Au
 <span>  memsize <span class="op">=</span> <span class="fl">24</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p>After classification, we can smooth the probability cube and then label the resulting smoothed probabilities to obtain a classified map.</p>
-<div class="sourceCode" id="cb143"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb189"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Smoothen the probability map</span></span>
 <span><span class="va">rondonia_20LMR_bayes_tcnn</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_smooth.html">sits_smooth</a></span><span class="op">(</span></span>
 <span>  <span class="va">rondonia_20LMR_probs_tcnn</span>,</span>
@@ -346,9 +349,9 @@ Figure 69: Final map of deforestation obtained by random forest model(Source: Au
 <span>  tmap_options <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span><span class="st">"legend_text_size"</span> <span class="op">=</span> <span class="fl">0.7</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <div class="figure" style="text-align: center">
-<span style="display:block;" id="fig:unnamed-chunk-143"></span>
-<img src="sitsbook_files/figure-html/unnamed-chunk-143-1.png" alt="Final map of deforestation obtained using TempCNN model (Source: Authors)." width="90%"><p class="caption">
-Figure 70: Final map of deforestation obtained using TempCNN model (Source: Authors).
+<span style="display:block;" id="fig:unnamed-chunk-15"></span>
+<img src="09-rasterclassification_files/figure-html/unnamed-chunk-15-1.png" alt="Final map of deforestation obtained using TempCNN model (source: authors)." width="90%"><p class="caption">
+Figure 38: Final map of deforestation obtained using TempCNN model (source: authors).
 </p>
 </div>
 </div>
@@ -358,7 +361,7 @@ Figure 70: Final map of deforestation obtained using TempCNN model (Source: Auth
 </h2>
 <p>Reclassification of a remote sensing map refers to changing the classes assigned to different pixels in the image. The purpose of reclassification is to modify the information contained in the image to better suit a specific use case. In <code>sits</code>, reclassification involves assigning new classes to pixels based on additional information from a reference map. Users define rules according to the desired outcome. These rules are then applied to the classified map to produce a new map with updated classes.</p>
 <p>To illustrate the reclassification in <code>sits</code>, we take a classified data cube stored in the <code>sitsdata</code> package. As discussed in Chapter <a href="https://e-sensing.github.io/sitsbook/earth-observation-data-cubes.html">Earth observation data cubes</a>, <code>sits</code> can create a data cube from a classified image file. Users need to provide the original data source and collection, the directory where data is stored (<code>data_dir</code>), the information on how to retrieve data cube parameters from file names (<code>parse_info</code>), and the labels used in the classification.</p>
-<div class="sourceCode" id="cb144"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb190"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Open classification map</span></span>
 <span><span class="va">data_dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html">system.file</a></span><span class="op">(</span><span class="st">"extdata/Rondonia-Class"</span>, package <span class="op">=</span> <span class="st">"sitsdata"</span><span class="op">)</span></span>
 <span><span class="va">rondonia_class</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_cube.html">sits_cube</a></span><span class="op">(</span></span>
@@ -366,7 +369,8 @@ Figure 70: Final map of deforestation obtained using TempCNN model (Source: Auth
 <span>  collection <span class="op">=</span> <span class="st">"SENTINEL-2-L2A"</span>,</span>
 <span>  data_dir <span class="op">=</span> <span class="va">data_dir</span>,</span>
 <span>  parse_info <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span></span>
-<span>    <span class="st">"satellite"</span>, <span class="st">"sensor"</span>, <span class="st">"tile"</span>, <span class="st">"start_date"</span>, <span class="st">"end_date"</span>,</span>
+<span>    <span class="st">"satellite"</span>, <span class="st">"sensor"</span>,</span>
+<span>    <span class="st">"tile"</span>, <span class="st">"start_date"</span>, <span class="st">"end_date"</span>,</span>
 <span>    <span class="st">"band"</span>, <span class="st">"version"</span></span>
 <span>  <span class="op">)</span>,</span>
 <span>  bands <span class="op">=</span> <span class="st">"class"</span>,</span>
@@ -384,21 +388,22 @@ Figure 70: Final map of deforestation obtained using TempCNN model (Source: Auth
 <span>  tmap_options <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span><span class="st">"legend_text_size"</span> <span class="op">=</span> <span class="fl">0.7</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <div class="figure" style="text-align: center">
-<span style="display:block;" id="fig:unnamed-chunk-144"></span>
-<img src="sitsbook_files/figure-html/unnamed-chunk-144-1.png" alt="Original classification map (Source: Authors)." width="100%"><p class="caption">
-Figure 71: Original classification map (Source: Authors).
+<span style="display:block;" id="fig:unnamed-chunk-16"></span>
+<img src="09-rasterclassification_files/figure-html/unnamed-chunk-16-1.png" alt="Original classification map (source: authors)." width="100%"><p class="caption">
+Figure 17: Original classification map (source: authors).
 </p>
 </div>
 <p>The above map shows the total extent of deforestation by clear cuts estimated by the <code>sits</code> random forest algorithm in an area in Rondonia, Brazil, based on a time series of Sentinel-2 images for the period 2020-06-04 to 2021-08-26. Suppose we want to estimate the deforestation that occurred from June 2020 to August 2021. We need a reference map containing information on forest cuts before 2020.</p>
 <p>In this example, we use as a reference the PRODES deforestation map of Amazonia created by Brazil’s National Institute for Space Research (INPE). This map is produced by visual interpretation. PRODES measures deforestation every year, starting from August of one year to July of the following year. It contains classes that represent the natural world (Forest, Water, NonForest, and NonForest2) and classes that capture the yearly deforestation increments. These classes are named “dYYYY” and “rYYYY”; the first refers to deforestation in a given year (e.g., “d2008” for deforestation for August 2007 to July 2008); the second to places where the satellite data is not sufficient to determine the land class (e.g., “r2010” for 2010). This map is available on package <code>sitsdata</code>, as shown below.</p>
-<div class="sourceCode" id="cb145"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb191"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">data_dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html">system.file</a></span><span class="op">(</span><span class="st">"extdata/PRODES"</span>, package <span class="op">=</span> <span class="st">"sitsdata"</span><span class="op">)</span></span>
 <span><span class="va">prodes_2021</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_cube.html">sits_cube</a></span><span class="op">(</span></span>
 <span>  source <span class="op">=</span> <span class="st">"USGS"</span>,</span>
 <span>  collection <span class="op">=</span> <span class="st">"LANDSAT-C2L2-SR"</span>,</span>
 <span>  data_dir <span class="op">=</span> <span class="va">data_dir</span>,</span>
 <span>  parse_info <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span></span>
-<span>    <span class="st">"product"</span>, <span class="st">"sensor"</span>, <span class="st">"tile"</span>, <span class="st">"start_date"</span>, <span class="st">"end_date"</span>,</span>
+<span>    <span class="st">"product"</span>, <span class="st">"sensor"</span>,</span>
+<span>    <span class="st">"tile"</span>, <span class="st">"start_date"</span>, <span class="st">"end_date"</span>,</span>
 <span>    <span class="st">"band"</span>, <span class="st">"version"</span></span>
 <span>  <span class="op">)</span>,</span>
 <span>  bands <span class="op">=</span> <span class="st">"class"</span>,</span>
@@ -418,7 +423,7 @@ Figure 71: Original classification map (Source: Authors).
 <span>  <span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p>Since the labels of the deforestation map are specialized and are not part of the default <code>sits</code> color table, we define a legend for better visualization of the different deforestation classes.</p>
-<div class="sourceCode" id="cb146"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb192"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Use the RColorBrewer palette "YlOrBr" for the deforestation years</span></span>
 <span><span class="va">colors</span> <span class="op">&lt;-</span> <span class="fu">grDevices</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/grDevices/palettes.html">hcl.colors</a></span><span class="op">(</span>n <span class="op">=</span> <span class="fl">15</span>, palette <span class="op">=</span> <span class="st">"YlOrBr"</span><span class="op">)</span></span>
 <span><span class="co"># Define the legend for the deforestation map</span></span>
@@ -441,17 +446,17 @@ Figure 71: Original classification map (Source: Authors).
 <span>  <span class="st">"r2021"</span> <span class="op">=</span> <span class="st">"lightcyan"</span>, <span class="st">"Clouds2021"</span> <span class="op">=</span> <span class="st">"lightblue2"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p>Using this new legend, we can visualize the PRODES deforestation map.</p>
-<div class="sourceCode" id="cb147"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb193"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_view.html">sits_view</a></span><span class="op">(</span><span class="va">prodes_2021</span>, legend <span class="op">=</span> <span class="va">def_legend</span><span class="op">)</span></span></code></pre></div>
 <div class="figure" style="text-align: center">
 <span style="display:block;" id="fig:prodes"></span>
-<img src="images/view_prodes_2021.png" alt="Deforestation map produced by PRODES." width="90%"><p class="caption">
-Figure 72: Deforestation map produced by PRODES.
+<img src="images/view_prodes_2021.png" alt="Deforestation map produced by PRODES (source: authors)." width="90%"><p class="caption">
+Figure 50: Deforestation map produced by PRODES (source: authors).
 </p>
 </div>
 <p>Taking the PRODES map as our reference, we can include new labels in the classified map produced by <code>sits</code> using <code><a href="https://rdrr.io/pkg/sits/man/sits_reclassify.html">sits_reclassify()</a></code>. The new class name Defor_2020 will be applied to all pixels that PRODES considers that have been deforested before July 2020. We also include a Non_Forest class to include all pixels that PRODES takes as not covered by native vegetation, such as wetlands and rocky areas. The PRODES classes will be used as a mask over the <code>sits</code> deforestation map.</p>
 <p>The <code><a href="https://rdrr.io/pkg/sits/man/sits_reclassify.html">sits_reclassify()</a></code> operation requires the parameters: (a) <code>cube</code>, the classified data cube whose pixels will be reclassified; (b) <code>mask</code>, the reference data cube used as a mask; (c) <code>rules</code>, a named list. The names of the <code>rules</code> list will be the new label. Each new label is associated with a <code>mask</code> vector that includes the labels of the reference map that will be joined. <code><a href="https://rdrr.io/pkg/sits/man/sits_reclassify.html">sits_reclassify()</a></code> then compares the original and reference map pixel by pixel. For each pixel of the reference map whose labels are in one of the <code>rules</code>, the algorithm relabels the original map. The result will be a reclassified map with the original labels plus the new labels that have been masked using the reference map.</p>
-<div class="sourceCode" id="cb148"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb194"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Reclassify cube</span></span>
 <span><span class="va">rondonia_def_2021</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_reclassify.html">sits_reclassify</a></span><span class="op">(</span></span>
 <span>  cube <span class="op">=</span> <span class="va">rondonia_class</span>,</span>
@@ -482,9 +487,9 @@ Figure 72: Deforestation map produced by PRODES.
 <span>  tmap_options <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span><span class="st">"legend_text_size"</span> <span class="op">=</span> <span class="fl">0.7</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <div class="figure" style="text-align: center">
-<span style="display:block;" id="fig:unnamed-chunk-148"></span>
-<img src="sitsbook_files/figure-html/unnamed-chunk-148-1.png" alt="Deforestation map by sits masked by PRODES map (Source: Authors)." width="100%"><p class="caption">
-Figure 73: Deforestation map by sits masked by PRODES map (Source: Authors).
+<span style="display:block;" id="fig:unnamed-chunk-20"></span>
+<img src="09-rasterclassification_files/figure-html/unnamed-chunk-20-1.png" alt="Deforestation map by sits masked by PRODES map (source: authors)." width="100%"><p class="caption">
+Figure 19: Deforestation map by sits masked by PRODES map (source: authors).
 </p>
 </div>
 <p>The reclassified map has been split into deforestation before mid-2020 (using the PRODES map) and the areas classified by <code>sits</code> that are taken as being deforested from mid-2020 to mid-2021. This allows experts to measure how much deforestation occurred in this period according to <code>sits</code> and compare the result with the PRODES map.</p>
@@ -526,7 +531,7 @@ Figure 73: Deforestation map by sits masked by PRODES map (Source: Authors).
 <footer class="bg-primary text-light mt-5"><div class="container"><div class="row">
 
   <div class="col-12 col-md-6 mt-3">
-    <p>"<strong><strong>sits</strong>: Satellite Image Time Series Analysis on Earth Observation Data Cubes</strong>" was written by Gilberto Camara, Rolf Simoes, Felipe Souza, Charlotte Pelletier, Alber Sanchez, Pedro R. Andrade, Karine Ferreira, Gilberto Queiroz. It was last built on 2023-12-27.</p>
+    <p>"<strong><strong>sits</strong>: Satellite Image Time Series Analysis on Earth Observation Data Cubes</strong>" was written by Gilberto Camara, Rolf Simoes, Felipe Souza, Felipe Menino, Charlotte Pelletier, Pedro R. Andrade, Karine Ferreira, Gilberto Queiroz. It was last built on 2024-08-08.</p>
   </div>
 
   <div class="col-12 col-md-6 mt-3">

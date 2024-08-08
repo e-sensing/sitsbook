@@ -7,6 +7,13 @@ dir.create("./tempdir/chp3")
 
 <a href="https://www.kaggle.com/esensing/introduction-to-sits" target="_blank"><img src="https://kaggle.com/static/images/open-in-kaggle.svg"/></a>
 
+
+## Who is this book for?{-}
+
+This book is intended for land use change experts and researchers, allowing them to harness the power of big Earth observation data sets. We aim to provide readers with the means to produce high-quality maps of land use and land cover, guiding them through all necessary steps to achieve good results. Given the natural world's complexity and huge variations in human-nature interactions, we consider that only local experts who know their countries and their ecosystems can extract full information from big EO data. 
+
+One group of readers that we are particularly keen to engage with are the national authorities on forest, agriculture, and statistics in developing countries. We aim to foster a collaborative environment where they can use EO data to enhance their national land use and cover estimates, thereby supporting sustainable development policies. To achieve this goal, `sits` has strong backing from the FAO Expert Group on the Use of Earth Observation data (FAO-EOSTAT)[https://www.fao.org/in-action/eostat]. FAO-EOSTAT is at the forefront of using advanced EO data analysis methods for agricultural statistics in developing countries [@DeSimone2022][@DeSimone2022a].
+
 ## Why work with satellite image time series?{-}
 
 Satellite images are the most comprehensive source of data about our environment.  Covering a large area of the Earth's surface, images allow researchers to study regional and global changes. Sensors capture data in multiple spectral bands to measure the physical, chemical, and biological properties of the Earth's surface. By observing the same location multiple times, satellites provide data on changes in the environment and survey areas that are difficult to observe from the ground. Given its unique features, images offer essential information for many applications, including deforestation, crop production, food security, urban footprints, water scarcity, and land degradation.
@@ -21,7 +28,7 @@ A time series is a set of data points collected at regular intervals over time. 
 
 The `sits` package uses satellite image time series for land classification, using  a *time-first, space-later* approach. In the data preparation part, collections of big Earth observation images are organized as data cubes. Each spatial location of a data cube is associated with a time series. Locations with known labels train a machine learning algorithm, which classifies all time series of a data cube, as shown in Figure \@ref(fig:gview).
 
-```{r gview, echo = FALSE, out.width = "70%", out.height = "70%", fig.align="center", fig.cap="Using time series for land classification (Source: Authors)."}
+```{r gview, echo = FALSE, out.width = "70%", out.height = "70%", fig.align="center", fig.cap="Using time series for land classification (source: authors)."}
 knitr::include_graphics("./images/sits_general_view.png")
 ```
 
@@ -86,7 +93,7 @@ kableExtra::kbl(sits_api,
 ```
 
 
-```{r api, echo = FALSE, out.width = "100%", out.height = "100%", fig.align="center", fig.cap="Main functions of the sits API (Source: Authors)."}
+```{r api, echo = FALSE, out.width = "100%", out.height = "100%", fig.align="center", fig.cap="Main functions of the sits API (source: authors)."}
 
 knitr::include_graphics("./images/sits_api.png") 
 ```
@@ -197,7 +204,7 @@ summary(samples_matogrosso_mod13q1)
 
 It is helpful to plot the dispersion of the time series. In what follows, for brevity, we will filter only one label (`Forest`) and select one index (NDVI). Note that for filtering the label we use a function from `dplyr` package, while for selecting the index we use `sits_select()`. We use two different functions for selection because of they way metadata is stored in a samples files. The labels for the samples are listed in column `label` in the samples tibble, as shown above. In this case, one can use functions from the `dplyr` package to extract subsets. In particular, the function `dplyr::filter` retaining all rows that satisfy a given condition. In the above example, the result of `dplyr::filter` is the set of samples associated to the "Forest" label. The second selection involves obtaining only the values for the NDVI band. This operation requires access to the `time_series` column, which is stored as a list. In this case, selection with `dplyr::filter` will not work. To handle such cases, `sits` provides `sits_select()` to select subsets inside the `time_series` list. 
 
-```{r, timeseriesforest, out.width = "80%", tidy="styler", fig.align = 'center', fig.cap="Joint plot of all samples in band NDVI for label Forest (Source: Authors).", strip.white = FALSE}
+```{r, timeseriesforest, out.width = "80%", tidy="styler", fig.align = 'center', fig.cap="Joint plot of all samples in band NDVI for label Forest (source: authors).", strip.white = FALSE}
 # select all samples with label "Forest"
 samples_forest <- dplyr::filter(
     samples_matogrosso_mod13q1, 
@@ -221,7 +228,7 @@ The next step is to train a machine learning (ML) model using `sits_train()`. It
 
 Since the time series data has four attributes (EVI, NDVI, NIR, and MIR) and the data cube images have only two, we select the NDVI and EVI values and use the resulting data for training. To build the classification model, we use a random forest model called by `sits_rfor()`. Results from the random forest model can vary between different runs, due to the stochastic nature of the algorithm, For this reason, in the code fragment below, we set the seed of R's pseudo-random number generation explicitly to ensure the same results are produced for documentation purposes.
 
-```{r, out.width = "80%", tidy="styler", fig.align="center", fig.cap="Most relevant variables of trained random forest model (Source: Authors)."}
+```{r, out.width = "80%", tidy="styler", fig.align="center", fig.cap="Most relevant variables of trained random forest model (source: authors)."}
 set.seed(03022024)
 # Select the bands NDVI and EVI
 samples_2bands <- sits_select(
@@ -242,7 +249,7 @@ plot(rf_model)
 
 After training the machine learning model, the next step is to classify the data cube using `sits_classify()`. This function produces a set of raster probability maps, one for each class. For each of these maps, the value of a pixel is proportional to the probability that it belongs to the class. This function has two mandatory parameters: `data`, the data cube or time series tibble to be classified; and `ml_model`, the trained ML model. Optional parameters include: (a) `multicores`, number of cores to be used; (b) `memsize`, RAM used in the classification; (c) `output_dir`, the directory where the classified raster files will be written. Details of the classification process are available in "Image classification in data cubes".
 
-```{r, out.width = "90%", tidy="styler", fig.align = 'center', fig.cap = "Probability map for class Forest (Source: Authors)."}
+```{r, out.width = "90%", tidy="styler", fig.align = 'center', fig.cap = "Probability map for class Forest (source: authors)."}
 # Classify the raster image
 sinop_probs <- sits_classify(
     data = sinop_cube, 
@@ -252,7 +259,8 @@ sinop_probs <- sits_classify(
     output_dir = "./tempdir/chp3"
 )
 # Plot the probability cube for class Forest
-plot(sinop_probs, labels = "Forest", palette = "YlGnBu")
+plot(sinop_probs, labels = "Forest", palette = "BuGn")
+
 ```
 
 After completing the classification, we plot the probability maps for class `Forest`. Probability maps are helpful to visualize the degree of confidence the classifier assigns to the labels for each pixel. They can be used to produce uncertainty information and support active learning, as described in Chapter [Image classification in data cubes](https://e-sensing.github.io/sitsbook/image-classification-in-data-cubes.html).
@@ -261,7 +269,7 @@ After completing the classification, we plot the probability maps for class `For
 
 When working with big Earth observation data, there is much variability in each class. As a result, some pixels will be misclassified. These errors are more likely to occur in transition areas between classes. To address these problems, `sits_smooth()` takes a probability cube as input and  uses the class probabilities of each pixel's neighborhood to reduce labeling uncertainty. Plotting the smoothed probability map for class Forest shows that most outliers have been removed.
 
-```{r, out.width = "90%",  tidy="styler", fig.align = 'center', fig.cap = "Smoothed probability map for class Forest (Source: Authors)."}
+```{r, out.width = "90%",  tidy="styler", fig.align = 'center', fig.cap = "Smoothed probability map for class Forest (source: authors)."}
 # Perform spatial smoothing
 sinop_bayes <- sits_smooth(
     cube = sinop_probs,
@@ -269,20 +277,20 @@ sinop_bayes <- sits_smooth(
     memsize = 8,
     output_dir = "./tempdir/chp3"
 )
-plot(sinop_bayes, labels = "Forest", palette = "YlGnBu")
+plot(sinop_bayes, labels = "Forest", palette = "BuGn")
 ```
 
 ## Labeling a probability data cube {.unnumbered}
 
 After removing outliers using local smoothing, the final classification map can be obtained using `sits_label_classification()`. This function assigns each pixel to the class with the highest probability.
 
-```{r, out.width = "100%", tidy="styler", fig.cap = "Classification map for Sinop (Source: Authors).", fig.align="center"}
+```{r, out.width = "100%", tidy="styler", fig.align="center", fig.cap = "Classification map for Sinop (source: authors)."}
 # Label the probability file 
 sinop_map <- sits_label_classification(
     cube = sinop_bayes, 
     output_dir = "./tempdir/chp3"
 )
-plot(sinop_map, title = "Sinop Classification Map")
+plot(sinop_map)
 ```
 
 The resulting classification files can be read by QGIS. Links to the associated files are available in the `sinop_map` object in the nested table `file_info`.
@@ -303,26 +311,23 @@ sits_colors_qgis(sinop_map, file = "./tempdir/chp3/qgis_style.xml")
 
 The `plot()` function produces a graphical display of data cubes, time series, models, and SOM maps. For each type of data, there is a dedicated version of the `plot()` function. See `?plot.sits` for details. Plotting of time series, models and SOM outputs uses the `ggplot2` package; maps are plotted using the `tmap` package. When plotting images and classified maps, users can control the output with three main parameters:
 
-1. `pallete`: color scheme to be used for false color maps, which should be one of the `RColorBrewer` palettes. These palettes have been designed to be effective for map display by Prof Cynthia Brewer as described at the [Brewer website](http://colorbrewer2.org). To see the available palettes, please run `RColorBrewer::display.brewer.all(type = "seq")` and `RColorBrewer::display.brewer.all(type = "div")`. By default, optical images use the `RdYlGn` scheme, SAR images use `Greys`, and DEM cubes use `Spectral`. 
-2. `rev`: whether the color palette should be reversed; `TRUE` for DEM cubes, and `FALSE` otherwise.
-3. `scale`: global scale parameter used by `tmap`. All font sizes, symbol sizes, border widths, and line widths are controlled by this value. Default is 0.75; users should vary this parameter and see the results.
-4. `style`: method to process the color scale in `tmap`. Options are "cont", "order", and "log10". The first maps the values of col to a smooth gradient, the second maps the order of values of col to a smooth gradient, and the third uses a logarithmic transformation.
-5. `max_cog_size`: for cloud-oriented geotiff files (COG), sets the maximum number of lines or columns of the COG overview to be used for plotting. 
+- `pallete`: color scheme to be used for false color maps, which should be one of the `RColorBrewer` palettes. These palettes have been designed to be effective for map display by Prof Cynthia Brewer as described at the [Brewer website](http://colorbrewer2.org). To see the available palettes, please run `RColorBrewer::display.brewer.all(type = "seq")` and `RColorBrewer::display.brewer.all(type = "div")`. By default, optical images use the `RdYlGn` scheme, SAR images use `Greys`, and DEM cubes use `Spectral`. 
+- `rev`: whether the color palette should be reversed; `TRUE` for DEM cubes, and `FALSE` otherwise.
+- `scale`: global scale parameter used by `tmap`. All font sizes, symbol sizes, border widths, and line widths are controlled by this value. Default is 0.75; users should vary this parameter and see the results.
+- `first_quantile`: 1st quantile for stretching images (default = 0.05)
+- `last_quantile`: last quantile for stretching images (default = 0.95)
+- `max_cog_size`: for cloud-oriented geotiff files (COG), sets the maximum number of lines or columns of the COG overview to be used for plotting. 
 
 COG overviews are reduced-resolution versions of the main image, stored within the same file. Overviews allow for quick rendering at lower zoom levels, improving performance when dealing with large images. Usually, a single GeoTIFF will have many overviews, to match different zoom levels. The parameter `max_cog_size` controls the size of the overview which will be used for visualisation.
 
 The following optional parameters are available to allow for detailed control over the plot output:
 
-1. `first_quantile`: 1st quantile for stretching images (default = 0.05)
-2. `last_quantile`: last quantile for stretching images (default = 0.95)
+
 3. `graticules_labels_size`: size of coordinates labels (default = 0.8)
 4. `legend_title_size`: relative size of legend title (default = 1.0)
 5. `legend_text_size`: relative size of legend text (default = 1.0)
 6. `legend_bg_color`: color of legend background (default = "white")
 7. `legend_bg_alpha`: legend opacity (default = 0.5)
-8. `legend_width`: relative width of legend (default = 1.0)
-9. `legend_position`: 2D position of legend (default = c("left", "bottom"))
-10. `legend_height`: relative height of legend (default = 1.0)
 
 
 ## Visualization of data cubes in interactive maps {.unnumbered}

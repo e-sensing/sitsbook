@@ -4,7 +4,7 @@
 source("common.R")
 ```
 
-```{r}
+```{r, echo = FALSE, eval = TRUE}
 # Create a directory to store files
 if (!file.exists("./tempdir/chp13"))
     dir.create("./tempdir/chp13")
@@ -22,7 +22,7 @@ In what follows, we will use the same sample dataset and data cube used in Chapt
 
 The first step is to recover the data cube which is available in the `sitsdata` package, and to select only the spectral bands. 
 
-```{r, tidy = "styler", echo = TRUE, eval = TRUE, out.width="100%", fig.align="center", fig.cap= "Subset of Sentinel-2 tile 20LMR (Source: Authors)."}
+```{r, tidy = "styler", echo = TRUE, eval = TRUE, out.width="100%", fig.align="center", fig.cap= "Subset of Sentinel-2 tile 20LMR (source: authors)."}
 # Files are available in a local directory 
 data_dir <- system.file("extdata/Rondonia-20LMR/", package = "sitsdata")
 # Read data cube
@@ -37,7 +37,7 @@ ro_cube_20LMR <- sits_select(
   bands = c("B02", "B03", "B04", "B05", "B06", "B07", "B08", "B11", "B12", "B8A")
 )
 # plot one time step of the cube
-plot(ro_cube_20LMR, red = "B11", green = "B8A", blue = "B02", date = "2022-08-17")
+plot(ro_cube_20LMR, blue = "B02", green = "B8A", red = "B11", date = "2022-08-17")
 ```
 
 We will train three models: Random Forests (RF), Light Temporal Attention Encoder (LTAE), and Temporal Convolution Neural Networks (TempCNN), classify the cube with them, and then combine their results. The example uses all spectral bands. We first run the RF classification.
@@ -92,7 +92,7 @@ ro_cube_20LMR_rfor_variance <- sits_variance(
 summary(ro_cube_20LMR_rfor_variance)
 ```
 
-Based on the variance values, we apply the smoothness hyperparameter according to the recommendations proposed before. We choose values of $\sigma^2_{k}$ that reflect our prior expectation of the spatial patterns of each class. For classes \code{Clear_Cut_Vegetation} and \code{Clear_Cut_Burned_Area}, to produce denser spatial clusters and remove "salt-and-pepper" outliers, we take $\sigma^2_{k}$ values in 95%-100% range.  In the case of the most frequent classes \code{Forest} and \code{Clear_Cut_Bare_Soil} we want to preserve their original spatial shapes as much as possible; the same logic applies to less frequent classes \code{Water} and \code{Wetlands}. For this reason, we set  $\sigma^2_{k}$ values in the 75%-80% range for these classes. The class spatial patterns correspond to our prior expectations.
+Based on the variance values, we apply the smoothness hyperparameter according to the recommendations proposed before. We choose values of $\sigma^2_{k}$ that reflect our prior expectation of the spatial patterns of each class. For classes `Clear_Cut_Vegetation` and `Clear_Cut_Burned_Area`, to produce denser spatial clusters and remove "salt-and-pepper" outliers, we take $\sigma^2_{k}$ values in 95%-100% range.  In the case of the most frequent classes `Forest` and `Clear_Cut_Bare_Soil` we want to preserve their original spatial shapes as much as possible; the same logic applies to less frequent classes `Water` and `Wetland`. For this reason, we set  $\sigma^2_{k}$ values in the 75%-80% range for these classes. The class spatial patterns correspond to our prior expectations.
 
 ```{r, tidy = "styler", echo = TRUE, eval = FALSE}
 ro_cube_20LMR_rfor_bayes <- sits_smooth(
@@ -128,7 +128,7 @@ ro_cube_20LMR_rfor_bayes <- sits_cube(
     data_dir = data_dir, 
     bands = "bayes",
     labels = labels,
-    version = "rfor-raster"
+    version = "rfor"
 )
 ro_cube_20LMR_rfor_class <- sits_cube(
     source = "MPC", 
@@ -136,12 +136,12 @@ ro_cube_20LMR_rfor_class <- sits_cube(
     data_dir = data_dir, 
     bands = "class",
     labels = labels,
-    version = "rfor-raster"
+    version = "rfor"
 )
 ```
 
 
-```{r, tidy = "styler", warning = FALSE, out.width = "100%", fig.align="center", fig.cap= "Land classification in Rondonia using a random forest algorithm  (Source: Authors)."}
+```{r, tidy = "styler", warning = FALSE, out.width = "100%", fig.align="center", fig.cap= "Land classification in Rondonia using a random forest algorithm  (source: authors)."}
 plot(ro_cube_20LMR_rfor_class, 
       tmap_options = list("legend_text_size" = 0.71))
 ```
@@ -180,15 +180,15 @@ ro_cube_20LMR_tcnn_bayes <- sits_smooth(
     output_dir = "./tempdir/chp13", 
     window_size = 11,
     smoothness = c(  
-      "Clear_Cut_Bare_Soil" = 2.3, 
-      "Clear_Cut_Burned_Area" = 12.5, 
-      "Clear_Cut_Vegetation" =  17.0, 
-      "Forest" = 11.5, 
-      "Mountainside_Forest" = 2.6,
-      "Riparian_Forest" = 39.0, 
-      "Seasonally_Flooded" = 28.0,
-      "Water" = 22.3, 
-      "Wetland" = 2.5),
+      "Clear_Cut_Bare_Soil" = 1.5, 
+      "Clear_Cut_Burned_Area" = 20.0, 
+      "Clear_Cut_Vegetation" =  25.0, 
+      "Forest" = 4.0, 
+      "Mountainside_Forest" = 3.0,
+      "Riparian_Forest" = 40.0, 
+      "Seasonally_Flooded" = 30.0,
+      "Water" = 1.0, 
+      "Wetland" = 2.0),
     multicores = 2,
     memsize = 6,
     version = "tcnn"
@@ -234,7 +234,7 @@ ro_cube_20LMR_tcnn_class <- sits_cube(
 )
 ```
 
-```{r, tidy = "styler", warning = FALSE, out.width = "100%", fig.align="center", fig.cap= "Land classification in Rondonia using tempCNN (Source: Authors)."}
+```{r, tidy = "styler", warning = FALSE, out.width = "100%", fig.align="center", fig.cap= "Land classification in Rondonia using tempCNN (source: authors)."}
 plot(ro_cube_20LMR_tcnn_class,  
      tmap_options = list("legend_text_size" = 0.7))
 ```
@@ -274,15 +274,15 @@ ro_cube_20LMR_ltae_bayes <- sits_smooth(
     output_dir = "./tempdir/chp13", 
     window_size = 11,
     smoothness = c(  
-      "Clear_Cut_Bare_Soil" = 2.3, 
-      "Clear_Cut_Burned_Area" = 18.0, 
-      "Clear_Cut_Vegetation" =  20.0, 
-      "Forest" = 5.0, 
-      "Mountainside_Forest" = 3.0,
-      "Riparian_Forest" = 30.0, 
+      "Clear_Cut_Bare_Soil" = 1.2, 
+      "Clear_Cut_Burned_Area" = 10.0, 
+      "Clear_Cut_Vegetation" = 15.0, 
+      "Forest" = 4.0, 
+      "Mountainside_Forest" = 8.0,
+      "Riparian_Forest" = 25.0, 
       "Seasonally_Flooded" = 30.0,
-      "Water" = 22.3, 
-      "Wetland" = 2.5),
+      "Water" = 0.3, 
+      "Wetland" = 1.8),
     multicores = 2,
     memsize = 6,
     version = "ltae"
@@ -328,7 +328,7 @@ ro_cube_20LMR_ltae_class <- sits_cube(
 )
 ```
 
-```{r, tidy = "styler", warning = FALSE, out.width = "100%", fig.align="center", fig.cap= "Land classification in Rondonia using tempCNN (Source: Authors)."}
+```{r, tidy = "styler", warning = FALSE, out.width = "100%", fig.align="center", fig.cap= "Land classification in Rondonia using tempCNN (source: authors)."}
 plot(ro_cube_20LMR_ltae_class,  
      tmap_options = list("legend_text_size" = 0.7))
 ```
@@ -358,7 +358,7 @@ The study area presents many challenges for land classification, given the prese
 
 Given the differences and complementaries between the three predicted outcomes, combining them using `sits_combine_predictions()` is useful. This function takes the following arguments: (a) `cubes`, a list of the cubes to be combined. These cubes should be probability cubes generated by which optionally may have been smoothened; (b) `type`, which indicates how to combine the probability maps. The options are `average`, which performs a weighted mean of the probabilities, and  `uncertainty`, which uses the uncertainty cubes to combine the predictions; (c) `weights`, a vector of weights to be used to combine the predictions when `average` is selected; (d) `uncertainty_cubes`, a list of uncertainty cubes associated to the predictions;  (e) `multicores`, number of cores to be used; (f) `memsize`, RAM used in the classification; (g) `output_dir`, the directory where the classified raster files will be written.
 
-```{r, tidy = "styler", out.width = "100%", fig.align="center", cache = TRUE, fig.cap= "Land classification in Rondonia using the average of the probabilities produced by Random Forest and SVM algorithms (Source: Authors)."}
+```{r, tidy = "styler", out.width = "100%", fig.align="center", cache = TRUE, fig.cap= "Land classification in Rondonia using the average of the probabilities produced by Random Forest and SVM algorithms (source: authors)."}
 # Combine the two predictions by taking the average of the probabilities for each class
 ro_cube_20LMR_average_probs <- sits_combine_predictions(
   cubes = list(ro_cube_20LMR_tcnn_bayes, 
@@ -380,7 +380,7 @@ ro_cube_20LMR_average_class <- sits_label_classification(
     multicores = 4)
 ```
 
-```{r, tidy = "styler", out.width = "100%", fig.align="center", fig.cap= "Land classification in Rondonia using the average of the probabilities produced by Random Forest and SVM algorithms (Source: Authors)."}
+```{r, tidy = "styler", out.width = "100%", fig.align="center", fig.cap= "Land classification in Rondonia using the average of the probabilities produced by Random Forest and SVM algorithms (source: authors)."}
 
 # Plot the second version of the classified cube
 plot(ro_cube_20LMR_average_class, 

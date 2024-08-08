@@ -4,6 +4,79 @@
 
 This Chapter contains technical details on the algorithms available in `sits`. It is intended to support those that want to understand how the package works and also want to contribute to its development.
 
+## How colors work in sits{-}
+
+In examples provided in the book, the color legend is taken from a predefined color pallete provided by `sits`. The default color definition file used by `sits` has 220 class names, which can be shown using `sits_colors()`
+
+
+```
+#> [1] "Returning all available colors"
+```
+
+```
+#> # A tibble: 236 × 2
+#>    name                             color  
+#>    <chr>                            <chr>  
+#>  1 Evergreen_Broadleaf_Forest       #1E8449
+#>  2 Evergreen_Broadleaf_Forests      #1E8449
+#>  3 Tree_Cover_Broadleaved_Evergreen #1E8449
+#>  4 Forest                           #1E8449
+#>  5 Forests                          #1E8449
+#>  6 Closed_Forest                    #1E8449
+#>  7 Closed_Forests                   #1E8449
+#>  8 Mountainside_Forest              #229C59
+#>  9 Mountainside_Forests             #229C59
+#> 10 Open_Forest                      #53A145
+#> # ℹ 226 more rows
+```
+
+These colors are grouped by typical legends used by the Earth observation community, which include "IGBP", "UMD", "ESA_CCI_LC", "WORLDCOVER", "PRODES", "PRODES_VISUAL", "TERRA_CLASS", "TERRA_CLASS_PT". The following commands shows the colors associated with the IGBP legend [@Herold2009].
+
+
+``` r
+# Display default `sits` colors
+sits_colors_show(legend = "IGBP")
+```
+
+<div class="figure" style="text-align: center">
+<img src="15-annex_files/figure-html/unnamed-chunk-3-1.png" alt="Colors used in the sits package to represeny IGBP legend (source: authors)." width="100%" height="100%" />
+<p class="caption">(\#fig:unnamed-chunk-3)Colors used in the sits package to represeny IGBP legend (source: authors).</p>
+</div>
+
+
+The default color table can be extended using `sits_colors_set()`. As an example of a user-defined color table, consider a definition that covers level 1 of the Anderson Classification System used in the US National Land Cover Data, obtained by defining a set of colors associated to a new legend. The colors should be defined by HEX values and the color names should consist of a single string; multiple names need to be connected with an underscore("_").
+
+``` r
+# Define a color table based on the Anderson Land Classification System
+us_nlcd <- tibble::tibble(name = character(), color = character())
+us_nlcd <- us_nlcd |>
+  tibble::add_row(name = "Urban_Built_Up", color = "#85929E") |>
+  tibble::add_row(name = "Agricultural_Land", color = "#F0B27A") |>
+  tibble::add_row(name = "Rangeland", color = "#F1C40F") |>
+  tibble::add_row(name = "Forest_Land", color = "#27AE60") |>
+  tibble::add_row(name = "Water", color = "#2980B9") |>
+  tibble::add_row(name = "Wetland", color = "#D4E6F1") |>
+  tibble::add_row(name = "Barren_Land", color = "#FDEBD0") |>
+  tibble::add_row(name = "Tundra", color = "#EBDEF0") |>
+  tibble::add_row(name = "Snow_and_Ice", color = "#F7F9F9")
+# Load the color table into `sits`
+sits_colors_set(colors = us_nlcd, legend = "US_NLCD")
+# Show the new legend
+sits_colors_show(legend = "US_NLCD")
+```
+
+<div class="figure" style="text-align: center">
+<img src="15-annex_files/figure-html/unnamed-chunk-4-1.png" alt="Example of defining colors for the Anderson Land Classification Scheme(source: authors)." width="100%" height="80%" />
+<p class="caption">(\#fig:unnamed-chunk-4)Example of defining colors for the Anderson Land Classification Scheme(source: authors).</p>
+</div>
+
+The original default `sits` color table can be restored using `sits_colors_reset()`. 
+
+
+
+As an alternative, a legend can be used directly as a parameter to `plot()`. Please see the example provided in Section "Map Reclassification" in Chapter [Image classification in data cubes](https://e-sensing.github.io/sitsbook/image-classification-in-data-cubes.html). 
+
+
 ## How parallel processing works in virtual machines with CPUs{-}
 
 This section provides an overview of how `sits_classify()`, `sits_smooth()`, and `sits_label_classification()` process images in parallel. To achieve efficiency, `sits` implements a fault-tolerant multitasking procedure for big Earth observation data classification. The learning curve is shortened as there is no need to learn how to do multiprocessing. Image classification in `sits` is done by a cluster of independent workers linked to a virtual machine. To avoid communication overhead, all large payloads are read and stored independently; direct interaction between the main process and the workers is kept at a minimum. 
@@ -20,7 +93,7 @@ The approach for parallel processing in `sits`, depicted in Figure \@ref(fig:par
 6. After generating all subimages, join them to obtain the result.
 
 <div class="figure" style="text-align: center">
-<img src="images/sits_parallel.png" alt="Parallel processing in sits (Source: Simoes et al. (2021).  Reproduction under fair use doctrine)." width="90%" height="90%" />
+<img src="./images/sits_parallel.png" alt="Parallel processing in sits (Source: Simoes et al. (2021).  Reproduction under fair use doctrine)." width="90%" height="90%" />
 <p class="caption">(\#fig:par)Parallel processing in sits (Source: Simoes et al. (2021).  Reproduction under fair use doctrine).</p>
 </div>
 
@@ -264,7 +337,7 @@ data("samples_matogrosso_mod13q1", package = "sitsdata")
 # Create a data cube using local files
 sinop <- sits_cube(
   source = "BDC",
-  collection = "MOD13Q1-6",
+  collection = "MOD13Q1-6.1",
   data_dir = system.file("extdata/sinop", package = "sitsdata"),
   parse_info = c("X1", "X2", "tile", "band", "date")
 )
@@ -302,83 +375,57 @@ plot(sinop_map, title = "Sinop Classification Map")
 ```
 
 <div class="figure" style="text-align: center">
-<img src="15-annex_files/figure-html/unnamed-chunk-11-1.png" alt="Classification map for Sinop using LightGBM (Source: Authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-11)Classification map for Sinop using LightGBM (Source: Authors).</p>
+<img src="15-annex_files/figure-html/unnamed-chunk-15-1.png" alt="Classification map for Sinop using LightGBM (source: authors)." width="100%" />
+<p class="caption">(\#fig:unnamed-chunk-15)Classification map for Sinop using LightGBM (source: authors).</p>
 </div>
 
-The above example shows how it is possible to extend `sits` with new machine learning algorithms.
+## Adding functions to the `sits` API{-}
 
-## How colors work in sits{-}
+### General principles{-}
 
-In examples provided in the book, the color legend is taken from a predefined color pallete provided by `sits`. The default color definition file used by `sits` has 220 class names, which can be shown using `sits_colors()`
+New functions that build on the `sits` API should follow the general principles below.
 
+- The target audience for `sits` is the community of remote sensing experts with Earth Sciences background who want to use state-of-the-art data analysis methods with minimal investment in programming skills. The design of the `sits` API considers the typical workflow for land classification using satellite image time series and thus provides a clear and direct set of functions, which are easy to learn and master. 
 
-```
-#> [1] "Returning all available colors"
-```
+- For this reason, we welcome contributors that provide useful additions to the existing API, such as new ML/DL classification algorithms. In case of a new API function, before making a pull request please raise an issue stating your rationale for a new function.
 
-```
-#> # A tibble: 241 × 2
-#>    name                             color  
-#>    <chr>                            <chr>  
-#>  1 Evergreen_Broadleaf_Forest       #1E8449
-#>  2 Evergreen_Broadleaf_Forests      #1E8449
-#>  3 Tree_Cover_Broadleaved_Evergreen #1E8449
-#>  4 Forest                           #1E8449
-#>  5 Forests                          #1E8449
-#>  6 Closed_Forest                    #1E8449
-#>  7 Closed_Forests                   #1E8449
-#>  8 Mountainside_Forest              #229C59
-#>  9 Mountainside_Forests             #229C59
-#> 10 Open_Forest                      #53A145
-#> # ℹ 231 more rows
-```
+- Most functions in `sits` use the S3 programming model with a strong emphasis on generic methods wich are specialized depending on the input data type. See for example the implementation of the `sits_bands()` function. 
 
-These colors are grouped by typical legends used by the Earth observation community, which include "IGBP", "UMD", "ESA_CCI_LC", "WORLDCOVER", "PRODES", "PRODES_VISUAL", "TERRA_CLASS", "TERRA_CLASS_PT". The following commands shows the colors associated with the IGBP legend [@Herold2009].
+- Please do not include contributed code using the S4 programming model. Doing so would break the structure and the logic of existing code. Convert your code from S4 to S3.
 
+- Use generic functions as much as possible, as they improve modularity and maintenance. If your code has decision points using `if-else` clauses, such as `if A, do X; else do Y` consider using generic functions. 
 
-``` r
-# Display default `sits` colors
-sits_colors_show(legend = "IGBP")
-```
+- Functions that use the `torch` package use the R6 model to be compatible with that package. See for example, the code in `sits_tempcnn.R` and `api_torch.R`. To convert `pyTorch` code to R and include it is straightforward. Please see the [Technical Annex](https://e-sensing.github.io/sitsbook/technical-annex.html) of the sits on-line book.
 
-<div class="figure" style="text-align: center">
-<img src="15-annex_files/figure-html/unnamed-chunk-13-1.png" alt="Colors used in the sits package to represeny IGBP legend (Source: Authors)." width="100%" height="100%" />
-<p class="caption">(\#fig:unnamed-chunk-13)Colors used in the sits package to represeny IGBP legend (Source: Authors).</p>
-</div>
+- The sits code relies on the packages of the `tidyverse` to work with tables and list. We use `dplyr` and `tidyr` for data selection and wrangling, `purrr` and `slider` for loops on lists and table, `lubridate` to handle dates and times. 
+
+### Adherence to the `sits` data types{-}
+
+The `sits` package in built on top of three data types: time series tibble, data cubes and models. Most `sits` functions have one or more of these types as inputs and one of them as return values. The time series tibble contains data and metadata. The first six columns contain the metadata: spatial and temporal information, the label assigned to the sample, and the data cube from where the data has been extracted. The time_series column contains the time series data for each spatiotemporal location. All time series tibbles are objects of class `sits`. 
+
+The `cube` data type is designed to store metadata about image files. In principle, images which are part of a data cube share the same geographical region, have the same bands, and have been regularized to fit into a pre-defined temporal interval. Data cubes in `sits` are organized by tiles. A tile is an element of a satellite's mission reference system, for example MGRS for Sentinel-2 and WRS2 for Landsat. A `cube` is a tibble where each row contains information about data covering one tile. Each row of the cube tibble contains a column named `file_info`; this column contains a list that stores a tibble 
+
+The `cube` data type is specialised in `raster_cube` (ARD images), `vector_cube` (ARD cube with segmentation vectors). `probs_cube` (probabilities produced by classification algorithms on raster data), `probs_vector_cube`(probabilites generated by vector classification of segments),  `uncertainty_cube` (cubes with uncertainty information), and `class_cube` (labelled maps). See the code in `sits_plot.R` as an example of specialisation of `plot` to handle different classes of raster data. 
+
+All ML/DL models in `sits` which are the result of `sits_train` belong to the `ml_model` class. In addition, models are assigned a second class, which is unique to ML models (e.g, `rfor_model`, `svm_model`) and generic for all DL `torch` based models (`torch_model`). The class information is used for plotting models and for establishing if a model can run on GPUs. 
+
+### Literal values, error messages, and testing{-}
+
+The internal `sits` code has no literal values, which are all stored in the YAML configuration files `./inst/extdata/config.yml` and `./inst/extdata/config_internals.yml`. The first file contains configuration parameters that are relevant to users, related to visualisation and plotting; the second contains parameters that are relevant only for developers. These values are accessible using the `.conf` function. For example, the value of the default size for ploting COG files is accessed using the command `.conf["plot", "max_size"]`. 
+
+Error messages are also stored outside of the code in the YAML configuration file `./inst/extdata/config_messages.yml`. These values are accessible using the `.conf` function. For example, the error associated to an invalid NA value for an input parameter is accessible using th function `.conf("messages", ".check_na_parameter")`. 
+
+We strive for high code coverage (> 90\%). Every parameter of all `sits` function (including internal ones) is checked for consistency. Please see `api_check.R`. 
 
 
-The default color table can be extended using `sits_colors_set()`. As an example of a user-defined color table, consider a definition that covers level 1 of the Anderson Classification System used in the US National Land Cover Data, obtained by defining a set of colors associated to a new legend. The colors should be defined by HEX values and the color names should consist of a single string; multiple names need to be connected with an underscore("_").
+### Supporting new STAC-based image catalogues 
 
-``` r
-# Define a color table based on the Anderson Land Classification System
-us_nlcd <- tibble::tibble(name = character(), color = character())
-us_nlcd <- us_nlcd |>
-  tibble::add_row(name = "Urban_Built_Up", color = "#85929E") |>
-  tibble::add_row(name = "Agricultural_Land", color = "#F0B27A") |>
-  tibble::add_row(name = "Rangeland", color = "#F1C40F") |>
-  tibble::add_row(name = "Forest_Land", color = "#27AE60") |>
-  tibble::add_row(name = "Water", color = "#2980B9") |>
-  tibble::add_row(name = "Wetland", color = "#D4E6F1") |>
-  tibble::add_row(name = "Barren_Land", color = "#FDEBD0") |>
-  tibble::add_row(name = "Tundra", color = "#EBDEF0") |>
-  tibble::add_row(name = "Snow_and_Ice", color = "#F7F9F9")
-# Load the color table into `sits`
-sits_colors_set(colors = us_nlcd, legend = "US_NLCD")
-# Show the new legend
-sits_colors_show(legend = "US_NLCD")
-```
+If you want to include a STAC-based catalogue not yet supported by `sits`, we encourage you to look at existing implementations of catalogues such as Microsoft Planetary Computer (MPC), Digital Earth Africa (DEA) and AWS. STAC-based catalogues in `sits` are associated to YAML description files, which are available in the directory `.inst/exdata/sources`. For example, the YAML file `config_source_mpc.yml` describes the contents of the MPC collections supported by `sits`. Please first provide an YAML file which lists the detailed contents of the new catalogue you wish to include. Follow the examples provided.
 
-<div class="figure" style="text-align: center">
-<img src="15-annex_files/figure-html/unnamed-chunk-14-1.png" alt="Example of defining colors for the Anderson Land Classification Scheme(Source: Authors)." width="100%" height="80%" />
-<p class="caption">(\#fig:unnamed-chunk-14)Example of defining colors for the Anderson Land Classification Scheme(Source: Authors).</p>
-</div>
+After writing the YAML file, you need to consider how to access and query the new catalogue. The entry point for access to all catalogues is the `sits_cube.stac_cube()` function, which in turn calls a sequence of functions which are described in the generic interface `api_source.R`. Most calls of this API are handled by the functions of `api_source_stac.R` which provides an interface to the `rstac` package and handles STAC queries. 
 
-The original default `sits` color table can be restored using `sits_colors_reset()`. 
+Each STAC catalogue is different. The STAC specification allows providers to implement their data descriptions with specific information. For this reason, the generic API described in `api_source.R` needs to be specialized for each provider. Whenever a provider needs specific implementations of parts of the STAC protocol, we include them in separate files. For example, `api_source_mpc.R` implements specific quirks of the MPC platform. Similarly, specific support for CDSE (Copernicus Data Space Environment) is available in `api_source_cdse.R`. 
 
-
-
-As an alternative, a legend can be used directly as a parameter to `plot()`. Please see the example provided in Section "Map Reclassification" in Chapter [Image classification in data cubes](https://e-sensing.github.io/sitsbook/image-classification-in-data-cubes.html). 
 
 ## Exporting data to JSON{-}
 

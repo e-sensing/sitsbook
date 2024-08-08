@@ -72,8 +72,8 @@ plot(cube_20LMR, red = "B11", green = "B8A", blue = "B02", date = "2022-07-16")
 ```
 
 <div class="figure" style="text-align: center">
-<img src="14-obia_files/figure-html/unnamed-chunk-2-1.png" alt="Sentinel-2 image in an area of Rondonia, Brazil (Source: Authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-2)Sentinel-2 image in an area of Rondonia, Brazil (Source: Authors).</p>
+<img src="14-obia_files/figure-html/unnamed-chunk-2-1.png" alt="Sentinel-2 image in an area of Rondonia, Brazil (source: authors)." width="100%" />
+<p class="caption">(\#fig:unnamed-chunk-2)Sentinel-2 image in an area of Rondonia, Brazil (source: authors).</p>
 </div>
 
 The following example produces a segmented image. For the SLIC algorithm, we take the initial separation between cluster centres (`step`) to be 20 pixels, the `compactness` to be 1, and the minimum area for each superpixel (`min_area`) to be 20 pixels.
@@ -111,7 +111,7 @@ sits_view(segments_20LMR,
 )
 ```
 
-<img src="images/segmentation_2.png" width="90%" style="display: block; margin: auto;" />
+<img src="./images/segmentation_2.png" width="90%" style="display: block; margin: auto;" />
 
 After obtaining the segments, the next step is to classify them. This is done by first training a classification model. In this case study, we will use an SVM model.
 
@@ -157,6 +157,6 @@ sits_view(
 )
 ```
 
-<img src="images/segments_20LMR.png" width="90%" style="display: block; margin: auto;" />
+<img src="./images/segments_20LMR.png" width="90%" style="display: block; margin: auto;" />
 
 We conclude that OBIA analysis applied to image time series is a worthy and efficient technique for land classification, combining the desirable sharp object boundary properties required by land use and cover maps with the analytical power of image time series. 

@@ -4,21 +4,21 @@
 
 The authors acknowledge the funders that supported the development of `sits`:
 
-1.  Amazon Fund, established by Brazil with financial contribution from Norway, through contract 17.2.0536.1. between the Brazilian Development Bank (BNDES) and the Foundation for Science, Technology, and Space Applications (FUNCATE), for the establishment of the Brazil Data Cube.
+- Amazon Fund, established by Brazil with financial contribution from Norway, through contract 17.2.0536.1. between the Brazilian Development Bank (BNDES) and the Foundation for Science, Technology, and Space Applications (FUNCATE), for the establishment of the Brazil Data Cube.
 
-2. Coordenação de Aperfeiçoamento de Pessoal de Nível Superior-Brasil (CAPES) and Conselho Nacional de Desenvolvimento Científico e Tecnológico (CNPq) for grants 312151/2014-4 and 140684/2016-6. 
+- Coordenação de Aperfeiçoamento de Pessoal de Nível Superior-Brasil (CAPES) and Conselho Nacional de Desenvolvimento Científico e Tecnológico (CNPq) for grants 312151/2014-4 and 140684/2016-6. 
 
-3. Sao Paulo Research Foundation (FAPESP) under eScience Program grant 2014/08398-6, for providing MSc, PhD, and post-doc scholarships, equipment, and travel support.  
+- Sao Paulo Research Foundation (FAPESP) under eScience Program grant 2014/08398-6, for providing MSc, PhD, and post-doc scholarships, equipment, and travel support.  
 
-4. International Climate Initiative of the Germany Federal Ministry for the Environment, Nature Conservation, Building and Nuclear Safety (IKI) under grant 17-III-084-Global-A-RESTORE+ (“RESTORE+: Addressing Landscape Restoration on Degraded Land in Indonesia and Brazil”). 
+- International Climate Initiative of the Germany Federal Ministry for the Environment, Nature Conservation, Building and Nuclear Safety (IKI) under grant 17-III-084-Global-A-RESTORE+ (“RESTORE+: Addressing Landscape Restoration on Degraded Land in Indonesia and Brazil”). 
 
-5. Microsoft Planetary Computer initiative under the GEO-Microsoft Cloud Computer Grants Programme. 
+- Microsoft Planetary Computer initiative under the GEO-Microsoft Cloud Computer Grants Programme. 
 
-6. Instituto Clima e Sociedade, under the project grant "Modernization of PRODES and DETER Amazon monitoring systems". 
+- Instituto Clima e Sociedade, under the project grant "Modernization of PRODES and DETER Amazon monitoring systems". 
 
-7.  Open-Earth-Monitor Cyberinfrastructure project, which has received funding from the European Union’s Horizon Europe research and innovation programme under grant agreement No. 101059548.
+- Open-Earth-Monitor Cyberinfrastructure project, which has received funding from the European Union’s Horizon Europe research and innovation programme under grant agreement No. 101059548.
 
-8. FAO-EOSTAT initiative, which uses next generation Earth observation tools to produce land cover and land use statistics.
+- FAO-EOSTAT initiative, which uses next generation Earth observation tools to produce land cover and land use statistics.
 
 
 ## Community Contributions {-}

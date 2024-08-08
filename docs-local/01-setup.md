@@ -6,6 +6,7 @@ This book contains reproducible code that can be run on an R environment. There 
 
 1. Install R and RStudio and the packages required by `sits`, with specific procedures for each type of operating systems.
 2. Use a Docker image provided by the Brazil Data Cube.
+3. Install `sits` and all its dependencies using `conda`. 
 
 ## How to install sits using R and RStudio {.unnumbered}
 
@@ -14,9 +15,8 @@ We suggest a staged installation, as follows:
 1. Get and install base R from [CRAN](https://cran.r-project.org/).
 2. Install RStudio from the [Posit website](https://posit.co/).
 
-Then, chose one of the following options, as decribed below: (a) install `sits` from CRAN; (b) use `docker` containers; (c) use the `conda` environment.
 
-## Installing `sits` from CRAN {.unnumbered}
+### Installing `sits` from CRAN {.unnumbered}
 
 The Comprehensive R Archive Network (CRAN), a network of servers (also known as mirrors) from around the world that store up-to-date versions of basic code and packages for R. In what follows, we describe how to use CRAN to `sits` on Windows, Linux and MacOS. 
 
@@ -77,7 +77,7 @@ install.packages("sits", dependencies = TRUE)
 
 For Debian,  use the [rocker geospatial](https://github.com/rocker-org/geospatial) dockerfiles. 
 
-### Installing in Fedora environments
+### Installing in Fedora environments {.unnumbered}
 
 In the case of Fedora, the following command installs all required dependencies:
 
@@ -131,7 +131,7 @@ devtools::install_github("e-sensing/sits@dev", dependencies = TRUE)
 
 ## Additional requirements {.unnumbered}
 
-To run the examples in the book, please also install `sitsdata` package.
+To run the examples in the book, please also install the `sitsdata` package. We recommend installing it using `wget`. See instructions in the [GNU Wget site](https://www.gnu.org/software/wget/). 
 
 
 ``` r
