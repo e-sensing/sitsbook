@@ -80,8 +80,8 @@ plot(reg_cube, band = "NDVI", palette = "RdYlGn")
 ```
 
 <div class="figure" style="text-align: center">
-<img src="05-cubeoperations_files/figure-html/unnamed-chunk-6-1.png" alt="NDVI using bands B08 and B04 of Sentinel-2 (source: authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-6)NDVI using bands B08 and B04 of Sentinel-2 (source: authors).</p>
+<img src="05-cubeoperations_files/figure-html/ndviop-1.png" alt="NDVI using bands B08 and B04 of Sentinel-2 (source: authors)." width="100%" />
+<p class="caption">(\#fig:ndviop)NDVI using bands B08 and B04 of Sentinel-2 (source: authors).</p>
 </div>
 We now compare the traditional NDVI with other vegetation index computed using red-edge bands. The example below such the NDRE1 index, obtained using bands B06 and B05. Sun et al. argue that a vegetation index built using bands B06 and B07 provides a better approximation to leaf area index estimates than NDVI [@Sun2020a]. Notice that the contrast between forests and deforested areas is more robust in the NDRE1 index than with NDVI. 
 
@@ -101,8 +101,8 @@ plot(reg_cube, band = "NDRE1", palette = "RdYlGn")
 ```
 
 <div class="figure" style="text-align: center">
-<img src="05-cubeoperations_files/figure-html/unnamed-chunk-8-1.png" alt="NDRE1 using bands B06 and B05 of Sentinel-2 (source: authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-8)NDRE1 using bands B06 and B05 of Sentinel-2 (source: authors).</p>
+<img src="05-cubeoperations_files/figure-html/ndreop-1.png" alt="NDRE1 using bands B06 and B05 of Sentinel-2 (source: authors)." width="100%" />
+<p class="caption">(\#fig:ndreop)NDRE1 using bands B06 and B05 of Sentinel-2 (source: authors).</p>
 </div>
 
 
@@ -126,8 +126,8 @@ plot(reg_cube, band = "NBR", palette = "Reds")
 ```
 
 <div class="figure" style="text-align: center">
-<img src="05-cubeoperations_files/figure-html/unnamed-chunk-10-1.png" alt="NBR ratio using Sentinel-2 B11 and B8A (source: authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-10)NBR ratio using Sentinel-2 B11 and B8A (source: authors).</p>
+<img src="05-cubeoperations_files/figure-html/unnamed-chunk-7-1.png" alt="NBR ratio using Sentinel-2 B11 and B8A (source: authors)." width="100%" />
+<p class="caption">(\#fig:unnamed-chunk-7)NBR ratio using Sentinel-2 B11 and B8A (source: authors).</p>
 </div>
 
 ## Support for non-normalized indexes{-}
@@ -146,8 +146,8 @@ plot(reg_cube, band = "CVI", palette = "Greens")
 ```
 
 <div class="figure" style="text-align: center">
-<img src="05-cubeoperations_files/figure-html/unnamed-chunk-11-1.png" alt="CVI index using bands B03, B05, and B8A (source: authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-11)CVI index using bands B03, B05, and B8A (source: authors).</p>
+<img src="05-cubeoperations_files/figure-html/cviop-1.png" alt="CVI index using bands B03, B05, and B8A (source: authors)." width="100%" />
+<p class="caption">(\#fig:cviop)CVI index using bands B03, B05, and B8A (source: authors).</p>
 </div>
 
 ## Temporal combination operations{-}
@@ -186,8 +186,8 @@ plot(ave_cube, band = "NDVIMAX", palette = "Greens")
 ```
 
 <div class="figure" style="text-align: center">
-<img src="05-cubeoperations_files/figure-html/unnamed-chunk-12-1.png" alt="maximum NDVI for Sentinel-2 cube (source: authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-12)maximum NDVI for Sentinel-2 cube (source: authors).</p>
+<img src="05-cubeoperations_files/figure-html/redmax-1.png" alt="maximum NDVI for Sentinel-2 cube (source: authors)." width="100%" />
+<p class="caption">(\#fig:redmax)maximum NDVI for Sentinel-2 cube (source: authors).</p>
 </div>
 
 
@@ -233,8 +233,8 @@ plot(reg_cube, band = "FOREST", palette = "Greens")
 ```
 
 <div class="figure" style="text-align: center">
-<img src="05-cubeoperations_files/figure-html/unnamed-chunk-14-1.png" alt="Percentage of forest per pixel estimated by mixture model (source: authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-14)Percentage of forest per pixel estimated by mixture model (source: authors).</p>
+<img src="05-cubeoperations_files/figure-html/mixfor-1.png" alt="Percentage of forest per pixel estimated by mixture model (source: authors)." width="100%" />
+<p class="caption">(\#fig:mixfor)Percentage of forest per pixel estimated by mixture model (source: authors).</p>
 </div>
 
 
@@ -244,8 +244,8 @@ plot(reg_cube, band = "WATER", palette = "Blues")
 ```
 
 <div class="figure" style="text-align: center">
-<img src="05-cubeoperations_files/figure-html/unnamed-chunk-15-1.png" alt="Percentage of water per pixel estimated by mixture model (source: authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-15)Percentage of water per pixel estimated by mixture model (source: authors).</p>
+<img src="05-cubeoperations_files/figure-html/mixwater-1.png" alt="Percentage of water per pixel estimated by mixture model (source: authors)." width="100%" />
+<p class="caption">(\#fig:mixwater)Percentage of water per pixel estimated by mixture model (source: authors).</p>
 </div>
 
 
@@ -255,8 +255,8 @@ plot(reg_cube, band = "SOIL", palette = "OrRd")
 ```
 
 <div class="figure" style="text-align: center">
-<img src="05-cubeoperations_files/figure-html/unnamed-chunk-16-1.png" alt="Percentage of soil per pixel estimated by mixture model (source: authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-16)Percentage of soil per pixel estimated by mixture model (source: authors).</p>
+<img src="05-cubeoperations_files/figure-html/mixsoil-1.png" alt="Percentage of soil per pixel estimated by mixture model (source: authors)." width="100%" />
+<p class="caption">(\#fig:mixsoil)Percentage of soil per pixel estimated by mixture model (source: authors).</p>
 </div>
 
 Linear mixture models (LMM) improve the interpretation of remote sensing images by accounting for mixed pixels and providing a more accurate representation of the Earth's surface. LMMs provide a more accurate representation of mixed pixels by considering the contributions of multiple land classes within a single pixel. This can lead to improved land cover classification accuracy compared to conventional per-pixel classification methods, which may struggle to accurately classify mixed pixels. 

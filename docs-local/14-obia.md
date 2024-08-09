@@ -72,8 +72,8 @@ plot(cube_20LMR, red = "B11", green = "B8A", blue = "B02", date = "2022-07-16")
 ```
 
 <div class="figure" style="text-align: center">
-<img src="14-obia_files/figure-html/unnamed-chunk-2-1.png" alt="Sentinel-2 image in an area of Rondonia, Brazil (source: authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-2)Sentinel-2 image in an area of Rondonia, Brazil (source: authors).</p>
+<img src="14-obia_files/figure-html/obiaimage-1.png" alt="Sentinel-2 image in an area of Rondonia, Brazil (source: authors)." width="100%" />
+<p class="caption">(\#fig:obiaimage)Sentinel-2 image in an area of Rondonia, Brazil (source: authors).</p>
 </div>
 
 The following example produces a segmented image. For the SLIC algorithm, we take the initial separation between cluster centres (`step`) to be 20 pixels, the `compactness` to be 1, and the minimum area for each superpixel (`min_area`) to be 20 pixels.
@@ -99,7 +99,7 @@ plot(segments_20LMR,
 )
 ```
 
-<img src="14-obia_files/figure-html/unnamed-chunk-3-1.png" width="90%" style="display: block; margin: auto;" />
+<img src="14-obia_files/figure-html/obiaseg-1.png" width="90%" style="display: block; margin: auto;" />
 
 It is useful to visualize the segments in a leaflet together with the RGB image using `sits_view()`.
 

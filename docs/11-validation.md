@@ -47,16 +47,18 @@ rondonia_2022_class <- sits_cube(
   labels = labels,
   version = "mosaic"
 )
+```
 
+
+``` r
 # plot the classification map
 plot(rondonia_2022_class)
 ```
 
 <div class="figure" style="text-align: center">
-<img src="11-validation_files/figure-html/unnamed-chunk-2-1.png" alt="Classified mosaic for land cover in Rondonia, Brazil for 2022 (source: authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-2)Classified mosaic for land cover in Rondonia, Brazil for 2022 (source: authors).</p>
+<img src="./images/valromosaic.png" alt="Classified mosaic for land cover in Rondonia, Brazil for 2022 (source: authors)." width="100%" />
+<p class="caption">(\#fig:valromosaic)Classified mosaic for land cover in Rondonia, Brazil for 2022 (source: authors).</p>
 </div>
-
 
 
 ## Stratified sampling design and allocation{-} 
@@ -105,7 +107,7 @@ ro_sampling_design <- sits_sampling_design(
     "Clear_Cut_Bare_Soil" = 0.75,
     "Clear_Cut_Burned_Area" = 0.70,
     "Mountainside_Forest" = 0.70,
-    "Forest" = 0.70,
+    "Forest" = 0.75,
     "Riparian_Forest" = 0.70,
     "Clear_Cut_Vegetation" = 0.70,
     "Water" = 0.70,
@@ -122,25 +124,25 @@ ro_sampling_design
 
 ```
 #>                       prop        expected_ua std_dev equal alloc_120 alloc_100
-#> Clear_Cut_Bare_Soil   0.3841309   0.75        0.433   223   487       546      
-#> Clear_Cut_Burned_Area 0.004994874 0.7         0.458   223   120       100      
-#> Clear_Cut_Vegetation  0.009201698 0.7         0.458   223   120       100      
-#> Forest                0.538726    0.7         0.458   223   684       765      
-#> Mountainside_Forest   0.004555433 0.7         0.458   223   120       100      
-#> Riparian_Forest       0.005482552 0.7         0.458   223   120       100      
-#> Seasonally_Flooded    0.007677294 0.7         0.458   223   120       100      
-#> Water                 0.007682599 0.7         0.458   223   120       100      
-#> Wetland               0.03754864  0.7         0.458   223   120       100      
+#> Clear_Cut_Bare_Soil   0.3841309   0.75        0.433   210   438       496      
+#> Clear_Cut_Burned_Area 0.004994874 0.7         0.458   210   120       100      
+#> Clear_Cut_Vegetation  0.009201698 0.7         0.458   210   120       100      
+#> Forest                0.538726    0.75        0.433   210   614       696      
+#> Mountainside_Forest   0.004555433 0.7         0.458   210   120       100      
+#> Riparian_Forest       0.005482552 0.7         0.458   210   120       100      
+#> Seasonally_Flooded    0.007677294 0.7         0.458   210   120       100      
+#> Water                 0.007682599 0.7         0.458   210   120       100      
+#> Wetland               0.03754864  0.7         0.458   210   120       100      
 #>                       alloc_prop
-#> Clear_Cut_Bare_Soil   772       
-#> Clear_Cut_Burned_Area 10        
-#> Clear_Cut_Vegetation  19        
-#> Forest                1083      
+#> Clear_Cut_Bare_Soil   727       
+#> Clear_Cut_Burned_Area 9         
+#> Clear_Cut_Vegetation  17        
+#> Forest                1019      
 #> Mountainside_Forest   9         
-#> Riparian_Forest       11        
+#> Riparian_Forest       10        
 #> Seasonally_Flooded    15        
 #> Water                 15        
-#> Wetland               76
+#> Wetland               71
 ```
 The next step is to chose one of the options for sampling design to generate a set of points for stratified sampling. These points can then be used for accuracy assessment. This is achieved by function `sits_stratified_sampling()` which takes the following parameters: 
 
@@ -152,7 +154,45 @@ The next step is to chose one of the options for sampling design to generate a s
 - `shp_file`: name of shapefile to save results for later use (optional);
 - `progress`: show progress bar?
 
-The output of the function is CSV file with points with location (latitude and longitude) and class assigned in the map. Using this CSV file (or the optional shapefile) users can visualize the points in a standard GIS such as QGIS. For each point, they will indicate what is the correct class. In this way, they will obtain a confusion matrix which will be used for accuracy assessment. The `overhead` parameter is useful for users to discard border or doubtful pixels where the interpreter cannot be confident of her class assignment. By discarding points whose attribution is uncertain, they will improve the quality of the assessment. 
+In the example below, we chose the "alloc_120" option from the sampling design to generate a set of stratified samples. The output of the function is an `sf` object with points with location (latitude and longitude) and class assigned in the map. We can also generate a SHP file with the sample information. The script below shows how to usee `sits_stratified_sampling()` and also how to convert an `sf` object to a CSV file. 
+
+
+
+
+``` r
+ro_samples_sf <- sits_stratified_sampling(
+  cube = rondonia_2022_class,
+  sampling_design = ro_sampling_design,
+  alloc = "alloc_120",
+  multicores = 4,
+  shp_file = "./tempdir/chp11/ro_samples.shp"
+)
+```
+
+```
+#> Deleting layer `ro_samples' using driver `ESRI Shapefile'
+#> Writing layer `ro_samples' to data source 
+#>   `./tempdir/chp11/ro_samples.shp' using driver `ESRI Shapefile'
+#> Writing 2254 features with 1 fields and geometry type Point.
+```
+
+``` r
+# save sf object as CSV file
+sf::st_write(ro_samples_sf,
+  "./tempdir/chp11/ro_samples.csv",
+  layer_options = "GEOMETRY=AS_XY",
+  append = FALSE
+)
+```
+
+```
+#> Writing layer `ro_samples' to data source 
+#>   `./tempdir/chp11/ro_samples.csv' using driver `CSV'
+#> options:        GEOMETRY=AS_XY 
+#> Writing 2254 features with 1 fields and geometry type Point.
+```
+
+Using the CSV file (or the optional shapefile) users can visualize the points in a standard GIS such as QGIS. For each point, they will indicate what is the correct class. In this way, they will obtain a confusion matrix which will be used for accuracy assessment. The `overhead` parameter is useful for users to discard border or doubtful pixels where the interpreter cannot be confident of her class assignment. By discarding points whose attribution is uncertain, they will improve the quality of the assessment. 
 
 After all sampling points are labelled in QGIS (or similar), users should produce a CSV file, a SHP file, a data frame, or an `sf` object,  with at least three columns: `latitude`, `longitude` and `label`. See the next section for an example on how to use this data set for accuracay assessment.
 

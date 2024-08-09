@@ -3,7 +3,10 @@
 
 ```{r, include = FALSE, echo = FALSE}
 source("common.R")
-dir.create("./tempdir/chp11")
+library(sits)
+library(sitsdata)
+if (!file.exists("./tempdir/chp11"))
+  dir.create("./tempdir/chp11")
 ```
 
 ## Introduction{-}
@@ -24,7 +27,7 @@ The work considered nine LUCC classes: (a) stable  natural land cover, including
 
 In this chapter, we will take the classification map as our starting point for accuracy assessment. This map can be retrieved from the `sitsdata` package as follows.
 
-```{r, tidy = "styler", out.width = "100%", fig.align="center", fig.cap="Classified mosaic for land cover in Rondonia, Brazil for 2022 (source: authors)."}
+```{r, tidy = "styler"}
 # define the classes of the probability cube
 labels <- c("1" = "Clear_Cut_Bare_Soil",
             "2" = "Clear_Cut_Burned_Area", 
@@ -47,11 +50,16 @@ rondonia_2022_class <- sits_cube(
     labels = labels,
     version = "mosaic"
 )
+```
 
+```{r, eval = FALSE, echo = TRUE}
 # plot the classification map
 plot(rondonia_2022_class)
 ```
 
+```{r valromosaic, tidy = "styler", , eval = TRUE, echo = FALSE, out.width = "100%", fig.align="center", fig.cap="Classified mosaic for land cover in Rondonia, Brazil for 2022 (source: authors)."}
+knitr::include_graphics("./images/valromosaic.png") 
+```
 
 
 ## Stratified sampling design and allocation{-} 
@@ -99,7 +107,7 @@ ro_sampling_design <- sits_sampling_design(
         "Clear_Cut_Bare_Soil" = 0.75,
         "Clear_Cut_Burned_Area" = 0.70, 
         "Mountainside_Forest" = 0.70, 
-        "Forest" = 0.70,  
+        "Forest" = 0.75,  
         "Riparian_Forest" = 0.70, 
         "Clear_Cut_Vegetation" = 0.70,  
         "Water" = 0.70, 
@@ -123,7 +131,30 @@ The next step is to chose one of the options for sampling design to generate a s
 - `shp_file`: name of shapefile to save results for later use (optional);
 - `progress`: show progress bar?
 
-The output of the function is CSV file with points with location (latitude and longitude) and class assigned in the map. Using this CSV file (or the optional shapefile) users can visualize the points in a standard GIS such as QGIS. For each point, they will indicate what is the correct class. In this way, they will obtain a confusion matrix which will be used for accuracy assessment. The `overhead` parameter is useful for users to discard border or doubtful pixels where the interpreter cannot be confident of her class assignment. By discarding points whose attribution is uncertain, they will improve the quality of the assessment. 
+In the example below, we chose the "alloc_120" option from the sampling design to generate a set of stratified samples. The output of the function is an `sf` object with points with location (latitude and longitude) and class assigned in the map. We can also generate a SHP file with the sample information. The script below shows how to usee `sits_stratified_sampling()` and also how to convert an `sf` object to a CSV file. 
+
+```{r, eval = TRUE, echo = FALSE, messa}
+if (file.exists("./tempdir/chp11/ro_samples.csv"))
+  file.remove("./tempdir/chp11/ro_samples.csv")
+```
+
+```{r, message = FALSE, warning = FALSE}
+ro_samples_sf <- sits_stratified_sampling(
+    cube = rondonia_2022_class,
+    sampling_design = ro_sampling_design,
+    alloc = "alloc_120",
+    multicores = 4,
+    shp_file = "./tempdir/chp11/ro_samples.shp"
+)
+# save sf object as CSV file
+sf::st_write(ro_samples_sf, 
+    "./tempdir/chp11/ro_samples.csv", 
+    layer_options = "GEOMETRY=AS_XY",
+    append = FALSE
+)
+```
+
+Using the CSV file (or the optional shapefile) users can visualize the points in a standard GIS such as QGIS. For each point, they will indicate what is the correct class. In this way, they will obtain a confusion matrix which will be used for accuracy assessment. The `overhead` parameter is useful for users to discard border or doubtful pixels where the interpreter cannot be confident of her class assignment. By discarding points whose attribution is uncertain, they will improve the quality of the assessment. 
 
 After all sampling points are labelled in QGIS (or similar), users should produce a CSV file, a SHP file, a data frame, or an `sf` object,  with at least three columns: `latitude`, `longitude` and `label`. See the next section for an example on how to use this data set for accuracay assessment.
 

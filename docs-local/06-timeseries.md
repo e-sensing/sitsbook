@@ -113,8 +113,8 @@ plot(samples_cerrado[1:12, ])
 ```
 
 <div class="figure" style="text-align: center">
-<img src="06-timeseries_files/figure-html/cerrado-12-1.png" alt="Plot of the first 'Cerrado' samples (source: authors)." width="70%" />
-<p class="caption">(\#fig:cerrado-12)Plot of the first 'Cerrado' samples (source: authors).</p>
+<img src="06-timeseries_files/figure-html/tscerrado12-1.png" alt="Plot of the first 'Cerrado' samples (source: authors)." width="70%" />
+<p class="caption">(\#fig:tscerrado12)Plot of the first 'Cerrado' samples (source: authors).</p>
 </div>
 
 For many samples, the default visualization combines all samples together in a single temporal interval, even if they belong to different years. This plot shows the spread of values for the time series of each band. The strong red line in the plot indicates the median of the values, while the two orange lines are the first and third interquartile ranges. See `?sits::plot` for more details on data visualization in  `sits`.
@@ -126,8 +126,8 @@ plot(samples_cerrado)
 ```
 
 <div class="figure" style="text-align: center">
-<img src="06-timeseries_files/figure-html/unnamed-chunk-6-1.png" alt="Plot of all Cerrado samples (source: authors)." width="70%" />
-<p class="caption">(\#fig:unnamed-chunk-6)Plot of all Cerrado samples (source: authors).</p>
+<img src="06-timeseries_files/figure-html/tscerrado-1.png" alt="Plot of all Cerrado samples (source: authors)." width="70%" />
+<p class="caption">(\#fig:tscerrado)Plot of all Cerrado samples (source: authors).</p>
 </div>
 
 To see the spatial distribution of the samples, use `sits_view()` to create an interactive plot. The spatial visulisation is useful to show where the data has been collected. 
@@ -158,8 +158,8 @@ samples_matogrosso_mod13q1 |>
 ```
 
 <div class="figure" style="text-align: center">
-<img src="06-timeseries_files/figure-html/unnamed-chunk-9-1.png" alt="Patterns for the samples for Mato Grosso (source: authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-9)Patterns for the samples for Mato Grosso (source: authors).</p>
+<img src="06-timeseries_files/figure-html/tspat-1.png" alt="Patterns for the samples for Mato Grosso (source: authors)." width="100%" />
+<p class="caption">(\#fig:tspat)Patterns for the samples for Mato Grosso (source: authors).</p>
 </div>
 
 The resulting patterns provide some insights over the time series behaviour of each class. The response of the Forest class is quite distinctive.  They also show that it should be possible to separate between the single and double cropping classes. There are similarities between the double-cropping classes (`Soy_Corn` and `Soy_Millet `) and between the `Cerrado` and `Pasture` classes. The subtle differences between class signatures provide hints at possible ways by which machine learning algorithms might distinguish between classes. One example is the difference between the middle-infrared response during the dry season (May to September) to differentiate between `Cerrado` and `Pasture`. 
@@ -191,8 +191,8 @@ plot(distances)
 ```
 
 <div class="figure">
-<img src="06-timeseries_files/figure-html/unnamed-chunk-10-1.png" alt="Distribution of sample-to-sample and sample-to-prediction distances (source: authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-10)Distribution of sample-to-sample and sample-to-prediction distances (source: authors).</p>
+<img src="06-timeseries_files/figure-html/tsdist-1.png" alt="Distribution of sample-to-sample and sample-to-prediction distances (source: authors)." width="100%" />
+<p class="caption">(\#fig:tsdist)Distribution of sample-to-sample and sample-to-prediction distances (source: authors).</p>
 </div>
 The plot shows a mismatch between the sample-to-sample and the sample-to-prediction distributions. Most samples are closer to each other than they are close to the location where values need to be predicted. In this case, there are many areas where few or no samples have been collected and where the prediction uncertainty will be higher. In this and similar cases, improving the distribution of training samples is always welcome. If that is not possible, areas with insufficient samples could have lower accuracy. This information must be reported to potential users of classification results. 
 
@@ -231,8 +231,8 @@ plot(series)
 ```
 
 <div class="figure" style="text-align: center">
-<img src="06-timeseries_files/figure-html/unnamed-chunk-11-1.png" alt="NDVI and EVI time series fetched from local raster cube (source: authors)." width="90%" />
-<p class="caption">(\#fig:unnamed-chunk-11)NDVI and EVI time series fetched from local raster cube (source: authors).</p>
+<img src="06-timeseries_files/figure-html/tsget-1.png" alt="NDVI and EVI time series fetched from local raster cube (source: authors)." width="90%" />
+<p class="caption">(\#fig:tsget)NDVI and EVI time series fetched from local raster cube (source: authors).</p>
 </div>
 
 A useful case is when a set of labeled samples can be used as a training dataset. In this case, trusted observations are usually labeled and commonly stored in plain text files in comma-separated values (csv) or using shapefiles (shp). 
@@ -349,8 +349,8 @@ sits_merge(point_sg, point_ndvi) |> plot()
 ```
 
 <div class="figure" style="text-align: center">
-<img src="06-timeseries_files/figure-html/unnamed-chunk-16-1.png" alt="Savitzky-Golay filter applied on a multi-year NDVI time series (source: authors)." width="90%" />
-<p class="caption">(\#fig:unnamed-chunk-16)Savitzky-Golay filter applied on a multi-year NDVI time series (source: authors).</p>
+<img src="06-timeseries_files/figure-html/tssg-1.png" alt="Savitzky-Golay filter applied on a multi-year NDVI time series (source: authors)." width="90%" />
+<p class="caption">(\#fig:tssg)Savitzky-Golay filter applied on a multi-year NDVI time series (source: authors).</p>
 </div>
 
 The resulting smoothed curve has both desirable and unwanted properties. From 2000 to 2008, the Savitsky-Golay filter removes noise from clouds. However, after 2010, when the region was converted to agriculture, the filter removes an important part of the natural variability from the crop cycle. Therefore, the `length` parameter is arguably too big, resulting in oversmoothing. 
@@ -370,8 +370,8 @@ sits_merge(point_whit, point_ndvi) |> plot()
 ```
 
 <div class="figure" style="text-align: center">
-<img src="06-timeseries_files/figure-html/unnamed-chunk-17-1.png" alt="Whittaker filter applied on a one-year NDVI time series (source: authors)." width="90%" />
-<p class="caption">(\#fig:unnamed-chunk-17)Whittaker filter applied on a one-year NDVI time series (source: authors).</p>
+<img src="06-timeseries_files/figure-html/tswhit-1.png" alt="Whittaker filter applied on a one-year NDVI time series (source: authors)." width="90%" />
+<p class="caption">(\#fig:tswhit)Whittaker filter applied on a one-year NDVI time series (source: authors).</p>
 </div>
 
 Similar to what is observed in the Savitsky-Golay filter, high values of the smoothing parameter `lambda` produce an over-smoothed time series that reduces the capacity of the time series to represent natural variations in crop growth. For this reason, low smoothing values are recommended when using `sits_whittaker()`.

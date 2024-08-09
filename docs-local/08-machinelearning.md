@@ -31,7 +31,7 @@ Random forest is a machine learning algorithm that uses an ensemble learning met
 
 <div class="figure" style="text-align: center">
 <img src="./images/random_forest.png" alt="Random forest algorithm (Source: Venkata Jagannath in Wikipedia - licenced as CC-BY-SA 4.0)." width="90%" />
-<p class="caption">(\#fig:unnamed-chunk-2)Random forest algorithm (Source: Venkata Jagannath in Wikipedia - licenced as CC-BY-SA 4.0).</p>
+<p class="caption">(\#fig:mlrffig)Random forest algorithm (Source: Venkata Jagannath in Wikipedia - licenced as CC-BY-SA 4.0).</p>
 </div>
 
 `sits` provides `sits_rfor()`, which uses the R `randomForest` package [@Wright2017]; its main parameter is `num_trees`, which is the number of trees to grow with a default value of 100. The model can be visualized using `plot()`.
@@ -50,8 +50,8 @@ plot(rfor_model)
 ```
 
 <div class="figure" style="text-align: center">
-<img src="08-machinelearning_files/figure-html/unnamed-chunk-4-1.png" alt="Most important variables in random forest model (source: authors)." width="90%" />
-<p class="caption">(\#fig:unnamed-chunk-4)Most important variables in random forest model (source: authors).</p>
+<img src="08-machinelearning_files/figure-html/mlrformodel-1.png" alt="Most important variables in random forest model (source: authors)." width="90%" />
+<p class="caption">(\#fig:mlrformodel)Most important variables in random forest model (source: authors).</p>
 </div>
 
 The most important explanatory variables are the NIR (near infrared) band on date 17 (2007-05-25) and the MIR (middle infrared) band on date 22 (2007-08-13). The NIR value at the end of May captures the growth of the second crop for double cropping classes.  Values of the MIR band at the end of the period (late July to late August) capture bare soil signatures to distinguish between agricultural and natural classes. This corresponds to summertime when the ground is drier after harvesting crops.
@@ -68,8 +68,8 @@ plot(point_class, bands = c("NDVI", "EVI"))
 ```
 
 <div class="figure" style="text-align: center">
-<img src="08-machinelearning_files/figure-html/unnamed-chunk-5-1.png" alt="Classification of time series using random forest (source: authors)." width="90%" />
-<p class="caption">(\#fig:unnamed-chunk-5)Classification of time series using random forest (source: authors).</p>
+<img src="08-machinelearning_files/figure-html/mlrforplot-1.png" alt="Classification of time series using random forest (source: authors)." width="90%" />
+<p class="caption">(\#fig:mlrforplot)Classification of time series using random forest (source: authors).</p>
 </div>
 
 The result shows that the area started as a forest in 2000, was deforested from 2004 to 2005, used as pasture from 2006 to 2007, and for double-cropping agriculture from 2009 onwards. This behavior is consistent with expert evaluation of land change process in this region of Amazonia.
@@ -82,7 +82,7 @@ The support vector machine (SVM) classifier is a generalization of a linear clas
 
 <div class="figure" style="text-align: center">
 <img src="./images/svm_margin.png" alt="Maximum-margin hyperplane and margins for an SVM trained with samples from two classes. Samples on the margin are called the support vectors. (Source: Larhmam in Wikipedia - licensed as CC-BY-SA-4.0)." width="50%" />
-<p class="caption">(\#fig:unnamed-chunk-6)Maximum-margin hyperplane and margins for an SVM trained with samples from two classes. Samples on the margin are called the support vectors. (Source: Larhmam in Wikipedia - licensed as CC-BY-SA-4.0).</p>
+<p class="caption">(\#fig:mlsvmfig)Maximum-margin hyperplane and margins for an SVM trained with samples from two classes. Samples on the margin are called the support vectors. (Source: Larhmam in Wikipedia - licensed as CC-BY-SA-4.0).</p>
 </div>
 
 For data that is not linearly separable, SVM includes kernel functions that map the original feature space into a higher dimensional space, providing nonlinear boundaries to the original feature space. Despite having a linear boundary on the enlarged feature space, the new classification model generally translates its hyperplane to a nonlinear boundary in the original attribute space. Kernels are an efficient computational strategy to produce nonlinear boundaries in the input attribute space; thus, they improve training-class separation. SVM is one of the most widely used algorithms in machine learning applications and has been applied to classify remote sensing data [@Mountrakis2011].
@@ -111,8 +111,8 @@ plot(point_class, bands = c("NDVI", "EVI"))
 ```
 
 <div class="figure" style="text-align: center">
-<img src="08-machinelearning_files/figure-html/unnamed-chunk-8-1.png" alt="Classification of time series using SVM (source: authors)." width="90%" />
-<p class="caption">(\#fig:unnamed-chunk-8)Classification of time series using SVM (source: authors).</p>
+<img src="08-machinelearning_files/figure-html/mlsvmplot-1.png" alt="Classification of time series using SVM (source: authors)." width="90%" />
+<p class="caption">(\#fig:mlsvmplot)Classification of time series using SVM (source: authors).</p>
 </div>
 The SVM classifier is less stable and less robust to outliers than the random forest method. In this example, it tends to misclassify some of the data. In 2008, it is likely that the correct land class was still `Pasture` rather than `Soy_Millet` as produced by the algorithm, while the `Soy_Cotton` class in 2012 is also inconsistent with the previous and latter classification of `Soy_Corn`.
 
@@ -124,7 +124,7 @@ Although random forest and boosting use trees for classification, there are sign
 
 <div class="figure" style="text-align: center">
 <img src="./images/flow_chart_xgboost.png" alt="Flow chart of XGBoost algorithm (Source: Guo et al., Applied Sciences, 2020. - licenced as CC-BY-SA 4.0)." width="90%" />
-<p class="caption">(\#fig:unnamed-chunk-9)Flow chart of XGBoost algorithm (Source: Guo et al., Applied Sciences, 2020. - licenced as CC-BY-SA 4.0).</p>
+<p class="caption">(\#fig:mlxgbfig)Flow chart of XGBoost algorithm (Source: Guo et al., Applied Sciences, 2020. - licenced as CC-BY-SA 4.0).</p>
 </div>
 
 The boosting method starts from a weak predictor and then improves performance sequentially by fitting a better model at each iteration. It fits a simple classifier to the training data and uses the residuals of the fit to build a predictor. Typically, the base classifier is a regression tree. Although random forest and boosting use trees for classification, there are significant differences. The performance of random forest generally increases with the number of trees until it becomes stable. Boosting trees apply finer divisions over previous results to improve performance [@Hastie2009]. Some recent papers show that it outperforms random forest for remote sensing image classification [@Jafarzadeh2021]. However, this result is not generalizable since the quality of the training dataset controls actual performance.
@@ -152,8 +152,8 @@ plot(point_class_xgb, bands = c("NDVI", "EVI"))
 ```
 
 <div class="figure" style="text-align: center">
-<img src="08-machinelearning_files/figure-html/unnamed-chunk-11-1.png" alt="Classification of time series using XGBoost (source: authors)." width="90%" />
-<p class="caption">(\#fig:unnamed-chunk-11)Classification of time series using XGBoost (source: authors).</p>
+<img src="08-machinelearning_files/figure-html/mlxgbplot-1.png" alt="Classification of time series using XGBoost (source: authors)." width="90%" />
+<p class="caption">(\#fig:mlxgbplot)Classification of time series using XGBoost (source: authors).</p>
 </div>
 
 
@@ -199,8 +199,8 @@ plot(mlp_model)
 ```
 
 <div class="figure" style="text-align: center">
-<img src="08-machinelearning_files/figure-html/mlp-1.png" alt="Evolution of training accuracy of MLP model (source: authors)." width="80%" />
-<p class="caption">(\#fig:mlp)Evolution of training accuracy of MLP model (source: authors).</p>
+<img src="08-machinelearning_files/figure-html/mlmlpplot-1.png" alt="Evolution of training accuracy of MLP model (source: authors)." width="80%" />
+<p class="caption">(\#fig:mlmlpplot)Evolution of training accuracy of MLP model (source: authors).</p>
 </div>
 
 Then, we classify a 16-year time series using the multilayer perceptron model.
@@ -214,8 +214,8 @@ point_mt_mod13q1 |>
 ```
 
 <div class="figure" style="text-align: center">
-<img src="08-machinelearning_files/figure-html/unnamed-chunk-13-1.png" alt="Classification of time series using MLP (source: authors)." width="90%" />
-<p class="caption">(\#fig:unnamed-chunk-13)Classification of time series using MLP (source: authors).</p>
+<img src="08-machinelearning_files/figure-html/unnamed-chunk-6-1.png" alt="Classification of time series using MLP (source: authors)." width="90%" />
+<p class="caption">(\#fig:unnamed-chunk-6)Classification of time series using MLP (source: authors).</p>
 </div>
 
 In theory, multilayer perceptron model can capture more subtle changes than random forest and XGBoost In this specific case, the result is similar to theirs. Although the model mixes the `Soy_Corn` and `Soy_Millet` classes, the distinction between their temporal signatures is quite subtle. Also, in this case, this suggests the need to improve the number of samples. In this example, the MLP model shows an increase in sensitivity compared to previous models. We recommend to compare different configurations since the MLP model is sensitive to changes in its parameters.
@@ -226,11 +226,11 @@ Convolutional neural networks (CNN) are deep learning methods that apply convolu
 
 TempCNN applies one-dimensional convolutions on the input sequence to capture temporal dependencies, allowing the network to learn long-term dependencies in the input sequence. Each layer of the model captures temporal dependencies at a different scale. Due to its multi-scale approach, TempCNN can capture complex temporal patterns in the data and produce accurate predictions.
 
-The TempCNN architecture for satellite image time series classification is proposed by Pelletier et al. [@Pelletier2019].  It has three 1D convolutional layers and a final softmax layer for classification (see Figure \@ref(fig:tcnn)). The authors combine different methods to avoid overfitting and reduce the vanishing gradient effect, including dropout, regularization, and batch normalization. In the TempCNN reference paper [@Pelletier2019], the authors favourably compare their model with the Recurrent Neural Network proposed by Russwurm and Körner [@Russwurm2018]. Figure \@ref(fig:tcnn) shows the architecture of the TempCNN model.
+The TempCNN architecture for satellite image time series classification is proposed by Pelletier et al. [@Pelletier2019].  It has three 1D convolutional layers and a final softmax layer for classification (see Figure \@ref(fig:mltcnnfig)). The authors combine different methods to avoid overfitting and reduce the vanishing gradient effect, including dropout, regularization, and batch normalization. In the TempCNN reference paper [@Pelletier2019], the authors favourably compare their model with the Recurrent Neural Network proposed by Russwurm and Körner [@Russwurm2018]. Figure \@ref(fig:mltcnnfig) shows the architecture of the TempCNN model.
 
 <div class="figure" style="text-align: center">
 <img src="./images/tempcnn.png" alt="Structure of tempCNN architecture (Source: Pelletier et al. (2019). Reproduction under fair use doctrine). " width="100%" />
-<p class="caption">(\#fig:tcnn)Structure of tempCNN architecture (Source: Pelletier et al. (2019). Reproduction under fair use doctrine). </p>
+<p class="caption">(\#fig:mltcnnfig)Structure of tempCNN architecture (Source: Pelletier et al. (2019). Reproduction under fair use doctrine). </p>
 </div>
 
 The function `sits_tempcnn()` implements the model. The first parameter is the `optimizer` used in the backpropagation phase for gradient descent. The default is `adamw` which is considered as a stable and reliable optimization function. The parameter `cnn_layers` controls the number of 1D-CNN layers and the size of the filters applied at each layer; the default values are three CNNs with 128 units. The parameter `cnn_kernels` indicates the size of the convolution kernels; the default is kernels of size 7. Activation for all 1D-CNN layers uses the "relu" function. The dropout rates for each 1D-CNN layer are controlled individually by the parameter `cnn_dropout_rates`. The `validation_split` controls the size of the test set relative to the full dataset. We recommend setting aside at least 20% of the samples for validation.
@@ -260,8 +260,8 @@ plot(tempcnn_model)
 ```
 
 <div class="figure" style="text-align: center">
-<img src="08-machinelearning_files/figure-html/tcnnex-1.png" alt="Training evolution of TempCNN model (source: authors)." width="80%" />
-<p class="caption">(\#fig:tcnnex)Training evolution of TempCNN model (source: authors).</p>
+<img src="08-machinelearning_files/figure-html/mltcnnmodel-1.png" alt="Training evolution of TempCNN model (source: authors)." width="80%" />
+<p class="caption">(\#fig:mltcnnmodel)Training evolution of TempCNN model (source: authors).</p>
 </div>
 
 Then, we classify a 16-year time series using the TempCNN model.
@@ -275,8 +275,8 @@ point_mt_mod13q1 |>
 ```
 
 <div class="figure" style="text-align: center">
-<img src="08-machinelearning_files/figure-html/unnamed-chunk-15-1.png" alt="Classification of time series using TempCNN (source: authors)." width="90%" />
-<p class="caption">(\#fig:unnamed-chunk-15)Classification of time series using TempCNN (source: authors).</p>
+<img src="08-machinelearning_files/figure-html/mltccnplot-1.png" alt="Classification of time series using TempCNN (source: authors)." width="90%" />
+<p class="caption">(\#fig:mltccnplot)Classification of time series using TempCNN (source: authors).</p>
 </div>
 
 The result has important differences from the previous ones. The TempCNN model indicates the `Soy_Cotton` class as the most likely one in 2004. While this result is possibly wrong, it shows that the time series for 2004 is different from those of Forest and Pasture classes. One possible explanation is that there was forest degradation in 2004, leading to a signature that is a mix of forest and bare soil. In this case, including forest degradation samples could improve the training data. In our experience, TempCNN models are a reliable way of classifying image time series [@Simoes2021]. Recent work which compares different models also provides evidence that TempCNN models have satisfactory behavior, especially in the case of crop classes [@Russwurm2020].
@@ -322,8 +322,8 @@ plot(tae_model)
 ```
 
 <div class="figure" style="text-align: center">
-<img src="08-machinelearning_files/figure-html/tae-1.png" alt="Training evolution of Temporal Self-Attention model (source: authors)." width="100%" />
-<p class="caption">(\#fig:tae)Training evolution of Temporal Self-Attention model (source: authors).</p>
+<img src="08-machinelearning_files/figure-html/mltaemodel-1.png" alt="Training evolution of Temporal Self-Attention model (source: authors)." width="100%" />
+<p class="caption">(\#fig:mltaemodel)Training evolution of Temporal Self-Attention model (source: authors).</p>
 </div>
 
 Then, we classify a 16-year time series using the TAE model. 
@@ -337,8 +337,8 @@ point_mt_mod13q1 |>
 ```
 
 <div class="figure" style="text-align: center">
-<img src="08-machinelearning_files/figure-html/unnamed-chunk-16-1.png" alt="Classification of time series using TAE (source: authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-16)Classification of time series using TAE (source: authors).</p>
+<img src="08-machinelearning_files/figure-html/mltaeplot-1.png" alt="Classification of time series using TAE (source: authors)." width="100%" />
+<p class="caption">(\#fig:mltaeplot)Classification of time series using TAE (source: authors).</p>
 </div>
 
 Garnot and co-authors also proposed the Lightweight Temporal Self-Attention Encoder (LTAE) [@Garnot2020b], which the authors claim can achieve high classification accuracy with fewer parameters compared to other neural network models. It is a good choice for applications where computational resources are limited. The `sits_lighttae()` function implements this algorithm. The most important parameter to be set is the learning rate `lr`. Values ranging from 0.001 to 0.005 should produce good results. See also the section below on model tuning. 
@@ -361,8 +361,8 @@ plot(ltae_model)
 ```
 
 <div class="figure" style="text-align: center">
-<img src="08-machinelearning_files/figure-html/ltae-1.png" alt="Training evolution of Lightweight Temporal Self-Attention model (source: authors)." width="80%" />
-<p class="caption">(\#fig:ltae)Training evolution of Lightweight Temporal Self-Attention model (source: authors).</p>
+<img src="08-machinelearning_files/figure-html/mlltaemodel-1.png" alt="Training evolution of Lightweight Temporal Self-Attention model (source: authors)." width="80%" />
+<p class="caption">(\#fig:mlltaemodel)Training evolution of Lightweight Temporal Self-Attention model (source: authors).</p>
 </div>
 
 Then, we classify a 16-year time series using the LightTAE model. 
@@ -376,8 +376,8 @@ point_mt_mod13q1 |>
 ```
 
 <div class="figure" style="text-align: center">
-<img src="08-machinelearning_files/figure-html/unnamed-chunk-17-1.png" alt="Classification of time series using LightTAE (source: authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-17)Classification of time series using LightTAE (source: authors).</p>
+<img src="08-machinelearning_files/figure-html/mlltaeplot-1.png" alt="Classification of time series using LightTAE (source: authors)." width="100%" />
+<p class="caption">(\#fig:mlltaeplot)Classification of time series using LightTAE (source: authors).</p>
 </div>
 
 The behaviour of both `sits_tae()` and `sits_lighttae()` is similar to that of `sits_tempcnn()`. It points out the possible need for more classes and training data to better represent the transition period between 2004 and 2010. One possibility is that the training data associated with the Pasture class is only consistent with the time series between the years 2005 to 2008. However, the transition from Forest to Pasture in 2004 and from Pasture to Agriculture in 2009-2010 is subject to uncertainty since the classifiers do not agree on the resulting classes. In general, deep learning temporal-aware models are more sensitive to class variability than random forest and extreme gradient boosters. 

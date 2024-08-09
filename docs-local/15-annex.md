@@ -66,8 +66,8 @@ sits_colors_show(legend = "US_NLCD")
 ```
 
 <div class="figure" style="text-align: center">
-<img src="15-annex_files/figure-html/unnamed-chunk-4-1.png" alt="Example of defining colors for the Anderson Land Classification Scheme(source: authors)." width="100%" height="80%" />
-<p class="caption">(\#fig:unnamed-chunk-4)Example of defining colors for the Anderson Land Classification Scheme(source: authors).</p>
+<img src="15-annex_files/figure-html/colors-1.png" alt="Example of defining colors for the Anderson Land Classification Scheme(source: authors)." width="100%" height="80%" />
+<p class="caption">(\#fig:colors)Example of defining colors for the Anderson Land Classification Scheme(source: authors).</p>
 </div>
 
 The original default `sits` color table can be restored using `sits_colors_reset()`. 
@@ -375,8 +375,8 @@ plot(sinop_map, title = "Sinop Classification Map")
 ```
 
 <div class="figure" style="text-align: center">
-<img src="15-annex_files/figure-html/unnamed-chunk-15-1.png" alt="Classification map for Sinop using LightGBM (source: authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-15)Classification map for Sinop using LightGBM (source: authors).</p>
+<img src="15-annex_files/figure-html/maplgbm-1.png" alt="Classification map for Sinop using LightGBM (source: authors)." width="100%" />
+<p class="caption">(\#fig:maplgbm)Classification map for Sinop using LightGBM (source: authors).</p>
 </div>
 
 ## Adding functions to the `sits` API{-}

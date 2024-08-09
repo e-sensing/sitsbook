@@ -29,8 +29,8 @@ plot(rondonia_20LMR, date = "2022-07-16", band = "NDVI")
 ```
 
 <div class="figure" style="text-align: center">
-<img src="09-rasterclassification_files/figure-html/unnamed-chunk-2-1.png" alt="Color composite image of the cube for date 2023-07-16 (source: authors)." width="90%" />
-<p class="caption">(\#fig:unnamed-chunk-2)Color composite image of the cube for date 2023-07-16 (source: authors).</p>
+<img src="09-rasterclassification_files/figure-html/rcndvi-1.png" alt="Color composite image of the cube for date 2023-07-16 (source: authors)." width="90%" />
+<p class="caption">(\#fig:rcndvi)Color composite image of the cube for date 2023-07-16 (source: authors).</p>
 </div>
 
 ## Training data for the case study{-}
@@ -73,8 +73,8 @@ samples_deforestation_rondonia |>
 ```
 
 <div class="figure" style="text-align: center">
-<img src="09-rasterclassification_files/figure-html/unnamed-chunk-4-1.png" alt="Patterns associated to the training samples (source: authors)." width="90%" />
-<p class="caption">(\#fig:unnamed-chunk-4)Patterns associated to the training samples (source: authors).</p>
+<img src="09-rasterclassification_files/figure-html/rcpatplot-1.png" alt="Patterns associated to the training samples (source: authors)." width="90%" />
+<p class="caption">(\#fig:rcpatplot)Patterns associated to the training samples (source: authors).</p>
 </div>
 
 The patterns show different temporal responses for the selected classes. They match the typical behavior of deforestation in the Amazon. In most cases, the forest is cut at the start of the dry season (May/June). At the end of the dry season, some clear-cut areas are burned to clean the remains; this action is reflected in the steep fall of the response of B11 values of burned area samples after August. (....) The areas where native trees have been cut but some vegatation remain ("Clear_Cut_Vegetation") have values in the B8A band that increase during the period. 
@@ -101,8 +101,8 @@ plot(rfor_model)
 ```
 
 <div class="figure" style="text-align: center">
-<img src="09-rasterclassification_files/figure-html/unnamed-chunk-6-1.png" alt="Most relevant variables of the Random Forest model (source: authors)." width="90%" />
-<p class="caption">(\#fig:unnamed-chunk-6)Most relevant variables of the Random Forest model (source: authors).</p>
+<img src="09-rasterclassification_files/figure-html/rcrfmodel-1.png" alt="Most relevant variables of the Random Forest model (source: authors)." width="90%" />
+<p class="caption">(\#fig:rcrfmodel)Most relevant variables of the Random Forest model (source: authors).</p>
 </div>
 The figure shows that  EVI index values on dates 9 ("2022-05-13") and 15 ("2022-08-17") are the most informative variables for the random forest model. These bands and dates represent inflection points in the image time series. 
 
@@ -128,8 +128,8 @@ plot(rondonia_20LMR_probs, labels = "Forest", palette = "YlGn")
 ```
 
 <div class="figure" style="text-align: center">
-<img src="09-rasterclassification_files/figure-html/unnamed-chunk-7-1.png" alt="Probabilities for class Forest  (source: authors)." width="90%" />
-<p class="caption">(\#fig:unnamed-chunk-7)Probabilities for class Forest  (source: authors).</p>
+<img src="09-rasterclassification_files/figure-html/rcprobs-1.png" alt="Probabilities for class Forest  (source: authors)." width="90%" />
+<p class="caption">(\#fig:rcprobs)Probabilities for class Forest  (source: authors).</p>
 </div>
 
 The probability cube provides information on the output values of the algorithm for each class. Most probability maps contain outliers or misclassified pixels. The labeled map generated from the pixel-based time series classification method exhibits several misclassified pixels, which are small patches surrounded by a different class. This occurrence of outliers is a common issue that arises due to the inherent nature of this classification approach. Regardless of their resolution, mixed pixels are prevalent in images, and each class exhibits considerable data variability. As a result, these factors can lead to outliers that are more likely to be misclassified. To overcome this limitation, `sits` employs post-processing smoothing techniques that leverage the spatial context of the probability cubes to refine the results. These techniques will be discussed in the Chapter [Bayesian smoothing for post-processing](https://e-sensing.github.io/sitsbook/bayesian-smoothing-for-post-processing.html). In what follows, we will generate the smoothed cube to illustrate the procedure. 
@@ -148,8 +148,8 @@ plot(rondonia_20LMR_bayes, labels = c("Forest"), palette = "YlGn")
 ```
 
 <div class="figure" style="text-align: center">
-<img src="09-rasterclassification_files/figure-html/unnamed-chunk-8-1.png" alt="Smoothened probabilities for class Forest  (source: authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-8)Smoothened probabilities for class Forest  (source: authors).</p>
+<img src="09-rasterclassification_files/figure-html/rcbayes-1.png" alt="Smoothened probabilities for class Forest  (source: authors)." width="100%" />
+<p class="caption">(\#fig:rcbayes)Smoothened probabilities for class Forest  (source: authors).</p>
 </div>
 
 In general, users should perform a post-processing smoothing after obtaining the probability maps in raster format. After the post-processing operation, we apply `sits_label_classification()` to obtain a map with the most likely class for each pixel. For each pixel, the `sits_label_classification()` function takes the label with highest probability and assigns it to the resulting map. The output is a labelled map with classes.
@@ -173,8 +173,8 @@ plot(rondonia_20LMR_class,
 ```
 
 <div class="figure" style="text-align: center">
-<img src="09-rasterclassification_files/figure-html/unnamed-chunk-9-1.png" alt="Final map of deforestation obtained by random forest model(source: authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-9)Final map of deforestation obtained by random forest model(source: authors).</p>
+<img src="09-rasterclassification_files/figure-html/rcmap-1.png" alt="Final map of deforestation obtained by random forest model(source: authors)." width="100%" />
+<p class="caption">(\#fig:rcmap)Final map of deforestation obtained by random forest model(source: authors).</p>
 </div>
 
 
@@ -300,8 +300,8 @@ plot(rondonia_20LMR_class_tcnn,
 ```
 
 <div class="figure" style="text-align: center">
-<img src="09-rasterclassification_files/figure-html/unnamed-chunk-15-1.png" alt="Final map of deforestation obtained using TempCNN model (source: authors)." width="90%" />
-<p class="caption">(\#fig:unnamed-chunk-15)Final map of deforestation obtained using TempCNN model (source: authors).</p>
+<img src="09-rasterclassification_files/figure-html/rctcnnmap-1.png" alt="Final map of deforestation obtained using TempCNN model (source: authors)." width="90%" />
+<p class="caption">(\#fig:rctcnnmap)Final map of deforestation obtained using TempCNN model (source: authors).</p>
 </div>
 
 
@@ -341,8 +341,8 @@ plot(rondonia_class,
 ```
 
 <div class="figure" style="text-align: center">
-<img src="09-rasterclassification_files/figure-html/unnamed-chunk-16-1.png" alt="Original classification map (source: authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-16)Original classification map (source: authors).</p>
+<img src="09-rasterclassification_files/figure-html/rcreclasorig-1.png" alt="Original classification map (source: authors)." width="100%" />
+<p class="caption">(\#fig:rcreclasorig)Original classification map (source: authors).</p>
 </div>
 
 The above map shows the total extent of deforestation by clear cuts estimated by the `sits` random forest algorithm in an area in Rondonia, Brazil, based on a time series of Sentinel-2 images for the period 2020-06-04 to 2021-08-26. Suppose we want to estimate the deforestation that occurred from June 2020 to August 2021. We need a reference map containing information on forest cuts before 2020. 
@@ -414,7 +414,7 @@ sits_view(prodes_2021, legend = def_legend)
 
 <div class="figure" style="text-align: center">
 <img src="./images/view_prodes_2021.png" alt="Deforestation map produced by PRODES (source: authors)." width="90%" />
-<p class="caption">(\#fig:prodes)Deforestation map produced by PRODES (source: authors).</p>
+<p class="caption">(\#fig:prodesview)Deforestation map produced by PRODES (source: authors).</p>
 </div>
 
 Taking the PRODES map as our reference, we can include new labels in the classified map produced by `sits` using `sits_reclassify()`. The new class name Defor_2020 will be applied to all pixels that PRODES considers that have been deforested before July 2020. We also include a Non_Forest class to include all pixels that PRODES takes as not covered by native vegetation, such as wetlands and rocky areas. The PRODES classes will be used as a mask over the `sits` deforestation map.
@@ -455,8 +455,8 @@ plot(rondonia_def_2021,
 ```
 
 <div class="figure" style="text-align: center">
-<img src="09-rasterclassification_files/figure-html/unnamed-chunk-20-1.png" alt="Deforestation map by sits masked by PRODES map (source: authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-20)Deforestation map by sits masked by PRODES map (source: authors).</p>
+<img src="09-rasterclassification_files/figure-html/prodesreclass-1.png" alt="Deforestation map by sits masked by PRODES map (source: authors)." width="100%" />
+<p class="caption">(\#fig:prodesreclass)Deforestation map by sits masked by PRODES map (source: authors).</p>
 </div>
 
 The reclassified map has been split into deforestation before mid-2020 (using the PRODES map) and the areas classified by `sits` that are taken as being deforested from mid-2020 to mid-2021. This allows experts to measure how much deforestation occurred in this period according to `sits` and compare the result with the PRODES map. 

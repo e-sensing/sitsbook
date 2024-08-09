@@ -17,7 +17,7 @@ The main idea behind our post-processing method is that a pixel-based classifica
 
 <div class="figure" style="text-align: center">
 <img src="images/map_no_smooth_v2.png" alt="Detail of labelled map produced by pixel-based random forest without smoothing (source: authors)" width="80%" />
-<p class="caption">(\#fig:unnamed-chunk-2)Detail of labelled map produced by pixel-based random forest without smoothing (source: authors)</p>
+<p class="caption">(\#fig:bayesexnosmooth)Detail of labelled map produced by pixel-based random forest without smoothing (source: authors)</p>
 </div>
 
 To maintain consistency and coherence in our class representations, we should minimise small variations or misclassifications. We incorporate spatial coherence as a post-processing step to accomplish this. The probabilities associated with each pixel will change based on statistical inference, which depends on the values for each neighbourhood. Using the recalculated probabilities for each pixel, we get a better version of the final classified map.  
@@ -27,7 +27,7 @@ Consider the figure below, which is the result of Bayesian smoothing on the rand
 
 <div class="figure" style="text-align: center">
 <img src="images/map_smooth_v2.png" alt="Detail of labelled map produced by pixel-based random forest after smoothing (source: uthors)" width="70%" />
-<p class="caption">(\#fig:mapsmooth)Detail of labelled map produced by pixel-based random forest after smoothing (source: uthors)</p>
+<p class="caption">(\#fig:bayesexsmooth)Detail of labelled map produced by pixel-based random forest after smoothing (source: uthors)</p>
 </div>
 
 
@@ -137,8 +137,8 @@ plot(rondonia_20LLQ_probs,
 ```
 
 <div class="figure" style="text-align: center">
-<img src="10-bayesiansmoothing_files/figure-html/unnamed-chunk-3-1.png" alt="Probability map produced for classes Forest and Clear_Cut_Bare_Soil (source: authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-3)Probability map produced for classes Forest and Clear_Cut_Bare_Soil (source: authors).</p>
+<img src="10-bayesiansmoothing_files/figure-html/bayesprobmapfor-1.png" alt="Probability map produced for classes Forest and Clear_Cut_Bare_Soil (source: authors)." width="100%" />
+<p class="caption">(\#fig:bayesprobmapfor)Probability map produced for classes Forest and Clear_Cut_Bare_Soil (source: authors).</p>
 </div>
 
 ``` r
@@ -148,8 +148,8 @@ plot(rondonia_20LLQ_probs,
 ```
 
 <div class="figure" style="text-align: center">
-<img src="10-bayesiansmoothing_files/figure-html/unnamed-chunk-4-1.png" alt="Probability map produced for classes Forest and Clear_Cut_Bare_Soil (source: authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-4)Probability map produced for classes Forest and Clear_Cut_Bare_Soil (source: authors).</p>
+<img src="10-bayesiansmoothing_files/figure-html/bayesprobmapveg-1.png" alt="Probability map produced for classes Forest and Clear_Cut_Bare_Soil (source: authors)." width="100%" />
+<p class="caption">(\#fig:bayesprobmapveg)Probability map produced for classes Forest and Clear_Cut_Bare_Soil (source: authors).</p>
 </div>
               
 The probability map for `Forest` shows high values associated with compact patches and linear stretches in riparian areas. Class `Clear_Cut_Bare_Soil` is mostly composed of dense areas of high probability whose geometrical boundaries result from forest cuts. Areas of class `Clear_Cut_Vegetation` are is less well-defined than the others; this is to be expected since this is a transitional class between a natural forest and areas of bare soil. Patches associated to class `Clear_Cut_Burned_Area` include both homogeneous areas of high probability and areas of mixed response. Since classes have different behaviours, the post-processing procedure should enable users to control how to handle outliers and border pixels of each class.  
@@ -174,8 +174,8 @@ plot(rondonia_20LLQ_class,
 ```
 
 <div class="figure" style="text-align: center">
-<img src="10-bayesiansmoothing_files/figure-html/unnamed-chunk-5-1.png" alt="Classified map without smoothing (source: authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-5)Classified map without smoothing (source: authors).</p>
+<img src="10-bayesiansmoothing_files/figure-html/bayesmapnosmooth-1.png" alt="Classified map without smoothing (source: authors)." width="100%" />
+<p class="caption">(\#fig:bayesmapnosmooth)Classified map without smoothing (source: authors).</p>
 </div>
 
 ## Assessing the local logit variance{-}
@@ -203,8 +203,8 @@ plot(rondonia_20LLQ_var,
 ```
 
 <div class="figure" style="text-align: center">
-<img src="10-bayesiansmoothing_files/figure-html/unnamed-chunk-6-1.png" alt="Variance map for classes Forest and Clear_Cut_Bare_Soil (source: authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-6)Variance map for classes Forest and Clear_Cut_Bare_Soil (source: authors).</p>
+<img src="10-bayesiansmoothing_files/figure-html/bayesvarfor-1.png" alt="Variance map for classes Forest and Clear_Cut_Bare_Soil (source: authors)." width="100%" />
+<p class="caption">(\#fig:bayesvarfor)Variance map for classes Forest and Clear_Cut_Bare_Soil (source: authors).</p>
 </div>
 
 
@@ -217,8 +217,8 @@ plot(rondonia_20LLQ_var,
 ```
 
 <div class="figure" style="text-align: center">
-<img src="10-bayesiansmoothing_files/figure-html/unnamed-chunk-7-1.png" alt="Variance map for clases Clear_Cut_Vegetation and Clear_Cut_Burned_Area (source: authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-7)Variance map for clases Clear_Cut_Vegetation and Clear_Cut_Burned_Area (source: authors).</p>
+<img src="10-bayesiansmoothing_files/figure-html/bayesvarveg-1.png" alt="Variance map for clases Clear_Cut_Vegetation and Clear_Cut_Burned_Area (source: authors)." width="100%" />
+<p class="caption">(\#fig:bayesvarveg)Variance map for clases Clear_Cut_Vegetation and Clear_Cut_Burned_Area (source: authors).</p>
 </div>
 
 
@@ -294,8 +294,8 @@ plot(rondonia_20LLQ_smooth, labels = c("Clear_Cut_Vegetation", "Forest"))
 ```
 
 <div class="figure" style="text-align: center">
-<img src="10-bayesiansmoothing_files/figure-html/unnamed-chunk-9-1.png" alt="Probability maps after bayesian smoothing (source: authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-9)Probability maps after bayesian smoothing (source: authors).</p>
+<img src="10-bayesiansmoothing_files/figure-html/bayessmoothfor-1.png" alt="Probability maps after bayesian smoothing (source: authors)." width="100%" />
+<p class="caption">(\#fig:bayessmoothfor)Probability maps after bayesian smoothing (source: authors).</p>
 </div>
 
 Bayesian smoothing has removed some of the local variability associated with misclassified pixels that differ from their neighbors, specially in the case of transitional classes such as `Clear_Cut_Vegetation`. The smoothing impact is best appreciated by comparing the labeled map produced without smoothing to the one that follows the procedure, as shown below.
@@ -317,8 +317,8 @@ plot(rondonia_20LLQ_class_v2,
 ```
 
 <div class="figure" style="text-align: center">
-<img src="10-bayesiansmoothing_files/figure-html/unnamed-chunk-10-1.png" alt="Final classification map after Bayesian smoothing with 7 x 7 window, using high smoothness values (source: authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-10)Final classification map after Bayesian smoothing with 7 x 7 window, using high smoothness values (source: authors).</p>
+<img src="10-bayesiansmoothing_files/figure-html/bayessmoothmap-1.png" alt="Final classification map after Bayesian smoothing with 7 x 7 window, using high smoothness values (source: authors)." width="100%" />
+<p class="caption">(\#fig:bayessmoothmap)Final classification map after Bayesian smoothing with 7 x 7 window, using high smoothness values (source: authors).</p>
 </div>
 
 In the smoothed map, outliers inside forest areas and in the class borders have been removed. The salt-and-pepper effect associated to transitional classes has also been replaced by more coherent estimates. The smoothed map shown much improvements compared with the non-smoothed one. In conclusion, post-processing is a desirable step in any classification process. Bayesian smoothing improves the borders between the objects created by the classification and removes outliers that result from pixel-based classification. It is a reliable method that should be used in most situations. 

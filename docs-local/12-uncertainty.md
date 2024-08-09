@@ -109,8 +109,8 @@ plot(s2_reg_cube_ro,
 ```
 
 <div class="figure" style="text-align: center">
-<img src="12-uncertainty_files/figure-html/unnamed-chunk-2-1.png" alt="Area in Rondonia near Samuel dam (source: authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-2)Area in Rondonia near Samuel dam (source: authors).</p>
+<img src="12-uncertainty_files/figure-html/uncubefirst-1.png" alt="Area in Rondonia near Samuel dam (source: authors)." width="100%" />
+<p class="caption">(\#fig:uncubefirst)Area in Rondonia near Samuel dam (source: authors).</p>
 </div>
 
 The second image is from 2020-11-09 and shows that most of the inundation area dries during the dry season. In early November 2020, after the end of the dry season, the inundation area is dry and has a response similar to bare soil and burned areas. The Madeira River can be seen running through the dried inundation area. 
@@ -126,8 +126,8 @@ plot(s2_reg_cube_ro,
 ```
 
 <div class="figure" style="text-align: center">
-<img src="12-uncertainty_files/figure-html/unnamed-chunk-3-1.png" alt="Area in Rondonia near Samuel dam in November 2021 (source: authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-3)Area in Rondonia near Samuel dam in November 2021 (source: authors).</p>
+<img src="12-uncertainty_files/figure-html/uncubesec-1.png" alt="Area in Rondonia near Samuel dam in November 2021 (source: authors)." width="100%" />
+<p class="caption">(\#fig:uncubesec)Area in Rondonia near Samuel dam in November 2021 (source: authors).</p>
 </div>
 
 The third image is from 2021-08-08. In early August 2021, after the wet season, the inundation area is again covered by a shallow water layer. Several burned and clear-cut areas can also be seen in the August 2021 image compared with the July 2020 one. Given the contrast between the wet and dry seasons, correct land classification of this area is hard. 
@@ -138,8 +138,8 @@ plot(s2_reg_cube_ro, red = "B11", green = "B8A", blue = "B02", date = "2021-08-0
 ```
 
 <div class="figure" style="text-align: center">
-<img src="12-uncertainty_files/figure-html/unnamed-chunk-4-1.png" alt="Area in Rondonia near Samuel dam in August 2021 (source: authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-4)Area in Rondonia near Samuel dam in August 2021 (source: authors).</p>
+<img src="12-uncertainty_files/figure-html/uncubethird-1.png" alt="Area in Rondonia near Samuel dam in August 2021 (source: authors)." width="100%" />
+<p class="caption">(\#fig:uncubethird)Area in Rondonia near Samuel dam in August 2021 (source: authors).</p>
 </div>
 
 The next step is to classify this study area using a training set with 480 times series collected over the state of Rondonia (Brazil) for detecting deforestation. The training set uses 4 classes (`Burned_Area`, `Forest`,` `Highly_Degraded`, and `Cleared_Area`). The cube is classified using a Random Forest model, post-processed by Bayesian smoothing, and then labeled.
@@ -190,8 +190,8 @@ plot(s2_cube_label)
 ```
 
 <div class="figure" style="text-align: center">
-<img src="12-uncertainty_files/figure-html/unnamed-chunk-5-1.png" alt="Classified map for area in Rondonia near Samuel dam (source: authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-5)Classified map for area in Rondonia near Samuel dam (source: authors).</p>
+<img src="12-uncertainty_files/figure-html/unmapbefore-1.png" alt="Classified map for area in Rondonia near Samuel dam (source: authors)." width="100%" />
+<p class="caption">(\#fig:unmapbefore)Classified map for area in Rondonia near Samuel dam (source: authors).</p>
 </div>
 
 The resulting map correctly identifies the forest area and the deforestation. However, it wrongly classifies the area covered by the Samuel hydroelectric dam. The reason is the lack of samples for classes related to surface water and wetlands. To improve the classification, we need to improve our samples. To do that, the first step is to calculate the uncertainty of the classification.
@@ -211,8 +211,8 @@ plot(s2_cube_uncert)
 ```
 
 <div class="figure" style="text-align: center">
-<img src="12-uncertainty_files/figure-html/unnamed-chunk-6-1.png" alt="Uncertainty map for classification in Rondonia near Samuel dam (source: authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-6)Uncertainty map for classification in Rondonia near Samuel dam (source: authors).</p>
+<img src="12-uncertainty_files/figure-html/unmarginbefore-1.png" alt="Uncertainty map for classification in Rondonia near Samuel dam (source: authors)." width="100%" />
+<p class="caption">(\#fig:unmarginbefore)Uncertainty map for classification in Rondonia near Samuel dam (source: authors).</p>
 </div>
 
 As expected, the places of highest uncertainty are those covered by surface water or associated with wetlands. These places are likely to be misclassified. For this reason, `sits` provides `sits_uncertainty_sampling()`, which takes the uncertainty cube as its input and produces a tibble with locations in WGS84 with high uncertainty. The function has three parameters: `n`, the number of uncertain points to be included; `min_uncert`, the minimum value of uncertainty for pixels to be included in the list; and `sampling_window`, which defines a window where only one sample will be selected. The aim of  `sampling_window` is to improve the spatial distribution of the new samples by avoiding points in the same neighborhood to be included. After running the function, we can use `sits_view()` to visualize the location of the samples.
@@ -234,7 +234,7 @@ sits_view(new_samples)
 
 <div class="figure" style="text-align: center">
 <img src="./images/samuel_dam.png" alt="Location of uncertain pixel for classification in Rondonia near Samuel dam (source: authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-8)Location of uncertain pixel for classification in Rondonia near Samuel dam (source: authors).</p>
+<p class="caption">(\#fig:unview)Location of uncertain pixel for classification in Rondonia near Samuel dam (source: authors).</p>
 </div>
 
 The visualization shows that the samples are located in the areas covered by the Samuel data. Thus, we designate these samples as Wetlands. A more detailed evaluation, which is recommended in practice, requires analysing these samples with an exploration software such as QGIS and individually labeling each sample. In our case, we will take a direct approach for illustration purposes.
@@ -294,8 +294,8 @@ plot(s2_cube_label_v2)
 ```
 
 <div class="figure" style="text-align: center">
-<img src="12-uncertainty_files/figure-html/unnamed-chunk-9-1.png" alt="New land classification in Rondonia near Samuel dam (source: authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-9)New land classification in Rondonia near Samuel dam (source: authors).</p>
+<img src="12-uncertainty_files/figure-html/unmapafter-1.png" alt="New land classification in Rondonia near Samuel dam (source: authors)." width="100%" />
+<p class="caption">(\#fig:unmapafter)New land classification in Rondonia near Samuel dam (source: authors).</p>
 </div>
 
 The results show a significant quality gain over the earlier classification. There are still some areas of confusion in the exposed soils inside the inundation area, some of which have been classified as burned areas. It is also useful to show the uncertainty map associated with the second model. 
@@ -305,7 +305,7 @@ The results show a significant quality gain over the earlier classification. The
 # Calculate the uncertainty cube
 s2_cube_uncert_v2 <- sits_uncertainty(
   cube = s2_cube_bayes_v2,
-  type = "entropy",
+  type = "margin",
   output_dir = "./tempdir/chp12/",
   version = "v2",
   memsize = 16,
@@ -316,8 +316,8 @@ plot(s2_cube_uncert_v2)
 ```
 
 <div class="figure" style="text-align: center">
-<img src="12-uncertainty_files/figure-html/unnamed-chunk-10-1.png" alt="Uncertainty map for classification in Rondonia near Samuel dam - improved model (source: authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-10)Uncertainty map for classification in Rondonia near Samuel dam - improved model (source: authors).</p>
+<img src="12-uncertainty_files/figure-html/unentropy-1.png" alt="Uncertainty map for classification in Rondonia near Samuel dam - improved model (source: authors)." width="100%" />
+<p class="caption">(\#fig:unentropy)Uncertainty map for classification in Rondonia near Samuel dam - improved model (source: authors).</p>
 </div>
  
 As the new uncertainty map shows, there is a significant improvement in the quality of the classification. The remaining areas of high uncertainty are those affected by the contrast between the wet and dry seasons close to the inundation area. These areas are low-laying places that sometimes are covered by water and sometimes are bare soil areas throughout the year, depending on the intensity of the rainy season. To further improve the classification quality, we could obtain new samples of those uncertain areas, label them, and add them to samples. In general, as this Chapter shows, combining uncertainty measurements with active learning is a recommended practice for improving classification results. 

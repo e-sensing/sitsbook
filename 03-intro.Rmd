@@ -2,7 +2,8 @@
 
 ```{r, include = FALSE}
 source("common.R")
-dir.create("./tempdir/chp3")
+if (!file.exists("./tempdir/chp3"))
+  dir.create("./tempdir/chp3")
 ```
 
 <a href="https://www.kaggle.com/esensing/introduction-to-sits" target="_blank"><img src="https://kaggle.com/static/images/open-in-kaggle.svg"/></a>
@@ -125,7 +126,7 @@ To build a data cube from local files, users must provide information about the 
 (c) `data_dir`, the local directory where the image files are stored; 
 (d) `parse_info`, a vector of strings stating how file names store information on "tile", "band", and "date". In this case, local images are stored in files whose names are similar to `TERRA_MODIS_012010_EVI_2014-07-28.tif`. This file represents an image obtained by the MODIS sensor onboard the TERRA satellite, covering part of tile 012010 in the EVI band for date 2014-07-28.
 
-```{r, out.width = "100%", tidy="styler", fig.align = 'center', fig.cap="False color MODIS image for NDVI band in 2013-09-14 from sinop data cube (source: Authors)."}
+```{r introndvi, out.width = "100%", tidy="styler", fig.align = 'center', fig.cap="False color MODIS image for NDVI band in 2013-09-14 from sinop data cube (source: Authors)."}
 # load package "tibble"
 library(tibble)
 # load packages "sits" and "sitsdata"
@@ -204,7 +205,7 @@ summary(samples_matogrosso_mod13q1)
 
 It is helpful to plot the dispersion of the time series. In what follows, for brevity, we will filter only one label (`Forest`) and select one index (NDVI). Note that for filtering the label we use a function from `dplyr` package, while for selecting the index we use `sits_select()`. We use two different functions for selection because of they way metadata is stored in a samples files. The labels for the samples are listed in column `label` in the samples tibble, as shown above. In this case, one can use functions from the `dplyr` package to extract subsets. In particular, the function `dplyr::filter` retaining all rows that satisfy a given condition. In the above example, the result of `dplyr::filter` is the set of samples associated to the "Forest" label. The second selection involves obtaining only the values for the NDVI band. This operation requires access to the `time_series` column, which is stored as a list. In this case, selection with `dplyr::filter` will not work. To handle such cases, `sits` provides `sits_select()` to select subsets inside the `time_series` list. 
 
-```{r, timeseriesforest, out.width = "80%", tidy="styler", fig.align = 'center', fig.cap="Joint plot of all samples in band NDVI for label Forest (source: authors).", strip.white = FALSE}
+```{r timeseriesforest, out.width = "80%", tidy="styler", fig.align = 'center', fig.cap="Joint plot of all samples in band NDVI for label Forest (source: authors).", strip.white = FALSE}
 # select all samples with label "Forest"
 samples_forest <- dplyr::filter(
     samples_matogrosso_mod13q1, 
@@ -228,7 +229,7 @@ The next step is to train a machine learning (ML) model using `sits_train()`. It
 
 Since the time series data has four attributes (EVI, NDVI, NIR, and MIR) and the data cube images have only two, we select the NDVI and EVI values and use the resulting data for training. To build the classification model, we use a random forest model called by `sits_rfor()`. Results from the random forest model can vary between different runs, due to the stochastic nature of the algorithm, For this reason, in the code fragment below, we set the seed of R's pseudo-random number generation explicitly to ensure the same results are produced for documentation purposes.
 
-```{r, out.width = "80%", tidy="styler", fig.align="center", fig.cap="Most relevant variables of trained random forest model (source: authors)."}
+```{r rfintro, out.width = "80%", tidy="styler", fig.align="center", fig.cap="Most relevant variables of trained random forest model (source: authors)."}
 set.seed(03022024)
 # Select the bands NDVI and EVI
 samples_2bands <- sits_select(
@@ -249,7 +250,7 @@ plot(rf_model)
 
 After training the machine learning model, the next step is to classify the data cube using `sits_classify()`. This function produces a set of raster probability maps, one for each class. For each of these maps, the value of a pixel is proportional to the probability that it belongs to the class. This function has two mandatory parameters: `data`, the data cube or time series tibble to be classified; and `ml_model`, the trained ML model. Optional parameters include: (a) `multicores`, number of cores to be used; (b) `memsize`, RAM used in the classification; (c) `output_dir`, the directory where the classified raster files will be written. Details of the classification process are available in "Image classification in data cubes".
 
-```{r, out.width = "90%", tidy="styler", fig.align = 'center', fig.cap = "Probability map for class Forest (source: authors)."}
+```{r pbforintro, out.width = "90%", tidy="styler", fig.align = 'center', fig.cap = "Probability map for class Forest (source: authors)."}
 # Classify the raster image
 sinop_probs <- sits_classify(
     data = sinop_cube, 
@@ -269,7 +270,7 @@ After completing the classification, we plot the probability maps for class `For
 
 When working with big Earth observation data, there is much variability in each class. As a result, some pixels will be misclassified. These errors are more likely to occur in transition areas between classes. To address these problems, `sits_smooth()` takes a probability cube as input and  uses the class probabilities of each pixel's neighborhood to reduce labeling uncertainty. Plotting the smoothed probability map for class Forest shows that most outliers have been removed.
 
-```{r, out.width = "90%",  tidy="styler", fig.align = 'center', fig.cap = "Smoothed probability map for class Forest (source: authors)."}
+```{r byforintro, out.width = "90%",  tidy="styler", fig.align = 'center', fig.cap = "Smoothed probability map for class Forest (source: authors)."}
 # Perform spatial smoothing
 sinop_bayes <- sits_smooth(
     cube = sinop_probs,
@@ -284,7 +285,7 @@ plot(sinop_bayes, labels = "Forest", palette = "BuGn")
 
 After removing outliers using local smoothing, the final classification map can be obtained using `sits_label_classification()`. This function assigns each pixel to the class with the highest probability.
 
-```{r, out.width = "100%", tidy="styler", fig.align="center", fig.cap = "Classification map for Sinop (source: authors)."}
+```{r mapintro, out.width = "100%", tidy="styler", fig.align="center", fig.cap = "Classification map for Sinop (source: authors)."}
 # Label the probability file 
 sinop_map <- sits_label_classification(
     cube = sinop_bayes, 

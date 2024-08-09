@@ -36,8 +36,8 @@ plot(ro_cube_20LMR, blue = "B02", green = "B8A", red = "B11", date = "2022-08-17
 ```
 
 <div class="figure" style="text-align: center">
-<img src="13-ensembleprediction_files/figure-html/unnamed-chunk-3-1.png" alt="Subset of Sentinel-2 tile 20LMR (source: authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-3)Subset of Sentinel-2 tile 20LMR (source: authors).</p>
+<img src="13-ensembleprediction_files/figure-html/ensmapfirst-1.png" alt="Subset of Sentinel-2 tile 20LMR (source: authors)." width="100%" />
+<p class="caption">(\#fig:ensmapfirst)Subset of Sentinel-2 tile 20LMR (source: authors).</p>
 </div>
 
 We will train three models: Random Forests (RF), Light Temporal Attention Encoder (LTAE), and Temporal Convolution Neural Networks (TempCNN), classify the cube with them, and then combine their results. The example uses all spectral bands. We first run the RF classification.
@@ -129,8 +129,8 @@ plot(ro_cube_20LMR_rfor_class,
 ```
 
 <div class="figure" style="text-align: center">
-<img src="13-ensembleprediction_files/figure-html/unnamed-chunk-8-1.png" alt="Land classification in Rondonia using a random forest algorithm  (source: authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-8)Land classification in Rondonia using a random forest algorithm  (source: authors).</p>
+<img src="13-ensembleprediction_files/figure-html/unrforclass-1.png" alt="Land classification in Rondonia using a random forest algorithm  (source: authors)." width="100%" />
+<p class="caption">(\#fig:unrforclass)Land classification in Rondonia using a random forest algorithm  (source: authors).</p>
 </div>
 
 The next step is to classify the same area using a tempCNN algorithm, as shown below. 
@@ -204,8 +204,8 @@ plot(ro_cube_20LMR_tcnn_class,
 ```
 
 <div class="figure" style="text-align: center">
-<img src="13-ensembleprediction_files/figure-html/unnamed-chunk-12-1.png" alt="Land classification in Rondonia using tempCNN (source: authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-12)Land classification in Rondonia using tempCNN (source: authors).</p>
+<img src="13-ensembleprediction_files/figure-html/untcnnmap-1.png" alt="Land classification in Rondonia using tempCNN (source: authors)." width="100%" />
+<p class="caption">(\#fig:untcnnmap)Land classification in Rondonia using tempCNN (source: authors).</p>
 </div>
 
 The third model is the Light Temporal Attention Encoder (LTAE), which has been discussed. 
@@ -278,8 +278,8 @@ plot(ro_cube_20LMR_ltae_class,
 ```
 
 <div class="figure" style="text-align: center">
-<img src="13-ensembleprediction_files/figure-html/unnamed-chunk-16-1.png" alt="Land classification in Rondonia using tempCNN (source: authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-16)Land classification in Rondonia using tempCNN (source: authors).</p>
+<img src="13-ensembleprediction_files/figure-html/unltaemap-1.png" alt="Land classification in Rondonia using tempCNN (source: authors)." width="100%" />
+<p class="caption">(\#fig:unltaemap)Land classification in Rondonia using tempCNN (source: authors).</p>
 </div>
 
 To understand the differences between the results, it is useful to compare the resulting class areas produced by the different algorithms.
@@ -305,17 +305,17 @@ dplyr::inner_join(sum1, sum2, by = "class") |>
 
 ```
 #> # A tibble: 9 × 4
-#>   class                     rfor    tcnn    ltae
-#>   <chr>                    <dbl>   <dbl>   <dbl>
-#> 1 Clear_Cut_Bare_Soil    80       67      67    
-#> 2 Clear_Cut_Burned_Area   1.7      4.1     4.3  
-#> 3 Clear_Cut_Vegetation   19       17      18    
-#> 4 Forest                280      250     240    
-#> 5 Mountainside_Forest     0.0088   0.056   0.058
-#> 6 Riparian_Forest        47       44      44    
-#> 7 Seasonally_Flooded     70      120     120    
-#> 8 Water                  63       69      69    
-#> 9 Wetland                14       10      10
+#>   class                     rfor   tcnn    ltae
+#>   <chr>                    <dbl>  <dbl>   <dbl>
+#> 1 Clear_Cut_Bare_Soil    80       68     68    
+#> 2 Clear_Cut_Burned_Area   1.7      4.7    4.8  
+#> 3 Clear_Cut_Vegetation   19       14     14    
+#> 4 Forest                280      240    240    
+#> 5 Mountainside_Forest     0.0088   0.04   0.028
+#> 6 Riparian_Forest        47       40     40    
+#> 7 Seasonally_Flooded     70      130    130    
+#> 8 Water                  63       67     66    
+#> 9 Wetland                14       13     13
 ```
 
 
@@ -358,8 +358,8 @@ plot(ro_cube_20LMR_average_class,
 ```
 
 <div class="figure" style="text-align: center">
-<img src="13-ensembleprediction_files/figure-html/unnamed-chunk-19-1.png" alt="Land classification in Rondonia using the average of the probabilities produced by Random Forest and SVM algorithms (source: authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-19)Land classification in Rondonia using the average of the probabilities produced by Random Forest and SVM algorithms (source: authors).</p>
+<img src="13-ensembleprediction_files/figure-html/enavemap-1.png" alt="Land classification in Rondonia using the average of the probabilities produced by Random Forest and SVM algorithms (source: authors)." width="100%" />
+<p class="caption">(\#fig:enavemap)Land classification in Rondonia using the average of the probabilities produced by Random Forest and SVM algorithms (source: authors).</p>
 </div>
 
 We can also consider the class areas produced by the ensemble combination and compare them to the original estimates.
@@ -378,17 +378,17 @@ dplyr::inner_join(sum1, sum2, by = "class") |>
 
 ```
 #> # A tibble: 9 × 5
-#>   class                     rfor    tcnn    ltae     ave
-#>   <chr>                    <dbl>   <dbl>   <dbl>   <dbl>
-#> 1 Clear_Cut_Bare_Soil    80       67      67      71    
-#> 2 Clear_Cut_Burned_Area   1.7      4.1     4.3     3.8  
-#> 3 Clear_Cut_Vegetation   19       17      18      15    
-#> 4 Forest                280      250     240     250    
-#> 5 Mountainside_Forest     0.0088   0.056   0.058   0.036
-#> 6 Riparian_Forest        47       44      44      45    
-#> 7 Seasonally_Flooded     70      120     120     110    
-#> 8 Water                  63       69      69      68    
-#> 9 Wetland                14       10      10      11
+#>   class                     rfor   tcnn    ltae     ave
+#>   <chr>                    <dbl>  <dbl>   <dbl>   <dbl>
+#> 1 Clear_Cut_Bare_Soil    80       68     68      71    
+#> 2 Clear_Cut_Burned_Area   1.7      4.7    4.8     3.8  
+#> 3 Clear_Cut_Vegetation   19       14     14      15    
+#> 4 Forest                280      240    240     250    
+#> 5 Mountainside_Forest     0.0088   0.04   0.028   0.036
+#> 6 Riparian_Forest        47       40     40      45    
+#> 7 Seasonally_Flooded     70      130    130     110    
+#> 8 Water                  63       67     66      68    
+#> 9 Wetland                14       13     13      11
 ```
 
 As expected, the ensemble map combines information from the three models. Taking the RF model prediction as a base, there is a reduction in the areas of classes `Clear_Cut_Bare_Soil` and `Forest`, confirming the tendency of the RF model to overemphasize the most frequent classes. The LTAE and TempCNN models are more sensitive to class variations and capture time-varying classes such as `Riparian_Forest` and `Clear_Cut_Burned_Area` in more detail than the RF model. However, both TempCNN and LTAE tend to confuse the deforestation-related class `Clear_Cut_Vegetation` and the natural class `Riparian_Forest` more than the RF model. This effect is evident in the left bank of the Madeira river in the centre-left region of the image. Also, both the LTAE and TempCNN maps are more grainy and have more spatial variability than the RF map.

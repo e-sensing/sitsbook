@@ -195,8 +195,8 @@ clusters <- sits_cluster_dendro(
 ```
 
 <div class="figure" style="text-align: center">
-<img src="07-clustering_files/figure-html/unnamed-chunk-4-1.png" alt="Example of hierarchical clustering for a two class set of time series (source: authors)." width="90%" />
-<p class="caption">(\#fig:unnamed-chunk-4)Example of hierarchical clustering for a two class set of time series (source: authors).</p>
+<img src="07-clustering_files/figure-html/cludendro-1.png" alt="Example of hierarchical clustering for a two class set of time series (source: authors)." width="90%" />
+<p class="caption">(\#fig:cludendro)Example of hierarchical clustering for a two class set of time series (source: authors).</p>
 </div>
 
 The `sits_cluster_dendro()` function has one mandatory parameter (`samples`), with the samples to be evaluated. Optional parameters include `bands`, `dist_method`, and `linkage`. The `dist_method` parameter specifies how to calculate the distance between two time series. We recommend a metric that uses dynamic time warping (DTW) [@Petitjean2012], as DTW is a reliable method for measuring differences between satellite image time series [@Maus2016]. The options available in `sits` are based on those provided by package `dtwclust`, which include `dtw_basic`, `dtw_lb`, and `dtw2`. Please check `?dtwclust::tsclust` for more information on DTW distances.
@@ -253,7 +253,7 @@ The input data for quality assessment is a set of training samples, which are hi
 
 <div class="figure" style="text-align: center">
 <img src="./images/methodology_bayes_som.png" alt="Using SOM for class noise reduction (Source: Santos et al. (2021). Reproduction under fair use doctrine)." width="90%" height="90%" />
-<p class="caption">(\#fig:unnamed-chunk-7)Using SOM for class noise reduction (Source: Santos et al. (2021). Reproduction under fair use doctrine).</p>
+<p class="caption">(\#fig:clusommet)Using SOM for class noise reduction (Source: Santos et al. (2021). Reproduction under fair use doctrine).</p>
 </div>
 
 
@@ -286,8 +286,8 @@ plot(som_cluster)
 ```
 
 <div class="figure">
-<img src="07-clustering_files/figure-html/unnamed-chunk-10-1.png" alt="SOM map for the Cerrado samples (source: authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-10)SOM map for the Cerrado samples (source: authors).</p>
+<img src="07-clustering_files/figure-html/clusommap-1.png" alt="SOM map for the Cerrado samples (source: authors)." width="100%" />
+<p class="caption">(\#fig:clusommap)SOM map for the Cerrado samples (source: authors).</p>
 </div>
 
 The output of the `sits_som_map()` is a list with three elements: (a) `data`, the original set of time series with two additional columns for each time series: `id_sample` (the original id of each sample) and `id_neuron` (the id of the neuron to which it belongs); (b) `labelled_neurons`, a tibble with information on the neurons. For each neuron, it gives the prior and posterior probabilities of all labels which occur in the samples assigned to it; and (c) the SOM grid. To plot the SOM grid, use `plot()`. The neurons are labelled using majority voting.
@@ -310,16 +310,16 @@ som_eval
 #> # A tibble: 66 × 4
 #>    id_cluster cluster        class          mixture_percentage
 #>         <int> <chr>          <chr>                       <dbl>
-#>  1          1 Dense_Woodland Dense_Woodland           79.6    
-#>  2          1 Dense_Woodland Pasture                   5.44   
-#>  3          1 Dense_Woodland Rocky_Savanna             8.20   
-#>  4          1 Dense_Woodland Savanna                   3.20   
-#>  5          1 Dense_Woodland Silviculture              3.48   
-#>  6          1 Dense_Woodland Soy_Corn                  0.0607 
-#>  7          1 Dense_Woodland Soy_Fallow                0.00868
-#>  8          2 Dunes          Dunes                   100      
-#>  9          3 Fallow_Cotton  Fallow_Cotton            45.3    
-#> 10          3 Fallow_Cotton  Millet_Cotton            20.3    
+#>  1          1 Dense_Woodland Dense_Woodland            78.1   
+#>  2          1 Dense_Woodland Pasture                    5.56  
+#>  3          1 Dense_Woodland Rocky_Savanna              8.95  
+#>  4          1 Dense_Woodland Savanna                    3.88  
+#>  5          1 Dense_Woodland Silviculture               3.48  
+#>  6          1 Dense_Woodland Soy_Corn                   0.0249
+#>  7          2 Dunes          Dunes                    100     
+#>  8          3 Fallow_Cotton  Dense_Woodland             0.169 
+#>  9          3 Fallow_Cotton  Fallow_Cotton             49.5   
+#> 10          3 Fallow_Cotton  Millet_Cotton             13.9   
 #> # ℹ 56 more rows
 ```
 
@@ -332,8 +332,8 @@ plot(som_eval)
 ```
 
 <div class="figure" style="text-align: center">
-<img src="07-clustering_files/figure-html/unnamed-chunk-12-1.png" alt="Confusion between classes as measured by SOM (source: authors)." width="90%" />
-<p class="caption">(\#fig:unnamed-chunk-12)Confusion between classes as measured by SOM (source: authors).</p>
+<img src="07-clustering_files/figure-html/clusomeval-1.png" alt="Confusion between classes as measured by SOM (source: authors)." width="90%" />
+<p class="caption">(\#fig:clusomeval)Confusion between classes as measured by SOM (source: authors).</p>
 </div>
 
 ## Detecting noisy samples using SOM{-}
@@ -368,15 +368,15 @@ summary(new_samples)
 #> # A tibble: 9 × 3
 #>   label            count   prop
 #>   <chr>            <int>  <dbl>
-#> 1 Dense_Woodland    8612 0.216 
-#> 2 Dunes              550 0.0138
-#> 3 Pasture           5252 0.132 
-#> 4 Rocky_Savanna     6110 0.153 
-#> 5 Savanna           7559 0.189 
-#> 6 Savanna_Parkland  2064 0.0517
-#> 7 Soy_Corn          4640 0.116 
-#> 8 Soy_Cotton        3830 0.0959
-#> 9 Soy_Fallow        1306 0.0327
+#> 1 Dense_Woodland    8519 0.220 
+#> 2 Dunes              550 0.0142
+#> 3 Pasture           5509 0.142 
+#> 4 Rocky_Savanna     5508 0.142 
+#> 5 Savanna           7651 0.197 
+#> 6 Savanna_Parkland  1619 0.0418
+#> 7 Soy_Corn          4595 0.119 
+#> 8 Soy_Cotton        3515 0.0907
+#> 9 Soy_Fallow        1309 0.0338
 ```
 
 All samples of the class which had the highest confusion with others(`Millet_Cotton`) have been removed. Most samples of class `Silviculture` (planted forests) have also been removed since they have been confused with natural forests and woodlands in the SOM map. Further analysis includes calculating the SOM map and confusion matrix for the new set, as shown in the following example. 
@@ -404,8 +404,8 @@ plot(new_cluster_mixture)
 ```
 
 <div class="figure" style="text-align: center">
-<img src="07-clustering_files/figure-html/unnamed-chunk-16-1.png" alt="Cluster confusion plot for samples cleaned by SOM (source: authors)." width="90%" />
-<p class="caption">(\#fig:unnamed-chunk-16)Cluster confusion plot for samples cleaned by SOM (source: authors).</p>
+<img src="07-clustering_files/figure-html/clumix-1.png" alt="Cluster confusion plot for samples cleaned by SOM (source: authors)." width="90%" />
+<p class="caption">(\#fig:clumix)Cluster confusion plot for samples cleaned by SOM (source: authors).</p>
 </div>
 
 As expected, the new confusion map shows a significant improvement over the previous one. This result should be interpreted carefully since it may be due to different effects. The most direct interpretation is that `Millet_Cotton` and `Silviculture` cannot be easily separated from the other classes, given the current attributes (a time series of NDVI and EVI indices from MODIS images). In such situations, users should consider improving the number of samples from the less represented classes, including more MODIS bands, or working with higher resolution satellites. The results of the SOM method should be interpreted based on the users' understanding of the ecosystems and agricultural practices of the study region. 

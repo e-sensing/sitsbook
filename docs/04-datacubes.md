@@ -129,7 +129,7 @@ plot(s2_23MMU_cube,
 
 <div class="figure" style="text-align: center">
 <img src="./images/aws_s2.png" alt="Sentinel-2 image in an area of the Northeastern coast of Brazil (source: authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-3)Sentinel-2 image in an area of the Northeastern coast of Brazil (source: authors).</p>
+<p class="caption">(\#fig:aws)Sentinel-2 image in an area of the Northeastern coast of Brazil (source: authors).</p>
 </div>
 
 
@@ -161,7 +161,7 @@ plot(s2_20LKP_cube_MPC,
 
 <div class="figure" style="text-align: center">
 <img src="./images/mpc_s2.png" alt="Sentinel-2 image in an area of the state of Rondonia, Brazil (source: authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-5)Sentinel-2 image in an area of the state of Rondonia, Brazil (source: authors).</p>
+<p class="caption">(\#fig:mpc1)Sentinel-2 image in an area of the state of Rondonia, Brazil (source: authors).</p>
 </div>
 
 ### LANDSAT-C2-L2 images in MPC{-}
@@ -193,7 +193,7 @@ plot(s2_L8_cube_MPC,
 
 <div class="figure" style="text-align: center">
 <img src="./images/mpc_l8.png" alt="Landsat-8 image in an area in Northeast Brazil (source: authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-7)Landsat-8 image in an area in Northeast Brazil (source: authors).</p>
+<p class="caption">(\#fig:mpc2)Landsat-8 image in an area in Northeast Brazil (source: authors).</p>
 </div>
 
 ### SENTINEL-1-GRD images in MPC{-}
@@ -221,8 +221,8 @@ plot(cube_s1_grd, band = "VV", palette = "Greys")
 ```
 
 <div class="figure" style="text-align: center">
-<img src="04-datacubes_files/figure-html/unnamed-chunk-8-1.png" alt="Sentinel-1 image in an area in Mato Grosso, Brazil (source: authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-8)Sentinel-1 image in an area in Mato Grosso, Brazil (source: authors).</p>
+<img src="04-datacubes_files/figure-html/mpc3-1.png" alt="Sentinel-1 image in an area in Mato Grosso, Brazil (source: authors)." width="100%" />
+<p class="caption">(\#fig:mpc3)Sentinel-1 image in an area in Mato Grosso, Brazil (source: authors).</p>
 </div>
 
 As explained earlier in this chapter, in areas with areas with large elevation differences, Sentinel-1 GRD images will have geometric distortions. For this reason, whenever possible, we recommend the use of RTC (radiometrically terrain corrected) images as described in the next session. 
@@ -251,8 +251,8 @@ plot(cube_s1_rtc, band = "VV", palette = "Greys")
 ```
 
 <div class="figure" style="text-align: center">
-<img src="04-datacubes_files/figure-html/unnamed-chunk-9-1.png" alt="Sentinel-1-RTC image of an area in Colombia (source: authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-9)Sentinel-1-RTC image of an area in Colombia (source: authors).</p>
+<img src="04-datacubes_files/figure-html/mpcrtcol-1.png" alt="Sentinel-1-RTC image of an area in Colombia (source: authors)." width="100%" />
+<p class="caption">(\#fig:mpcrtcol)Sentinel-1-RTC image of an area in Colombia (source: authors).</p>
 </div>
 The above image is from the central region of Colombia, a country with large variations in altitude due to the Andes mountains. Users are invited to compare this images with the one from the `SENTINEL-1-GRD` collection and see the significant geometrical distortions of the GRD image compared with the RTC one.
 
@@ -274,8 +274,8 @@ plot(cube_dem_30, band = "ELEVATION", rev = TRUE)
 ```
 
 <div class="figure" style="text-align: center">
-<img src="04-datacubes_files/figure-html/unnamed-chunk-10-1.png" alt="Copernicus 30-meter DEM of an area in Brazil (source: authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-10)Copernicus 30-meter DEM of an area in Brazil (source: authors).</p>
+<img src="04-datacubes_files/figure-html/mpc4-1.png" alt="Copernicus 30-meter DEM of an area in Brazil (source: authors)." width="100%" />
+<p class="caption">(\#fig:mpc4)Copernicus 30-meter DEM of an area in Brazil (source: authors).</p>
 </div>
 
 
@@ -288,7 +288,7 @@ The BDC uses three hierarchical grids based on the Albers Equal Area projection 
 
 <div class="figure" style="text-align: center">
 <img src="./images/bdc_grid.png" alt="Hierarchical BDC tiling system showing (a) large BDC grid overlayed on Brazilian biomes, (b) one large tile, (c) four medium tiles, and (d) sixteen small tiles (Source: Ferreira et al. (2020). Reproduction under fair use doctrine)." width="80%" />
-<p class="caption">(\#fig:unnamed-chunk-11)Hierarchical BDC tiling system showing (a) large BDC grid overlayed on Brazilian biomes, (b) one large tile, (c) four medium tiles, and (d) sixteen small tiles (Source: Ferreira et al. (2020). Reproduction under fair use doctrine).</p>
+<p class="caption">(\#fig:bdc)Hierarchical BDC tiling system showing (a) large BDC grid overlayed on Brazilian biomes, (b) one large tile, (c) four medium tiles, and (d) sixteen small tiles (Source: Ferreira et al. (2020). Reproduction under fair use doctrine).</p>
 </div>
 
 To access the BDC, users must provide their credentials using environment variables, as shown below. Obtaining a BDC access key is free. Users must register at the [BDC site](https://brazildatacube.dpi.inpe.br/portal/explore) to obtain a key. In the example below, the data cube is defined as one tile ("005004") of `CBERS-WFI-16D` collection, which holds CBERS AWFI images at 16 days resolution.
@@ -315,7 +315,7 @@ plot(cbers_tile,
 
 <div class="figure" style="text-align: center">
 <img src="./images/bdc_cbers4.png" alt="CBERS-4 WFI image in a Cerrado area in Brazil (source: authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-13)CBERS-4 WFI image in a Cerrado area in Brazil (source: authors).</p>
+<p class="caption">(\#fig:cbers)CBERS-4 WFI image in a Cerrado area in Brazil (source: authors).</p>
 </div>
 
 
@@ -361,7 +361,7 @@ plot(lena_cube, date = "2023-07-06", red = "B12", green = "B8A", blue = "B04")
 
 <div class="figure" style="text-align: center">
 <img src="./images/s2_lena_delta.png" alt="Sentinel-2 image of the Lena river delta in summertime (source: authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-16)Sentinel-2 image of the Lena river delta in summertime (source: authors).</p>
+<p class="caption">(\#fig:lena)Sentinel-2 image of the Lena river delta in summertime (source: authors).</p>
 </div>
 
 ### SENTINEL-1-RTC images in CDSE{-}
@@ -389,7 +389,7 @@ plot(s1_cube, band = "VV", date = c("2023-03-03"), palette = "Greys")
 
 <div class="figure" style="text-align: center">
 <img src="./images/s1_rtc_cdse.png" alt="Sentinel-1-RTC image of the Rift Valley in Ethiopia (source: authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-18)Sentinel-1-RTC image of the Rift Valley in Ethiopia (source: authors).</p>
+<p class="caption">(\#fig:cdsertc)Sentinel-1-RTC image of the Rift Valley in Ethiopia (source: authors).</p>
 </div>
 
 
@@ -429,7 +429,7 @@ plot(dea_s2_cube, red = "B04", blue = "B02", green = "B08")
 
 <div class="figure" style="text-align: center">
 <img src="./images/deafrica_s2.png" alt="Sentinel-2 image in an area over Madagascar (source: authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-20)Sentinel-2 image in an area over Madagascar (source: authors).</p>
+<p class="caption">(\#fig:dea1)Sentinel-2 image in an area over Madagascar (source: authors).</p>
 </div>
 
 The next example retrieves a set of ARD Landsat-9 data, covering the Serengeti plain in Tanzania. 
@@ -455,7 +455,7 @@ plot(dea_l9_cube,
 
 <div class="figure" style="text-align: center">
 <img src="./images/landsat9_serengeti.png" alt="Landsat-9 image in an area over the Serengeti in Tanzania (source: authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-22)Landsat-9 image in an area over the Serengeti in Tanzania (source: authors).</p>
+<p class="caption">(\#fig:seren)Landsat-9 image in an area over the Serengeti in Tanzania (source: authors).</p>
 </div>
 
 The following example shows how to retrieve a subset of the ALOS-PALSAR mosaic for year 2020, for an area near the border between Congo and Rwanda. 
@@ -477,8 +477,8 @@ plot(dea_alos_cube, band = "HH")
 ```
 
 <div class="figure" style="text-align: center">
-<img src="./images/alos_palsar_hh_lake_kivu.png" alt="Landsat-9 image in an area over the Serengeti in Thailand (source: authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-24)Landsat-9 image in an area over the Serengeti in Thailand (source: authors).</p>
+<img src="./images/alos_palsar_hh_lake_kivu.png" alt="ALOS-PALSAC mosaic in the Congo forest area (source: authors)." width="100%" />
+<p class="caption">(\#fig:lakekivu)ALOS-PALSAC mosaic in the Congo forest area (source: authors).</p>
 </div>
 
 
@@ -520,7 +520,7 @@ plot(s2_56KKV, green = "NIR-2", blue = "BLUE", red = "SWIR-2", date = "2023-10-1
 
 <div class="figure" style="text-align: center">
 <img src="./images/s2_56KKV.png" alt="Plot of Sentinel-2 image obtained from the DEAUSTRALIA collection for date 2023-10-14 showing MGRS tile 56KKV (source: authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-26)Plot of Sentinel-2 image obtained from the DEAUSTRALIA collection for date 2023-10-14 showing MGRS tile 56KKV (source: authors).</p>
+<p class="caption">(\#fig:goldcoast)Plot of Sentinel-2 image obtained from the DEAUSTRALIA collection for date 2023-10-14 showing MGRS tile 56KKV (source: authors).</p>
 </div>
 ## Harmonized Landsat-Sentinel {-}
 
@@ -582,7 +582,7 @@ plot(hls_cube_s2, red = "RED", green = "GREEN", blue = "BLUE", date = "2020-06-2
 
 <div class="figure" style="text-align: center">
 <img src="./images/hls_ilhabela_s2.png" alt="Plot of Sentinel-2 image obtained from the NASA HLS collection for date 2020-06-15 showing the island of Ilhabela in the Brazilian coast  (source: authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-29)Plot of Sentinel-2 image obtained from the NASA HLS collection for date 2020-06-15 showing the island of Ilhabela in the Brazilian coast  (source: authors).</p>
+<p class="caption">(\#fig:hlssen)Plot of Sentinel-2 image obtained from the NASA HLS collection for date 2020-06-15 showing the island of Ilhabela in the Brazilian coast  (source: authors).</p>
 </div>
 Images from the HLS Landsat and Sentinel-2 collections are accessed separately and can be combined with `sits_merge()`. The script below creates an HLS Landsat cube over the same area as the Sentinel-2 cube above bands. The two cubes are then merged. 
 
@@ -661,7 +661,7 @@ plot(hls_cube_merged,
 
 <div class="figure" style="text-align: center">
 <img src="./images/hls_ilhabela_l8.png" alt="Plot of Sentinel-2 image obtained from merging NASA HLS collection and Sentinel-2 collection for date 2020-06-15 showing the island of Ilhabela in the Brazilian coast (source: authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-36)Plot of Sentinel-2 image obtained from merging NASA HLS collection and Sentinel-2 collection for date 2020-06-15 showing the island of Ilhabela in the Brazilian coast (source: authors).</p>
+<p class="caption">(\#fig:hlsmerge)Plot of Sentinel-2 image obtained from merging NASA HLS collection and Sentinel-2 collection for date 2020-06-15 showing the island of Ilhabela in the Brazilian coast (source: authors).</p>
 </div>
 
 ## EO products from TERRASCOPE{-}
@@ -690,7 +690,7 @@ plot(world_cover_2021_20LBL)
 ```
 <div class="figure" style="text-align: center">
 <img src="./images/world_cover_2021.png" alt="Plot of World Cover 2021 map covering MGRS tile 22LBL (source: authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-38)Plot of World Cover 2021 map covering MGRS tile 22LBL (source: authors).</p>
+<p class="caption">(\#fig:worldcover)Plot of World Cover 2021 map covering MGRS tile 22LBL (source: authors).</p>
 </div>
 
 ## Planet data as ARD local files{-}
@@ -727,8 +727,8 @@ plot(planet_cube, red = "B3", green = "B2", blue = "B1")
 ```
 
 <div class="figure" style="text-align: center">
-<img src="04-datacubes_files/figure-html/unnamed-chunk-39-1.png" alt="Planet image over an area in Colombia (source: authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-39)Planet image over an area in Colombia (source: authors).</p>
+<img src="04-datacubes_files/figure-html/planet-1.png" alt="Planet image over an area in Colombia (source: authors)." width="100%" />
+<p class="caption">(\#fig:planet)Planet image over an area in Colombia (source: authors).</p>
 </div>
 
 
@@ -772,8 +772,8 @@ plot(Rondonia_class_cube)
 ```
 
 <div class="figure" style="text-align: center">
-<img src="04-datacubes_files/figure-html/unnamed-chunk-40-1.png" alt="Classified data cube for the year 2020/2021 in Rondonia, Brazil (source: authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-40)Classified data cube for the year 2020/2021 in Rondonia, Brazil (source: authors).</p>
+<img src="04-datacubes_files/figure-html/mapdata-1.png" alt="Classified data cube for the year 2020/2021 in Rondonia, Brazil (source: authors)." width="100%" />
+<p class="caption">(\#fig:mapdata)Classified data cube for the year 2020/2021 in Rondonia, Brazil (source: authors).</p>
 </div>
 
 ## Regularizing data cubes{-}
@@ -823,8 +823,8 @@ s2_cube_rondonia |>
 ```
 
 <div class="figure" style="text-align: center">
-<img src="04-datacubes_files/figure-html/unnamed-chunk-42-1.png" alt="Sentinel-2 tile 20LLP for date 2018-07-03 (source: authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-42)Sentinel-2 tile 20LLP for date 2018-07-03 (source: authors).</p>
+<img src="04-datacubes_files/figure-html/senroirreg-1.png" alt="Sentinel-2 tile 20LLP for date 2018-07-03 (source: authors)." width="100%" />
+<p class="caption">(\#fig:senroirreg)Sentinel-2 tile 20LLP for date 2018-07-03 (source: authors).</p>
 </div>
 
 Because of the different acquisition orbits of the Sentinel-2 and Sentinel-2A satellites, the two tiles also have different timelines. Tile `20LKP` has 12 instances, while tile `20LLP` has 24 instances for the chosen period. The function  `sits_regularize()` builds a data cube with a regular timeline and a best estimate of a valid pixel for each interval. The `period` parameter sets the time interval between two images. Values of `period` use the ISO8601 time period specification, which defines time intervals as `P[n]Y[n]M[n]D`, where "Y" stands for years, "M" for months, and "D" for days. Thus, `P1M` stands for a one-month period, `P15D` for a fifteen-day period. When joining different images to get the best image for a period, `sits_regularize()` uses an aggregation method that organizes the images for the chosen interval in order of increasing cloud cover and then selects the first cloud-free pixel. In the example, we use a small spatial resolution for the regular cube to speed up processing; in actual case, we suggest using a 10-meter spatial resolution for the cube.
@@ -848,8 +848,8 @@ reg_cube_rondonia |>
 ```
 
 <div class="figure" style="text-align: center">
-<img src="04-datacubes_files/figure-html/unnamed-chunk-43-1.png" alt="Regularized image for tile Sentinel-2 tile 20LLP (source: authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-43)Regularized image for tile Sentinel-2 tile 20LLP (source: authors).</p>
+<img src="04-datacubes_files/figure-html/senroreg-1.png" alt="Regularized image for tile Sentinel-2 tile 20LLP (source: authors)." width="100%" />
+<p class="caption">(\#fig:senroreg)Regularized image for tile Sentinel-2 tile 20LLP (source: authors).</p>
 </div>
 
 ### Regularizing Sentinel-1 images{-}
@@ -878,7 +878,7 @@ knitr::include_graphics("./images/cube_s1_rtc_tile_22LBL.png")
 
 <div class="figure" style="text-align: center">
 <img src="./images/cube_s1_rtc_tile_22LBL.png" alt="Original Sentinel-1 image covering tile 22LBL (source: authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-45)Original Sentinel-1 image covering tile 22LBL (source: authors).</p>
+<p class="caption">(\#fig:sargrdorig)Original Sentinel-1 image covering tile 22LBL (source: authors).</p>
 </div>
 
 After creating an irregular data cube from the data available in MPC, we use `sits_regularize()` to produce a SAR data cube that matches MGRS tile "22LBL". For plotting the SAR image, we select a multidate plot for the "VH" band, where the first date will be displayed in red, the second in green and the third in blue, so as to show an RGB map where changes are visually enhanced.
@@ -913,7 +913,7 @@ knitr::include_graphics("./images/cube_s1_rtc_tile_22LBL_reg_rgb.png")
 
 <div class="figure" style="text-align: center">
 <img src="./images/cube_s1_rtc_tile_22LBL_reg_rgb.png" alt="Regular Sentinel-1 image covering tile 22LBL (source: authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-47)Regular Sentinel-1 image covering tile 22LBL (source: authors).</p>
+<p class="caption">(\#fig:sarrtcreg)Regular Sentinel-1 image covering tile 22LBL (source: authors).</p>
 </div>
 
 ### Merging Sentinel-1 and Sentinel-2 images{-}
@@ -941,7 +941,7 @@ knitr::include_graphics("./images/s2_tile_22LBL.png")
 
 <div class="figure" style="text-align: center">
 <img src="./images/s2_tile_22LBL.png" alt="Sentinel-2 image covering tile 22LBL (source: authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-49)Sentinel-2 image covering tile 22LBL (source: authors).</p>
+<p class="caption">(\#fig:senlbl)Sentinel-2 image covering tile 22LBL (source: authors).</p>
 </div>
 
 The next step is to create a regular data cube for tile "20LBL". 
@@ -999,8 +999,8 @@ plot(cube_s1_s2, red = "B11", green = "B8A", blue = "VH")
 ```
 
 <div class="figure" style="text-align: center">
-<img src="04-datacubes_files/figure-html/unnamed-chunk-54-1.png" alt="Sentinel-2 and Sentinel-1 RGB composite for tile 22LBL (source: authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-54)Sentinel-2 and Sentinel-1 RGB composite for tile 22LBL (source: authors).</p>
+<img src="04-datacubes_files/figure-html/saropt-1.png" alt="Sentinel-2 and Sentinel-1 RGB composite for tile 22LBL (source: authors)." width="100%" />
+<p class="caption">(\#fig:saropt)Sentinel-2 and Sentinel-1 RGB composite for tile 22LBL (source: authors).</p>
 </div>
 
 ## Combining multitemporal data cubes with digital elevation models{-}
@@ -1029,7 +1029,7 @@ knitr::include_graphics("./images/s2_19HBA.png")
 
 <div class="figure" style="text-align: center">
 <img src="./images/s2_19HBA.png" alt="Sentinel-2 image covering tile 19HBA (source: authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-56)Sentinel-2 image covering tile 19HBA (source: authors).</p>
+<p class="caption">(\#fig:unnamed-chunk-30)Sentinel-2 image covering tile 19HBA (source: authors).</p>
 </div>
 
 Then, we produce a regular data cube to use for classification. In this example, we will use a reduced resolution (30 meters) to expedite processing. In practice, a resolution of 10 meters is recommended.
@@ -1078,8 +1078,8 @@ plot(dem_cube_19HBA_reg, band = "ELEVATION", palette = "Spectral", rev = TRUE)
 ```
 
 <div class="figure" style="text-align: center">
-<img src="04-datacubes_files/figure-html/unnamed-chunk-60-1.png" alt="Copernicus DEM-30 covering tile 19HBA (source: authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-60)Copernicus DEM-30 covering tile 19HBA (source: authors).</p>
+<img src="04-datacubes_files/figure-html/demchile-1.png" alt="Copernicus DEM-30 covering tile 19HBA (source: authors)." width="100%" />
+<p class="caption">(\#fig:demchile)Copernicus DEM-30 covering tile 19HBA (source: authors).</p>
 </div>
 
 After obtaining regular data cubes from satellite images and from DEMs, there are two ways to combine them. One option is to take the DEM band as a multitemporal information, and duplicate this band for every time step so that the DEM becomes one additional time series. The alternative is to use DEMs as base cubes, and take them as a single additional band. These options are discusses in what follows.

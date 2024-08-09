@@ -1,6 +1,7 @@
 ```{r, include = FALSE}
 source("common.R")
-dir.create("./tempdir/chp9")
+if (!file.exists("./tempdir/chp9"))
+  dir.create("./tempdir/chp9")
 library(torch)
 library(luz)
 torch::install_torch()
@@ -19,7 +20,7 @@ This Chapter discusses how to classify data cubes by providing a step-by-step ex
 
 The examples of this chapter use a pre-built data cube of Sentinel-2 images, available in the package `sitsdata`. These images are from the `SENTINEL-2-L2A` collection in Microsoft Planetary Computer (`MPC`). The data consists of bands BO2, B8A, and B11, and indexes NDVI, EVI and NBR in a small area of $1200 \times 1200$ pixels in the state of Rondonia. As explained in Chapter [Earth observation data cubes](https://e-sensing.github.io/sitsbook/earth-observation-data-cubes.html), we must inform `sits` how to parse these file names to obtain tile, date, and band information. Image files are named according to the convention "satellite_ sensor_tile_band_date" (e.g., `SENTINEL-2_MSI_20LKP_BO2_2020_06_04.tif`) which is the default format in `sits`. 
 
-```{r, tidy = "styler", out.width = "90%", fig.align="center", fig.cap="Color composite image of the cube for date 2023-07-16 (source: authors)."}
+```{r rcndvi, tidy = "styler", out.width = "90%", fig.align="center", fig.cap="Color composite image of the cube for date 2023-07-16 (source: authors)."}
 # Files are available in a local directory 
 data_dir <- system.file("extdata/Rondonia-20LMR/", 
                         package = "sitsdata")
@@ -49,7 +50,7 @@ summary(samples_deforestation_rondonia)
 
 It is helpful to plot the basic patterns associated with the samples to understand the training set better. The function `sits_patterns()` uses a generalized additive model (GAM) to predict a smooth, idealized approximation to the time series associated with each class for all bands. Since the data cube used in the classification has 10 bands we filter the samples for bands B02, B8A, and B11  before showing the patterns. 
 
-```{r, tidy = "styler", out.width = "90%", fig.align="center", fig.cap="Patterns associated to the training samples (source: authors)."}
+```{r rcpatplot, tidy = "styler", out.width = "90%", fig.align="center", fig.cap="Patterns associated to the training samples (source: authors)."}
 samples_deforestation_rondonia |> 
     sits_select(bands = c("B02", "B8A", "B11")) |> 
     sits_patterns() |> 
@@ -73,7 +74,7 @@ rfor_model <- sits_train(
 )
 ```
 
-```{r, tidy = "styler", out.width = "90%", fig.align="center", fig.cap="Most relevant variables of the Random Forest model (source: authors)."}
+```{r rcrfmodel, tidy = "styler", out.width = "90%", fig.align="center", fig.cap="Most relevant variables of the Random Forest model (source: authors)."}
 plot(rfor_model)
 ```
 The figure shows that  EVI index values on dates 9 ("2022-05-13") and 15 ("2022-08-17") are the most informative variables for the random forest model. These bands and dates represent inflection points in the image time series. 
@@ -84,7 +85,7 @@ By default, all classification algorithms in `sits` use CPU-based parallel proce
 
 To classify both data cubes and sets of time series, use `sits_classify()`, which uses parallel processing to speed up the performance, as described at the end of this Chapter. Its most relevant parameters are: (a) `data`, either a data cube or a set of time series; (b) `ml_model`, a trained model using one of the machine learning methods provided; (c) `multicores`, number of CPU cores that will be used for processing; (d) `memsize`, memory available for classification; (e) `output_dir`, directory where results will be stored; (f) `version`, for version control. To follow the processing steps, turn on the parameters `verbose` to print information and `progress` to get a progress bar. The classification result is a data cube with a set of probability layers, one for each output class. Each probability layer contains the model's assessment of how likely each pixel belongs to the related class. The probability cube can be visualized with `plot()`. In this example, we show only the probabilities associated to label "Forest". 
 
-```{r, tidy = "styler", out.width = "90%", fig.align="center", fig.cap="Probabilities for class Forest  (source: authors)."}
+```{r rcprobs, tidy = "styler", out.width = "90%", fig.align="center", fig.cap="Probabilities for class Forest  (source: authors)."}
 
 # Classify data cube to obtain a probability cube
 rondonia_20LMR_probs <- sits_classify(
@@ -100,7 +101,7 @@ plot(rondonia_20LMR_probs, labels = "Forest", palette = "YlGn")
 
 The probability cube provides information on the output values of the algorithm for each class. Most probability maps contain outliers or misclassified pixels. The labeled map generated from the pixel-based time series classification method exhibits several misclassified pixels, which are small patches surrounded by a different class. This occurrence of outliers is a common issue that arises due to the inherent nature of this classification approach. Regardless of their resolution, mixed pixels are prevalent in images, and each class exhibits considerable data variability. As a result, these factors can lead to outliers that are more likely to be misclassified. To overcome this limitation, `sits` employs post-processing smoothing techniques that leverage the spatial context of the probability cubes to refine the results. These techniques will be discussed in the Chapter [Bayesian smoothing for post-processing](https://e-sensing.github.io/sitsbook/bayesian-smoothing-for-post-processing.html). In what follows, we will generate the smoothed cube to illustrate the procedure. 
 
-```{r, tidy = "styler", out.width = "100%", fig.align="center", fig.cap="Smoothened probabilities for class Forest  (source: authors)."}
+```{r rcbayes, tidy = "styler", out.width = "100%", fig.align="center", fig.cap="Smoothened probabilities for class Forest  (source: authors)."}
 # Smoothen a  probability cube
 rondonia_20LMR_bayes <- sits_smooth(
     cube    = rondonia_20LMR_probs,
@@ -114,7 +115,7 @@ plot(rondonia_20LMR_bayes, labels = c("Forest"),  palette = "YlGn")
 In general, users should perform a post-processing smoothing after obtaining the probability maps in raster format. After the post-processing operation, we apply `sits_label_classification()` to obtain a map with the most likely class for each pixel. For each pixel, the `sits_label_classification()` function takes the label with highest probability and assigns it to the resulting map. The output is a labelled map with classes.
 
 
-```{r, tidy = "styler", out.width = "100%", fig.align="center", fig.cap="Final map of deforestation obtained by random forest model(source: authors)."}
+```{r rcmap, tidy = "styler", out.width = "100%", fig.align="center", fig.cap="Final map of deforestation obtained by random forest model(source: authors)."}
 # Generate a thematic map
 rondonia_20LMR_class <- sits_label_classification(
     cube = rondonia_20LMR_bayes,
@@ -213,7 +214,7 @@ rondonia_20LMR_probs_tcnn <- sits_classify(
 
 After classification, we can smooth the probability cube and then label the resulting smoothed probabilities to obtain a classified map. 
 
-```{r, tidy="styler", out.width = "90%", fig.align="center", fig.cap="Final map of deforestation obtained using TempCNN model (source: authors)."}
+```{r rctcnnmap, tidy="styler", out.width = "90%", fig.align="center", fig.cap="Final map of deforestation obtained using TempCNN model (source: authors)."}
 # Smoothen the probability map 
 rondonia_20LMR_bayes_tcnn <- sits_smooth(
     rondonia_20LMR_probs_tcnn,
@@ -242,7 +243,7 @@ Reclassification of a remote sensing map refers to changing the classes assigned
 
 To illustrate the reclassification in `sits`, we take a classified data cube stored in the `sitsdata` package. As discussed in Chapter [Earth observation data cubes](https://e-sensing.github.io/sitsbook/earth-observation-data-cubes.html), `sits` can create a data cube from a classified image file. Users need to provide the original data source and collection, the directory where data is stored (`data_dir`), the information on how to retrieve data cube parameters from file names (`parse_info`), and the labels used in the classification. 
 
-```{r, tidy = "styler", out.width = "100%", fig.align="center", fig.cap="Original classification map (source: authors)."}
+```{r rcreclasorig, tidy = "styler", out.width = "100%", fig.align="center", fig.cap="Original classification map (source: authors)."}
 # Open classification map
 data_dir <- system.file("extdata/Rondonia-Class", package = "sitsdata")
 rondonia_class <- sits_cube(
@@ -269,7 +270,7 @@ The above map shows the total extent of deforestation by clear cuts estimated by
 
 In this example, we use as a reference the PRODES deforestation map of Amazonia created by Brazil's National Institute for Space Research (INPE). This map is produced by visual interpretation. PRODES measures deforestation every year, starting from August of one year to July of the following year. It contains classes that represent the natural world (Forest, Water, NonForest, and  NonForest2) and classes that capture the yearly deforestation increments. These classes are named "dYYYY" and "rYYYY"; the first refers to deforestation in a given year (e.g., "d2008" for deforestation for August 2007 to July 2008); the second to places where the satellite data is not sufficient to determine the land class (e.g., "r2010" for 2010). This map is available on package `sitsdata`, as shown below.
 
-```{r, tidy = "styler", out.width = "100%", fig.align="center", fig.cap="Deforestation map produced by sits (source: authors)."}
+```{r rcprodes, tidy = "styler", out.width = "100%", fig.align="center", fig.cap="Deforestation map produced by sits (source: authors)."}
 data_dir <- system.file("extdata/PRODES", package = "sitsdata")
 prodes_2021 <- sits_cube(
     source = "USGS",
@@ -324,7 +325,7 @@ Using this new legend, we can visualize the PRODES deforestation map.
 sits_view(prodes_2021, legend = def_legend)
 ```
 
-```{r prodes, echo = FALSE, out.width="90%", fig.align="center", fig.cap="Deforestation map produced by PRODES (source: authors)."}
+```{r prodesview, echo = FALSE, out.width="90%", fig.align="center", fig.cap="Deforestation map produced by PRODES (source: authors)."}
 knitr::include_graphics("./images/view_prodes_2021.png")
 ```
 
@@ -332,7 +333,7 @@ Taking the PRODES map as our reference, we can include new labels in the classif
 
 The `sits_reclassify()` operation requires the parameters: (a) `cube`, the classified data cube whose pixels will be reclassified; (b) `mask`, the reference data cube used as a mask; (c) `rules`, a named list. The names of the `rules` list will be the new label. Each new label is associated with a `mask` vector that includes the labels of the reference map that will be joined. `sits_reclassify()` then compares the original and reference map pixel by pixel. For each pixel of the reference map whose labels are in one of the `rules`, the algorithm relabels the original map. The result will be a reclassified map with the original labels plus the new labels that have been masked using the reference map.
 
-```{r, tidy = "styler", out.width = "100%", fig.align="center", fig.cap="Deforestation map by sits masked by PRODES map (source: authors)."}
+```{r prodesreclass, tidy = "styler", out.width = "100%", fig.align="center", fig.cap="Deforestation map by sits masked by PRODES map (source: authors)."}
 # Reclassify cube
 rondonia_def_2021 <- sits_reclassify(
     cube = rondonia_class,
