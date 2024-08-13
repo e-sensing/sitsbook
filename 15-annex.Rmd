@@ -386,29 +386,33 @@ jsonlite::write_json(
   pretty = TRUE)
 ```
 
+## SITS and Google Earth Engine APIs: A Side-by-Side exploration{-}
 
-
-## Comparison of sits and Google Earth Engine APIs{-}
-
-This section provides a comparison between the sits and Google Earth Engine APIs, 
-focusing on their capabilities to perform specific tasks using satellite data. 
-The comparison will be structured around three examples: (1) creating a mosaic 
-(2) calculating the Normalized Difference Vegetation Index (NDVI), and (3) performing 
-a land use and land cover (LULC) classification. Each section will illustrate 
-how these tasks are accomplished using sits and GEE, highlighting similarities 
-and differences in the API approaches.
+This section presents a side-by-side exploration of the `sits` and Google Earth 
+Engine (`gee`) APIs, focusing on their respective capabilities in handling 
+satellite data. The exploration will be structured around three key examples: 
+(1) creating a mosaic, (2) calculating the Normalized Difference Vegetation 
+Index (NDVI), and (3) performing a Land Use and Land Cover (LULC) classification. 
+Each example will demonstrate how these tasks are executed using `sits` and `gee`, 
+offering a clear view of their methodologies and highlighting the similarities 
+and the unique approaches each API employs.
 
 ### Example 1: Creating a Mosaic{-}
 
 ### Example 2: Calculating NDVI{-}
 
-This example demonstrates how to generate Normalized Difference Vegetation 
-Index (NDVI) using both the `sits` and `Google Earth Engine (gee)` APIs.
+This example demonstrates how to generate time-series of Normalized Difference 
+Vegetation Index (NDVI) using both the `sits` and `gee` APIs.
 
 #### Define Region of Interest data{-}
 
-In this example, an Region of Interest is defined using the `sinop_roi.shp` file. 
-The following code blocks specify this file in the `sits` and `gee` APIs.
+In this example, a Region of Interest (ROI) is defined using the `sinop_roi.shp` 
+file. Below are the code snippets for specifying this file in both `sits` and 
+`gee` environments.
+
+> To reproduce the example, you can download the shapefile using [this link](#). 
+In `sits`, you can just use it. In `gee`, it would be required to upload the 
+file in your user space.
 
 **sits**
 
@@ -426,8 +430,7 @@ var roi_data = ee.FeatureCollection("/path/to/sinop_roi");
 
 Next, we load the satellite imagery. For this example, we use data from [Landsat-8](https://www.usgs.gov/landsat-missions/landsat-8). 
 In `sits`, this data is retrieved from the Brazil Data Cube, although 
-other sources are also available. For `gee`, the platform provides the data 
-directly.
+other sources are available. For `gee`, the data provided by the platform is used.
 
 In `sits`, when the data is loaded, all necessary transformations to make the 
 data ready for use (e.g., `factor`, `offset`, `cloud masking`) are applied 
@@ -510,8 +513,9 @@ data_ndvi = data_ndvi.select("NDVI");
 The results are clipped to the ROI defined at the beginning of the 
 example to facilitate visualization.
 
-> In both APIs, defining an ROI before the calculation is possible. For this
-example, the data was calculated before.
+> In both APIs, you can define a ROI before performing the 
+operation to optimize resource usage. However, in this example, the data is 
+cropped after the calculation.
 
 **sits**
 
@@ -519,7 +523,7 @@ example, the data was calculated before.
 data_ndvi <- sits_mosaic(
   cube       = data_ndvi,
   roi        = roi_data,
-  output_dir = output_dir,
+  output_dir = tempdir(),
   multicores = 4
 )
 ```
@@ -542,13 +546,17 @@ Finally, the results can be visualized in an interactive map.
 sits_view(data_ndvi, band = "NDVI", date = "2019-05-25", opacity = 1)
 ```
 
+```{r, echo = FALSE, out.width = "100%", out.height = "50%"}
+knitr::include_graphics("./images/sitsgee/ndvi-sits.png")
+```
+
 **gee**
 
 ```js
 // Define view region
 Map.centerObject(roi_data, 10);
 
-// Add classification map (colors from sits R package)
+// Add classification map (colors from sits)
 Map.addLayer(data_ndvi, {
     min: 0, 
     max: 1, 
@@ -556,16 +564,25 @@ Map.addLayer(data_ndvi, {
 }, "NDVI Image");
 ```
 
+```{r, echo = FALSE, out.width = "100%", out.height = "50%"}
+knitr::include_graphics("./images/sitsgee/ndvi-gee.png")
+```
+
 ### Example 3: Land Use and Land Cover (LULC) Classification{-}
 
 This example demonstrates how to perform Land Use and Land Cover (LULC) 
-classification using both the `sits` and `Google Earth Engine (gee)` APIs.
+classification using satellite image time series and machine-learning models in 
+both `sits` and `gee`.
 
-#### Define Region of Interest (ROI) data{-}
+#### Define Region of Interest data{-}
 
 This example defines the region of interest (ROI) using a shapefile named 
 `sinop_roi.shp`. Below are the code snippets for specifying this file in both 
-the `sits` and `gee` environments.
+`sits` and `gee` environments.
+
+> To reproduce the example, you can download the shapefile using [this link](#). 
+In `sits`, you can just use it. In `gee`, it would be required to upload the 
+file in your user space.
 
 **sits**
 
@@ -583,8 +600,16 @@ var roi_data = ee.FeatureCollection("/path/to/sinop_roi");
 
 To train a classifier, sample data with labels representing the behavior of 
 each class to be identified is necessary. In this example, we use a small set 
-of `18` samples. The following code snippets show how these samples are defined 
+with `18` samples. The following code snippets show how these samples are defined 
 in each environment.
+
+In `sits`, labels can be of type `string`, whereas `gee` requires labels to be 
+`integers`. To accommodate this difference, two versions of the same sample set 
+were created: (1) one with `string` labels for use with `sits`, and (2) another 
+with `integer` labels for use with `gee`.
+
+> To download these samples, you can use the following links: 
+[samples_sinop_crop for sits](#) or [samples_sinop_crop for gee](#)
 
 **sits**
 
@@ -600,18 +625,23 @@ var samples = ee.FeatureCollection("samples_sinop_crop");
 
 #### Load Satellite Imagery{-}
 
-Next, we load satellite imagery. In this example, data from [MOD13Q1](https://ladsweb.modaps.eosdis.nasa.gov/missions-and-measurements/products/MOD13Q1) 
-is used. In `sits`, this data is retrieved from the Brazil Data Cube, but other 
+Next, we load the satellite imagery. For this example, we use data from [MOD13Q1](https://ladsweb.modaps.eosdis.nasa.gov/missions-and-measurements/products/MOD13Q1) . 
+In `sits`, this data is retrieved from the Brazil Data Cube, but other 
 sources are also available. In `gee`, the platform directly provides this data.
 
-In `sits`, all necessary transformations for using the data in a classification 
-task are handled automatically. In `gee`, users must transform the data into the 
-correct format, such as converting all images into bands for time-series 
-classification using Random Forest.
+In `sits`, all necessary data transformations for classification tasks are 
+handled automatically. In contrast, `gee` requires users to manually transform 
+the data into the correct format.
 
-> The approach adopted in `gee` for this example may require adjustments when 
-working with larger datasets or more bands. In `sits`, the API usage remains 
-consistent regardless of the data size.
+In this context it's important to note that, in the `gee` code, transforming all 
+images into bands mimics the approach used by `sits` for non-temporal classifiers. 
+However, this method is not inherently scalable in `gee` and may need adjustments 
+for larger datasets or more bands. Additionally, for temporal classifiers like 
+TempCNN, other transformations are necessary and must be manually implemented by 
+the user in `gee`.
+
+In contrast, `sits` provides a consistent API experience, regardless of the data 
+size or machine learning algorithm.
 
 **sits**
 
@@ -640,9 +670,10 @@ data = data.toBands();
 
 #### Extract sample time-series{-}
 
-To train a Random Forest classifier, we need sample data associated with 
-time-series. In this step, we extract the time-series for the samples using the 
-previously loaded satellite imagery.
+In this example, we'll use a Random Forest classifier to create a LULC map. To 
+train the classifier, we need sample data linked to time-series.
+
+This step shows how to extract and associate time-series with samples.
 
 **sits**
 
@@ -666,7 +697,7 @@ var samples_ts = data.sampleRegions({
 #### Train classification model{-}
 
 With the time-series data extracted for each sample, we can now train the Random
-Forest classifier by associating temporal behavior with labels from the samples.
+Forest classifier
 
 **sits**
 
@@ -688,15 +719,18 @@ var classifier = ee.Classifier.smileRandomForest(100).train({
 
 #### Generate classification map{-}
 
-With the trained Random Forest classifier, we can generate the classification map. 
+Now, it is possible to generate the classification map using the trained Random 
+Forest model.
 
-In `sits`, this involves two steps: (1) Generating class probabilities and 
-(2) Generating the label map. This method is advantageous because it allows 
-further transformations, such as applying Bayesian smoothing to reduce artifacts 
-in the final result.
+In `sits`, the classification process starts with a probability map. 
+This map provides the probability of each class for every pixel, offering insights 
+into the classifier's performance. It also allows for refining the results using
+methods like Bayesian probability smoothing. After generating the probability map, 
+it is possible to produce the class map, where each pixel is assigned to the class 
+with the highest probability.
 
-In `gee`, the same operation is performed in a single step, but it doesn't allow 
-for working with probabilities.
+In `gee`, the classification is completed in a single step, and the probability 
+outputs from the classifier cannot be analyzed or manipulated.
 
 **sits**
 
@@ -706,12 +740,12 @@ probabilities <- sits_classify(
     ml_model   = classifier,
     multicores = 4,
     roi        = roi_data,
-    output_dir = output_dir
+    output_dir = tempdir()
 )
 
 class_map <- sits_label_classification(
     cube       = probabilities,
-    output_dir = output_dir,
+    output_dir = tempdir(),
     multicores = 4
 )
 ```
@@ -736,7 +770,7 @@ was not applied in this example.
 class_map <- sits_mosaic(
     cube       = class_map,
     roi        = roi_data,
-    output_dir = output_dir,
+    output_dir = tempdir(),
     multicores = 4
 )
 ```
@@ -757,16 +791,24 @@ Finally, the results can be visualized on an interactive map.
 sits_view(class_map, opacity = 1)
 ```
 
+```{r, echo = FALSE, out.width = "100%", out.height = "50%"}
+knitr::include_graphics("./images/sitsgee/classification-sits.png")
+```
+
 **gee**
 
 ```js
 // Define view region
 Map.centerObject(roi_data, 10);
 
-// Add classification map (colors from sits R package)
+// Add classification map (colors from sits)
 Map.addLayer(class_map, {
     min: 1,
     max: 4,
     palette: ["#FAD12D", "#1E8449", "#D68910", "#a2d43f"]
 }, "Classification map");
+```
+
+```{r, echo = FALSE, out.width = "100%", out.height = "50%"}
+knitr::include_graphics("./images/sitsgee/classification-gee.png")
 ```
