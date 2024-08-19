@@ -169,7 +169,7 @@
 <h2>Example of SLIC-based segmentation and classification<a class="anchor" aria-label="anchor" href="#example-of-slic-based-segmentation-and-classification"><i class="fas fa-link"></i></a>
 </h2>
 <p>To show an example of SLIC-based segmentation, we first build a data cube, using images available in the <code>sitsdata</code> package.</p>
-<div class="sourceCode" id="cb241"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb242"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># directory where files are located</span></span>
 <span><span class="va">data_dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html">system.file</a></span><span class="op">(</span><span class="st">"extdata/Rondonia-20LMR"</span>, package <span class="op">=</span> <span class="st">"sitsdata"</span><span class="op">)</span></span>
 <span><span class="co"># Builds a cube based on existing files</span></span>
@@ -183,11 +183,11 @@
 <div class="figure" style="text-align: center">
 <span style="display:block;" id="fig:obiaimage"></span>
 <img src="14-obia_files/figure-html/obiaimage-1.png" alt="Sentinel-2 image in an area of Rondonia, Brazil (source: authors)." width="100%"><p class="caption">
-Figure 112: Sentinel-2 image in an area of Rondonia, Brazil (source: authors).
+Figure 113: Sentinel-2 image in an area of Rondonia, Brazil (source: authors).
 </p>
 </div>
 <p>The following example produces a segmented image. For the SLIC algorithm, we take the initial separation between cluster centres (<code>step</code>) to be 20 pixels, the <code>compactness</code> to be 1, and the minimum area for each superpixel (<code>min_area</code>) to be 20 pixels.</p>
-<div class="sourceCode" id="cb242"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb243"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># segment a cube using SLIC</span></span>
 <span><span class="co"># Files are available in a local directory</span></span>
 <span><span class="va">segments_20LMR</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_segment.html">sits_segment</a></span><span class="op">(</span></span>
@@ -207,17 +207,17 @@ Figure 112: Sentinel-2 image in an area of Rondonia, Brazil (source: authors).
 <span><span class="op">)</span></span></code></pre></div>
 <div class="inline-figure"><img src="14-obia_files/figure-html/obiaseg-1.png" width="90%" style="display: block; margin: auto;"></div>
 <p>It is useful to visualize the segments in a leaflet together with the RGB image using <code><a href="https://rdrr.io/pkg/sits/man/sits_view.html">sits_view()</a></code>.</p>
-<div class="sourceCode" id="cb243"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb244"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_view.html">sits_view</a></span><span class="op">(</span><span class="va">segments_20LMR</span>,</span>
 <span>  red <span class="op">=</span> <span class="st">"B11"</span>, green <span class="op">=</span> <span class="st">"B8A"</span>, blue <span class="op">=</span> <span class="st">"B02"</span>,</span>
 <span>  dates <span class="op">=</span> <span class="st">"2022-07-16"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <div class="inline-figure"><img src="images/segmentation_2.png" width="90%" style="display: block; margin: auto;"></div>
 <p>After obtaining the segments, the next step is to classify them. This is done by first training a classification model. In this case study, we will use an SVM model.</p>
-<div class="sourceCode" id="cb244"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb245"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">svm_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_train.html">sits_train</a></span><span class="op">(</span><span class="va">samples_deforestation</span>, <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_svm.html">sits_svm</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>The segment classification procedure applies the model to a number of user-defined samples inside each segment. Each of these samples is then assigned a set of probability values, one for each class. We then obtain the median value of the probabilities for each class and normalize them. The output of the procedure is a vector data cube containing a set of classified segments. The parameters for the <code><a href="https://rdrr.io/pkg/sits/man/sits_classify.html">sits_classify()</a></code></p>
-<div class="sourceCode" id="cb245"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb246"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">segments_20LMR_probs_svm</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_classify.html">sits_classify</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="va">segments_20LMR</span>,</span>
 <span>  ml_model <span class="op">=</span> <span class="va">svm_model</span>,</span>
@@ -237,7 +237,7 @@ Figure 112: Sentinel-2 image in an area of Rondonia, Brazil (source: authors).
 <span>  version <span class="op">=</span> <span class="st">"svm-segments"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p>To view the classified segments together with the original image, use <code><a href="https://rdrr.io/r/graphics/plot.default.html">plot()</a></code> or <code><a href="https://rdrr.io/pkg/sits/man/sits_view.html">sits_view()</a></code>, as in the following example.</p>
-<div class="sourceCode" id="cb246"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb247"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_view.html">sits_view</a></span><span class="op">(</span></span>
 <span>  <span class="va">segments_20LMR_class_svm</span>,</span>
 <span>  red <span class="op">=</span> <span class="st">"B11"</span>,</span>
@@ -276,7 +276,7 @@ Figure 112: Sentinel-2 image in an area of Rondonia, Brazil (source: authors).
 <footer class="bg-primary text-light mt-5"><div class="container"><div class="row">
 
   <div class="col-12 col-md-6 mt-3">
-    <p>"<strong><strong>sits</strong>: Satellite Image Time Series Analysis on Earth Observation Data Cubes</strong>" was written by Gilberto Camara, Rolf Simoes, Felipe Souza, Felipe Menino, Charlotte Pelletier, Pedro R. Andrade, Karine Ferreira, Gilberto Queiroz. It was last built on 2024-08-09.</p>
+    <p>"<strong><strong>sits</strong>: Satellite Image Time Series Analysis on Earth Observation Data Cubes</strong>" was written by Gilberto Camara, Rolf Simoes, Felipe Souza, Felipe Menino, Charlotte Pelletier, Pedro R. Andrade, Karine Ferreira, Gilberto Queiroz. It was last built on 2024-08-18.</p>
   </div>
 
   <div class="col-12 col-md-6 mt-3">
