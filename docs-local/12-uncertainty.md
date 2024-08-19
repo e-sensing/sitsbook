@@ -99,7 +99,12 @@ s2_reg_cube_ro <- sits_regularize(
   multicores = 4,
   progress = FALSE
 )
+```
 
+
+
+
+``` r
 plot(s2_reg_cube_ro,
   red = "B11",
   green = "B8A",

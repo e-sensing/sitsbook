@@ -36,7 +36,6 @@ When a set of time series organized as tibble is taken as input to the classifie
 Random forest is a machine learning algorithm that uses an ensemble learning method for classification tasks. The algorithm consists of multiple decision trees, each trained on a different subset of the training data and with a different subset of features. To make a prediction, each decision tree in the forest independently classifies the input data. The final prediction is made based on the majority vote of all the decision trees. The randomness in the algorithm comes from the random subsets of data and features used to train each decision tree, which helps to reduce overfitting and improve the accuracy of the model. This classifier measures the importance of each feature in the classification task, which can be helpful in feature selection and data visualization. Pelletier et al.  discuss the robustness of random forest method for satellite image time series classification [@Pelletier2016]. 
 
 ```{r mlrffig, echo = FALSE, out.width = "90%", fig.align="center", fig.cap="Random forest algorithm (Source: Venkata Jagannath in Wikipedia - licenced as CC-BY-SA 4.0)."}
-
 knitr::include_graphics("./images/random_forest.png") 
 ```
 
@@ -46,7 +45,7 @@ knitr::include_graphics("./images/random_forest.png")
 set.seed(290356)
 ```
 
-```{r mlrformodel, tidy="styler",out.width = "90%", fig.align="center", fig.cap="Most important variables in random forest model (source: authors)."}
+```{r tidy="styler", eval = FALSE}
 # Train the Mato Grosso samples with random forest model
 rfor_model <- sits_train(
     samples = samples_matogrosso_mod13q1, 
@@ -55,16 +54,25 @@ rfor_model <- sits_train(
 plot(rfor_model)
 ```
 
+```{r mlrformodel, tidy="styler", eval = TRUE, echo = FALSE, out.width = "90%", fig.align="center", fig.cap="Most important variables in random forest model (source: authors)."}
+knitr::include_graphics("./images/mlrformodel.png") 
+```
+
 The most important explanatory variables are the NIR (near infrared) band on date 17 (2007-05-25) and the MIR (middle infrared) band on date 22 (2007-08-13). The NIR value at the end of May captures the growth of the second crop for double cropping classes.  Values of the MIR band at the end of the period (late July to late August) capture bare soil signatures to distinguish between agricultural and natural classes. This corresponds to summertime when the ground is drier after harvesting crops.
 
 
-```{r mlrforplot, tidy="styler",out.width = "90%", fig.align="center", fig.cap="Classification of time series using random forest (source: authors)."}
+```{r, tidy="styler", eval = FALSE, echo = TRUE}
 # Classify using random forest model and plot the result
 point_class <- sits_classify(
     data = point_mt_mod13q1, 
     ml_model  = rfor_model)
 plot(point_class, bands = c("NDVI", "EVI"))
 ```
+
+```{r mlrforplot, out.width = "90%", fig.align="center", fig.cap="Classification of time series using random forest (source: authors)."}
+knitr::include_graphics("./images/mlrforplot.png") 
+```
+
 
 The result shows that the area started as a forest in 2000, was deforested from 2004 to 2005, used as pasture from 2006 to 2007, and for double-cropping agriculture from 2009 onwards. This behavior is consistent with expert evaluation of land change process in this region of Amazonia.
 
@@ -89,7 +97,7 @@ set.seed(290356)
 ```
 
 
-```{r mlsvmplot, tidy="styler", out.width = "90%", fig.align="center", fig.cap="Classification of time series using SVM (source: authors)."}
+```{r tidy="styler", eval = FALSE}
 # Train an SVM model
 svm_model <- sits_train(
     samples = samples_matogrosso_mod13q1, 
@@ -101,6 +109,11 @@ point_class <- sits_classify(
 # Plot the result
 plot(point_class, bands = c("NDVI", "EVI"))
 ```
+
+```{r mlsvmplot, echo = FALSE, tidy="styler", out.width = "90%", fig.align="center", fig.cap="Classification of time series using SVM (source: authors)."}
+knitr::include_graphics("./images/mlsvmplot.png") 
+```
+
 The SVM classifier is less stable and less robust to outliers than the random forest method. In this example, it tends to misclassify some of the data. In 2008, it is likely that the correct land class was still `Pasture` rather than `Soy_Millet` as produced by the algorithm, while the `Soy_Cotton` class in 2012 is also inconsistent with the previous and latter classification of `Soy_Corn`.
 
 ## Extreme gradient boosting{-}
@@ -125,7 +138,7 @@ set.seed(290356)
 ```
 
 
-```{r mlxgbplot, tidy="styler", out.width = "90%", fig.align="center", fig.cap="Classification of time series using XGBoost (source: authors)."}
+```{r tidy="styler", eval = FALSE, echo = TRUE}
 # Train using  XGBoost
 xgb_model <- sits_train(
     samples = samples_matogrosso_mod13q1, 
@@ -137,6 +150,10 @@ point_class_xgb <- sits_classify(
 plot(point_class_xgb, bands = c("NDVI", "EVI"))
 ```
 
+
+```{r mlxgbplot, echo = FALSE, out.width = "90%", fig.align="center", fig.cap="Classification of time series using XGBoost (source: authors)."}
+knitr::include_graphics("./images/mlxgbplot.png") 
+```
 
 ## Deep learning using multilayer perceptron{-}
 
@@ -160,7 +177,7 @@ To simplify the output, the `verbose` option has been turned off. After the mode
 set.seed(290356)
 ```
 
-```{r mlmlpplot, tidy="styler", out.width = "80%", warning = FALSE, message = FALSE, fig.align="center", fig.cap="Evolution of training accuracy of MLP model (source: authors)."}
+```{r  tidy="styler", eval = FALSE, warning = FALSE, message = FALSE}
 # Train using an MLP model
 # This is an example of how to set parameters
 # First-time users should test default options first
@@ -178,14 +195,23 @@ mlp_model <- sits_train(
 plot(mlp_model)
 ```
 
+```{r mlmlpmodel, echo = FALSE, out.width = "80%", fig.align="center", fig.cap="Evolution of training accuracy of MLP model (source: authors)."}
+knitr::include_graphics("./images/mlmlpmodel.png") 
+```
+
 Then, we classify a 16-year time series using the multilayer perceptron model.
 
-```{r, tidy="styler", out.width = "90%", fig.align="center", fig.cap="Classification of time series using MLP (source: authors)."}
+```{r, tidy="styler", eval = FALSE}
 # Classify using MLP model and plot the result
 point_mt_mod13q1 |>  
     sits_classify(mlp_model) |>  
     plot(bands = c("NDVI", "EVI"))
 ```
+
+```{r mlmlpplot, echo = FALSE, out.width = "90%", fig.align="center", fig.cap="Classification of time series using MLP (source: authors)."}
+knitr::include_graphics("./images/mlmlpplot.png") 
+```
+
 
 In theory, multilayer perceptron model can capture more subtle changes than random forest and XGBoost In this specific case, the result is similar to theirs. Although the model mixes the `Soy_Corn` and `Soy_Millet` classes, the distinction between their temporal signatures is quite subtle. Also, in this case, this suggests the need to improve the number of samples. In this example, the MLP model shows an increase in sensitivity compared to previous models. We recommend to compare different configurations since the MLP model is sensitive to changes in its parameters.
 
@@ -208,7 +234,7 @@ set.seed(290356)
 ```
 
 
-```{r mltcnnmodel, tidy="styler", cache = TRUE, out.width = "80%", warning = FALSE, message = FALSE, fig.align="center", fig.cap="Training evolution of TempCNN model (source: authors)."}
+```{r tidy="styler", eval = FALSE}
 library(torchopt)
 # Train using tempCNN
 tempcnn_model <- sits_train(samples_matogrosso_mod13q1, 
@@ -225,7 +251,11 @@ tempcnn_model <- sits_train(samples_matogrosso_mod13q1,
 plot(tempcnn_model)
 ```
 
-Then, we classify a 16-year time series using the TempCNN model.
+```{r mltcnnmodel, echo = FALSE, out.width = "80%", fig.align="center", fig.cap="Training evolution of TempCNN model (source: authors)."}
+knitr::include_graphics("./images/mltcnnmodel.png")
+```
+
+Using the TempCNN model, we classify a 16-year time series.
 
 ```{r mltccnplot, out.width = "90%", tidy="styler", fig.align="center", fig.cap="Classification of time series using TempCNN (source: authors)."}
 # Classify using TempCNN model and plot the result
@@ -233,6 +263,11 @@ point_mt_mod13q1 |>
     sits_classify(tempcnn_model) |>  
     plot(bands = c("NDVI", "EVI"))
 ```
+
+```{r mltcnnplot, out.width = "90%", fig.align="center", fig.cap="Classification of time series using TempCNN (source: authors)."}
+knitr::include_graphics("./images/mltcnnplot.png")
+```
+
 
 The result has important differences from the previous ones. The TempCNN model indicates the `Soy_Cotton` class as the most likely one in 2004. While this result is possibly wrong, it shows that the time series for 2004 is different from those of Forest and Pasture classes. One possible explanation is that there was forest degradation in 2004, leading to a signature that is a mix of forest and bare soil. In this case, including forest degradation samples could improve the training data. In our experience, TempCNN models are a reliable way of classifying image time series [@Simoes2021]. Recent work which compares different models also provides evidence that TempCNN models have satisfactory behavior, especially in the case of crop classes [@Russwurm2020].
 
@@ -259,7 +294,7 @@ The first model proposed by Garnot et al. is a full transformer-based model [@Ga
 
 In `sits`, the full transformer-based model proposed by Garnot et al. [@Garnot2020a]   is implemented using `sits_tae()`. The default parameters are those proposed by the authors. The default optimizer is `optim_adamw`, as also used in the `sits_tempcnn()` function.
 
-```{r mltaemodel, tidy="styler", out.width = "100%", cache = TRUE, warning = FALSE, message = FALSE, fig.align="center", fig.cap="Training evolution of Temporal Self-Attention model (source: authors)."}
+```{r tidy="styler", eval = FALSE}
 # Train a machine learning model using TAE
 tae_model <- sits_train(samples_matogrosso_mod13q1, 
                        sits_tae(
@@ -272,18 +307,27 @@ tae_model <- sits_train(samples_matogrosso_mod13q1,
 plot(tae_model)
 ```
 
+```{r mltaemodel, out.width = "100%", echo = FALSE, fig.align="center", fig.cap="Training evolution of Temporal Self-Attention model (source: authors)."}
+knitr::include_graphics("./images/mltaemodel.png")
+```
+
 Then, we classify a 16-year time series using the TAE model. 
 
-```{r mltaeplot, tidy="styler", out.width = "100%", fig.align="center", fig.cap="Classification of time series using TAE (source: authors)."}
+```{r tidy="styler", eval = FALSE}
 # Classify using DL model and plot the result
 point_mt_mod13q1 |>  
     sits_classify(tae_model) |>  
     plot(bands = c("NDVI", "EVI"))
 ```
 
+```{r mltaeplot, echo = FALSE, out.width = "100%", fig.align="center", fig.cap="Classification of time series using TAE (source: authors)."}
+knitr::include_graphics("./images/mltaeplot.png")
+```
+
+
 Garnot and co-authors also proposed the Lightweight Temporal Self-Attention Encoder (LTAE) [@Garnot2020b], which the authors claim can achieve high classification accuracy with fewer parameters compared to other neural network models. It is a good choice for applications where computational resources are limited. The `sits_lighttae()` function implements this algorithm. The most important parameter to be set is the learning rate `lr`. Values ranging from 0.001 to 0.005 should produce good results. See also the section below on model tuning. 
 
-```{r mlltaemodel, tidy="styler", out.width = "80%", warning = FALSE, message = FALSE, fig.align="center", fig.cap="Training evolution of Lightweight Temporal Self-Attention model (source: authors)."}
+```{r tidy="styler", eval = FALSE}
 # Train a machine learning model using TAE
 ltae_model <- sits_train(samples_matogrosso_mod13q1, 
                        sits_lighttae(
@@ -296,13 +340,21 @@ ltae_model <- sits_train(samples_matogrosso_mod13q1,
 plot(ltae_model)
 ```
 
+```{r mlltaemodel, echo = FALSE,  out.width = "80%", fig.align="center", fig.cap="Training evolution of Lightweight Temporal Self-Attention model (source: authors)."}
+knitr::include_graphics("./images/mlltaemodel.png")
+```
+
 Then, we classify a 16-year time series using the LightTAE model. 
 
-```{r mlltaeplot, tidy="styler", out.width = "100%", fig.align="center", fig.cap="Classification of time series using LightTAE (source: authors)."}
+```{r tidy="styler", eval = FALSE}
 # Classify using DL model and plot the result
 point_mt_mod13q1 |>  
     sits_classify(ltae_model) |>  
     plot(bands = c("NDVI", "EVI"))
+```
+
+```{r mlltaeplot, echo = FALSE, out.width = "100%", fig.align="center", fig.cap="Classification of time series using LightTAE (source: authors)."}
+knitr::include_graphics("./images/mlltaeplot.png")
 ```
 
 The behaviour of both `sits_tae()` and `sits_lighttae()` is similar to that of `sits_tempcnn()`. It points out the possible need for more classes and training data to better represent the transition period between 2004 and 2010. One possibility is that the training data associated with the Pasture class is only consistent with the time series between the years 2005 to 2008. However, the transition from Forest to Pasture in 2004 and from Pasture to Agriculture in 2009-2010 is subject to uncertainty since the classifiers do not agree on the resulting classes. In general, deep learning temporal-aware models are more sensitive to class variability than random forest and extreme gradient boosters. 

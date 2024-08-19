@@ -29,8 +29,8 @@ plot(rondonia_20LMR, date = "2022-07-16", band = "NDVI")
 ```
 
 <div class="figure" style="text-align: center">
-<img src="09-rasterclassification_files/figure-html/rcndvi-1.png" alt="Color composite image of the cube for date 2023-07-16 (source: authors)." width="90%" />
-<p class="caption">(\#fig:rcndvi)Color composite image of the cube for date 2023-07-16 (source: authors).</p>
+<img src="09-rasterclassification_files/figure-html/rcndvi-1.png" alt="Color composite image of the cube for date 2023-07-16 (&amp;copy;: EU Copernicus Sentinel Programme; source: Microsoft)." width="90%" />
+<p class="caption">(\#fig:rcndvi)Color composite image of the cube for date 2023-07-16 (&copy;: EU Copernicus Sentinel Programme; source: Microsoft).</p>
 </div>
 
 ## Training data for the case study{-}
@@ -62,12 +62,15 @@ summary(samples_deforestation_rondonia)
 ```
 
 
-It is helpful to plot the basic patterns associated with the samples to understand the training set better. The function `sits_patterns()` uses a generalized additive model (GAM) to predict a smooth, idealized approximation to the time series associated with each class for all bands. Since the data cube used in the classification has 10 bands we filter the samples for bands B02, B8A, and B11  before showing the patterns. 
+It is helpful to plot the basic patterns associated with the samples to understand the training set better. The function `sits_patterns()` uses a generalized additive model (GAM) to predict a smooth, idealized approximation to the time series associated with each class for all bands. Since the data cube used in the classification has 10 bands, we obtain the indexes NDVI, EVI and NBR before showing the patterns. 
 
 
 ``` r
 samples_deforestation_rondonia |>
-  sits_select(bands = c("B02", "B8A", "B11")) |>
+  sits_apply(NDVI = (B08 - B04) / (B08 + B04)) |>
+  sits_apply(NBR = (B08 - B12) / (B08 + B12)) |>
+  sits_apply(EVI = 2.5 * (B08 - B04) / ((B08 + 6.0 * B04 - 7.5 * B02) + 1.0)) |>
+  sits_select(bands = c("NDVI", "EVI", "NBR")) |>
   sits_patterns() |>
   plot()
 ```
@@ -88,12 +91,14 @@ The next step is to train a machine learning model to illustrate CPU-based class
 ``` r
 # set the seed to get the same result
 set.seed(03022024)
-# Train model using Temporal CNN model
+# Train model using random forest model
 rfor_model <- sits_train(
   samples_deforestation_rondonia,
   ml_method = sits_rfor()
 )
 ```
+
+
 
 
 ``` r
@@ -168,7 +173,7 @@ rondonia_20LMR_class <- sits_label_classification(
 
 # Plot the thematic map
 plot(rondonia_20LMR_class,
-  tmap_options = list("legend_text_size" = 0.7)
+  legend_text_size = 0.7
 )
 ```
 
@@ -293,9 +298,15 @@ rondonia_20LMR_class_tcnn <- sits_label_classification(
   multicores = 6,
   memsize = 24
 )
+```
+
+
+
+
+``` r
 # plot the final classification map
 plot(rondonia_20LMR_class_tcnn,
-  tmap_options = list("legend_text_size" = 0.7)
+  legend_text_size = 0.7
 )
 ```
 
@@ -336,7 +347,7 @@ rondonia_class <- sits_cube(
 )
 
 plot(rondonia_class,
-  tmap_options = list("legend_text_size" = 0.7)
+  legend_text_size = 0.7
 )
 ```
 
@@ -450,7 +461,7 @@ rondonia_def_2021 <- sits_reclassify(
 
 # Plot the reclassified map
 plot(rondonia_def_2021,
-  tmap_options = list("legend_text_size" = 0.7)
+  legend_text_size = 0.7
 )
 ```
 

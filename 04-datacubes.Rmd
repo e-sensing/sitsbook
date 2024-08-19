@@ -45,7 +45,7 @@ knitr::include_graphics("./images/usgs_ard_tile.png")
 
 ARD image collections are organized in spatial partitions. Sentinel-2/2A images follow the Military Grid Reference System (MGRS) tiling system, which divides the world into 60 UTM zones of 8 degrees of longitude. Each zone has blocks of 6 degrees of latitude. Blocks are split into tiles of 110 $\times$ 110 km$^2$ with a 10 km overlap. Figure \@ref(fig:mgrs) shows the MGRS tiling system for a part of the Northeastern coast of Brazil, contained in UTM zone 24, block M. 
 
-```{r mgrs, echo = FALSE, out.width="80%", fig.align="center", fig.cap="MGRS tiling system used by Sentinel-2 images (source: GISSurfer 2.0. Reproduction based on fair use doctrine)."}
+```{r mgrs, echo = FALSE, out.width="80%", fig.align="center", fig.cap="MGRS tiling system used by Sentinel-2 images (source: US Army. Reproduction based on fair use doctrine)."}
 knitr::include_graphics("./images/s2_mgrs_grid.png")
 ```
 
@@ -133,7 +133,7 @@ plot(s2_23MMU_cube,
 )
 ```
 
-```{r aws, echo = FALSE, out.width="100%", fig.align="center", fig.cap= "Sentinel-2 image in an area of the Northeastern coast of Brazil (source: authors)."}
+```{r aws, echo = FALSE, out.width="100%", fig.align="center", fig.cap= "Sentinel-2 image in an area of the Northeastern coast of Brazil (&copy;: EU Copernicus Sentinel Programme; source: AWS)."}
 knitr::include_graphics("./images/aws_s2.png")
 ```
 
@@ -162,7 +162,7 @@ plot(s2_20LKP_cube_MPC, red = "B11", blue = "B02", green = "B8A",
 )
 ```
 
-```{r mpc1, echo = FALSE, out.width="100%", fig.align="center", fig.cap= "Sentinel-2 image in an area of the state of Rondonia, Brazil (source: authors)."}
+```{r mpc1, echo = FALSE, out.width="100%", fig.align="center", fig.cap= "Sentinel-2 image in an area of the state of Rondonia, Brazil (&copy;: EU Copernicus Sentinel Programme; source: Microsoft)."}
 knitr::include_graphics("./images/mpc_s2.png")
 ```
 
@@ -189,7 +189,7 @@ plot(s2_L8_cube_MPC, red = "RED", green = "GREEN", blue = "BLUE",
      date = "2019-06-30")
 ```
 
-```{r mpc2, echo = FALSE, out.width="100%", fig.align="center", fig.cap= "Landsat-8 image in an area in Northeast Brazil (source: authors)."}
+```{r mpc2, echo = FALSE, out.width="100%", fig.align="center", fig.cap= "Landsat-8 image in an area in Northeast Brazil (sources: USGS and Microsoft)."}
 knitr::include_graphics("./images/mpc_l8.png")
 ```
 
@@ -203,7 +203,7 @@ Access to Sentinel-1 GRD images can be done either by MGRS tiles (`tiles`) or by
 
 The following example shows how to create a data cube of S1 GRD images over a region in Mato Grosso Brazil that is an area of the Amazon forest that has been deforested. The resulting cube will not follow any specific projection and its coordinates will be stated as EPSG 4326 (latitude/longitude). Its geometry is derived from the SAR slant-range perspective; thus, it will appear included in relation to the Earth's longitude. 
 
-```{r mpc3, tidy="styler", cache = TRUE, out.width="100%", fig.align="center", fig.cap= "Sentinel-1 image in an area in Mato Grosso, Brazil (source: authors)."}
+```{r, tidy="styler", echo = TRUE, eval = FALSE}
 cube_s1_grd <-  sits_cube(
   source = "MPC",
   collection = "SENTINEL-1-GRD",
@@ -214,6 +214,10 @@ cube_s1_grd <-  sits_cube(
   end_date = "2021-09-30"
 )
 plot(cube_s1_grd, band = "VV", palette = "Greys")
+```
+
+```{r mpc3, tidy="styler", echo = FALSE, out.width="100%", fig.align="center", fig.cap= "Sentinel-1 image in an area in Mato Grosso, Brazil (&copy;: EU Copernicus Sentinel Programme; source: Microsoft)."}
+knitr::include_graphics("./images/mpc3.png")
 ```
 
 As explained earlier in this chapter, in areas with areas with large elevation differences, Sentinel-1 GRD images will have geometric distortions. For this reason, whenever possible, we recommend the use of RTC (radiometrically terrain corrected) images as described in the next session. 
@@ -227,7 +231,7 @@ The terrain correction addresses geometric distortions caused by the side-lookin
 
 In MPC, access to Sentinel-1-RTC images requires a Planetary Computer account. User will receive a  Shared Access Signature (SAS) Token from MPC that allows access to RTC data. Once a user receives a token from Microsoft, she needs to include the environment variable `MPC_TOKEN` in her `.Rprofile`. Therefore, the following example only works for users that have an SAS token.
 
-```{r mpcrtcol, tidy="styler", cache = TRUE, out.width="100%", fig.align="center", fig.cap= "Sentinel-1-RTC image of an area in Colombia (source: authors)."}
+```{r tidy="styler", echo = TRUE, eval = FALSE}
 cube_s1_rtc <-  sits_cube(
   source = "MPC",
   collection = "SENTINEL-1-RTC",
@@ -239,6 +243,12 @@ cube_s1_rtc <-  sits_cube(
 )
 plot(cube_s1_rtc, band = "VV", palette = "Greys")
 ```
+
+```{r mpcrtcol, tidy="styler", eval = TRUE, echo = FALSE, out.width="100%", fig.align="center", fig.cap= "Sentinel-1-RTC image of an area in Colombia (&copy;: EU Copernicus Sentinel Programme; source: Microsoft)."}
+knitr::include_graphics("./images/mpcrtcol.png")
+```
+
+
 The above image is from the central region of Colombia, a country with large variations in altitude due to the Andes mountains. Users are invited to compare this images with the one from the `SENTINEL-1-GRD` collection and see the significant geometrical distortions of the GRD image compared with the RTC one.
 
 ### Copernicus DEM 30 meter images in MPC{-}
@@ -247,16 +257,21 @@ The Copernicus digital elevation model 30-meter global dataset (COP-DEM-GLO-30) 
 
 The Copernicus DEM 30 meter is organized in a 1$^\circ$ by 1$^\circ$ grid. In `sits`, access to COP-DEM-GLO-30 images can be done either by MGRS tiles (`tiles`) or by region of interest (`roi`). In both case, the cube is retrieved based on the parts of the grid that intersect the region of interest or the chosen tiles.
 
-```{r mpc4, tidy="styler", out.width="100%", fig.align="center", fig.cap= "Copernicus 30-meter DEM of an area in Brazil (source: authors)."}
+```{r tidy="styler", echo = TRUE, eval = FALSE}
 cube_dem_30 <-  sits_cube(
   source = "MPC",
   collection = "COP-DEM-GLO-30",
   tiles = "20LMR",
   band = "ELEVATION"
 )
-plot(cube_dem_30, band = "ELEVATION", rev = TRUE)
+plot(cube_dem_30, band = "ELEVATION", palette = "RdYlGn", rev = TRUE)
 ```
 
+
+```{r mpc4, tidy="styler", echo = FALSE, eval = TRUE, out.width="100%", fig.align="center", fig.cap= "Copernicus 30-meter DEM of an area in Brazil (&copy; DLR e.V. 2010-2014 and &copy Airbus Defence and Space GmbH 2014-2018 provided under COPERNICUS by the European Union and ESA; source: Microsoft)."}
+
+knitr::include_graphics("./images/mpc4.png")
+```
 
 ## Brazil Data Cube{-}
 
@@ -288,7 +303,7 @@ plot(cbers_tile,
      date = "2021-05-09")
 ```
 
-```{r cbers, echo = FALSE, out.width="100%", fig.align="center", fig.cap="CBERS-4 WFI image in a Cerrado area in Brazil (source: authors)."}
+```{r cbers, echo = FALSE, out.width="100%", fig.align="center", fig.cap="CBERS-4 WFI image in a Cerrado area in Brazil (&copy; INPE/Brazil licensed under CC-BY-SA. source: Brazil Data Cube)."}
 knitr::include_graphics("./images/bdc_cbers4.png")
 ```
 
@@ -331,7 +346,7 @@ lena_cube <- sits_cube(
 plot(lena_cube, date = "2023-07-06", red = "B12", green = "B8A", blue = "B04")
 ```
 
-```{r lena, echo = FALSE, out.width="100%", fig.align="center", fig.cap= "Sentinel-2 image of the Lena river delta in summertime (source: authors)."}
+```{r lena, echo = FALSE, out.width="100%", fig.align="center", fig.cap= "Sentinel-2 image of the Lena river delta in summertime (&copy;: EU Copernicus Sentinel Programme; source: CDSE)."}
 knitr::include_graphics("./images/s2_lena_delta.png")
 ```
 
@@ -357,7 +372,7 @@ s1_cube <- sits_cube(
 plot(s1_cube, band = "VV", date = c("2023-03-03"), palette = "Greys")
 ```
 
-```{r cdsertc, echo = FALSE, out.width="100%", fig.align="center", fig.cap= "Sentinel-1-RTC image of the Rift Valley in Ethiopia (source: authors)."}
+```{r cdsertc, echo = FALSE, out.width="100%", fig.align="center", fig.cap= "Sentinel-1-RTC image of the Rift Valley in Ethiopia (&copy;: EU Copernicus Sentinel Programme; source: CDSE)."}
 knitr::include_graphics("./images/s1_rtc_cdse.png")
 ```
 
@@ -395,7 +410,7 @@ dea_s2_cube <- sits_cube(
 plot(dea_s2_cube, red = "B04", blue = "B02", green = "B08")
 ```
 
-```{r dea1, echo = FALSE, out.width="100%", fig.align="center", fig.cap="Sentinel-2 image in an area over Madagascar (source: authors)."}
+```{r dea1, echo = FALSE, out.width="100%", fig.align="center", fig.cap="Sentinel-2 image in an area over Madagascar (&copy;: EU Copernicus Sentinel Programme; source: Digital Earth Africa)."}
 knitr::include_graphics("./images/deafrica_s2.png")
 ```
 
@@ -417,7 +432,7 @@ plot(dea_l9_cube, date = "2023-06-26",
      red = "B06", green = "B05", blue = "B04")
 ```
 
-```{r seren, echo = FALSE, out.width="100%", fig.align="center", fig.cap="Landsat-9 image in an area over the Serengeti in Tanzania (source: authors)."}
+```{r seren, echo = FALSE, out.width="100%", fig.align="center", fig.cap="Landsat-9 image in an area over the Serengeti in Tanzania (source: Digital Earth Africa)."}
 knitr::include_graphics("./images/landsat9_serengeti.png")
 ```
 
@@ -438,7 +453,7 @@ dea_alos_cube <- sits_cube(
 plot(dea_alos_cube,band = "HH")
 ```
 
-```{r lakekivu, echo = FALSE, out.width="100%", fig.align="center", fig.cap="ALOS-PALSAC mosaic in the Congo forest area (source: authors)."}
+```{r lakekivu, echo = FALSE, out.width="100%", fig.align="center", fig.cap="ALOS-PALSAC mosaic in the Congo forest area (&copy;: JAXA EORC; source: Digital Earth Africa)."}
 knitr::include_graphics("./images/alos_palsar_hh_lake_kivu.png")
 ```
 
@@ -478,7 +493,7 @@ s2_56KKV <- sits_cube(
 plot(s2_56KKV, green = "NIR-2", blue = "BLUE", red = "SWIR-2", date = "2023-10-14")
 ```
 
-```{r goldcoast, echo = FALSE, eval = TRUE, out.width="100%", fig.align="center", fig.cap="Plot of Sentinel-2 image obtained from the DEAUSTRALIA collection for date 2023-10-14 showing MGRS tile 56KKV (source: authors)."}
+```{r goldcoast, echo = FALSE, eval = TRUE, out.width="100%", fig.align="center", fig.cap="Plot of Sentinel-2 image obtained from the DEAUSTRALIA collection for date 2023-10-14 showing MGRS tile 56KKV (&copy;: EU Copernicus Sentinel Programme; source: Digital Earth Australia)."}
 
 knitr::include_graphics("./images/s2_56KKV.png") 
 ```
@@ -535,7 +550,7 @@ hls_cube_s2 <- sits_cube(
 plot(hls_cube_s2, red = "RED", green = "GREEN", blue = "BLUE", date = "2020-06-20")
 ```
 
-```{r hlssen, echo = FALSE, eval = TRUE, out.width="100%", fig.align="center", fig.cap="Plot of Sentinel-2 image obtained from the NASA HLS collection for date 2020-06-15 showing the island of Ilhabela in the Brazilian coast  (source: authors)."}
+```{r hlssen, echo = FALSE, eval = TRUE, out.width="100%", fig.align="center", fig.cap="Plot of Sentinel-2 image obtained from the NASA HLS collection for date 2020-06-15 showing the island of Ilhabela in the Brazilian coast  (&copy;:EU Copernicus Sentinel Programme; source: NASA)."}
 
 knitr::include_graphics("./images/hls_ilhabela_s2.png") 
 ```
@@ -592,7 +607,7 @@ plot(hls_cube_merged,
      date = "2020-07-11")
 ```
 
-```{r hlsmerge, echo = FALSE, eval = TRUE, out.width="100%", fig.align="center", fig.cap="Plot of Sentinel-2 image obtained from merging NASA HLS collection and Sentinel-2 collection for date 2020-06-15 showing the island of Ilhabela in the Brazilian coast (source: authors)."}
+```{r hlsmerge, echo = FALSE, eval = TRUE, out.width="100%", fig.align="center", fig.cap="Plot of Sentinel-2 image obtained from merging NASA HLS collection and Sentinel-2 collection for date 2020-06-15 showing the island of Ilhabela in the Brazilian coast (&copy;: EU Copernicus Sentinel Programme; source: NASA)."}
 knitr::include_graphics("./images/hls_ilhabela_l8.png") 
 ```
 
@@ -619,7 +634,8 @@ world_cover_2021_20LBL <- sits_cube_copy(
 # plot the resulting map
 plot(world_cover_2021_20LBL)
 ```
-```{r worldcover, echo = FALSE, eval = TRUE, out.width="100%", fig.align="center", fig.cap="Plot of World Cover 2021 map covering MGRS tile 22LBL (source: authors)."}
+
+```{r worldcover, echo = FALSE, eval = TRUE, out.width="100%", fig.align="center", fig.cap="Plot of World Cover 2021 map covering MGRS tile 22LBL (&copy;: TerraScope)."}
 knitr::include_graphics("./images/world_cover_2021.png") 
 ```
 
@@ -641,7 +657,7 @@ The example shows how to define a data cube using Planet images from the `sitsda
 In general, `sits` users need to match the local file names to the values provided by the `parse_info` parameter. The file names of this dataset use the format `PLANETSCOPE_MOSAIC_604-1043_B4_2022-10-01.tif`, which fits the default value for `parse_info` which is `c("source", "collection", "tile", "band", "date")` and for `delim` which is "_",  it is not necessary to set these values when creating a data cube from the local files. 
 
 
-```{r planet, tidy="styler", out.width="100%", fig.align="center", fig.cap="Planet image over an area in Colombia (source: authors)."}
+```{r tidy="styler", eval = FALSE}
 # Define the directory where Planet files are stored
 data_dir <- system.file("extdata/Planet", package = "sitsdata")
 # Create a data cube from local files
@@ -655,6 +671,10 @@ planet_cube <- sits_cube(
 plot(planet_cube, red = "B3", green = "B2", blue = "B1")
 ```
 
+
+```{r planet, tidy="styler", echo = FALSE, out.width="100%", fig.align="center", fig.cap="Planet image over an area in Colombia (&copy;: Planet - reproduction based on fair use doctrine)."}
+knitr::include_graphics("./images/planet.png") 
+```
 
 ## Reading classified images as local data cube{-}
 
@@ -670,7 +690,7 @@ It is also possible to create local cubes based on results that have been produc
 
 The following code creates a results cube based on the classification of deforestation in Brazil.  This classified cube was obtained by a large data cube of Sentinel-2 images, covering the state of Rondonia, Brazil comprising 40 tiles, 10 spectral bands, and covering the period from 2020-06-01 to 2021-09-11. Samples of four classes were trained by a random forest classifier. Internally, classified images use integers to represent classes. Thus, labels have to be associated to the integers that represent each class name.
 
-```{r mapdata, tidy="styler", out.width="100%", fig.align="center", fig.cap="Classified data cube for the year 2020/2021 in Rondonia, Brazil (source: authors)."}
+```{r mapdata, tidy="styler", out.width="100%", fig.align="center", fig.cap="Classified data cube for the year 2020/2021 in Rondonia, Brazil (&copy;: EU Copernicus Sentinel Programme; source: authors)."}
 # Create a cube based on a classified image 
 data_dir <- system.file("extdata/Rondonia-20LLP", 
                         package = "sitsdata")
@@ -710,7 +730,7 @@ sits_timeline(s2_cube_rondonia)
 ```
 
 
-```{r senroirreg, cache = TRUE, tidy="styler", out.width="100%", fig.align="center", fig.cap="Sentinel-2 tile 20LLP for date 2018-07-03 (source: authors)."}
+```{r cache = TRUE, tidy="styler", out.width="100%", fig.align="center", fig.cap="Sentinel-2 tile 20LLP for date 2018-07-03 (&copy;: EU Copernicus Sentinel Programme; source: authors)."}
 # plot the first image of the irregular cube
 s2_cube_rondonia |>  
     dplyr::filter(tile == "20LLP") |>  
@@ -719,7 +739,7 @@ s2_cube_rondonia |>
 
 Because of the different acquisition orbits of the Sentinel-2 and Sentinel-2A satellites, the two tiles also have different timelines. Tile `20LKP` has 12 instances, while tile `20LLP` has 24 instances for the chosen period. The function  `sits_regularize()` builds a data cube with a regular timeline and a best estimate of a valid pixel for each interval. The `period` parameter sets the time interval between two images. Values of `period` use the ISO8601 time period specification, which defines time intervals as `P[n]Y[n]M[n]D`, where "Y" stands for years, "M" for months, and "D" for days. Thus, `P1M` stands for a one-month period, `P15D` for a fifteen-day period. When joining different images to get the best image for a period, `sits_regularize()` uses an aggregation method that organizes the images for the chosen interval in order of increasing cloud cover and then selects the first cloud-free pixel. In the example, we use a small spatial resolution for the regular cube to speed up processing; in actual case, we suggest using a 10-meter spatial resolution for the cube.
 
-```{r senroreg, cache = TRUE, tidy="styler", message = FALSE, results='hide', out.width="100%", fig.align="center", fig.cap="Regularized image for tile Sentinel-2 tile 20LLP (source: authors)."}
+```{r senroreg, cache = TRUE, tidy="styler", message = FALSE, results='hide', out.width="100%", fig.align="center", fig.cap="Regularized image for tile Sentinel-2 tile 20LLP (&copy;: EU Copernicus Sentinel Programme; source: authors)."}
 # Regularize the cube to 15 day intervals
 reg_cube_rondonia <- sits_regularize(
           cube       = s2_cube_rondonia,
@@ -753,7 +773,7 @@ cube_s1_rtc <-  sits_cube(
 plot(cube_s1_rtc, band = "VH", palette = "Greys", scale = 0.7)
 ```
 
-```{r sargrdorig, out.width="100%", fig.align="center", fig.cap="Original Sentinel-1 image covering tile 22LBL (source: authors)."}
+```{r sargrdorig, echo = FALSE, out.width="100%", fig.align="center", fig.cap="Original Sentinel-1 image covering tile 22LBL (&copy;: EU Copernicus Sentinel Programme; source: Microsoft)."}
 knitr::include_graphics("./images/cube_s1_rtc_tile_22LBL.png") 
 ```
 
@@ -778,7 +798,7 @@ plot(cube_s1_reg, band = "VH", palette = "Greys", scale = 0.7,
      dates = c("2021-06-06", "2021-07-24", "2021-09-26"))
 ```
 
-```{r sarrtcreg, out.width="100%", fig.align="center", fig.cap="Regular Sentinel-1 image covering tile 22LBL (source: authors)."}
+```{r sarrtcreg, echo = FALSE, out.width="100%", fig.align="center", fig.cap="Regular Sentinel-1 image covering tile 22LBL (&copy;: EU Copernicus Sentinel Programme; source: Microsoft)."}
 knitr::include_graphics("./images/cube_s1_rtc_tile_22LBL_reg_rgb.png") 
 ```
 
@@ -787,7 +807,6 @@ knitr::include_graphics("./images/cube_s1_rtc_tile_22LBL_reg_rgb.png")
 To combine Sentinel-1 and Sentinel-2 data, the first step is to produce regular data cubes for the same MGRS tiles with compatible time steps. The timelines do not have to be exactly the same, but they need to be close enough so that matching is acceptable and have the same number of time steps. This example uses the regular Sentinel-1 cube for tile "22LBL" produced in the previous sections. The next step is to produce a regular Sentinel-2 data cube for the same tile and regularize it. The cube below defines an irregular data cube retrieved from Planetary Computer. 
 
 ```{r, echo = TRUE, tidy="styler", eval = FALSE}
-
 # define the output directory
 cube_s2 <-  sits_cube(
     source = "MPC",
@@ -800,7 +819,7 @@ cube_s2 <-  sits_cube(
 plot(cube_s2, red = "B11", green = "B8A", blue = "B02", date = "2021-07-07")
 ```
 
-```{r senlbl, out.width="100%", fig.align="center", fig.cap="Sentinel-2 image covering tile 22LBL (source: authors)."}
+```{r senlbl, echo = FALSE, out.width="100%", fig.align="center", fig.cap="Sentinel-2 image covering tile 22LBL (&copy;: EU Copernicus Sentinel Programme; source: authors)."}
 knitr::include_graphics("./images/s2_tile_22LBL.png") 
 ```
 
@@ -862,7 +881,7 @@ In many applications, especially in regions with large topographical, soil or cl
 
 As an example of DEM integation in a data cube, we will consider an agricultural region of Chile which is located in a narrow area close to the Andes. There is a steep gradient so that the cube benefits from the inclusion of the DEM.
 
-```{r demsen, echo = TRUE, eval = FALSE}
+```{r demsen, tidy="styler", echo = TRUE, eval = FALSE}
 s2_cube_19HBA <- sits_cube(
   source = "MPC",
   collection = "SENTINEL-2-L2A",
@@ -874,13 +893,13 @@ s2_cube_19HBA <- sits_cube(
 plot(s2_cube_19HBA, red = "B12", green = "B8A", blue = "B04")
 ```
 
-```{r, out.width="100%", fig.align="center", fig.cap="Sentinel-2 image covering tile 19HBA (source: authors)."}
+```{r, echo = FALSE, out.width="100%", fig.align="center", fig.cap="Sentinel-2 image covering tile 19HBA (source: authors)."}
 knitr::include_graphics("./images/s2_19HBA.png") 
 ```
 
 Then, we produce a regular data cube to use for classification. In this example, we will use a reduced resolution (30 meters) to expedite processing. In practice, a resolution of 10 meters is recommended.
 
-```{r, echo = TRUE, eval = FALSE}
+```{r, tidy="styler", echo = TRUE, eval = FALSE}
 s2_cube_19HBA_reg <- sits_regularize(
   cube = s2_cube_19HBA,
   period = "P16D",
@@ -900,7 +919,7 @@ s2_cube_19HBA_reg <- sits_cube(
 The next step is recover the DEM for the area. For this purpose, we will use the Copernicus Global DEM-30, and select the area covered by the tile. As explained in the MPC access section above, the Copernicus DEM tiles are stored as 1$^\circ$ by 1$^\circ$ grid. For them to match an MGRS tile, they have to be regularized in a similar way as the Sentinel-1 images, as shown below. To select a DEM, no temporal information is required.
 
 
-```{r, echo = TRUE, eval = TRUE}
+```{r, tidy="styler", echo = TRUE, eval = FALSE}
 # obtain the DEM cube for 
 dem_cube_19HBA <- sits_cube(
   source = "MPC",
@@ -910,11 +929,9 @@ dem_cube_19HBA <- sits_cube(
 )
 ```
 
-
 After obtaining the 1$^\circ$ by 1$^\circ$ data cube covering the selected tile, the next step is to regularize it. This is done using the `sits_regularize()` function. This function will produce a DEM which matches exactly the chosen tile. 
 
-```{r demchile, echo = TRUE, eval = TRUE, out.width = "100%", fig.align="center",  fig.cap="Copernicus DEM-30 covering tile 19HBA (source: authors)."}
-
+```{r, tidy = "styler", echo = TRUE, eval = FALSE}
 # obtain the DEM cube for 
 dem_cube_19HBA_reg <- sits_regularize(
   cube = dem_cube_19HBA,
@@ -925,6 +942,18 @@ dem_cube_19HBA_reg <- sits_regularize(
 )
 # plot the DEM reversing the palette 
 plot(dem_cube_19HBA_reg, band = "ELEVATION", palette = "Spectral", rev = TRUE)
+```
+
+```{r, echo = FALSE, eval = TRUE}
+dem_cube_19HBA_reg <- sits_cube(
+    source = "MPC",
+    collection = "COP-DEM-GLO-30",
+    data_dir = "./tempdir/chp4/dem_19HBA"
+)
+```
+
+```{r demchile, echo = FALSE, eval = TRUE, out.width = "100%", fig.align="center",  fig.cap="Copernicus DEM-30 covering tile 19HBA (&copy; DLR e.V. 2010-2014 and &copy Airbus Defence and Space GmbH 2014-2018 provided under COPERNICUS by the European Union and ESA; source: Microsoft and authors)."}
+knitr::include_graphics("./images/demchile.png") 
 ```
 
 After obtaining regular data cubes from satellite images and from DEMs, there are two ways to combine them. One option is to take the DEM band as a multitemporal information, and duplicate this band for every time step so that the DEM becomes one additional time series. The alternative is to use DEMs as base cubes, and take them as a single additional band. These options are discusses in what follows.

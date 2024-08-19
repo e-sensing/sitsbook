@@ -10,7 +10,7 @@ author:
 - Pedro R. Andrade
 - Karine Ferreira
 - Gilberto Queiroz
-date: "2024-08-09"
+date: "2024-08-18"
 output:
   html_document: 
     df_print: tibble
@@ -48,7 +48,7 @@ description: |
 ```
 
 ```
-## Loaded sits v1.5.1.
+## Loaded sits v1.5.2.
 ##         See ?sits for help, citation("sits") for use in publication.
 ##         Documentation avaliable in https://e-sensing.github.io/sitsbook/.
 ```

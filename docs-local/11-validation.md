@@ -17,7 +17,7 @@ Our study area is the state of Rondonia (RO) in the Brazilian Amazon, which has 
 
 We used Sentinel-2 and Sentinel-2A ARD (analysis ready) images from 2022-01-01 to 2022-12-31. Using all 10 spectral bands, we produced a regular data cube with a 16-day interval, with 23 instances per year. The best pixels for each period were selected to obtain as low cloud cover as possible. Persistent cloud cover pixels remaining in each period are then temporally interpolated to obtain estimated values. As a result, each pixel is associated with a valid time series. To fully cover RO, we used 41 MGRS tiles; the final data cube has 1.1 TB.  
 
-The work considered nine LUCC classes: (a) stable  natural land cover, including \textit{Natural Forest} and \textit{Water Bodies}; (b) events associated with clear-cuts, including \textit{Clear Cut with Vegetation}, \textit{Clear Cut with Bare Soil}, and \textit{Clear Cut with Burned Area}; (c) natural areas with seasonal variability, including \textit{Wetlands}, \textit{Seasonally-flooded Forest}, and \textit{Riparian Forest}; (d) stable forest areas subject to topographic effects, including \textit{Mountainside Forest}.  
+The work considered nine LUCC classes: (a) stable  natural land cover, including `Forest` and `Water`; (b) events associated with clear-cuts, including `Clear_Cut_Vegetation`, `Clear_Cut_Bare_Soil`, and `Clear_Cut_Burned_Area`; (c) natural areas with seasonal variability, `Wetland`, `Seasonally_Flooded_Forest`, and `Riparian_Forest`; (d) stable forest areas subject to topographic effects, including `Mountainside_Forest`.  
 
 In this chapter, we will take the classification map as our starting point for accuracy assessment. This map can be retrieved from the `sitsdata` package as follows.
 
@@ -170,10 +170,9 @@ ro_samples_sf <- sits_stratified_sampling(
 ```
 
 ```
-#> Deleting layer `ro_samples' using driver `ESRI Shapefile'
 #> Writing layer `ro_samples' to data source 
 #>   `./tempdir/chp11/ro_samples.shp' using driver `ESRI Shapefile'
-#> Writing 2254 features with 1 fields and geometry type Point.
+#> Writing 2261 features with 1 fields and geometry type Point.
 ```
 
 ``` r
@@ -189,7 +188,7 @@ sf::st_write(ro_samples_sf,
 #> Writing layer `ro_samples' to data source 
 #>   `./tempdir/chp11/ro_samples.csv' using driver `CSV'
 #> options:        GEOMETRY=AS_XY 
-#> Writing 2254 features with 1 fields and geometry type Point.
+#> Writing 2261 features with 1 fields and geometry type Point.
 ```
 
 Using the CSV file (or the optional shapefile) users can visualize the points in a standard GIS such as QGIS. For each point, they will indicate what is the correct class. In this way, they will obtain a confusion matrix which will be used for accuracy assessment. The `overhead` parameter is useful for users to discard border or doubtful pixels where the interpreter cannot be confident of her class assignment. By discarding points whose attribution is uncertain, they will improve the quality of the assessment. 

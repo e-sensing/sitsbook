@@ -126,7 +126,7 @@ To build a data cube from local files, users must provide information about the 
 (c) `data_dir`, the local directory where the image files are stored; 
 (d) `parse_info`, a vector of strings stating how file names store information on "tile", "band", and "date". In this case, local images are stored in files whose names are similar to `TERRA_MODIS_012010_EVI_2014-07-28.tif`. This file represents an image obtained by the MODIS sensor onboard the TERRA satellite, covering part of tile 012010 in the EVI band for date 2014-07-28.
 
-```{r introndvi, out.width = "100%", tidy="styler", fig.align = 'center', fig.cap="False color MODIS image for NDVI band in 2013-09-14 from sinop data cube (source: Authors)."}
+```{r introndvi, out.width = "100%", tidy="styler", fig.align = 'center', fig.cap="False color MODIS image for NDVI band in 2013-09-14 from sinop data cube (source: Brazil Data Cube)."}
 # load package "tibble"
 library(tibble)
 # load packages "sits" and "sitsdata"
@@ -221,8 +221,6 @@ plot(samples_forest_ndvi)
   
 The above figure shows all the time series associated with label `Forest` and band NDVI (in light blue), highlighting the median (shown in dark red) and the first and third quartiles (shown in brown). The spikes are noise caused by the presence of clouds.
 
-
-
 ## Training a machine learning model {.unnumbered}
 
 The next step is to train a machine learning (ML) model using `sits_train()`. It takes two inputs, `samples` (a time series tibble) and `ml_method` (a function that implements a machine learning algorithm). The result is a model that is used for classification. Each ML algorithm requires specific parameters that are user-controllable. For novice users, `sits` provides default parameters that produce good results. Please see Chapter [Machine learning for data cubes](https://e-sensing.github.io/sitsbook/machine-learning-for-data-cubes.html) for more details.
@@ -310,25 +308,39 @@ sits_colors_qgis(sinop_map, file = "./tempdir/chp3/qgis_style.xml")
 
 ## Plotting{-}
 
-The `plot()` function produces a graphical display of data cubes, time series, models, and SOM maps. For each type of data, there is a dedicated version of the `plot()` function. See `?plot.sits` for details. Plotting of time series, models and SOM outputs uses the `ggplot2` package; maps are plotted using the `tmap` package. When plotting images and classified maps, users can control the output with three main parameters:
+The `plot()` function produces a graphical display of data cubes, time series, models, and SOM maps. For each type of data, there is a dedicated version of the `plot()` function. See `?plot.sits` for details. Plotting of time series, models and SOM outputs uses the `ggplot2` package; maps are plotted using the `tmap` package. When plotting images and classified maps, users can control the output, which appropriate parameters for each type of image.
 
-- `pallete`: color scheme to be used for false color maps, which should be one of the `RColorBrewer` palettes. These palettes have been designed to be effective for map display by Prof Cynthia Brewer as described at the [Brewer website](http://colorbrewer2.org). To see the available palettes, please run `RColorBrewer::display.brewer.all(type = "seq")` and `RColorBrewer::display.brewer.all(type = "div")`. By default, optical images use the `RdYlGn` scheme, SAR images use `Greys`, and DEM cubes use `Spectral`. 
-- `rev`: whether the color palette should be reversed; `TRUE` for DEM cubes, and `FALSE` otherwise.
-- `scale`: global scale parameter used by `tmap`. All font sizes, symbol sizes, border widths, and line widths are controlled by this value. Default is 0.75; users should vary this parameter and see the results.
-- `first_quantile`: 1st quantile for stretching images (default = 0.05)
-- `last_quantile`: last quantile for stretching images (default = 0.95)
-- `max_cog_size`: for cloud-oriented geotiff files (COG), sets the maximum number of lines or columns of the COG overview to be used for plotting. 
+- For false color maps, DEM maps, and probability maps:
+    - `band`:  band or index to be plotted;
+    - `pallete`: color scheme to be used for false color maps, which should be one of the `RColorBrewer` palettes. These palettes have been designed to be effective for map display by Prof Cynthia Brewer as described at the [Brewer website](http://colorbrewer2.org). By default, optical images use the `RdYlGn` scheme, SAR images use `Greys`, and DEM cubes use `Spectral`. 
+    - `rev`: whether the color palette should be reversed; `TRUE` for DEM cubes, and `FALSE` otherwise.
+    - `scale`: global scale parameter used by `tmap`. All font sizes, symbol sizes, border widths, and line widths are controlled by this value. Default is 0.75; users should vary this parameter and see the results.
+    - `first_quantile`: 1st quantile for stretching images (default = 0.05).
+    - `last_quantile`: last quantile for stretching images (default = 0.95).
+    - `max_cog_size`: for cloud-oriented geotiff files (COG), sets the maximum number of lines or columns of the COG overview to be used for plotting.   
+    
+- For RGB color maps:
+    - `red`: band or index associated to the red color;
+    - `green`: band or index associated to the green color;
+    - `blue`: band or index associated to the blue color;
+    - `first_quantile`: 1st quantile for stretching images (default = 0.05)
+    - `last_quantile`: last quantile for stretching images (default = 0.95)
+    
+- For classified maps:
+    - `legend`: legend which associated colors to the classes; should be a named vector with classes as names and valid R colors as values. For example, `c("Forest" = "green", "Water" = "blue")` or `c("Forest" = "#1E8449", "Water" = "#2980B9")`. 
+    - `scale`: global scale parameter used by `tmap`.
+    - `max_cog_size`: max number of lines or columns to be read when COG files are available;
+    - `palette`: color palette to be used if legend is not available and colors are not defined in the `sits` color table.
 
 COG overviews are reduced-resolution versions of the main image, stored within the same file. Overviews allow for quick rendering at lower zoom levels, improving performance when dealing with large images. Usually, a single GeoTIFF will have many overviews, to match different zoom levels. The parameter `max_cog_size` controls the size of the overview which will be used for visualisation.
 
 The following optional parameters are available to allow for detailed control over the plot output:
-
-
-3. `graticules_labels_size`: size of coordinates labels (default = 0.8)
-4. `legend_title_size`: relative size of legend title (default = 1.0)
-5. `legend_text_size`: relative size of legend text (default = 1.0)
-6. `legend_bg_color`: color of legend background (default = "white")
-7. `legend_bg_alpha`: legend opacity (default = 0.5)
+- `graticules_labels_size`: size of coordinates labels (default = 0.8).
+- `legend_title_size`: relative size of legend title (default = 1.0).
+- `legend_text_size`: relative size of legend text (default = 1.0).
+- `legend_bg_color`: color of legend background (default = "white").
+- `legend_bg_alpha`: legend opacity (default = 0.5).
+- `legend_position`: where to place the legend (options = "inside" or "outside").
 
 
 ## Visualization of data cubes in interactive maps {.unnumbered}

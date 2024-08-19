@@ -20,7 +20,7 @@ This Chapter discusses how to classify data cubes by providing a step-by-step ex
 
 The examples of this chapter use a pre-built data cube of Sentinel-2 images, available in the package `sitsdata`. These images are from the `SENTINEL-2-L2A` collection in Microsoft Planetary Computer (`MPC`). The data consists of bands BO2, B8A, and B11, and indexes NDVI, EVI and NBR in a small area of $1200 \times 1200$ pixels in the state of Rondonia. As explained in Chapter [Earth observation data cubes](https://e-sensing.github.io/sitsbook/earth-observation-data-cubes.html), we must inform `sits` how to parse these file names to obtain tile, date, and band information. Image files are named according to the convention "satellite_ sensor_tile_band_date" (e.g., `SENTINEL-2_MSI_20LKP_BO2_2020_06_04.tif`) which is the default format in `sits`. 
 
-```{r rcndvi, tidy = "styler", out.width = "90%", fig.align="center", fig.cap="Color composite image of the cube for date 2023-07-16 (source: authors)."}
+```{r rcndvi, tidy = "styler", out.width = "90%", fig.align="center", fig.cap="Color composite image of the cube for date 2023-07-16 (&copy;: EU Copernicus Sentinel Programme; source: Microsoft)."}
 # Files are available in a local directory 
 data_dir <- system.file("extdata/Rondonia-20LMR/", 
                         package = "sitsdata")
@@ -48,11 +48,14 @@ summary(samples_deforestation_rondonia)
 ```
 
 
-It is helpful to plot the basic patterns associated with the samples to understand the training set better. The function `sits_patterns()` uses a generalized additive model (GAM) to predict a smooth, idealized approximation to the time series associated with each class for all bands. Since the data cube used in the classification has 10 bands we filter the samples for bands B02, B8A, and B11  before showing the patterns. 
+It is helpful to plot the basic patterns associated with the samples to understand the training set better. The function `sits_patterns()` uses a generalized additive model (GAM) to predict a smooth, idealized approximation to the time series associated with each class for all bands. Since the data cube used in the classification has 10 bands, we obtain the indexes NDVI, EVI and NBR before showing the patterns. 
 
 ```{r rcpatplot, tidy = "styler", out.width = "90%", fig.align="center", fig.cap="Patterns associated to the training samples (source: authors)."}
 samples_deforestation_rondonia |> 
-    sits_select(bands = c("B02", "B8A", "B11")) |> 
+    sits_apply(NDVI = (B08 - B04)/(B08 + B04)) |> 
+    sits_apply(NBR = (B08 - B12) / (B08 + B12)) |> 
+    sits_apply(EVI = 2.5 * (B08 - B04) / ((B08 + 6.0 * B04 - 7.5 * B02) + 1.0)) |> 
+    sits_select(bands = c("NDVI", "EVI", "NBR")) |> 
     sits_patterns() |> 
     plot()
 ```
@@ -64,17 +67,21 @@ The patterns show different temporal responses for the selected classes. They ma
 
 The next step is to train a machine learning model to illustrate CPU-based classification. We build a random forest model using `sits_train()` and then create a plot to find out what are the most important variables for the model.
 
-```{r, tidy = "styler"}
+```{r, tidy = "styler", eval = FALSE}
 # set the seed to get the same result
 set.seed(03022024)
-# Train model using Temporal CNN model
+# Train model using random forest model
 rfor_model <- sits_train(
   samples_deforestation_rondonia,
   ml_method = sits_rfor()
 )
 ```
 
-```{r rcrfmodel, tidy = "styler", out.width = "90%", fig.align="center", fig.cap="Most relevant variables of the Random Forest model (source: authors)."}
+```{r, echo = FALSE}
+rfor_model <- readRDS("./etc/rfor_model_chp09.rds")
+```
+
+```{r rcrfmodel, out.width = "90%", fig.align="center", fig.cap="Most relevant variables of the Random Forest model (source: authors)."}
 plot(rfor_model)
 ```
 The figure shows that  EVI index values on dates 9 ("2022-05-13") and 15 ("2022-08-17") are the most informative variables for the random forest model. These bands and dates represent inflection points in the image time series. 
@@ -126,7 +133,7 @@ rondonia_20LMR_class <- sits_label_classification(
 
 # Plot the thematic map
 plot(rondonia_20LMR_class,
-     tmap_options = list("legend_text_size" = 0.7))
+     legend_text_size = 0.7)
 ```
 
 
@@ -165,7 +172,7 @@ tuned_tempcnn <- readRDS("./etc/tuned_tempcnn_2.rds")
 
 The result of `sits_tuning()` is  tibble with different values of accuracy, kappa, decision matrix, and hyperparameters. The five best results obtain accuracy values between 0.939 and 0.908, as shown below. The best result is obtained by a learning rate of 3.76e-04 and a weight decay of 1.5e-04, and three CNN layers of size 256, kernel size of 5, and dropout rates of 0.2.
 
-```{r} 
+```{r tunedtempcnn} 
 # Obtain accuracy, kappa, cnn_layers, cnn_kernels, and cnn_dropout_rates the best result
 cnn_params <- tuned_tempcnn[1,c("accuracy", "kappa", "cnn_layers", "cnn_kernels", "cnn_dropout_rates"), ]
 # Learning rates and weight decay are organized as a list
@@ -183,7 +190,7 @@ Deep learning time series classification methods in `sits`, which include `sits_
 
 To illustrate the use of GPUs, we take the same data cube and training data used in the previous examples and use a Temporal CNN method. The first step is to obtain a deep learning model using the hyperparameters produced by the tuning procedure shown earlier. We run
 
-```{r, tidy="styler", out.width = "100%", fig.align="center", fig.cap="Plot of tempCNN model (source: authors)."}
+```{r, tidy="styler", eval = FALSE}
 tcnn_model <- sits_train(
   samples_deforestation_rondonia,
   sits_tempcnn(
@@ -200,7 +207,7 @@ tcnn_model <- sits_train(
 
 After training the model, we classify the data cube. If a GPU is available, users need to provide the additional parameter `gpu_memory` to `sits_classify()`. This information will be used by `sits` to optimize access to the GPU and speed up processing. 
 
-```{r, tidy="styler"}
+```{r probstcnn, tidy="styler", eval = FALSE}
 rondonia_20LMR_probs_tcnn <- sits_classify(
     rondonia_20LMR,
     ml_model = tcnn_model,
@@ -214,7 +221,7 @@ rondonia_20LMR_probs_tcnn <- sits_classify(
 
 After classification, we can smooth the probability cube and then label the resulting smoothed probabilities to obtain a classified map. 
 
-```{r rctcnnmap, tidy="styler", out.width = "90%", fig.align="center", fig.cap="Final map of deforestation obtained using TempCNN model (source: authors)."}
+```{r tidy="styler", eval = FALSE}
 # Smoothen the probability map 
 rondonia_20LMR_bayes_tcnn <- sits_smooth(
     rondonia_20LMR_probs_tcnn,
@@ -231,9 +238,26 @@ rondonia_20LMR_class_tcnn <- sits_label_classification(
     multicores = 6,
     memsize = 24
 )
+```
+
+```{r, eval = TRUE, echo = FALSE}
+labels <- sits_labels(samples_deforestation_rondonia)
+names(labels) <- seq_len(length(labels))
+
+rondonia_20LMR_class_tcnn <- sits_cube(
+    source = "MPC",
+    collection = "SENTINEL-2-L2A",
+    data_dir = "./tempdir/chp9",
+    labels = labels,
+    bands = "class",
+    version = "tcnn-raster"
+)
+```
+
+```{r rctcnnmap, tidy="styler", out.width = "90%", fig.align="center", fig.cap="Final map of deforestation obtained using TempCNN model (source: authors)."}
 # plot the final classification map
 plot(rondonia_20LMR_class_tcnn, 
-     tmap_options = list("legend_text_size" = 0.7))
+     legend_text_size = 0.7)
 ```
 
 
@@ -263,7 +287,7 @@ rondonia_class <- sits_cube(
     )
 
 plot(rondonia_class, 
-      tmap_options = list("legend_text_size" = 0.7))
+     legend_text_size = 0.7)
 ```
 
 The above map shows the total extent of deforestation by clear cuts estimated by the `sits` random forest algorithm in an area in Rondonia, Brazil, based on a time series of Sentinel-2 images for the period 2020-06-04 to 2021-08-26. Suppose we want to estimate the deforestation that occurred from June 2020 to August 2021. We need a reference map containing information on forest cuts before 2020. 
@@ -358,7 +382,7 @@ rondonia_def_2021 <- sits_reclassify(
 
 # Plot the reclassified map
 plot(rondonia_def_2021,
-      tmap_options = list("legend_text_size" = 0.7))
+     legend_text_size = 0.7)
 ```
 
 The reclassified map has been split into deforestation before mid-2020 (using the PRODES map) and the areas classified by `sits` that are taken as being deforested from mid-2020 to mid-2021. This allows experts to measure how much deforestation occurred in this period according to `sits` and compare the result with the PRODES map. 

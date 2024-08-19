@@ -36,8 +36,8 @@ plot(ro_cube_20LMR, blue = "B02", green = "B8A", red = "B11", date = "2022-08-17
 ```
 
 <div class="figure" style="text-align: center">
-<img src="13-ensembleprediction_files/figure-html/ensmapfirst-1.png" alt="Subset of Sentinel-2 tile 20LMR (source: authors)." width="100%" />
-<p class="caption">(\#fig:ensmapfirst)Subset of Sentinel-2 tile 20LMR (source: authors).</p>
+<img src="13-ensembleprediction_files/figure-html/ensmapfirst-1.png" alt="Subset of Sentinel-2 tile 20LMR ((&amp;copy;: EU Copernicus Sentinel Programme; source: Microsoft)." width="100%" />
+<p class="caption">(\#fig:ensmapfirst)Subset of Sentinel-2 tile 20LMR ((&copy;: EU Copernicus Sentinel Programme; source: Microsoft).</p>
 </div>
 
 We will train three models: Random Forests (RF), Light Temporal Attention Encoder (LTAE), and Temporal Convolution Neural Networks (TempCNN), classify the cube with them, and then combine their results. The example uses all spectral bands. We first run the RF classification.
@@ -124,7 +124,7 @@ ro_cube_20LMR_rfor_class <- sits_label_classification(
 
 ``` r
 plot(ro_cube_20LMR_rfor_class,
-  tmap_options = list("legend_text_size" = 0.71)
+  legend_text_size = 0.7, legend_position = "outside"
 )
 ```
 
@@ -199,7 +199,7 @@ ro_cube_20LMR_tcnn_class <- sits_label_classification(
 
 ``` r
 plot(ro_cube_20LMR_tcnn_class,
-  tmap_options = list("legend_text_size" = 0.7)
+  legend_text_size = 0.7, legend_position = "outside"
 )
 ```
 
@@ -273,7 +273,7 @@ ro_cube_20LMR_ltae_class <- sits_label_classification(
 
 ``` r
 plot(ro_cube_20LMR_ltae_class,
-  tmap_options = list("legend_text_size" = 0.7)
+  legend_text_size = 0.7, legend_position = "outside"
 )
 ```
 
@@ -305,17 +305,17 @@ dplyr::inner_join(sum1, sum2, by = "class") |>
 
 ```
 #> # A tibble: 9 × 4
-#>   class                     rfor   tcnn    ltae
-#>   <chr>                    <dbl>  <dbl>   <dbl>
-#> 1 Clear_Cut_Bare_Soil    80       68     68    
-#> 2 Clear_Cut_Burned_Area   1.7      4.7    4.8  
-#> 3 Clear_Cut_Vegetation   19       14     14    
-#> 4 Forest                280      240    240    
-#> 5 Mountainside_Forest     0.0088   0.04   0.028
-#> 6 Riparian_Forest        47       40     40    
-#> 7 Seasonally_Flooded     70      130    130    
-#> 8 Water                  63       67     66    
-#> 9 Wetland                14       13     13
+#>   class                     rfor    tcnn    ltae
+#>   <chr>                    <dbl>   <dbl>   <dbl>
+#> 1 Clear_Cut_Bare_Soil    80       67      66    
+#> 2 Clear_Cut_Burned_Area   1.7      4.4     4.5  
+#> 3 Clear_Cut_Vegetation   19       18      18    
+#> 4 Forest                280      240     240    
+#> 5 Mountainside_Forest     0.0088   0.065   0.051
+#> 6 Riparian_Forest        47       45      44    
+#> 7 Seasonally_Flooded     70      120     120    
+#> 8 Water                  63       67      67    
+#> 9 Wetland                14       11      11
 ```
 
 
@@ -353,7 +353,7 @@ ro_cube_20LMR_average_class <- sits_label_classification(
 ``` r
 # Plot the second version of the classified cube
 plot(ro_cube_20LMR_average_class,
-  tmap_options = list("legend_text_size" = 0.7)
+  legend_text_size = 0.7, legend_position = "outside"
 )
 ```
 
@@ -378,17 +378,17 @@ dplyr::inner_join(sum1, sum2, by = "class") |>
 
 ```
 #> # A tibble: 9 × 5
-#>   class                     rfor   tcnn    ltae     ave
-#>   <chr>                    <dbl>  <dbl>   <dbl>   <dbl>
-#> 1 Clear_Cut_Bare_Soil    80       68     68      71    
-#> 2 Clear_Cut_Burned_Area   1.7      4.7    4.8     3.8  
-#> 3 Clear_Cut_Vegetation   19       14     14      15    
-#> 4 Forest                280      240    240     250    
-#> 5 Mountainside_Forest     0.0088   0.04   0.028   0.036
-#> 6 Riparian_Forest        47       40     40      45    
-#> 7 Seasonally_Flooded     70      130    130     110    
-#> 8 Water                  63       67     66      68    
-#> 9 Wetland                14       13     13      11
+#>   class                     rfor    tcnn    ltae     ave
+#>   <chr>                    <dbl>   <dbl>   <dbl>   <dbl>
+#> 1 Clear_Cut_Bare_Soil    80       67      66      70    
+#> 2 Clear_Cut_Burned_Area   1.7      4.4     4.5     4    
+#> 3 Clear_Cut_Vegetation   19       18      18      16    
+#> 4 Forest                280      240     240     250    
+#> 5 Mountainside_Forest     0.0088   0.065   0.051   0.036
+#> 6 Riparian_Forest        47       45      44      46    
+#> 7 Seasonally_Flooded     70      120     120     110    
+#> 8 Water                  63       67      67      67    
+#> 9 Wetland                14       11      11      11
 ```
 
 As expected, the ensemble map combines information from the three models. Taking the RF model prediction as a base, there is a reduction in the areas of classes `Clear_Cut_Bare_Soil` and `Forest`, confirming the tendency of the RF model to overemphasize the most frequent classes. The LTAE and TempCNN models are more sensitive to class variations and capture time-varying classes such as `Riparian_Forest` and `Clear_Cut_Burned_Area` in more detail than the RF model. However, both TempCNN and LTAE tend to confuse the deforestation-related class `Clear_Cut_Vegetation` and the natural class `Riparian_Forest` more than the RF model. This effect is evident in the left bank of the Madeira river in the centre-left region of the image. Also, both the LTAE and TempCNN maps are more grainy and have more spatial variability than the RF map.

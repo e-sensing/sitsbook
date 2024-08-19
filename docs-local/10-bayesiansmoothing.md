@@ -141,6 +141,7 @@ plot(rondonia_20LLQ_probs,
 <p class="caption">(\#fig:bayesprobmapfor)Probability map produced for classes Forest and Clear_Cut_Bare_Soil (source: authors).</p>
 </div>
 
+
 ``` r
 plot(rondonia_20LLQ_probs,
   labels = c("Clear_Cut_Vegetation", "Clear_Cut_Burned_Area")
@@ -169,7 +170,7 @@ rondonia_20LLQ_class <- sits_label_classification(
 
 # Plot the result
 plot(rondonia_20LLQ_class,
-  tmap_options = list("legend_text_size" = 0.7)
+  legend_text_size = 0.7
 )
 ```
 
@@ -312,7 +313,7 @@ rondonia_20LLQ_class_v2 <- sits_label_classification(
 )
 
 plot(rondonia_20LLQ_class_v2,
-  tmap_options = list("legend_text_size" = 0.7)
+  legend_text_size = 0.7
 )
 ```
 
