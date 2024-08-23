@@ -4,7 +4,7 @@
 
 
 
-Ensemble prediction is a powerful technique for combining predictions from multiple models to produce more accurate and robust predictions. In general, ensemble predictions produce better predictions than using a single model. This is because the errors of individual models can cancel out or be reduced when combined with the predictions of other models. As a result, ensemble predictions can lead to better overall accuracy and reduce the risk of overfitting. This can be especially useful when working with complex or uncertain data. By combining the predictions of multiple models, users can identify which features or factors are most important for making accurate predictions. When using ensemble methods, choosing diverse models with different sources of error is important to ensure that the ensemble predictions are more accurate and robust.
+Ensemble prediction is a powerful technique for combining predictions from multiple models to produce more accurate and robust predictions. Errors of individual models cancel out or are reduced when combined with the predictions of other models. As a result, ensemble predictions can lead to better overall accuracy and reduce the risk of overfitting. This can be especially useful when working with complex or uncertain data. By combining the predictions of multiple models, users can identify which features or factors are most important for making accurate predictions. When using ensemble methods, choosing diverse models with different sources of error is essential to ensure that the ensemble predictions are more precise and robust.
 
 The `sits` package provides `sits_combine_predictions()` to estimate ensemble predictions using probability cubes produced by `sits_classify()` and optionally post-processed with `sits_smooth()`. There are two ways to make ensemble predictions from multiple models:
 
@@ -305,17 +305,17 @@ dplyr::inner_join(sum1, sum2, by = "class") |>
 
 ```
 #> # A tibble: 9 × 4
-#>   class                     rfor    tcnn    ltae
-#>   <chr>                    <dbl>   <dbl>   <dbl>
-#> 1 Clear_Cut_Bare_Soil    80       67      66    
-#> 2 Clear_Cut_Burned_Area   1.7      4.4     4.5  
-#> 3 Clear_Cut_Vegetation   19       18      18    
-#> 4 Forest                280      240     240    
-#> 5 Mountainside_Forest     0.0088   0.065   0.051
-#> 6 Riparian_Forest        47       45      44    
-#> 7 Seasonally_Flooded     70      120     120    
-#> 8 Water                  63       67      67    
-#> 9 Wetland                14       11      11
+#>   class                     rfor   tcnn    ltae
+#>   <chr>                    <dbl>  <dbl>   <dbl>
+#> 1 Clear_Cut_Bare_Soil    80       68     68    
+#> 2 Clear_Cut_Burned_Area   1.7      4.7    4.8  
+#> 3 Clear_Cut_Vegetation   19       14     14    
+#> 4 Forest                280      240    240    
+#> 5 Mountainside_Forest     0.0088   0.04   0.028
+#> 6 Riparian_Forest        47       40     40    
+#> 7 Seasonally_Flooded     70      130    130    
+#> 8 Water                  63       67     66    
+#> 9 Wetland                14       13     13
 ```
 
 
@@ -378,26 +378,24 @@ dplyr::inner_join(sum1, sum2, by = "class") |>
 
 ```
 #> # A tibble: 9 × 5
-#>   class                     rfor    tcnn    ltae     ave
-#>   <chr>                    <dbl>   <dbl>   <dbl>   <dbl>
-#> 1 Clear_Cut_Bare_Soil    80       67      66      70    
-#> 2 Clear_Cut_Burned_Area   1.7      4.4     4.5     4    
-#> 3 Clear_Cut_Vegetation   19       18      18      16    
-#> 4 Forest                280      240     240     250    
-#> 5 Mountainside_Forest     0.0088   0.065   0.051   0.036
-#> 6 Riparian_Forest        47       45      44      46    
-#> 7 Seasonally_Flooded     70      120     120     110    
-#> 8 Water                  63       67      67      67    
-#> 9 Wetland                14       11      11      11
+#>   class                     rfor   tcnn    ltae     ave
+#>   <chr>                    <dbl>  <dbl>   <dbl>   <dbl>
+#> 1 Clear_Cut_Bare_Soil    80       68     68      71    
+#> 2 Clear_Cut_Burned_Area   1.7      4.7    4.8     3.8  
+#> 3 Clear_Cut_Vegetation   19       14     14      15    
+#> 4 Forest                280      240    240     250    
+#> 5 Mountainside_Forest     0.0088   0.04   0.028   0.036
+#> 6 Riparian_Forest        47       40     40      45    
+#> 7 Seasonally_Flooded     70      130    130     110    
+#> 8 Water                  63       67     66      68    
+#> 9 Wetland                14       13     13      11
 ```
 
 As expected, the ensemble map combines information from the three models. Taking the RF model prediction as a base, there is a reduction in the areas of classes `Clear_Cut_Bare_Soil` and `Forest`, confirming the tendency of the RF model to overemphasize the most frequent classes. The LTAE and TempCNN models are more sensitive to class variations and capture time-varying classes such as `Riparian_Forest` and `Clear_Cut_Burned_Area` in more detail than the RF model. However, both TempCNN and LTAE tend to confuse the deforestation-related class `Clear_Cut_Vegetation` and the natural class `Riparian_Forest` more than the RF model. This effect is evident in the left bank of the Madeira river in the centre-left region of the image. Also, both the LTAE and TempCNN maps are more grainy and have more spatial variability than the RF map.
 
 The average map provides a compromise between RF's strong empahsis on the most frequent classes and the tendency of deep learning methods to produce outliers based on temporal relationship. The average map is less grainy and more spatially consistent than the LTAE and TempCNN maps, while introducing variability which is not present in the RF map. 
 
-This chapter shows the possibilities of ensemble prediction. There are many ways to get better results than those presented here. Increasing the number of spectral bands would improve the final accuracy. Also, Bayesian smoothing for deep learning models should not rely on default parameters; rather it needs to rely on variance analysis, increase the spatial window and provide more informed hyperparameters. 
-
-In general, ensemble prediction should be consider in all situations where one is not satisfied with the results of individual models. Combining model output increses the reliability of the result and thus shouls be considered in all situations where similar classes are present.
+This chapter shows the possibilities of ensemble prediction. There are many ways to get better results than those presented here. Increasing the number of spectral bands would improve the final accuracy. Also, Bayesian smoothing for deep learning models should not rely on default parameters; rather it needs to rely on variance analysis, increase the spatial window and provide more informed hyperparameters. In general, ensemble prediction should be consider in all situations where one is not satisfied with the results of individual models. Combining model output increses the reliability of the result and thus shouls be considered in all situations where similar classes are present.
 
 
 

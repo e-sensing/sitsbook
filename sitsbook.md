@@ -10,7 +10,7 @@ author:
 - Pedro R. Andrade
 - Karine Ferreira
 - Gilberto Queiroz
-date: "2024-08-18"
+date: "2024-08-23"
 output:
   html_document: 
     df_print: tibble
@@ -100,19 +100,15 @@ description: |
 
 <a href="https://github.com/e-sensing/sitsbook"><img class="cover" src="images/cover_sits_book.png" width="326" align="right" alt="Cover image" /></a>
 
-Petabytes of Earth observation (EO) data are now open and free, making the full extent of image archives available. From these big EO data sets, users can extract satellite image time series, which are sequences of satellite images taken over the same area at different times. These time series can range from days to decades. They are a powerful tool for observing the Earth's surface and its changes over time, enabling insights and analysis that would be difficult or impossible to achieve with single snapshots.   Using image time series, analysts make best use of big Earth observation data collections, capturing subtle changes in ecosystem health and condition and improving the distinction between different land classes.
+Petabytes of Earth observation (EO) data are now open, making the full extent of image archives available. Users can extract satellite image time series from these big EO data sets, covering the same areas at different times. These time series can range from days to decades. They are a powerful tool for observing the Earth's surface and its changes over time, enabling insights and analysis that would be difficult or impossible to achieve with single snapshots. Using image time series, analysts make best use of big Earth observation data collections, capturing subtle changes in ecosystem health and condition and improving the distinction between different land classes.
 
-Satellite image time series are relevant for tracking environmental changes, such as deforestation, forest degradation and desertification. They help to understand the impacts of climate change on natural ecosystems. Time serises can monitor agricultural production and indicate harvesting times. Following natural disasters like floods, earthquakes, and wildfires, image time series can assess damage and monitor recovery.  By monitoring changes in water bodies, they support the management of water resources. 
+Satellite image time series provide an unparalleled view of the Earth’s surface, offering users accurate ways to measure environmental changes, including deforestation, forest degradation, and desertification. They are also crucial in monitoring agricultural production and showing harvesting times. Organizing big EO data in data cubes that support time series is the most effective approach to address global challenges like climate change, natural resource depletion, and urban expansion.
 
-Satellite image time series offer an unparalleled view of the Earth's surface over time, providing critical data for a wide range of applications that impact society, the environment, and the global economy. Their relevance continues to grow as we face global challenges like climate change, natural resource depletion, and urban expansion.
-
-This book introduces `sits`, an open-source **R** package of big Earth observation data analysis using satellite image time series. Users build regular data cubes from cloud services such as Amazon Web Services, Microsoft Planetary Computer, Copernicus Data Space Ecosyste, NASA Harmonized Landsat-Sentinel, Brazil Data Cube, Swiss Data Cube, Digital Earth Australia and Digital Earth Africa. The `sits` API includes an assessment of training sample quality, machine learning and deep learning classification algorithms, and Bayesian post-processing methods for smoothing and uncertainty assessment. To evaluate results, `sits` supports best practice accuracy assessments.
+This book introduces `sits`, an open-source **R** package of big Earth observation data analysis using satellite image time series. Users build regular data cubes from cloud services such as Amazon Web Services, Microsoft Planetary Computer, Copernicus Data Space Ecosystem, NASA Harmonized Landsat-Sentinel, Brazil Data Cube, Swiss Data Cube, Digital Earth Australia, and Digital Earth Africa. The `sits` API includes training sample quality measures, machine learning and deep learning classification algorithms, and Bayesian post-processing methods for smoothing and uncertainty assessment. To evaluate results, `sits` supports best practice accuracy assessments.
 
 ## How much R knowledge is required?{-}
 
-The target audience for `sits` is the community of remote sensing experts with Earth Sciences background who want to use state-of-the-art data analysis methods with minimal investment in programming skills. The package provides a clear and direct set of functions, which are easy to learn and master. Users with a minimal background on **R** programming can start using `sits` right away. 
-
-Many Earth Sciences experts that are familiar with Python or JavaScript, and may consider their lack of **R** knowledge as a barrier for using `sits`. Fear not. Those not yet familiar with **R** can rely on their programming knowledge, since **R** scripts in `sits` are easy to follow. Users only need a basic understanding of core concepts of how functions work, which is also required for Python or JavaScript. A minimal investment will be rewarded with access to a package that currently has no equivalents in other programming languages.
+The `sits` package is designed for remote sensing experts in the Earth Sciences field who want to use advanced data analysis techniques without a lot of programming knowledge. The package provides a clear and direct set of functions that are easy to learn and master. Users with a minimal background in R programming can start using `sits` right away. Those familiar with Python or JavaScript may consider lack of **R** knowledge as a barrier to use `sits.` Fear not. Those unfamiliar with **R** can rely on their programming knowledge since **R** scripts in `sits` are easy to follow. Users only need a basic understanding of core concepts of how functions work, which is also required for Python or JavaScript. A minimal investment will be rewarded with access to a package with no equivalents in other programming languages.
 
 To quickly master what is needed to run `sits`, please read Parts 1 and 2 of Garrett Golemund's book, [Hands-On Programming with R](https://rstudio-education.github.io/hopr/). Although not needed to run `sits`, your **R** skills will benefit from the book by Hadley Wickham and Gareth Golemund, [R for Data Science (2nd edition)](https://r4ds.hadley.nz/). Important concepts of spatial analysis are presented by Edzer Pebesma and Roger Bivand in their book [Spatial Data Science](https://r-spatial.org/book/).
 
@@ -397,19 +393,23 @@ The authors have use Generative AI tools (Chat-GPT, Grammarly and ProWritingAid)
 
 ## Who is this book for?{-}
 
-This book is intended for land use change experts and researchers, allowing them to harness the power of big Earth observation data sets. We aim to provide readers with the means to produce high-quality maps of land use and land cover, guiding them through all necessary steps to achieve good results. Given the natural world's complexity and huge variations in human-nature interactions, we consider that only local experts who know their countries and their ecosystems can extract full information from big EO data. 
+This book, tailored for land use change experts and researchers, is a practical guide that enables them to analyze big Earth observation data sets. It provides readers with the means of producing high-quality maps of land use and land cover, guiding them through all the steps to achieve good results. Given the natural world's complexity and huge variations in human-nature interactions, only local experts who know their countries and ecosystems can extract full information from big EO data. 
 
-One group of readers that we are particularly keen to engage with are the national authorities on forest, agriculture, and statistics in developing countries. We aim to foster a collaborative environment where they can use EO data to enhance their national land use and cover estimates, thereby supporting sustainable development policies. To achieve this goal, `sits` has strong backing from the FAO Expert Group on the Use of Earth Observation data (FAO-EOSTAT)[https://www.fao.org/in-action/eostat]. FAO-EOSTAT is at the forefront of using advanced EO data analysis methods for agricultural statistics in developing countries [@DeSimone2022][@DeSimone2022a].
+One group of readers that we are keen to engage with is the national authorities on forest, agriculture, and statistics in developing countries. We aim to foster a collaborative environment where they can use EO data to enhance their national land use and cover estimates, supporting sustainable development policies.  To achieve this goal, `sits` has strong backing from the FAO Expert Group on the Use of Earth Observation data (FAO-EOSTAT)[https://www.fao.org/in-action/eostat]. FAO-EOSTAT is at the forefront of using advanced EO data analysis methods for agricultural statistics in developing countries [@DeSimone2022][@DeSimone2022a].
 
 ## Why work with satellite image time series?{-}
 
-Satellite images are the most comprehensive source of data about our environment.  Covering a large area of the Earth's surface, images allow researchers to study regional and global changes. Sensors capture data in multiple spectral bands to measure the physical, chemical, and biological properties of the Earth's surface. By observing the same location multiple times, satellites provide data on changes in the environment and survey areas that are difficult to observe from the ground. Given its unique features, images offer essential information for many applications, including deforestation, crop production, food security, urban footprints, water scarcity, and land degradation.
-
-A time series is a set of data points collected at regular intervals over time. Time series data is used to analyze trends, patterns, and changes. Satellite image time series refer to time series obtained from a collection of images captured by a satellite over a period of time, typically months or years. Using time series, experts improve their understanding of ecological patterns and processes. Instead of selecting individual images from specific dates and comparing them, researchers track change continuously [@Woodcock2020]. 
+Satellite imagery provides the most extensive data on our environment. By encompassing vast areas of the Earth's surface, images enable researchers to analyze local and worldwide transformations. By observing the same location multiple times, satellites provide data on environmental changes and survey areas that are difficult to observe from the ground. Given its unique features, images offer essential information for many applications, including deforestation, crop production, food security, urban footprints, water scarcity, and land degradation. Using time series, experts improve their understanding of ecological patterns and processes. Instead of selecting individual images from specific dates and comparing them, researchers track change continuously [@Woodcock2020]. 
 
 ## Time-first, space-later{-}
 
 "Time-first, space-later" is a concept in satellite image classification that takes time series analysis as the first step for analyzing remote sensing data, with spatial information being considered after all time series are classified. The *time-first* part brings a better understanding of changes in landscapes. Detecting and tracking seasonal and long-term trends becomes feasible, as well as identifying anomalous events or patterns in the data, such as wildfires, floods, or droughts. Each pixel in a data cube is treated as a time series, using information available in the temporal instances of the case. Time series classification is pixel-based, producing a set of labeled pixels. This result is then used as input to the *space-later* part of the method. In this phase, a smoothing algorithm improves the results of time-first classification by considering the spatial neighborhood of each pixel. The resulting map thus combines both spatial and temporal information.
+
+## Land use and land cover{-}
+
+The UN Food and Agriculture Organization defines land cover as "the observed biophysical cover on the Earth's surface" [@DiGregorio2016]. Land cover can be observed and mapped directly through remote sensing images. In FAO's guidelines and reports, land use is described as "the human activities or purposes for which land is managed or exploited". Although *land cover* and *land use* denote different approaches for describing the Earth's landscape, in practice there is considerable overlap between these concepts [@Comber2008b]. When classifying remote sensing images, natural areas are classified using land cover types (e.g, forest), while human-modified areas are described with land use classes (e.g., pasture). 
+
+One of the advantages of using image time series for land classification is its capacity of measuring changes in the landscape related to agricultural practices. For example, the time series of a vegetation index in an area of crop production will show a pattern of minima (planting and sowing stages) and maxima (flowering stage). Thus, classification schemas based on image time series data can be richer and more detailed than those associated only with land cover. In what follows, we use the term "land classification" to refer to image classification representing both land cover and land use classes.
 
 ## How `sits` works {.unnumbered}
 
@@ -507,15 +507,7 @@ Each workflow step corresponds to a function of the `sits` API, as shown in the 
 
 Additionally, experts can perform object-based image analysis (OBIA) with `sits`. In this case, before classifying the time series, one can use `sits_segments()` to create a set of closed polygons. These polygons are classified using a subset of the time series contained inside each segment. For details, see Chapter [Object-based time series image analysis](https://e-sensing.github.io/sitsbook/object-based-time-series-image-analysis.html).
 
-## Land use and land cover{-}
 
-Since `sits` aims mainly to support land use and land cover classification, this section presents a short discussion on the use of these terms. The UN Food and Agriculture Organization defines land cover as "the observed biophysical cover on the Earth's surface" [@DiGregorio2016]. Land cover can be observed and mapped directly through remote sensing images. In FAO's guidelines and reports, land use is described as "the human activities or purposes for which land is managed or exploited". FAO's land use classifications include classes such as cropland and pasture. Although *land cover* and *land use* denote different approaches for describing the Earth's landscape, in practice there is considerable overlap between these concepts [@Comber2008b]. When classifying remote sensing images, natural areas are classified using land cover types (e.g, forest), while human-modified areas are described with land use classes (e.g., pasture). 
-
-One of the advantages of using image time series for land classification is its capacity of measuring changes in the landscape related to agricultural practices. For example, the time series of a vegetation index in an area of crop production will show a pattern of minima (planting and sowing stages) and maxima (flowering stage). Thus, classification schemas based on image time series data can be richer and more detailed than those associated only with land cover. In what follows, we use the term "land classification" to refer to image classification representing both land cover and land use classes.
-
-## Classes and labels{-}
-
-In this book, we distinguish between the concepts of "class" and "label". A class denotes a group of spatial objects that share similar land cover and land use types, such as urban areas, forests, water bodies, or agricultural fields. Classes are defined based on the specific application or study being conducted, and they help to analyse the vast amount of data obtained from remote sensing imagery. A label is the assignment or identification given to a specific feature or object within an image. Labels are markers that indicate to which class a particular pixel, segment, or object belongs. Labels are essential for supervised classification methods, where a training dataset with known labels is used to train a machine learning algorithm to recognize and classify new, unlabeled data. Thus, a "class" represents the overall category or group of features, while a "label" refers to the specific assignment of a class to a particular feature or object within an image. 
 
 ## Creating a data cube {.unnumbered}
 
@@ -837,61 +829,7 @@ sinop_map$file_info[[1]]
 #> # ℹ 2 more variables: ymax <dbl>, path <chr>
 ```
 
-To simplify the process of importing your data to QGIS, the color palette used to display classified maps in `sits` can be exported as a QGIS style using `sits_colors_qgis`. The function takes two parameters: (a) `cube`, a classified data cube; and (b) `file`, the file where the QGIS style in XML will be written to. In this case study, it suffices to do the following command.
 
-
-``` r
-# Show the location of the classification file
-sits_colors_qgis(sinop_map, file = "./tempdir/chp3/qgis_style.xml")
-```
-
-## Plotting{-}
-
-The `plot()` function produces a graphical display of data cubes, time series, models, and SOM maps. For each type of data, there is a dedicated version of the `plot()` function. See `?plot.sits` for details. Plotting of time series, models and SOM outputs uses the `ggplot2` package; maps are plotted using the `tmap` package. When plotting images and classified maps, users can control the output, which appropriate parameters for each type of image.
-
-- For false color maps, DEM maps, and probability maps:
-    - `band`:  band or index to be plotted;
-    - `pallete`: color scheme to be used for false color maps, which should be one of the `RColorBrewer` palettes. These palettes have been designed to be effective for map display by Prof Cynthia Brewer as described at the [Brewer website](http://colorbrewer2.org). By default, optical images use the `RdYlGn` scheme, SAR images use `Greys`, and DEM cubes use `Spectral`. 
-    - `rev`: whether the color palette should be reversed; `TRUE` for DEM cubes, and `FALSE` otherwise.
-    - `scale`: global scale parameter used by `tmap`. All font sizes, symbol sizes, border widths, and line widths are controlled by this value. Default is 0.75; users should vary this parameter and see the results.
-    - `first_quantile`: 1st quantile for stretching images (default = 0.05).
-    - `last_quantile`: last quantile for stretching images (default = 0.95).
-    - `max_cog_size`: for cloud-oriented geotiff files (COG), sets the maximum number of lines or columns of the COG overview to be used for plotting.   
-    
-- For RGB color maps:
-    - `red`: band or index associated to the red color;
-    - `green`: band or index associated to the green color;
-    - `blue`: band or index associated to the blue color;
-    - `first_quantile`: 1st quantile for stretching images (default = 0.05)
-    - `last_quantile`: last quantile for stretching images (default = 0.95)
-    
-- For classified maps:
-    - `legend`: legend which associated colors to the classes; should be a named vector with classes as names and valid R colors as values. For example, `c("Forest" = "green", "Water" = "blue")` or `c("Forest" = "#1E8449", "Water" = "#2980B9")`. 
-    - `scale`: global scale parameter used by `tmap`.
-    - `max_cog_size`: max number of lines or columns to be read when COG files are available;
-    - `palette`: color palette to be used if legend is not available and colors are not defined in the `sits` color table.
-
-COG overviews are reduced-resolution versions of the main image, stored within the same file. Overviews allow for quick rendering at lower zoom levels, improving performance when dealing with large images. Usually, a single GeoTIFF will have many overviews, to match different zoom levels. The parameter `max_cog_size` controls the size of the overview which will be used for visualisation.
-
-The following optional parameters are available to allow for detailed control over the plot output:
-- `graticules_labels_size`: size of coordinates labels (default = 0.8).
-- `legend_title_size`: relative size of legend title (default = 1.0).
-- `legend_text_size`: relative size of legend text (default = 1.0).
-- `legend_bg_color`: color of legend background (default = "white").
-- `legend_bg_alpha`: legend opacity (default = 0.5).
-- `legend_position`: where to place the legend (options = "inside" or "outside").
-
-
-## Visualization of data cubes in interactive maps {.unnumbered}
-
- Data cubes and samples can also be shown as interactive maps using `sits_view()`. This function creates tiled overlays of different kinds of data cubes, allowing comparison between the original, intermediate and final results. It also includes background maps. The following example creates an interactive map combining the original data cube with the classified map.
-
-
-``` r
-sits_view(sinop, band = "NDVI", class_cube = sinop_map)
-```
-
-<img src="./images/view_sinop.png" width="90%" style="display: block; margin: auto;" />
 
 <!--chapter:end:03-intro.Rmd-->
 
@@ -901,27 +839,13 @@ sits_view(sinop, band = "NDVI", class_cube = sinop_map)
 
 <a href="https://www.kaggle.com/code/esensing/creating-data-cubes-in-sits" target="_blank"><img src="https://kaggle.com/static/images/open-in-kaggle.svg"/></a>
 
-## Brief introduction to remote sensing images and terminology{-}
-
-### Optical surface reflectance images{-}
-
-Optical satellite sensors are instruments onboard satellites designed to capture images of the Earth's surface using visible, near-infrared, and sometimes shortwave infrared light. These sensors detect reflected sunlight. To be useful for analysis, the signals captured by optical sensors are converted to surface reflectance values, which represent the fraction of sunlight reflected by the Earth's surface. This correction accounts for sensor characteristics, atmospheric scattering, and varying solar illumination conditions. The images are also corrected for geometric distortions caused by the sensor's angle of view. Finally, the images are accurately aligned with geographic coordinates. Additional information provided together with optical images include cloud detection masks. Pixels which are affected by clouds or shadows are marked to allow additional corrections and gap filling. 
-
-### Synthetic aperture radar (SAR) images{-}
-
-Synthetic Aperture Radar (SAR) images are acquired by satellites using a specialized radar system that sends out microwave signals. When the microwave pulses hit the Earth's surface, they are scattered in various directions. A portion of these scattered signals, known as backscatter, is reflected back towards the satellite. The SAR antenna on the satellite receives the backscattered signals. Because the satellite is moving along its orbit, it collects data from different positions, which helps in synthesizing a larger aperture than the physical size of the antenna. 
-
-The received signals are processed using complex algorithms. This processing involves combining the signals from multiple pulses and different positions to create a high-resolution image. The technique of combining these signals to simulate a larger antenna is called aperture synthesis. The processed data is then used to generate SAR images, which represent the backscatter intensity from the Earth's surface. SAR imaging has several advantages. SAR can penetrate clouds and work in all weather conditions, including rain and fog. Since SAR uses microwave signals, it does not rely on sunlight and can capture images both day and night.
-
-### Analysis-ready data(ARD){-}
+## Analysis-ready data(ARD){-}
 
 Analysis Ready Data (CEOS-ARD) are satellite data that have been processed to meet the [ARD standards](https://ceos.org/ard/) defined by the Committee on Earth Observation Satellites (CEOS). ARD data simplify and accelerate the analysis of Earth observation data by providing consistent and high-quality data that are standardized across different sensors and platforms. 
 
 ARD images processing includes geometric corrections, radiometric corrections, and sometimes atmospheric corrections. Images are georeferenced, meaning they are accurately aligned with a coordinate system. Optical ARD images include cloud and shadow masking information. These masks indicate which pixels affected by clouds or cloud shadows. For optical sensors, CEOS-ARD images have to be converted to surface reflectance values, which represent the fraction of light that is reflected by the surface. This makes the data more comparable across different times and locations.
 
 For SAR images, CEOS-ARD specification require images to undergo Radiometric Terrain Correction (RTC) and are provided in the GammaNought ($\gamma_0$) backscatter values. This value which mitigates the variations from diverse observation geometries and is recommended for most land applications. 
-
-## Analysis-ready data image collections{-}
 
 ARD images are available from various satellite platforms, including Landsat, Sentinel, and commercial satellites. This provides a wide range of spatial, spectral, and temporal resolutions to suit different applications. They are organised as a collection of  files, where each pixel contains a single value for each spectral band for a given date. These collections are available in cloud services such as Brazil Data Cube, Digital Earth Africa, and Microsoft's Planetary Computer. In general, the timelines of the images of an ARD collection are different. Images still contain cloudy or missing pixels; bands for the images in the collection may have different resolutions. Figure \@ref(fig:ardt) shows an example of the Landsat ARD image collection. 
 
@@ -1025,8 +949,8 @@ plot(s2_23MMU_cube,
 ```
 
 <div class="figure" style="text-align: center">
-<img src="./images/aws_s2.png" alt="Sentinel-2 image in an area of the Northeastern coast of Brazil (&amp;copy;: EU Copernicus Sentinel Programme; source: AWS)." width="100%" />
-<p class="caption">(\#fig:aws)Sentinel-2 image in an area of the Northeastern coast of Brazil (&copy;: EU Copernicus Sentinel Programme; source: AWS).</p>
+<img src="./images/aws_s2.png" alt="Sentinel-2 image in an area of the Northeastern coast of Brazil (&amp;copy; EU Copernicus Sentinel Programme; source: AWS)." width="100%" />
+<p class="caption">(\#fig:aws)Sentinel-2 image in an area of the Northeastern coast of Brazil (&copy; EU Copernicus Sentinel Programme; source: AWS).</p>
 </div>
 
 
@@ -1057,8 +981,8 @@ plot(s2_20LKP_cube_MPC,
 ```
 
 <div class="figure" style="text-align: center">
-<img src="./images/mpc_s2.png" alt="Sentinel-2 image in an area of the state of Rondonia, Brazil (&amp;copy;: EU Copernicus Sentinel Programme; source: Microsoft)." width="100%" />
-<p class="caption">(\#fig:mpc1)Sentinel-2 image in an area of the state of Rondonia, Brazil (&copy;: EU Copernicus Sentinel Programme; source: Microsoft).</p>
+<img src="./images/mpc_s2.png" alt="Sentinel-2 image in an area of the state of Rondonia, Brazil (&amp;copy; EU Copernicus Sentinel Programme; source: Microsoft)." width="100%" />
+<p class="caption">(\#fig:mpc1)Sentinel-2 image in an area of the state of Rondonia, Brazil (&copy; EU Copernicus Sentinel Programme; source: Microsoft).</p>
 </div>
 
 ### LANDSAT-C2-L2 images in MPC{-}
@@ -1118,8 +1042,8 @@ plot(cube_s1_grd, band = "VV", palette = "Greys")
 ```
 
 <div class="figure" style="text-align: center">
-<img src="./images/mpc3.png" alt="Sentinel-1 image in an area in Mato Grosso, Brazil (&amp;copy;: EU Copernicus Sentinel Programme; source: Microsoft)." width="100%" />
-<p class="caption">(\#fig:mpc3)Sentinel-1 image in an area in Mato Grosso, Brazil (&copy;: EU Copernicus Sentinel Programme; source: Microsoft).</p>
+<img src="./images/mpc3.png" alt="Sentinel-1 image in an area in Mato Grosso, Brazil (&amp;copy; EU Copernicus Sentinel Programme; source: Microsoft)." width="100%" />
+<p class="caption">(\#fig:mpc3)Sentinel-1 image in an area in Mato Grosso, Brazil (&copy; EU Copernicus Sentinel Programme; source: Microsoft).</p>
 </div>
 
 As explained earlier in this chapter, in areas with areas with large elevation differences, Sentinel-1 GRD images will have geometric distortions. For this reason, whenever possible, we recommend the use of RTC (radiometrically terrain corrected) images as described in the next session. 
@@ -1148,8 +1072,8 @@ plot(cube_s1_rtc, band = "VV", palette = "Greys")
 ```
 
 <div class="figure" style="text-align: center">
-<img src="./images/mpcrtcol.png" alt="Sentinel-1-RTC image of an area in Colombia (&amp;copy;: EU Copernicus Sentinel Programme; source: Microsoft)." width="100%" />
-<p class="caption">(\#fig:mpcrtcol)Sentinel-1-RTC image of an area in Colombia (&copy;: EU Copernicus Sentinel Programme; source: Microsoft).</p>
+<img src="./images/mpcrtcol.png" alt="Sentinel-1-RTC image of an area in Colombia (&amp;copy; EU Copernicus Sentinel Programme; source: Microsoft)." width="100%" />
+<p class="caption">(\#fig:mpcrtcol)Sentinel-1-RTC image of an area in Colombia (&copy; EU Copernicus Sentinel Programme; source: Microsoft).</p>
 </div>
 
 
@@ -1259,8 +1183,8 @@ plot(lena_cube, date = "2023-07-06", red = "B12", green = "B8A", blue = "B04")
 ```
 
 <div class="figure" style="text-align: center">
-<img src="./images/s2_lena_delta.png" alt="Sentinel-2 image of the Lena river delta in summertime (&amp;copy;: EU Copernicus Sentinel Programme; source: CDSE)." width="100%" />
-<p class="caption">(\#fig:lena)Sentinel-2 image of the Lena river delta in summertime (&copy;: EU Copernicus Sentinel Programme; source: CDSE).</p>
+<img src="./images/s2_lena_delta.png" alt="Sentinel-2 image of the Lena river delta in summertime (&amp;copy; EU Copernicus Sentinel Programme; source: CDSE)." width="100%" />
+<p class="caption">(\#fig:lena)Sentinel-2 image of the Lena river delta in summertime (&copy; EU Copernicus Sentinel Programme; source: CDSE).</p>
 </div>
 
 ### SENTINEL-1-RTC images in CDSE{-}
@@ -1287,8 +1211,8 @@ plot(s1_cube, band = "VV", date = c("2023-03-03"), palette = "Greys")
 ```
 
 <div class="figure" style="text-align: center">
-<img src="./images/s1_rtc_cdse.png" alt="Sentinel-1-RTC image of the Rift Valley in Ethiopia (&amp;copy;: EU Copernicus Sentinel Programme; source: CDSE)." width="100%" />
-<p class="caption">(\#fig:cdsertc)Sentinel-1-RTC image of the Rift Valley in Ethiopia (&copy;: EU Copernicus Sentinel Programme; source: CDSE).</p>
+<img src="./images/s1_rtc_cdse.png" alt="Sentinel-1-RTC image of the Rift Valley in Ethiopia (&amp;copy; EU Copernicus Sentinel Programme; source: CDSE)." width="100%" />
+<p class="caption">(\#fig:cdsertc)Sentinel-1-RTC image of the Rift Valley in Ethiopia (&copy; EU Copernicus Sentinel Programme; source: CDSE).</p>
 </div>
 
 
@@ -1327,8 +1251,8 @@ plot(dea_s2_cube, red = "B04", blue = "B02", green = "B08")
 ```
 
 <div class="figure" style="text-align: center">
-<img src="./images/deafrica_s2.png" alt="Sentinel-2 image in an area over Madagascar (&amp;copy;: EU Copernicus Sentinel Programme; source: Digital Earth Africa)." width="100%" />
-<p class="caption">(\#fig:dea1)Sentinel-2 image in an area over Madagascar (&copy;: EU Copernicus Sentinel Programme; source: Digital Earth Africa).</p>
+<img src="./images/deafrica_s2.png" alt="Sentinel-2 image in an area over Madagascar (&amp;copy; EU Copernicus Sentinel Programme; source: Digital Earth Africa)." width="100%" />
+<p class="caption">(\#fig:dea1)Sentinel-2 image in an area over Madagascar (&copy; EU Copernicus Sentinel Programme; source: Digital Earth Africa).</p>
 </div>
 
 The next example retrieves a set of ARD Landsat-9 data, covering the Serengeti plain in Tanzania. 
@@ -1376,8 +1300,8 @@ plot(dea_alos_cube, band = "HH")
 ```
 
 <div class="figure" style="text-align: center">
-<img src="./images/alos_palsar_hh_lake_kivu.png" alt="ALOS-PALSAC mosaic in the Congo forest area (&amp;copy;: JAXA EORC; source: Digital Earth Africa)." width="100%" />
-<p class="caption">(\#fig:lakekivu)ALOS-PALSAC mosaic in the Congo forest area (&copy;: JAXA EORC; source: Digital Earth Africa).</p>
+<img src="./images/alos_palsar_hh_lake_kivu.png" alt="ALOS-PALSAC mosaic in the Congo forest area (&amp;copy; JAXA EORC; source: Digital Earth Africa)." width="100%" />
+<p class="caption">(\#fig:lakekivu)ALOS-PALSAC mosaic in the Congo forest area (&copy; JAXA EORC; source: Digital Earth Africa).</p>
 </div>
 
 
@@ -1418,8 +1342,8 @@ plot(s2_56KKV, green = "NIR-2", blue = "BLUE", red = "SWIR-2", date = "2023-10-1
 ```
 
 <div class="figure" style="text-align: center">
-<img src="./images/s2_56KKV.png" alt="Plot of Sentinel-2 image obtained from the DEAUSTRALIA collection for date 2023-10-14 showing MGRS tile 56KKV (&amp;copy;: EU Copernicus Sentinel Programme; source: Digital Earth Australia)." width="100%" />
-<p class="caption">(\#fig:goldcoast)Plot of Sentinel-2 image obtained from the DEAUSTRALIA collection for date 2023-10-14 showing MGRS tile 56KKV (&copy;: EU Copernicus Sentinel Programme; source: Digital Earth Australia).</p>
+<img src="./images/s2_56KKV.png" alt="Plot of Sentinel-2 image obtained from the DEAUSTRALIA collection for date 2023-10-14 showing MGRS tile 56KKV (&amp;copy; EU Copernicus Sentinel Programme; source: Digital Earth Australia)." width="100%" />
+<p class="caption">(\#fig:goldcoast)Plot of Sentinel-2 image obtained from the DEAUSTRALIA collection for date 2023-10-14 showing MGRS tile 56KKV (&copy; EU Copernicus Sentinel Programme; source: Digital Earth Australia).</p>
 </div>
 ## Harmonized Landsat-Sentinel {-}
 
@@ -1480,8 +1404,8 @@ plot(hls_cube_s2, red = "RED", green = "GREEN", blue = "BLUE", date = "2020-06-2
 ```
 
 <div class="figure" style="text-align: center">
-<img src="./images/hls_ilhabela_s2.png" alt="Plot of Sentinel-2 image obtained from the NASA HLS collection for date 2020-06-15 showing the island of Ilhabela in the Brazilian coast  (&amp;copy;:EU Copernicus Sentinel Programme; source: NASA)." width="100%" />
-<p class="caption">(\#fig:hlssen)Plot of Sentinel-2 image obtained from the NASA HLS collection for date 2020-06-15 showing the island of Ilhabela in the Brazilian coast  (&copy;:EU Copernicus Sentinel Programme; source: NASA).</p>
+<img src="./images/hls_ilhabela_s2.png" alt="Plot of Sentinel-2 image obtained from the NASA HLS collection for date 2020-06-15 showing the island of Ilhabela in the Brazilian coast  (&amp;copy;EU Copernicus Sentinel Programme; source: NASA)." width="100%" />
+<p class="caption">(\#fig:hlssen)Plot of Sentinel-2 image obtained from the NASA HLS collection for date 2020-06-15 showing the island of Ilhabela in the Brazilian coast  (&copy;EU Copernicus Sentinel Programme; source: NASA).</p>
 </div>
 Images from the HLS Landsat and Sentinel-2 collections are accessed separately and can be combined with `sits_merge()`. The script below creates an HLS Landsat cube over the same area as the Sentinel-2 cube above bands. The two cubes are then merged. 
 
@@ -1559,8 +1483,8 @@ plot(hls_cube_merged,
 ```
 
 <div class="figure" style="text-align: center">
-<img src="./images/hls_ilhabela_l8.png" alt="Plot of Sentinel-2 image obtained from merging NASA HLS collection and Sentinel-2 collection for date 2020-06-15 showing the island of Ilhabela in the Brazilian coast (&amp;copy;: EU Copernicus Sentinel Programme; source: NASA)." width="100%" />
-<p class="caption">(\#fig:hlsmerge)Plot of Sentinel-2 image obtained from merging NASA HLS collection and Sentinel-2 collection for date 2020-06-15 showing the island of Ilhabela in the Brazilian coast (&copy;: EU Copernicus Sentinel Programme; source: NASA).</p>
+<img src="./images/hls_ilhabela_l8.png" alt="Plot of Sentinel-2 image obtained from merging NASA HLS collection and Sentinel-2 collection for date 2020-06-15 showing the island of Ilhabela in the Brazilian coast (&amp;copy; EU Copernicus Sentinel Programme; source: NASA)." width="100%" />
+<p class="caption">(\#fig:hlsmerge)Plot of Sentinel-2 image obtained from merging NASA HLS collection and Sentinel-2 collection for date 2020-06-15 showing the island of Ilhabela in the Brazilian coast (&copy; EU Copernicus Sentinel Programme; source: NASA).</p>
 </div>
 
 ## EO products from TERRASCOPE{-}
@@ -1589,8 +1513,8 @@ plot(world_cover_2021_20LBL)
 ```
 
 <div class="figure" style="text-align: center">
-<img src="./images/world_cover_2021.png" alt="Plot of World Cover 2021 map covering MGRS tile 22LBL (&amp;copy;: TerraScope)." width="100%" />
-<p class="caption">(\#fig:worldcover)Plot of World Cover 2021 map covering MGRS tile 22LBL (&copy;: TerraScope).</p>
+<img src="./images/world_cover_2021.png" alt="Plot of World Cover 2021 map covering MGRS tile 22LBL (&amp;copy; TerraScope)." width="100%" />
+<p class="caption">(\#fig:worldcover)Plot of World Cover 2021 map covering MGRS tile 22LBL (&copy; TerraScope).</p>
 </div>
 
 ## Planet data as ARD local files{-}
@@ -1628,8 +1552,8 @@ plot(planet_cube, red = "B3", green = "B2", blue = "B1")
 
 
 <div class="figure" style="text-align: center">
-<img src="./images/planet.png" alt="Planet image over an area in Colombia (&amp;copy;: Planet - reproduction based on fair use doctrine)." width="100%" />
-<p class="caption">(\#fig:planet)Planet image over an area in Colombia (&copy;: Planet - reproduction based on fair use doctrine).</p>
+<img src="./images/planet.png" alt="Planet image over an area in Colombia (&amp;copy; Planet - reproduction based on fair use doctrine)." width="100%" />
+<p class="caption">(\#fig:planet)Planet image over an area in Colombia (&copy; Planet - reproduction based on fair use doctrine).</p>
 </div>
 
 ## Reading classified images as local data cube{-}
@@ -1672,8 +1596,8 @@ plot(Rondonia_class_cube)
 ```
 
 <div class="figure" style="text-align: center">
-<img src="04-datacubes_files/figure-html/mapdata-1.png" alt="Classified data cube for the year 2020/2021 in Rondonia, Brazil (&amp;copy;: EU Copernicus Sentinel Programme; source: authors)." width="100%" />
-<p class="caption">(\#fig:mapdata)Classified data cube for the year 2020/2021 in Rondonia, Brazil (&copy;: EU Copernicus Sentinel Programme; source: authors).</p>
+<img src="04-datacubes_files/figure-html/mapdata-1.png" alt="Classified data cube for the year 2020/2021 in Rondonia, Brazil (&amp;copy; EU Copernicus Sentinel Programme; source: authors)." width="100%" />
+<p class="caption">(\#fig:mapdata)Classified data cube for the year 2020/2021 in Rondonia, Brazil (&copy; EU Copernicus Sentinel Programme; source: authors).</p>
 </div>
 
 ## Regularizing data cubes{-}
@@ -1723,8 +1647,8 @@ s2_cube_rondonia |>
 ```
 
 <div class="figure" style="text-align: center">
-<img src="04-datacubes_files/figure-html/unnamed-chunk-27-1.png" alt="Sentinel-2 tile 20LLP for date 2018-07-03 (&amp;copy;: EU Copernicus Sentinel Programme; source: authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-27)Sentinel-2 tile 20LLP for date 2018-07-03 (&copy;: EU Copernicus Sentinel Programme; source: authors).</p>
+<img src="04-datacubes_files/figure-html/unnamed-chunk-27-1.png" alt="Sentinel-2 tile 20LLP for date 2018-07-03 (&amp;copy; EU Copernicus Sentinel Programme; source: authors)." width="100%" />
+<p class="caption">(\#fig:unnamed-chunk-27)Sentinel-2 tile 20LLP for date 2018-07-03 (&copy; EU Copernicus Sentinel Programme; source: authors).</p>
 </div>
 
 Because of the different acquisition orbits of the Sentinel-2 and Sentinel-2A satellites, the two tiles also have different timelines. Tile `20LKP` has 12 instances, while tile `20LLP` has 24 instances for the chosen period. The function  `sits_regularize()` builds a data cube with a regular timeline and a best estimate of a valid pixel for each interval. The `period` parameter sets the time interval between two images. Values of `period` use the ISO8601 time period specification, which defines time intervals as `P[n]Y[n]M[n]D`, where "Y" stands for years, "M" for months, and "D" for days. Thus, `P1M` stands for a one-month period, `P15D` for a fifteen-day period. When joining different images to get the best image for a period, `sits_regularize()` uses an aggregation method that organizes the images for the chosen interval in order of increasing cloud cover and then selects the first cloud-free pixel. In the example, we use a small spatial resolution for the regular cube to speed up processing; in actual case, we suggest using a 10-meter spatial resolution for the cube.
@@ -1748,8 +1672,8 @@ reg_cube_rondonia |>
 ```
 
 <div class="figure" style="text-align: center">
-<img src="04-datacubes_files/figure-html/senroreg-1.png" alt="Regularized image for tile Sentinel-2 tile 20LLP (&amp;copy;: EU Copernicus Sentinel Programme; source: authors)." width="100%" />
-<p class="caption">(\#fig:senroreg)Regularized image for tile Sentinel-2 tile 20LLP (&copy;: EU Copernicus Sentinel Programme; source: authors).</p>
+<img src="04-datacubes_files/figure-html/senroreg-1.png" alt="Regularized image for tile Sentinel-2 tile 20LLP (&amp;copy; EU Copernicus Sentinel Programme; source: authors)." width="100%" />
+<p class="caption">(\#fig:senroreg)Regularized image for tile Sentinel-2 tile 20LLP (&copy; EU Copernicus Sentinel Programme; source: authors).</p>
 </div>
 
 ### Regularizing Sentinel-1 images{-}
@@ -1772,8 +1696,8 @@ plot(cube_s1_rtc, band = "VH", palette = "Greys", scale = 0.7)
 ```
 
 <div class="figure" style="text-align: center">
-<img src="./images/cube_s1_rtc_tile_22LBL.png" alt="Original Sentinel-1 image covering tile 22LBL (&amp;copy;: EU Copernicus Sentinel Programme; source: Microsoft)." width="100%" />
-<p class="caption">(\#fig:sargrdorig)Original Sentinel-1 image covering tile 22LBL (&copy;: EU Copernicus Sentinel Programme; source: Microsoft).</p>
+<img src="./images/cube_s1_rtc_tile_22LBL.png" alt="Original Sentinel-1 image covering tile 22LBL (&amp;copy; EU Copernicus Sentinel Programme; source: Microsoft)." width="100%" />
+<p class="caption">(\#fig:sargrdorig)Original Sentinel-1 image covering tile 22LBL (&copy; EU Copernicus Sentinel Programme; source: Microsoft).</p>
 </div>
 
 After creating an irregular data cube from the data available in MPC, we use `sits_regularize()` to produce a SAR data cube that matches MGRS tile "22LBL". For plotting the SAR image, we select a multidate plot for the "VH" band, where the first date will be displayed in red, the second in green and the third in blue, so as to show an RGB map where changes are visually enhanced.
@@ -1802,8 +1726,8 @@ plot(cube_s1_reg,
 ```
 
 <div class="figure" style="text-align: center">
-<img src="./images/cube_s1_rtc_tile_22LBL_reg_rgb.png" alt="Regular Sentinel-1 image covering tile 22LBL (&amp;copy;: EU Copernicus Sentinel Programme; source: Microsoft)." width="100%" />
-<p class="caption">(\#fig:sarrtcreg)Regular Sentinel-1 image covering tile 22LBL (&copy;: EU Copernicus Sentinel Programme; source: Microsoft).</p>
+<img src="./images/cube_s1_rtc_tile_22LBL_reg_rgb.png" alt="Regular Sentinel-1 image covering tile 22LBL (&amp;copy; EU Copernicus Sentinel Programme; source: Microsoft)." width="100%" />
+<p class="caption">(\#fig:sarrtcreg)Regular Sentinel-1 image covering tile 22LBL (&copy; EU Copernicus Sentinel Programme; source: Microsoft).</p>
 </div>
 
 ### Merging Sentinel-1 and Sentinel-2 images{-}
@@ -1825,8 +1749,8 @@ plot(cube_s2, red = "B11", green = "B8A", blue = "B02", date = "2021-07-07")
 ```
 
 <div class="figure" style="text-align: center">
-<img src="./images/s2_tile_22LBL.png" alt="Sentinel-2 image covering tile 22LBL (&amp;copy;: EU Copernicus Sentinel Programme; source: authors)." width="100%" />
-<p class="caption">(\#fig:senlbl)Sentinel-2 image covering tile 22LBL (&copy;: EU Copernicus Sentinel Programme; source: authors).</p>
+<img src="./images/s2_tile_22LBL.png" alt="Sentinel-2 image covering tile 22LBL (&amp;copy; EU Copernicus Sentinel Programme; source: authors)." width="100%" />
+<p class="caption">(\#fig:senlbl)Sentinel-2 image covering tile 22LBL (&copy; EU Copernicus Sentinel Programme; source: authors).</p>
 </div>
 
 The next step is to create a regular data cube for tile "20LBL". 
@@ -2099,8 +2023,8 @@ plot(reg_cube, band = "NDVI", palette = "RdYlGn")
 ```
 
 <div class="figure" style="text-align: center">
-<img src="05-cubeoperations_files/figure-html/ndviop-1.png" alt="NDVI using bands B08 and B04 of Sentinel-2 (&amp;copy;: EU Copernicus Programme modified by authors)." width="100%" />
-<p class="caption">(\#fig:ndviop)NDVI using bands B08 and B04 of Sentinel-2 (&copy;: EU Copernicus Programme modified by authors).</p>
+<img src="05-cubeoperations_files/figure-html/ndviop-1.png" alt="NDVI using bands B08 and B04 of Sentinel-2 (&amp;copy; EU Copernicus Programme modified by authors)." width="100%" />
+<p class="caption">(\#fig:ndviop)NDVI using bands B08 and B04 of Sentinel-2 (&copy; EU Copernicus Programme modified by authors).</p>
 </div>
 We now compare the traditional NDVI with other vegetation index computed using red-edge bands. The example below such the NDRE1 index, obtained using bands B06 and B05. Sun et al. argue that a vegetation index built using bands B06 and B07 provides a better approximation to leaf area index estimates than NDVI [@Sun2020a]. Notice that the contrast between forests and deforested areas is more robust in the NDRE1 index than with NDVI. 
 
@@ -2120,8 +2044,8 @@ plot(reg_cube, band = "NDRE1", palette = "RdYlGn")
 ```
 
 <div class="figure" style="text-align: center">
-<img src="05-cubeoperations_files/figure-html/ndreop-1.png" alt="NDRE1 using bands B06 and B05 of Sentinel-2 (&amp;copy;: EU Copernicus Programme modified by authors)." width="100%" />
-<p class="caption">(\#fig:ndreop)NDRE1 using bands B06 and B05 of Sentinel-2 (&copy;: EU Copernicus Programme modified by authors).</p>
+<img src="05-cubeoperations_files/figure-html/ndreop-1.png" alt="NDRE1 using bands B06 and B05 of Sentinel-2 (&amp;copy; EU Copernicus Programme modified by authors)." width="100%" />
+<p class="caption">(\#fig:ndreop)NDRE1 using bands B06 and B05 of Sentinel-2 (&copy; EU Copernicus Programme modified by authors).</p>
 </div>
 
 
@@ -2145,8 +2069,8 @@ plot(reg_cube, band = "NBR", palette = "Reds")
 ```
 
 <div class="figure" style="text-align: center">
-<img src="05-cubeoperations_files/figure-html/nbr-1.png" alt="NBR ratio using Sentinel-2 B11 and B8A (&amp;copy;: EU Copernicus Programme modified by authors)." width="100%" />
-<p class="caption">(\#fig:nbr)NBR ratio using Sentinel-2 B11 and B8A (&copy;: EU Copernicus Programme modified by authors).</p>
+<img src="05-cubeoperations_files/figure-html/nbr-1.png" alt="NBR ratio using Sentinel-2 B11 and B8A (&amp;copy; EU Copernicus Programme modified by authors)." width="100%" />
+<p class="caption">(\#fig:nbr)NBR ratio using Sentinel-2 B11 and B8A (&copy; EU Copernicus Programme modified by authors).</p>
 </div>
 
 ## Support for non-normalized indexes{-}
@@ -2165,8 +2089,8 @@ plot(reg_cube, band = "CVI", palette = "Greens")
 ```
 
 <div class="figure" style="text-align: center">
-<img src="05-cubeoperations_files/figure-html/cviop-1.png" alt="CVI index using bands B03, B05, and B8A (&amp;copy;: EU Copernicus Programme modified by authors)." width="100%" />
-<p class="caption">(\#fig:cviop)CVI index using bands B03, B05, and B8A (&copy;: EU Copernicus Programme modified by authors).</p>
+<img src="05-cubeoperations_files/figure-html/cviop-1.png" alt="CVI index using bands B03, B05, and B8A (&amp;copy; EU Copernicus Programme modified by authors)." width="100%" />
+<p class="caption">(\#fig:cviop)CVI index using bands B03, B05, and B8A (&copy; EU Copernicus Programme modified by authors).</p>
 </div>
 
 ## Temporal combination operations{-}
@@ -2205,8 +2129,8 @@ plot(ave_cube, band = "NDVIMAX", palette = "Greens")
 ```
 
 <div class="figure" style="text-align: center">
-<img src="05-cubeoperations_files/figure-html/redmax-1.png" alt="maximum NDVI for Sentinel-2 cube (&amp;copy;: EU Copernicus Programme modified by authors)." width="100%" />
-<p class="caption">(\#fig:redmax)maximum NDVI for Sentinel-2 cube (&copy;: EU Copernicus Programme modified by authors).</p>
+<img src="05-cubeoperations_files/figure-html/redmax-1.png" alt="maximum NDVI for Sentinel-2 cube (&amp;copy; EU Copernicus Programme modified by authors)." width="100%" />
+<p class="caption">(\#fig:redmax)maximum NDVI for Sentinel-2 cube (&copy; EU Copernicus Programme modified by authors).</p>
 </div>
 
 
@@ -2252,8 +2176,8 @@ plot(reg_cube, band = "FOREST", palette = "Greens")
 ```
 
 <div class="figure" style="text-align: center">
-<img src="05-cubeoperations_files/figure-html/mixfor-1.png" alt="Percentage of forest per pixel estimated by mixture model ((&amp;copy;: EU Copernicus Programme modified by authors)." width="100%" />
-<p class="caption">(\#fig:mixfor)Percentage of forest per pixel estimated by mixture model ((&copy;: EU Copernicus Programme modified by authors).</p>
+<img src="05-cubeoperations_files/figure-html/mixfor-1.png" alt="Percentage of forest per pixel estimated by mixture model ((&amp;copy; EU Copernicus Programme modified by authors)." width="100%" />
+<p class="caption">(\#fig:mixfor)Percentage of forest per pixel estimated by mixture model ((&copy; EU Copernicus Programme modified by authors).</p>
 </div>
 
 
@@ -2584,7 +2508,7 @@ sf_shape <- sf::st_read(shp_file)
 
 ```
 #> Reading layer `mt' from data source 
-#>   `/Library/Frameworks/R.framework/Versions/4.4-arm64/Resources/library/sits/extdata/shapefiles/mato_grosso/mt.shp' 
+#>   `/Library/Frameworks/R.framework/Versions/4.4-x86_64/Resources/library/sits/extdata/shapefiles/mato_grosso/mt.shp' 
 #>   using driver `ESRI Shapefile'
 #> Simple feature collection with 1 feature and 3 fields
 #> Geometry type: MULTIPOLYGON
@@ -2675,11 +2599,11 @@ Similar to what is observed in the Savitsky-Golay filter, high values of the smo
 <a href="https://www.kaggle.com/code/esensing/improving-quality-of-training-samples" target="_blank"><img src="https://kaggle.com/static/images/open-in-kaggle.svg"/></a>
 
 
-Selecting good training samples for machine learning classification of satellite images is critical to achieving accurate results. Experience with machine learning methods has demonstrated that the number and quality of training samples are crucial factors in obtaining accurate results [@Maxwell2018]. Large and accurate datasets are preferable, regardless of the algorithm used, while noisy training samples can negatively impact classification performance [@Frenay2014]. Thus, it is beneficial to use pre-processing methods to improve the quality of samples and eliminate those that may have been incorrectly labeled or possess low discriminatory power.
+Selecting good training samples for machine learning classification of satellite images is critical to achieving accurate results. Experience with machine learning methods has shown that the number and quality of training samples are crucial factors in obtaining accurate results [@Maxwell2018]. Large and accurate datasets are preferable, regardless of the algorithm used, while noisy training samples can negatively impact classification performance [@Frenay2014]. Thus, it is beneficial to use pre-processing methods to improve the quality of samples and eliminate those that may have been incorrectly labeled or possess low discriminatory power.
 
-It is necessary to distinguish between wrongly labeled samples and differences resulting from the natural variability of class signatures. When training data belongs to a large geographic region, the variability of vegetation phenology leads to different patterns being assigned to the same label. A related issue is the limitation of crisp boundaries to describe the natural world. Class definitions use idealized descriptions (e.g., "a savanna woodland has tree cover of 50% to 90% ranging from 8 to 15 m in height"). In practice, the boundaries between classes are fuzzy and sometimes overlap, making it hard to distinguish between them. To improve sample quality, `sits` provides methods for evaluating the training data.
+It is necessary to distinguish between wrongly labeled samples and differences resulting from the natural variability of class signatures. When working in a large geographic region, the variability of vegetation phenology leads to different patterns being assigned to the same label. A related issue is the limitation of crisp boundaries to describe the natural world. Class definitions use idealized descriptions (e.g., "a savanna woodland has tree cover of 50% to 90% ranging from 8 to 15 m in height"). Class boundaries are fuzzy and sometimes overlap, making it hard to distinguish between them. To improve sample quality, `sits` provides methods for evaluating the training data.
 
-Given a set of training samples, experts should first perform a cross-validation of the training set, to be able to assess their inherent prediction error. The results indicate whether the data is internally consistent. Since cross-validation is not a predictor of actual model performance, this chapter provides additional tools for improving the quality of training sets. More detailed information is available on Chapter [Validation and accuracy measurements](https://e-sensing.github.io/sitsbook/validation-and-accuracy-measurements.html).
+Given a set of training samples, experts should first cross-validate the training set to assess their inherent prediction error. The results show whether the data is internally consistent. Since cross-validation does not predict actual model performance, this chapter provides additional tools for improving the quality of training sets. More detailed information is available on Chapter [Validation and accuracy measurements](https://e-sensing.github.io/sitsbook/validation-and-accuracy-measurements.html).
 
 ## Datasets used in this chapter{-}
 
@@ -2753,97 +2677,97 @@ rfor_validate
 #> 
 #>                   Reference
 #> Prediction         Pasture Dense_Woodland Rocky_Savanna Savanna_Parkland
-#>   Pasture             6618             23             9                5
-#>   Dense_Woodland       496           9674           604                0
-#>   Rocky_Savanna          8             62          7309               27
-#>   Savanna_Parkland       4              0            50             2641
-#>   Savanna               56            200            33               26
+#>   Pasture             6628             27            11                3
+#>   Dense_Woodland       494           9672           605                0
+#>   Rocky_Savanna          8             69          7317               27
+#>   Savanna_Parkland       2              0            41             2642
+#>   Savanna               47            191            31               27
 #>   Dunes                  0              0             0                0
-#>   Soy_Corn               9              0             0                0
+#>   Soy_Corn              10              0             0                0
 #>   Soy_Cotton             1              0             0                0
-#>   Soy_Fallow            11              0             0                0
+#>   Soy_Fallow            12              0             0                0
 #>   Fallow_Cotton          3              0             0                0
-#>   Silviculture           0              7             0                0
+#>   Silviculture           1              7             0                0
 #>   Millet_Cotton          0              0             0                0
 #>                   Reference
 #> Prediction         Savanna Dunes Soy_Corn Soy_Cotton Soy_Fallow Fallow_Cotton
-#>   Pasture              114     0       36         12         25            41
-#>   Dense_Woodland       138     0        3          2          1             0
-#>   Rocky_Savanna          9     0        0          0          0             0
-#>   Savanna_Parkland      15     0        1          0          1             1
-#>   Savanna             8896     0        9          0          1             0
+#>   Pasture              114     0       38         10         23            37
+#>   Dense_Woodland       134     0        2          0          2             0
+#>   Rocky_Savanna          8     0        0          0          0             0
+#>   Savanna_Parkland      17     0        1          0          1             0
+#>   Savanna             8899     0        8          1          0             0
 #>   Dunes                  0   550        0          0          0             0
-#>   Soy_Corn               0     0     4851         58        355             8
-#>   Soy_Cotton             0     0       40       4041          0            19
-#>   Soy_Fallow             0     0       29          0       1710             1
-#>   Fallow_Cotton          0     0        2          3          5           555
+#>   Soy_Corn               0     0     4854         60        362             6
+#>   Soy_Cotton             0     0       40       4041          0            28
+#>   Soy_Fallow             0     0       27          0       1706             1
+#>   Fallow_Cotton          0     0        1          2          4           554
 #>   Silviculture           0     0        0          0          0             0
-#>   Millet_Cotton          0     0        0          8          0             5
+#>   Millet_Cotton          0     0        0         10          0             4
 #>                   Reference
 #> Prediction         Silviculture Millet_Cotton
-#>   Pasture                     1             1
-#>   Dense_Woodland            102             0
+#>   Pasture                     2             1
+#>   Dense_Woodland            105             0
 #>   Rocky_Savanna               0             0
 #>   Savanna_Parkland            0             0
-#>   Savanna                     8             0
+#>   Savanna                    11             0
 #>   Dunes                       0             0
-#>   Soy_Corn                    0             3
-#>   Soy_Cotton                  0            21
+#>   Soy_Corn                    0             2
+#>   Soy_Cotton                  0            20
 #>   Soy_Fallow                  0             0
-#>   Fallow_Cotton               0            20
-#>   Silviculture              312             0
-#>   Millet_Cotton               0           271
+#>   Fallow_Cotton               0            23
+#>   Silviculture              305             0
+#>   Millet_Cotton               0           270
 #> 
 #> Overall Statistics
 #>                             
-#>  Accuracy : 0.9455          
-#>    95% CI : (0.9435, 0.9475)
+#>  Accuracy : 0.9457          
+#>    95% CI : (0.9437, 0.9477)
 #>                             
-#>     Kappa : 0.9365          
+#>     Kappa : 0.9367          
 #> 
 #> Statistics by Class:
 #> 
 #>                           Class: Pasture Class: Dense_Woodland
-#> Prod Acc (Sensitivity)            0.9184                0.9707
-#> Specificity                       0.9938                0.9665
-#> User Acc (Pos Pred Value)         0.9612                0.8779
-#> Neg Pred Value                    0.9864                0.9925
-#> F1 score                          0.9393                0.9219
+#> Prod Acc (Sensitivity)            0.9198                0.9705
+#> Specificity                       0.9938                0.9666
+#> User Acc (Pos Pred Value)         0.9614                0.8782
+#> Neg Pred Value                    0.9866                0.9925
+#> F1 score                          0.9401                0.9220
 #>                           Class: Rocky_Savanna Class: Savanna_Parkland
-#> Prod Acc (Sensitivity)                  0.9131                  0.9785
-#> Specificity                             0.9975                  0.9985
-#> User Acc (Pos Pred Value)               0.9857                  0.9735
-#> Neg Pred Value                          0.9837                  0.9988
-#> F1 score                                0.9480                  0.9760
+#> Prod Acc (Sensitivity)                  0.9141                  0.9789
+#> Specificity                             0.9973                  0.9987
+#> User Acc (Pos Pred Value)               0.9849                  0.9771
+#> Neg Pred Value                          0.9839                  0.9988
+#> F1 score                                0.9482                  0.9780
 #>                           Class: Savanna Class: Dunes Class: Soy_Corn
-#> Prod Acc (Sensitivity)            0.9699            1          0.9759
-#> Specificity                       0.9919            1          0.9904
-#> User Acc (Pos Pred Value)         0.9639            1          0.9181
-#> Neg Pred Value                    0.9933            1          0.9973
-#> F1 score                          0.9669            1          0.9461
+#> Prod Acc (Sensitivity)            0.9702            1          0.9765
+#> Specificity                       0.9923            1          0.9903
+#> User Acc (Pos Pred Value)         0.9657            1          0.9169
+#> Neg Pred Value                    0.9933            1          0.9974
+#> F1 score                          0.9680            1          0.9457
 #>                           Class: Soy_Cotton Class: Soy_Fallow
-#> Prod Acc (Sensitivity)               0.9799            0.8151
-#> Specificity                          0.9982            0.9991
-#> User Acc (Pos Pred Value)            0.9803            0.9766
-#> Neg Pred Value                       0.9982            0.9920
-#> F1 score                             0.9801            0.8885
+#> Prod Acc (Sensitivity)               0.9799            0.8132
+#> Specificity                          0.9981            0.9992
+#> User Acc (Pos Pred Value)            0.9785            0.9771
+#> Neg Pred Value                       0.9982            0.9919
+#> F1 score                             0.9792            0.8876
 #>                           Class: Fallow_Cotton Class: Silviculture
-#> Prod Acc (Sensitivity)                  0.8810              0.7376
-#> Specificity                             0.9993              0.9999
-#> User Acc (Pos Pred Value)               0.9439              0.9781
-#> Neg Pred Value                          0.9985              0.9978
-#> F1 score                                0.9113              0.8410
+#> Prod Acc (Sensitivity)                  0.8794              0.7210
+#> Specificity                             0.9993              0.9998
+#> User Acc (Pos Pred Value)               0.9438              0.9744
+#> Neg Pred Value                          0.9985              0.9976
+#> F1 score                                0.9104              0.8288
 #>                           Class: Millet_Cotton
-#> Prod Acc (Sensitivity)                  0.8576
+#> Prod Acc (Sensitivity)                  0.8544
 #> Specificity                             0.9997
-#> User Acc (Pos Pred Value)               0.9542
+#> User Acc (Pos Pred Value)               0.9507
 #> Neg Pred Value                          0.9991
-#> F1 score                                0.9033
+#> F1 score                                0.9000
 ```
 
 The results show a good validation, reaching 94% accuracy. However, this accuracy does not guarantee a good classification result. It only shows if the training data is internally consistent. In what follows, we present additional methods for improving sample quality.
 
-The cross-validation results have to be interpreted carefully. Cross-validation measures how well the model fits the training data. Using these results to measure classification accuracy is only valid if the training data is a good sample of the entire dataset. In practice, training data is subject to various sources of bias. In most cases of land classification, some classes are much more frequent than others, and as such, the training dataset will be imbalanced. For large areas, regional differences in soil and climate condition will lead the same classes to have different spectral responses. When collecting samples for large areas, field analysts may be restricted to areas where they have access (e.g., along roads). An additional problem is that of mixed pixels. Expert interpreters tend to select samples that stand out in fieldwork or reference images. Border pixels are unlikely to be chosen as part of the training data. For all these reasons, cross-validation results should not be considered indicative of accuracy measurement over the entire dataset. 
+Cross-validation measures how well the model fits the training data. Using these results to measure classification accuracy is only valid if the training data is a good sample of the entire dataset. Training data is subject to various sources of bias. In land classification, some classes are much more frequent than others, so the training dataset will be imbalanced.  Regional differences in soil and climate conditions for large areas will lead the same classes to have different spectral responses. Field analysts may be restricted to places they have access (e.g., along roads) when collecting samples. An additional problem is mixed pixels. Expert interpreters select samples that stand out in fieldwork or reference images. Border pixels are unlikely to be chosen as part of the training data. For all these reasons, cross-validation results do not measure classification accuracy for the entire dataset. 
 
 ## Hierarchical clustering for sample quality control{-}
 
@@ -3206,7 +3130,7 @@ When a set of time series organized as tibble is taken as input to the classifie
 
 ## Random forest{-}
 
-Random forest is a machine learning algorithm that uses an ensemble learning method for classification tasks. The algorithm consists of multiple decision trees, each trained on a different subset of the training data and with a different subset of features. To make a prediction, each decision tree in the forest independently classifies the input data. The final prediction is made based on the majority vote of all the decision trees. The randomness in the algorithm comes from the random subsets of data and features used to train each decision tree, which helps to reduce overfitting and improve the accuracy of the model. This classifier measures the importance of each feature in the classification task, which can be helpful in feature selection and data visualization. Pelletier et al.  discuss the robustness of random forest method for satellite image time series classification [@Pelletier2016]. 
+Random forest is a machine learning algorithm that uses an ensemble learning method for classification tasks. The algorithm consists of multiple decision trees, each trained on a different subset of the training data and with a different subset of features. To make a prediction, each decision tree in the forest independently classifies the input data. The final prediction is made based on the majority vote of all the decision trees. The randomness in the algorithm comes from the random subsets of data and features used to train each decision tree, which helps to reduce overfitting and improve the accuracy of the model. This classifier measures the importance of each feature in the classification task, which can be helpful in feature selection and data visualization. For an in-depth discussion of the robustness of random forest method for satellite image time series classification, please see Pelletier et al [@Pelletier2016]. 
 
 <div class="figure" style="text-align: center">
 <img src="./images/random_forest.png" alt="Random forest algorithm (Source: Venkata Jagannath in Wikipedia - licenced as CC-BY-SA 4.0)." width="90%" />
@@ -3411,9 +3335,7 @@ In theory, multilayer perceptron model can capture more subtle changes than rand
 
 Convolutional neural networks (CNN) are deep learning methods that apply convolution filters (sliding windows) to the input data sequentially. The Temporal Convolutional Neural Network (TempCNN) is a neural network architecture specifically designed to process sequential data such as time series. In the case of time series, a 1D CNN applies a moving temporal window to the time series to produce another time series as the result of the convolution. 
 
-TempCNN applies one-dimensional convolutions on the input sequence to capture temporal dependencies, allowing the network to learn long-term dependencies in the input sequence. Each layer of the model captures temporal dependencies at a different scale. Due to its multi-scale approach, TempCNN can capture complex temporal patterns in the data and produce accurate predictions.
-
-The TempCNN architecture for satellite image time series classification is proposed by Pelletier et al. [@Pelletier2019].  It has three 1D convolutional layers and a final softmax layer for classification (see Figure \@ref(fig:mltcnnfig)). The authors combine different methods to avoid overfitting and reduce the vanishing gradient effect, including dropout, regularization, and batch normalization. In the TempCNN reference paper [@Pelletier2019], the authors favourably compare their model with the Recurrent Neural Network proposed by Russwurm and Körner [@Russwurm2018]. Figure \@ref(fig:mltcnnfig) shows the architecture of the TempCNN model.
+The TempCNN architecture for satellite image time series classification is proposed by Pelletier et al. [@Pelletier2019].  It has three 1D convolutional layers and a final softmax layer for classification (see Figure \@ref(fig:mltcnnfig)). The authors combine different methods to avoid overfitting and reduce the vanishing gradient effect, including dropout, regularization, and batch normalization. In the TempCNN reference paper [@Pelletier2019], the authors favourably compare their model with the Recurrent Neural Network proposed by Russwurm and Körner [@Russwurm2018]. Figure \@ref(fig:mltcnnfig) shows the architecture of the TempCNN model. TempCNN applies one-dimensional convolutions on the input sequence to capture temporal dependencies, allowing the network to learn long-term dependencies in the input sequence. Each layer of the model captures temporal dependencies at a different scale. Due to its multi-scale approach, TempCNN can capture complex temporal patterns in the data and produce accurate predictions.
 
 <div class="figure" style="text-align: center">
 <img src="./images/tempcnn.png" alt="Structure of tempCNN architecture (Source: Pelletier et al. (2019). Reproduction under fair use doctrine). " width="100%" />
@@ -3595,8 +3517,6 @@ To reduce the learning curve, `sits` provides default values for all machine lea
 
 The most straightforward approach to model tuning is to run a grid search; this involves defining a range for each hyperparameter and then testing all possible combinations. This approach leads to a combinatorial explosion and thus is not recommended. Instead, Bergstra and Bengio propose randomly chosen trials [@Bergstra2012]. Their paper shows that randomized trials are more efficient than grid search trials, selecting adequate hyperparameters at a fraction of the computational cost. The `sits_tuning()` function follows Bergstra and Bengio by using a random search on the chosen hyperparameters.
 
-
-
 Experiments with image time series show that other optimizers may have better performance for the specific problem of land classification. For this reason, the authors developed the  `torchopt` R package, which includes several recently proposed optimizers, including Madgrad [@Defazio2021], and Yogi [@Zaheer2018]. Using the `sits_tuning()` function allows testing these and other optimizers available in `torch` and `torch_opt` packages.  
 
 The `sits_tuning()` function takes the following parameters:
@@ -3727,8 +3647,8 @@ plot(rondonia_20LMR, date = "2022-07-16", band = "NDVI")
 ```
 
 <div class="figure" style="text-align: center">
-<img src="09-rasterclassification_files/figure-html/rcndvi-1.png" alt="Color composite image of the cube for date 2023-07-16 (&amp;copy;: EU Copernicus Sentinel Programme; source: Microsoft)." width="90%" />
-<p class="caption">(\#fig:rcndvi)Color composite image of the cube for date 2023-07-16 (&copy;: EU Copernicus Sentinel Programme; source: Microsoft).</p>
+<img src="09-rasterclassification_files/figure-html/rcndvi-1.png" alt="Color composite image of the cube for date 2023-07-16 (&amp;copy; EU Copernicus Sentinel Programme; source: Microsoft)." width="90%" />
+<p class="caption">(\#fig:rcndvi)Color composite image of the cube for date 2023-07-16 (&copy; EU Copernicus Sentinel Programme; source: Microsoft).</p>
 </div>
 
 ## Training data for the case study{-}
@@ -4197,10 +4117,7 @@ The main idea behind our post-processing method is that a pixel-based classifica
 <p class="caption">(\#fig:bayesexnosmooth)Detail of labelled map produced by pixel-based random forest without smoothing (source: authors)</p>
 </div>
 
-To maintain consistency and coherence in our class representations, we should minimise small variations or misclassifications. We incorporate spatial coherence as a post-processing step to accomplish this. The probabilities associated with each pixel will change based on statistical inference, which depends on the values for each neighbourhood. Using the recalculated probabilities for each pixel, we get a better version of the final classified map.  
-
-
-Consider the figure below, which is the result of Bayesian smoothing on the random forest algorithm outcomes. The noisy border pixels between two large areas of the same class have been removed. We have also removed small clusters of pixels belonging to one class inside larger areas of other classes. The outcome is a more uniform map, like the ones created through visual interpretation or object-based analysis. Details like narrow vegetation corridors or small forest roads might be missing in the smoothed image. However, the improved spatial consistency of the final map compensates for such losses, due to the removal of misclassified pixels that have mixed spectral responses. 
+To maintain consistency and coherence in our class representations, we should minimise small variations or misclassifications. We incorporate spatial coherence as a post-processing step to accomplish this. The probabilities associated with each pixel will change based on statistical inference, which depends on the values for each neighbourhood. Using the recalculated probabilities for each pixel, we get a better version of the final classified map. Consider the figure below, which is the result of Bayesian smoothing on the random forest algorithm outcomes. The noisy border pixels between two large areas of the same class have been removed. We have also removed small clusters of pixels belonging to one class inside larger areas of other classes. The outcome is a more uniform map, like the ones created through visual interpretation or object-based analysis. Details like narrow vegetation corridors or small forest roads might be missing in the smoothed image. However, the improved spatial consistency of the final map compensates for such losses, due to the removal of misclassified pixels that have mixed spectral responses. 
 
 <div class="figure" style="text-align: center">
 <img src="images/map_smooth_v2.png" alt="Detail of labelled map produced by pixel-based random forest after smoothing (source: uthors)" width="70%" />
@@ -4211,9 +4128,7 @@ Consider the figure below, which is the result of Bayesian smoothing on the rand
 
 ## Empirical Bayesian estimation{-}
 
-The Bayesian estimate is based on the probabilities produced by the classifiers. Let $p_{i,k} \geq 0$ be the prior probability of the $i$-th pixel belonging to class $k \in \{1, \ldots, m\}$.  The probabilities $p_{i,k}$ are the classifier's output, being subject to noise, outliers, and classification errors. Our estimation aims to remove these effects and obtain values that approximate the actual class probability better. 
-
-We convert the class probability values $p_{i,k}$  to log-odds values using the logit function, to transform probability values ranging from $0$ to $1$ to values from negative infinity to infinity. The conversion from probabilities logit values is helpful to support our assumption of normal distribution for our data. 
+The Bayesian estimate is based on the probabilities produced by the classifiers. Let $p_{i,k} \geq 0$ be the prior probability of the $i$-th pixel belonging to class $k \in \{1, \ldots, m\}$.  The probabilities $p_{i,k}$ are the classifier's output, being subject to noise, outliers, and classification errors. Our estimation aims to remove these effects and obtain values that approximate the actual class probability better. We convert the class probability values $p_{i,k}$  to log-odds values using the logit function, to transform probability values ranging from $0$ to $1$ to values from negative infinity to infinity. The conversion from probabilities logit values is helpful to support our assumption of normal distribution for our data. 
 
 $$
     x_{i,k} = \ln \left(\frac{p_{i,k}}{1 - p_{i,k}}\right)
@@ -4510,11 +4425,11 @@ In the smoothed map, outliers inside forest areas and in the class borders have 
 
 ## Introduction{-}
 
-Statistically robust and transparent approaches for assessing accuracy and estimating the area of change are essential to maintain the integrity of land change information. The `sits` packages supports a set of “good practice” recommendations for designing and implementing an accuracy assessment of a change map and estimating the area based on reference sample data. These recommendations address three major components: sampling design, response design, and analysis [@Olofsson2014].
+Statistically robust and transparent approaches for assessing accuracy are essential parts of the land classification process. The `sits` package supports the “good practice” recommendations for designing and implementing an accuracy assessment of a change map and estimating the area based on reference sample data. These recommendations address three components: sampling design, reference data collection, and accuracy estimates [@Olofsson2014].
 .
-The sampling design is implemented as a random stratified approach, ensure that every land use and land cover class in the population is included in the sample. Design-based inference methods provide support for sampling designs that provide making unbiased estimates. Each of the evaluation samples needs to be evaluated accurately, using high-quality reference data, ideally collected through field visits or high-resolution imagery, to validate classifications. In this way, we obtain a “reference classification” which is more accurate than the map classification being evaluated. 
+The sampling design is implemented as a random stratified approach, ensuring that every land use and land cover class in the population is included in the sample. Sampling designs use established statistical methods aimed at providing unbiased estimates. Based on a chosen design, `sits` supports a selection of random samples per class. These samples should be evaluated accurately using high-quality reference data, ideally collected through field visits or using high-resolution imagery. In this way, we get a reference classification that is more accurate than the map classification being evaluated. 
 
-The accuracy assessment is reported as an error matrix in terms of the proportion of area and estimates of overall accuracy, user’s accuracy and producer’s accuracy. Based on the error matrix, it is possible to estimate the proportion of each class and to adjust for classification errors. The estimated area includes confidence intervals.  
+The accuracy assessment is reported as an error matrix. It supports estimates of overall accuracy, user’s and producer’s accuracy. Based on the error matrix, it is possible to estimate each class's proportion and adjust for classification errors. The estimated area includes confidence intervals.  
 
 ## Example data set{-} 
 
@@ -4675,9 +4590,10 @@ ro_samples_sf <- sits_stratified_sampling(
 ```
 
 ```
+#> Deleting layer `ro_samples' using driver `ESRI Shapefile'
 #> Writing layer `ro_samples' to data source 
 #>   `./tempdir/chp11/ro_samples.shp' using driver `ESRI Shapefile'
-#> Writing 2261 features with 1 fields and geometry type Point.
+#> Writing 2254 features with 1 fields and geometry type Point.
 ```
 
 ``` r
@@ -4693,7 +4609,7 @@ sf::st_write(ro_samples_sf,
 #> Writing layer `ro_samples' to data source 
 #>   `./tempdir/chp11/ro_samples.csv' using driver `CSV'
 #> options:        GEOMETRY=AS_XY 
-#> Writing 2261 features with 1 fields and geometry type Point.
+#> Writing 2254 features with 1 fields and geometry type Point.
 ```
 
 Using the CSV file (or the optional shapefile) users can visualize the points in a standard GIS such as QGIS. For each point, they will indicate what is the correct class. In this way, they will obtain a confusion matrix which will be used for accuracy assessment. The `overhead` parameter is useful for users to discard border or doubtful pixels where the interpreter cannot be confident of her class assignment. By discarding points whose attribution is uncertain, they will improve the quality of the assessment. 
@@ -5173,7 +5089,7 @@ As the new uncertainty map shows, there is a significant improvement in the qual
 
 
 
-Ensemble prediction is a powerful technique for combining predictions from multiple models to produce more accurate and robust predictions. In general, ensemble predictions produce better predictions than using a single model. This is because the errors of individual models can cancel out or be reduced when combined with the predictions of other models. As a result, ensemble predictions can lead to better overall accuracy and reduce the risk of overfitting. This can be especially useful when working with complex or uncertain data. By combining the predictions of multiple models, users can identify which features or factors are most important for making accurate predictions. When using ensemble methods, choosing diverse models with different sources of error is important to ensure that the ensemble predictions are more accurate and robust.
+Ensemble prediction is a powerful technique for combining predictions from multiple models to produce more accurate and robust predictions. Errors of individual models cancel out or are reduced when combined with the predictions of other models. As a result, ensemble predictions can lead to better overall accuracy and reduce the risk of overfitting. This can be especially useful when working with complex or uncertain data. By combining the predictions of multiple models, users can identify which features or factors are most important for making accurate predictions. When using ensemble methods, choosing diverse models with different sources of error is essential to ensure that the ensemble predictions are more precise and robust.
 
 The `sits` package provides `sits_combine_predictions()` to estimate ensemble predictions using probability cubes produced by `sits_classify()` and optionally post-processed with `sits_smooth()`. There are two ways to make ensemble predictions from multiple models:
 
@@ -5474,17 +5390,17 @@ dplyr::inner_join(sum1, sum2, by = "class") |>
 
 ```
 #> # A tibble: 9 × 4
-#>   class                     rfor    tcnn    ltae
-#>   <chr>                    <dbl>   <dbl>   <dbl>
-#> 1 Clear_Cut_Bare_Soil    80       67      66    
-#> 2 Clear_Cut_Burned_Area   1.7      4.4     4.5  
-#> 3 Clear_Cut_Vegetation   19       18      18    
-#> 4 Forest                280      240     240    
-#> 5 Mountainside_Forest     0.0088   0.065   0.051
-#> 6 Riparian_Forest        47       45      44    
-#> 7 Seasonally_Flooded     70      120     120    
-#> 8 Water                  63       67      67    
-#> 9 Wetland                14       11      11
+#>   class                     rfor   tcnn    ltae
+#>   <chr>                    <dbl>  <dbl>   <dbl>
+#> 1 Clear_Cut_Bare_Soil    80       68     68    
+#> 2 Clear_Cut_Burned_Area   1.7      4.7    4.8  
+#> 3 Clear_Cut_Vegetation   19       14     14    
+#> 4 Forest                280      240    240    
+#> 5 Mountainside_Forest     0.0088   0.04   0.028
+#> 6 Riparian_Forest        47       40     40    
+#> 7 Seasonally_Flooded     70      130    130    
+#> 8 Water                  63       67     66    
+#> 9 Wetland                14       13     13
 ```
 
 
@@ -5547,26 +5463,24 @@ dplyr::inner_join(sum1, sum2, by = "class") |>
 
 ```
 #> # A tibble: 9 × 5
-#>   class                     rfor    tcnn    ltae     ave
-#>   <chr>                    <dbl>   <dbl>   <dbl>   <dbl>
-#> 1 Clear_Cut_Bare_Soil    80       67      66      70    
-#> 2 Clear_Cut_Burned_Area   1.7      4.4     4.5     4    
-#> 3 Clear_Cut_Vegetation   19       18      18      16    
-#> 4 Forest                280      240     240     250    
-#> 5 Mountainside_Forest     0.0088   0.065   0.051   0.036
-#> 6 Riparian_Forest        47       45      44      46    
-#> 7 Seasonally_Flooded     70      120     120     110    
-#> 8 Water                  63       67      67      67    
-#> 9 Wetland                14       11      11      11
+#>   class                     rfor   tcnn    ltae     ave
+#>   <chr>                    <dbl>  <dbl>   <dbl>   <dbl>
+#> 1 Clear_Cut_Bare_Soil    80       68     68      71    
+#> 2 Clear_Cut_Burned_Area   1.7      4.7    4.8     3.8  
+#> 3 Clear_Cut_Vegetation   19       14     14      15    
+#> 4 Forest                280      240    240     250    
+#> 5 Mountainside_Forest     0.0088   0.04   0.028   0.036
+#> 6 Riparian_Forest        47       40     40      45    
+#> 7 Seasonally_Flooded     70      130    130     110    
+#> 8 Water                  63       67     66      68    
+#> 9 Wetland                14       13     13      11
 ```
 
 As expected, the ensemble map combines information from the three models. Taking the RF model prediction as a base, there is a reduction in the areas of classes `Clear_Cut_Bare_Soil` and `Forest`, confirming the tendency of the RF model to overemphasize the most frequent classes. The LTAE and TempCNN models are more sensitive to class variations and capture time-varying classes such as `Riparian_Forest` and `Clear_Cut_Burned_Area` in more detail than the RF model. However, both TempCNN and LTAE tend to confuse the deforestation-related class `Clear_Cut_Vegetation` and the natural class `Riparian_Forest` more than the RF model. This effect is evident in the left bank of the Madeira river in the centre-left region of the image. Also, both the LTAE and TempCNN maps are more grainy and have more spatial variability than the RF map.
 
 The average map provides a compromise between RF's strong empahsis on the most frequent classes and the tendency of deep learning methods to produce outliers based on temporal relationship. The average map is less grainy and more spatially consistent than the LTAE and TempCNN maps, while introducing variability which is not present in the RF map. 
 
-This chapter shows the possibilities of ensemble prediction. There are many ways to get better results than those presented here. Increasing the number of spectral bands would improve the final accuracy. Also, Bayesian smoothing for deep learning models should not rely on default parameters; rather it needs to rely on variance analysis, increase the spatial window and provide more informed hyperparameters. 
-
-In general, ensemble prediction should be consider in all situations where one is not satisfied with the results of individual models. Combining model output increses the reliability of the result and thus shouls be considered in all situations where similar classes are present.
+This chapter shows the possibilities of ensemble prediction. There are many ways to get better results than those presented here. Increasing the number of spectral bands would improve the final accuracy. Also, Bayesian smoothing for deep learning models should not rely on default parameters; rather it needs to rely on variance analysis, increase the spatial window and provide more informed hyperparameters. In general, ensemble prediction should be consider in all situations where one is not satisfied with the results of individual models. Combining model output increses the reliability of the result and thus shouls be considered in all situations where similar classes are present.
 
 
 
@@ -5738,11 +5652,170 @@ We conclude that OBIA analysis applied to image time series is a worthy and effi
 
 <!--chapter:end:14-obia.Rmd-->
 
-# Technical annex {-}
+# Data visualisation in `sits` {-}
 
 
 
-This Chapter contains technical details on the algorithms available in `sits`. It is intended to support those that want to understand how the package works and also want to contribute to its development.
+This Chapter contains a discussion on plotting and visualisation of data cubes in `sits`. 
+
+## Plotting{-}
+
+The `plot()` function produces a graphical display of data cubes, time series, models, and SOM maps. For each type of data, there is a dedicated version of the `plot()` function. See `?plot.sits` for details. Plotting of time series, models and SOM outputs uses the `ggplot2` package; maps are plotted using the `tmap` package. When plotting images and classified maps, users can control the output, which appropriate parameters for each type of image. In this chapter, we provide examples of the options available for plotting different types of maps.
+
+Plotting and visualisation function in `sits` use COG overview if available. COG overviews are reduced-resolution versions of the main image, stored within the same file. Overviews allow for quick rendering at lower zoom levels, improving performance when dealing with large images. Usually, a single GeoTIFF will have many overviews, to match different zoom levels
+
+### Plotting false color maps{-}
+
+We refer to false color maps as images which are plotted on a color scale. Usually these are single bands, indexes such as NDVI or DEMs. For these data sets, the parameters for `plot()` are:
+        
+- `x`: data cube containing data to be visualised; 
+- `band`:  band or index to be plotted;
+- `pallete`: color scheme to be used for false color maps, which should be one of the `RColorBrewer` palettes. These palettes have been designed to be effective for map display by Prof Cynthia Brewer as described at the [Brewer website](http://colorbrewer2.org). By default, optical images use the `RdYlGn` scheme, SAR images use `Greys`, and DEM cubes use `Spectral`. 
+- `rev`: whether the color palette should be reversed; `TRUE` for DEM cubes, and `FALSE` otherwise.
+- `scale`: global scale parameter used by `tmap`. All font sizes, symbol sizes, border widths, and line widths are controlled by this value. Default is 0.75; users should vary this parameter and see the results.
+- `first_quantile`: 1st quantile for stretching images (default = 0.05).
+- `last_quantile`: last quantile for stretching images (default = 0.95).
+- `max_cog_size`: for cloud-oriented geotiff files (COG), sets the maximum number of lines or columns of the COG overview to be used for plotting.   
+
+The following optional parameters are available to allow for detailed control over the plot output:
+- `graticules_labels_size`: size of coordinates labels (default = 0.8).
+- `legend_title_size`: relative size of legend title (default = 1.0).
+- `legend_text_size`: relative size of legend text (default = 1.0).
+- `legend_bg_color`: color of legend background (default = "white").
+- `legend_bg_alpha`: legend opacity (default = 0.5).
+- `legend_position`: where to place the legend (options = "inside" or "outside" with "inside" as default).
+
+The following example shows a plot of an NDVI index of a data cube. This data cube covers part of MGRS tile `20LMR` and contains bands "B02", "B03", "B04", "B05", "B06",  "B07", "B08", "B11", "B12", "B8A", "EVI", "NBR", and "NDVI" for the period 2022-01-05 to 2022-12-23. We will use parameters with other than their defaults.
+
+
+``` r
+# set the directory where the data is
+data_dir <- system.file("extdata/Rondonia-20LMR", package = "sitsdata")
+# read the data cube
+ro_20LMR <- sits_cube(
+  source = "MPC",
+  collection = "SENTINEL-2-L2A",
+  data_dir = data_dir
+)
+# plot the NDVI for date 2022-08-01
+plot(ro_20LMR,
+  band = "NDVI",
+  date = "2022-08-01",
+  palette = "Greens",
+  legend_position = "outside",
+  scale = 1.0
+)
+```
+
+<div class="figure" style="text-align: center">
+<img src="15-visualisation_files/figure-html/visndvi-1.png" alt="Sentinel-2 NDVI index covering tile 20LMR (&amp;copy; EU Copernicus Sentinel Programme; source: Microsoft modified by authors)." width="100%" />
+<p class="caption">(\#fig:visndvi)Sentinel-2 NDVI index covering tile 20LMR (&copy; EU Copernicus Sentinel Programme; source: Microsoft modified by authors).</p>
+</div>
+### Plotting RGB color composite maps{-}
+
+For RGB color composite maps, the parameters for the `plot` function are:
+
+- `x`: data cube containing data to be visualised;
+- `band`:  band or index to be plotted;
+- `date`: date to be plotted (must be part of the cube timeline);
+- `red`: band or index associated to the red color;
+- `green`: band or index associated to the green color;
+- `blue`: band or index associated to the blue color;
+- `scale`: global scale parameter used by `tmap`. All font sizes, symbol sizes, border widths, and line widths are controlled by this value. Default is 0.75; users should vary this parameter and see the results.
+- `first_quantile`: 1st quantile for stretching images (default = 0.05).
+- `last_quantile`: last quantile for stretching images (default = 0.95).
+- `max_cog_size`: for cloud-oriented geotiff files (COG), sets the maximum number of lines or columns of the COG overview to be used for plotting.  
+
+The optional parameters listed in the previous section are also available. An example follows:
+
+
+``` r
+# plot the NDVI for date 2022-08-01
+plot(ro_20LMR,
+  red = "B11",
+  green = "B8A",
+  blue = "B02",
+  date = "2022-08-01",
+  palette = "Greens",
+  scale = 1.0
+)
+```
+
+<div class="figure" style="text-align: center">
+<img src="15-visualisation_files/figure-html/visrgb-1.png" alt="Sentinel-2 color composite covering tile 20LMR (&amp;copy; EU Copernicus Sentinel Programme; source: Microsoft modified by authors)." width="100%" />
+<p class="caption">(\#fig:visrgb)Sentinel-2 color composite covering tile 20LMR (&copy; EU Copernicus Sentinel Programme; source: Microsoft modified by authors).</p>
+</div>
+    
+### Plotting classified maps{-}
+
+Classified maps pose an additional challenge for plotting because of the association between labels and colors. In this case, `sits` allows three alternatives:
+
+- Predefined color scheme: `sits` includes some well-established color schemes such as `IBGP`, `UMD`, `ESA_CCI_LC`, and `WORLDCOVER`. There is a predefined color table with associates labels commonly used in LUCC classification to colors. Users can also create their color schemas. Please see section "How Colors Work on `sits` in this chapter.
+- legend: in this case, users provide a named vector with labels and colors, as shown in the example below.
+- palette: an RColorBrewer categorical palette, which is assigned to labels which are not in the color table. 
+
+The parameters for `plot()` applied to a classified data cube are:
+
+- `x`: data cube containing a classified map;
+- `legend`: legend which associated colors to the classes, which is `NULL` by default.
+- `palette`: color palette used for undefined colors, which is `Spectral` by default.
+- `scale`: global scale parameter used by `tmap`.
+
+The optional parameters listed in the previous section are also available. For an example of plotting a classified data cube with default color scheme, please see the section "Reading classified images as local data cube" in the "Earth observation data cubes" chapter. In what follows we show a similar case using a legend.
+
+
+``` r
+# Create a cube based on a classified image
+data_dir <- system.file("extdata/Rondonia-20LLP",
+  package = "sitsdata"
+)
+# Read the classified cube
+rondonia_class_cube <- sits_cube(
+  source = "AWS",
+  collection = "SENTINEL-S2-L2A-COGS",
+  bands = "class",
+  labels = c(
+    "1" = "Burned", "2" = "Cleared",
+    "3" = "Degraded", "4" = "Natural_Forest"
+  ),
+  data_dir = data_dir
+)
+# Plot the classified cube
+plot(rondonia_class_cube,
+  legend = c(
+    "Burned" = "#a93226",
+    "Cleared" = "#f9e79f",
+    "Degraded" = "#d4efdf",
+    "Natural_Forest" = "#1e8449"
+  ),
+  scale = 1.0,
+  legend_position = "outside"
+)
+```
+
+<div class="figure" style="text-align: center">
+<img src="15-visualisation_files/figure-html/vismap-1.png" alt="Classified data cube for the year 2020/2021 in Rondonia, Brazil (&amp;copy; EU Copernicus Sentinel Programme; source: authors)." width="100%" />
+<p class="caption">(\#fig:vismap)Classified data cube for the year 2020/2021 in Rondonia, Brazil (&copy; EU Copernicus Sentinel Programme; source: authors).</p>
+</div>
+
+
+## Visualization of data cubes in interactive maps {.unnumbered}
+
+ Data cubes and samples can also be shown as interactive maps using `sits_view()`. This function creates tiled overlays of different kinds of data cubes, allowing comparison between the original, intermediate and final results. It also includes background maps. The following example creates an interactive map combining the original data cube with the classified map.
+
+
+``` r
+sits_view(rondonia_class_cube,
+  legend = c(
+    "Burned" = "#a93226",
+    "Cleared" = "#f9e79f",
+    "Degraded" = "#d4efdf",
+    "Natural_Forest" = "#1e8449"
+  )
+)
+```
+
+<img src="./images/view_rondonia_class_cube.png" width="100%" style="display: block; margin: auto;" />
 
 ## How colors work in sits{-}
 
@@ -5754,7 +5827,7 @@ In examples provided in the book, the color legend is taken from a predefined co
 ```
 
 ```
-#> # A tibble: 241 × 2
+#> # A tibble: 236 × 2
 #>    name                             color  
 #>    <chr>                            <chr>  
 #>  1 Evergreen_Broadleaf_Forest       #1E8449
@@ -5767,7 +5840,7 @@ In examples provided in the book, the color legend is taken from a predefined co
 #>  8 Mountainside_Forest              #229C59
 #>  9 Mountainside_Forests             #229C59
 #> 10 Open_Forest                      #53A145
-#> # ℹ 231 more rows
+#> # ℹ 226 more rows
 ```
 
 These colors are grouped by typical legends used by the Earth observation community, which include "IGBP", "UMD", "ESA_CCI_LC", "WORLDCOVER", "PRODES", "PRODES_VISUAL", "TERRA_CLASS", "TERRA_CLASS_PT". The following commands shows the colors associated with the IGBP legend [@Herold2009].
@@ -5779,8 +5852,8 @@ sits_colors_show(legend = "IGBP")
 ```
 
 <div class="figure" style="text-align: center">
-<img src="15-annex_files/figure-html/unnamed-chunk-3-1.png" alt="Colors used in the sits package to represeny IGBP legend (source: authors)." width="100%" height="100%" />
-<p class="caption">(\#fig:unnamed-chunk-3)Colors used in the sits package to represeny IGBP legend (source: authors).</p>
+<img src="15-visualisation_files/figure-html/unnamed-chunk-4-1.png" alt="Colors used in the sits package to represeny IGBP legend (source: authors)." width="100%" height="100%" />
+<p class="caption">(\#fig:unnamed-chunk-4)Colors used in the sits package to represeny IGBP legend (source: authors).</p>
 </div>
 
 
@@ -5806,7 +5879,7 @@ sits_colors_show(legend = "US_NLCD")
 ```
 
 <div class="figure" style="text-align: center">
-<img src="15-annex_files/figure-html/colors-1.png" alt="Example of defining colors for the Anderson Land Classification Scheme(source: authors)." width="100%" height="80%" />
+<img src="15-visualisation_files/figure-html/colors-1.png" alt="Example of defining colors for the Anderson Land Classification Scheme(source: authors)." width="100%" height="80%" />
 <p class="caption">(\#fig:colors)Example of defining colors for the Anderson Land Classification Scheme(source: authors).</p>
 </div>
 
@@ -5814,8 +5887,119 @@ The original default `sits` color table can be restored using `sits_colors_reset
 
 
 
-As an alternative, a legend can be used directly as a parameter to `plot()`. Please see the example provided in Section "Map Reclassification" in Chapter [Image classification in data cubes](https://e-sensing.github.io/sitsbook/image-classification-in-data-cubes.html). 
+## Exporting colors to QGIS{-}
 
+To simplify the process of importing your data to QGIS, the color palette used to display classified maps in `sits` can be exported as a QGIS style using `sits_colors_qgis`. The function takes two parameters: (a) `cube`, a classified data cube; and (b) `file`, the file where the QGIS style in XML will be written to. In this case study, we first retrieve and plot a classified data cube and then export the colors to a QGIS XML style.
+
+
+``` r
+# Create a cube based on a classified image
+data_dir <- system.file("extdata/Rondonia-Class-2022-Mosaic",
+  package = "sitsdata"
+)
+
+# labels of the classified image
+labels <- c(
+  "1" = "Clear_Cut_Bare_Soil",
+  "2" = "Clear_Cut_Burned_Area",
+  "3" = "Clear_Cut_Vegetation",
+  "4" = "Forest",
+  "5" = "Mountainside_Forest",
+  "6" = "Riparian_Forest",
+  "7" = "Seasonally_Flooded",
+  "8" = "Water",
+  "9" = "Wetland"
+)
+# read classified data cube
+ro_class <- sits_cube(
+  source = "MPC",
+  collection = "SENTINEL-2-L2A",
+  data_dir = data_dir,
+  bands = "class",
+  labels = labels,
+  version = "mosaic"
+)
+# Plot the classified cube
+plot(ro_class, scale = 1.0)
+```
+
+<div class="figure" style="text-align: center">
+<img src="15-visualisation_files/figure-html/visqgis-1.png" alt="Classified data cube for the year 2022 for Rondonia, Brazil (&amp;copy; EU Copernicus Sentinel Programme; source: authors)." width="100%" />
+<p class="caption">(\#fig:visqgis)Classified data cube for the year 2022 for Rondonia, Brazil (&copy; EU Copernicus Sentinel Programme; source: authors).</p>
+</div>
+
+The file to be read by QGIS is a TIFF file whose location is informed by the data cube, as follows.
+
+
+``` r
+# Show the location of the classified map
+ro_class[["file_info"]][[1]]$path
+```
+
+```
+#> [1] "/Library/Frameworks/R.framework/Versions/4.4-x86_64/Resources/library/sitsdata/extdata/Rondonia-Class-2022-Mosaic/SENTINEL-2_MSI_MOSAIC_2022-01-05_2022-12-23_class_mosaic.tif"
+```
+
+The color schema can be exported to QGIS as follows.
+
+``` r
+# Export the color schema to QGIS
+sits_colors_qgis(ro_class, file = "./tempdir/chp15/qgis_style.xml")
+```
+
+
+<!--chapter:end:15-visualisation.Rmd-->
+
+# Technical annex {-}
+
+
+
+This Chapter contains technical details on the algorithms available in `sits`. It is intended to support those that want to understand how the package works and also want to contribute to its development.
+
+## Adding functions to the `sits` API{-}
+
+### General principles{-}
+
+New functions that build on the `sits` API should follow the general principles below.
+
+- We welcome contributors that provide useful additions to the existing API, such as new ML/DL classification algorithms. In case of a new API function, before making a pull request please raise an issue stating your rationale for a new function.
+
+- Most functions in `sits` use the S3 programming model with a strong emphasis on generic methods wich are specialized depending on the input data type. See for example the implementation of the `sits_bands()` function. Please do not include contributed code using the S4 programming model. Doing so would break the structure and the logic of existing code. Convert your code from S4 to S3.
+
+- Use generic functions as much as possible, as they improve modularity and maintenance. If your code has decision points using `if-else` clauses, such as `if A, do X; else do Y` consider using generic functions. 
+
+- The sits code relies on the packages of the `tidyverse` to work with tables and list. We use `dplyr` and `tidyr` for data selection and wrangling, `purrr` and `slider` for loops on lists and table, `lubridate` to handle dates and times. 
+
+- For vector data, we use `sf` and for raster data, we mostly use `terra`. 
+
+- Functions that use the `torch` package use the R6 model to be compatible with that package. To convert `pyTorch` code to R and include it is straightforward. See for example, the code in `sits_tempcnn.R` and `api_torch.R`. 
+
+
+### Adherence to the `sits` data types{-}
+
+The `sits` package in built on top of three data types: time series tibble, data cubes and models. Most `sits` functions have one or more of these types as inputs and one of them as return values. The time series tibble contains data and metadata. The first six columns contain the metadata: spatial and temporal information, the label assigned to the sample, and the data cube from where the data has been extracted. The time_series column contains the time series data for each spatiotemporal location. All time series tibbles are objects of class `sits`. 
+
+The `cube` data type is designed to store metadata about image files. In principle, images which are part of a data cube share the same geographical region, have the same bands, and have been regularized to fit into a pre-defined temporal interval. Data cubes in `sits` are organized by tiles. A tile is an element of a satellite's mission reference system, for example MGRS for Sentinel-2 and WRS2 for Landsat. A `cube` is a tibble where each row contains information about data covering one tile. Each row of the cube tibble contains a column named `file_info`; this column contains a list that stores a tibble 
+
+The `cube` data type is specialised in `raster_cube` (ARD images), `vector_cube` (ARD cube with segmentation vectors). `probs_cube` (probabilities produced by classification algorithms on raster data), `probs_vector_cube`(probabilites generated by vector classification of segments),  `uncertainty_cube` (cubes with uncertainty information), and `class_cube` (labelled maps). See the code in `sits_plot.R` as an example of specialisation of `plot` to handle different classes of raster data. 
+
+All ML/DL models in `sits` which are the result of `sits_train` belong to the `ml_model` class. In addition, models are assigned a second class, which is unique to ML models (e.g, `rfor_model`, `svm_model`) and generic for all DL `torch` based models (`torch_model`). The class information is used for plotting models and for establishing if a model can run on GPUs. 
+
+### Literal values, error messages, and testing{-}
+
+The internal `sits` code has no literal values, which are all stored in the YAML configuration files `./inst/extdata/config.yml` and `./inst/extdata/config_internals.yml`. The first file contains configuration parameters that are relevant to users, related to visualisation and plotting; the second contains parameters that are relevant only for developers. These values are accessible using the `.conf` function. For example, the value of the default size for ploting COG files is accessed using the command `.conf["plot", "max_size"]`. 
+
+Error messages are also stored outside of the code in the YAML configuration file `./inst/extdata/config_messages.yml`. These values are accessible using the `.conf` function. For example, the error associated to an invalid NA value for an input parameter is accessible using th function `.conf("messages", ".check_na_parameter")`. 
+
+We strive for high code coverage (> 90\%). Every parameter of all `sits` function (including internal ones) is checked for consistency. Please see `api_check.R`. 
+
+### Supporting new STAC-based image catalogues{-}
+
+If you want to include a STAC-based catalogue not yet supported by `sits`, we encourage you to look at existing implementations of catalogues such as Microsoft Planetary Computer (MPC), Digital Earth Africa (DEA) and AWS. STAC-based catalogues in `sits` are associated to YAML description files, which are available in the directory `.inst/exdata/sources`. For example, the YAML file `config_source_mpc.yml` describes the contents of the MPC collections supported by `sits`. Please first provide an YAML file which lists the detailed contents of the new catalogue you wish to include. Follow the examples provided.
+
+After writing the YAML file, you need to consider how to access and query the new catalogue. The entry point for access to all catalogues is the `sits_cube.stac_cube()` function, which in turn calls a sequence of functions which are described in the generic interface `api_source.R`. Most calls of this API are handled by the functions of `api_source_stac.R` which provides an interface to the `rstac` package and handles STAC queries. 
+
+Each STAC catalogue is different. The STAC specification allows providers to implement their data descriptions with specific information. For this reason, the generic API described in `api_source.R` needs to be specialized for each provider. Whenever a provider needs specific implementations of parts of the STAC protocol, we include them in separate files. For example, `api_source_mpc.R` implements specific quirks of the MPC platform. Similarly, specific support for CDSE (Copernicus Data Space Environment) is available in `api_source_cdse.R`. 
 
 ## How parallel processing works in virtual machines with CPUs{-}
 
@@ -6115,84 +6299,13 @@ plot(sinop_map, title = "Sinop Classification Map")
 ```
 
 <div class="figure" style="text-align: center">
-<img src="15-annex_files/figure-html/maplgbm-1.png" alt="Classification map for Sinop using LightGBM (source: authors)." width="100%" />
+<img src="16-annex_files/figure-html/maplgbm-1.png" alt="Classification map for Sinop using LightGBM (source: authors)." width="100%" />
 <p class="caption">(\#fig:maplgbm)Classification map for Sinop using LightGBM (source: authors).</p>
 </div>
 
-## Adding functions to the `sits` API{-}
-
-### General principles{-}
-
-New functions that build on the `sits` API should follow the general principles below.
-
-- The target audience for `sits` is the community of remote sensing experts with Earth Sciences background who want to use state-of-the-art data analysis methods with minimal investment in programming skills. The design of the `sits` API considers the typical workflow for land classification using satellite image time series and thus provides a clear and direct set of functions, which are easy to learn and master. 
-
-- For this reason, we welcome contributors that provide useful additions to the existing API, such as new ML/DL classification algorithms. In case of a new API function, before making a pull request please raise an issue stating your rationale for a new function.
-
-- Most functions in `sits` use the S3 programming model with a strong emphasis on generic methods wich are specialized depending on the input data type. See for example the implementation of the `sits_bands()` function. 
-
-- Please do not include contributed code using the S4 programming model. Doing so would break the structure and the logic of existing code. Convert your code from S4 to S3.
-
-- Use generic functions as much as possible, as they improve modularity and maintenance. If your code has decision points using `if-else` clauses, such as `if A, do X; else do Y` consider using generic functions. 
-
-- Functions that use the `torch` package use the R6 model to be compatible with that package. See for example, the code in `sits_tempcnn.R` and `api_torch.R`. To convert `pyTorch` code to R and include it is straightforward. Please see the [Technical Annex](https://e-sensing.github.io/sitsbook/technical-annex.html) of the sits on-line book.
-
-- The sits code relies on the packages of the `tidyverse` to work with tables and list. We use `dplyr` and `tidyr` for data selection and wrangling, `purrr` and `slider` for loops on lists and table, `lubridate` to handle dates and times. 
-
-### Adherence to the `sits` data types{-}
-
-The `sits` package in built on top of three data types: time series tibble, data cubes and models. Most `sits` functions have one or more of these types as inputs and one of them as return values. The time series tibble contains data and metadata. The first six columns contain the metadata: spatial and temporal information, the label assigned to the sample, and the data cube from where the data has been extracted. The time_series column contains the time series data for each spatiotemporal location. All time series tibbles are objects of class `sits`. 
-
-The `cube` data type is designed to store metadata about image files. In principle, images which are part of a data cube share the same geographical region, have the same bands, and have been regularized to fit into a pre-defined temporal interval. Data cubes in `sits` are organized by tiles. A tile is an element of a satellite's mission reference system, for example MGRS for Sentinel-2 and WRS2 for Landsat. A `cube` is a tibble where each row contains information about data covering one tile. Each row of the cube tibble contains a column named `file_info`; this column contains a list that stores a tibble 
-
-The `cube` data type is specialised in `raster_cube` (ARD images), `vector_cube` (ARD cube with segmentation vectors). `probs_cube` (probabilities produced by classification algorithms on raster data), `probs_vector_cube`(probabilites generated by vector classification of segments),  `uncertainty_cube` (cubes with uncertainty information), and `class_cube` (labelled maps). See the code in `sits_plot.R` as an example of specialisation of `plot` to handle different classes of raster data. 
-
-All ML/DL models in `sits` which are the result of `sits_train` belong to the `ml_model` class. In addition, models are assigned a second class, which is unique to ML models (e.g, `rfor_model`, `svm_model`) and generic for all DL `torch` based models (`torch_model`). The class information is used for plotting models and for establishing if a model can run on GPUs. 
-
-### Literal values, error messages, and testing{-}
-
-The internal `sits` code has no literal values, which are all stored in the YAML configuration files `./inst/extdata/config.yml` and `./inst/extdata/config_internals.yml`. The first file contains configuration parameters that are relevant to users, related to visualisation and plotting; the second contains parameters that are relevant only for developers. These values are accessible using the `.conf` function. For example, the value of the default size for ploting COG files is accessed using the command `.conf["plot", "max_size"]`. 
-
-Error messages are also stored outside of the code in the YAML configuration file `./inst/extdata/config_messages.yml`. These values are accessible using the `.conf` function. For example, the error associated to an invalid NA value for an input parameter is accessible using th function `.conf("messages", ".check_na_parameter")`. 
-
-We strive for high code coverage (> 90\%). Every parameter of all `sits` function (including internal ones) is checked for consistency. Please see `api_check.R`. 
-
-
-### Supporting new STAC-based image catalogues{-}
-
-If you want to include a STAC-based catalogue not yet supported by `sits`, we encourage you to look at existing implementations of catalogues such as Microsoft Planetary Computer (MPC), Digital Earth Africa (DEA) and AWS. STAC-based catalogues in `sits` are associated to YAML description files, which are available in the directory `.inst/exdata/sources`. For example, the YAML file `config_source_mpc.yml` describes the contents of the MPC collections supported by `sits`. Please first provide an YAML file which lists the detailed contents of the new catalogue you wish to include. Follow the examples provided.
-
-After writing the YAML file, you need to consider how to access and query the new catalogue. The entry point for access to all catalogues is the `sits_cube.stac_cube()` function, which in turn calls a sequence of functions which are described in the generic interface `api_source.R`. Most calls of this API are handled by the functions of `api_source_stac.R` which provides an interface to the `rstac` package and handles STAC queries. 
-
-Each STAC catalogue is different. The STAC specification allows providers to implement their data descriptions with specific information. For this reason, the generic API described in `api_source.R` needs to be specialized for each provider. Whenever a provider needs specific implementations of parts of the STAC protocol, we include them in separate files. For example, `api_source_mpc.R` implements specific quirks of the MPC platform. Similarly, specific support for CDSE (Copernicus Data Space Environment) is available in `api_source_cdse.R`. 
-
-
-## Exporting data to JSON{-}
-
-Both the data cube and the time series tibble can be exported to exchange formats such as JSON.
-
-
-``` r
-library(jsonlite)
-# Export the data cube to JSON
-jsonlite::write_json(
-  x = sinop,
-  path = "./data_cube.json",
-  pretty = TRUE
-)
-
-# Export the time series to JSON
-jsonlite::write_json(
-  x = samples_prodes_4classes,
-  path = "./time_series.json",
-  pretty = TRUE
-)
-```
-
-
-<!--chapter:end:15-annex.Rmd-->
+<!--chapter:end:16-annex.Rmd-->
 
 # References{-}
 
-<!--chapter:end:16-references.Rmd-->
+<!--chapter:end:17-references.Rmd-->
 

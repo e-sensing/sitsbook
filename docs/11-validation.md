@@ -5,11 +5,11 @@
 
 ## Introduction{-}
 
-Statistically robust and transparent approaches for assessing accuracy and estimating the area of change are essential to maintain the integrity of land change information. The `sits` packages supports a set of “good practice” recommendations for designing and implementing an accuracy assessment of a change map and estimating the area based on reference sample data. These recommendations address three major components: sampling design, response design, and analysis [@Olofsson2014].
+Statistically robust and transparent approaches for assessing accuracy are essential parts of the land classification process. The `sits` package supports the “good practice” recommendations for designing and implementing an accuracy assessment of a change map and estimating the area based on reference sample data. These recommendations address three components: sampling design, reference data collection, and accuracy estimates [@Olofsson2014].
 .
-The sampling design is implemented as a random stratified approach, ensure that every land use and land cover class in the population is included in the sample. Design-based inference methods provide support for sampling designs that provide making unbiased estimates. Each of the evaluation samples needs to be evaluated accurately, using high-quality reference data, ideally collected through field visits or high-resolution imagery, to validate classifications. In this way, we obtain a “reference classification” which is more accurate than the map classification being evaluated. 
+The sampling design is implemented as a random stratified approach, ensuring that every land use and land cover class in the population is included in the sample. Sampling designs use established statistical methods aimed at providing unbiased estimates. Based on a chosen design, `sits` supports a selection of random samples per class. These samples should be evaluated accurately using high-quality reference data, ideally collected through field visits or using high-resolution imagery. In this way, we get a reference classification that is more accurate than the map classification being evaluated. 
 
-The accuracy assessment is reported as an error matrix in terms of the proportion of area and estimates of overall accuracy, user’s accuracy and producer’s accuracy. Based on the error matrix, it is possible to estimate the proportion of each class and to adjust for classification errors. The estimated area includes confidence intervals.  
+The accuracy assessment is reported as an error matrix. It supports estimates of overall accuracy, user’s and producer’s accuracy. Based on the error matrix, it is possible to estimate each class's proportion and adjust for classification errors. The estimated area includes confidence intervals.  
 
 ## Example data set{-} 
 
@@ -170,9 +170,10 @@ ro_samples_sf <- sits_stratified_sampling(
 ```
 
 ```
+#> Deleting layer `ro_samples' using driver `ESRI Shapefile'
 #> Writing layer `ro_samples' to data source 
 #>   `./tempdir/chp11/ro_samples.shp' using driver `ESRI Shapefile'
-#> Writing 2261 features with 1 fields and geometry type Point.
+#> Writing 2254 features with 1 fields and geometry type Point.
 ```
 
 ``` r
@@ -188,7 +189,7 @@ sf::st_write(ro_samples_sf,
 #> Writing layer `ro_samples' to data source 
 #>   `./tempdir/chp11/ro_samples.csv' using driver `CSV'
 #> options:        GEOMETRY=AS_XY 
-#> Writing 2261 features with 1 fields and geometry type Point.
+#> Writing 2254 features with 1 fields and geometry type Point.
 ```
 
 Using the CSV file (or the optional shapefile) users can visualize the points in a standard GIS such as QGIS. For each point, they will indicate what is the correct class. In this way, they will obtain a confusion matrix which will be used for accuracy assessment. The `overhead` parameter is useful for users to discard border or doubtful pixels where the interpreter cannot be confident of her class assignment. By discarding points whose attribution is uncertain, they will improve the quality of the assessment. 

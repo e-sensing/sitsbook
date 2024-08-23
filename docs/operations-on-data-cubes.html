@@ -92,6 +92,7 @@
 <li><a class="" href="uncertainty-and-active-learning.html">Uncertainty and active learning</a></li>
 <li><a class="" href="ensemble-prediction-from-multiple-models.html">Ensemble prediction from multiple models</a></li>
 <li><a class="" href="object-based-time-series-image-analysis.html">Object-based time series image analysis</a></li>
+<li><a class="" href="data-visualisation-in-sits.html">Data visualisation in sits</a></li>
 <li><a class="" href="technical-annex.html">Technical annex</a></li>
 <li><a class="" href="references.html">References</a></li>
 </ul>
@@ -122,12 +123,12 @@
 </h2>
 <p>Using vegetation indexes is an established practice in remote sensing. These indexes aim to improve the discrimination of vegetation structure by combining two wavebands, one where leaf pigments reflect incoming light with another where leaves absorb incoming radiation. Green leaves from natural vegetation such as forests have a strong emissivity rate in the near-infrared bands and low emissivity rates in the red bands of the electromagnetic spectrum. These spectral properties are used to calculate the Normalized Difference Vegetation Index (NDVI), a widely used index that is computed as the normalized difference between the values of infra-red and red bands. Including red-edge bands in Sentinel-2 images has broadened the scope of the bands used to calculate these indices <span class="citation"><a href="references.html#ref-Xie2019">[8]</a>, <a href="references.html#ref-Sun2020a">[9]</a></span>. In what follows, we show examples of vegetation index calculation using a Sentinel-2 data cube.</p>
 <p>First, we define a data cube for a tile in the state of Rondonia, Brazil, including bands used to compute different vegetation indexes. We regularize the cube using a target resolution of 60 m to reduce processing time.</p>
-<div class="sourceCode" id="cb94"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb92"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Create a directory to store files</span></span>
 <span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/files.html">file.exists</a></span><span class="op">(</span><span class="st">"./tempdir/chp5"</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/files2.html">dir.create</a></span><span class="op">(</span><span class="st">"./tempdir/chp5"</span><span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
-<div class="sourceCode" id="cb95"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb93"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Create an irregular data cube from AWS</span></span>
 <span><span class="va">s2_cube</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_cube.html">sits_cube</a></span><span class="op">(</span></span>
 <span>  source <span class="op">=</span> <span class="st">"AWS"</span>,</span>
@@ -142,7 +143,7 @@
 <span>  start_date <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html">as.Date</a></span><span class="op">(</span><span class="st">"2018-07-01"</span><span class="op">)</span>,</span>
 <span>  end_date <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html">as.Date</a></span><span class="op">(</span><span class="st">"2018-08-31"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb96"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb94"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Regularize the cube to 15 day intervals</span></span>
 <span><span class="va">reg_cube</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_regularize.html">sits_regularize</a></span><span class="op">(</span></span>
 <span>  cube       <span class="op">=</span> <span class="va">s2_cube</span>,</span>
@@ -153,34 +154,34 @@
 <span><span class="op">)</span></span></code></pre></div>
 <p>There are many options for calculating vegetation indexes using Sentinel-2 bands. The most widely used method combines band B08 (785-899 nm) and band B04 (650-680 nm). Recent works in the literature propose using the red-edge bands B05 (698-713 nm), B06 (733-748 nm), and B07 (773-793 nm) for capturing subtle variations in chlorophyll absorption producing indexes, which are called Normalized Difference Vegetation Red-edge indexes (NDRE) <span class="citation"><a href="references.html#ref-Xie2019">[8]</a></span>. In a recent review, Chaves et al. argue that red-edge bands are important for distinguishing leaf structure and chlorophyll content of different vegetation species <span class="citation"><a href="references.html#ref-Chaves2020">[10]</a></span>. In the example below, we show how to include indexes in the regular data cube with the Sentinel-2 spectral bands.</p>
 <p>We first calculate the NDVI in the usual way, using bands B08 and B04.</p>
-<div class="sourceCode" id="cb97"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb95"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Calculate NDVI index using bands B08 and B04</span></span>
 <span><span class="va">reg_cube</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_apply.html">sits_apply</a></span><span class="op">(</span><span class="va">reg_cube</span>,</span>
 <span>  NDVI <span class="op">=</span> <span class="op">(</span><span class="va">B08</span> <span class="op">-</span> <span class="va">B04</span><span class="op">)</span> <span class="op">/</span> <span class="op">(</span><span class="va">B08</span> <span class="op">+</span> <span class="va">B04</span><span class="op">)</span>,</span>
 <span>  output_dir <span class="op">=</span> <span class="st">"./tempdir/chp5"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb98"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb96"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">reg_cube</span>, band <span class="op">=</span> <span class="st">"NDVI"</span>, palette <span class="op">=</span> <span class="st">"RdYlGn"</span><span class="op">)</span></span></code></pre></div>
 <div class="figure" style="text-align: center">
 <span style="display:block;" id="fig:ndviop"></span>
-<img src="05-cubeoperations_files/figure-html/ndviop-1.png" alt="NDVI using bands B08 and B04 of Sentinel-2 (&amp;copy;: EU Copernicus Programme modified by authors)." width="100%"><p class="caption">
-Figure 40: NDVI using bands B08 and B04 of Sentinel-2 (©: EU Copernicus Programme modified by authors).
+<img src="05-cubeoperations_files/figure-html/ndviop-1.png" alt="NDVI using bands B08 and B04 of Sentinel-2 (&amp;copy; EU Copernicus Programme modified by authors)." width="100%"><p class="caption">
+Figure 40: NDVI using bands B08 and B04 of Sentinel-2 (© EU Copernicus Programme modified by authors).
 </p>
 </div>
 <p>We now compare the traditional NDVI with other vegetation index computed using red-edge bands. The example below such the NDRE1 index, obtained using bands B06 and B05. Sun et al. argue that a vegetation index built using bands B06 and B07 provides a better approximation to leaf area index estimates than NDVI <span class="citation"><a href="references.html#ref-Sun2020a">[9]</a></span>. Notice that the contrast between forests and deforested areas is more robust in the NDRE1 index than with NDVI.</p>
-<div class="sourceCode" id="cb99"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb97"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Calculate NDRE1 index using bands B06 and B05</span></span>
 <span><span class="va">reg_cube</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_apply.html">sits_apply</a></span><span class="op">(</span><span class="va">reg_cube</span>,</span>
 <span>  NDRE1 <span class="op">=</span> <span class="op">(</span><span class="va">B06</span> <span class="op">-</span> <span class="va">B05</span><span class="op">)</span> <span class="op">/</span> <span class="op">(</span><span class="va">B06</span> <span class="op">+</span> <span class="va">B05</span><span class="op">)</span>,</span>
 <span>  output_dir <span class="op">=</span> <span class="st">"./tempdir/chp5"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb100"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb98"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Plot NDRE1 index</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">reg_cube</span>, band <span class="op">=</span> <span class="st">"NDRE1"</span>, palette <span class="op">=</span> <span class="st">"RdYlGn"</span><span class="op">)</span></span></code></pre></div>
 <div class="figure" style="text-align: center">
 <span style="display:block;" id="fig:ndreop"></span>
-<img src="05-cubeoperations_files/figure-html/ndreop-1.png" alt="NDRE1 using bands B06 and B05 of Sentinel-2 (&amp;copy;: EU Copernicus Programme modified by authors)." width="100%"><p class="caption">
-Figure 41: NDRE1 using bands B06 and B05 of Sentinel-2 (©: EU Copernicus Programme modified by authors).
+<img src="05-cubeoperations_files/figure-html/ndreop-1.png" alt="NDRE1 using bands B06 and B05 of Sentinel-2 (&amp;copy; EU Copernicus Programme modified by authors)." width="100%"><p class="caption">
+Figure 41: NDRE1 using bands B06 and B05 of Sentinel-2 (© EU Copernicus Programme modified by authors).
 </p>
 </div>
 </div>
@@ -188,19 +189,19 @@ Figure 41: NDRE1 using bands B06 and B05 of Sentinel-2 (©: EU Copernicus Progra
 <h2>Spectral indexes for identifying burned areas<a class="anchor" aria-label="anchor" href="#spectral-indexes-for-identifying-burned-areas"><i class="fas fa-link"></i></a>
 </h2>
 <p>Band combination can also generate spectral indices for detecting degradation by fires, which are an important element in environmental degradation. Forest fires significantly impact emissions and impoverish natural ecosystems <span class="citation"><a href="references.html#ref-Nepstad1999">[11]</a></span>. Fires open the canopy, making the microclimate drier and increasing the amount of dry fuel <span class="citation"><a href="references.html#ref-Gao2020">[12]</a></span>. One well-established technique for detecting burned areas with remote sensing images is the normalized burn ratio (NBR), the difference between the near-infrared and the short wave infrared band, calculated using bands B8A and B12.</p>
-<div class="sourceCode" id="cb101"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb99"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Calculate the NBR index</span></span>
 <span><span class="va">reg_cube</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_apply.html">sits_apply</a></span><span class="op">(</span><span class="va">reg_cube</span>,</span>
 <span>  NBR <span class="op">=</span> <span class="op">(</span><span class="va">B12</span> <span class="op">-</span> <span class="va">B8A</span><span class="op">)</span> <span class="op">/</span> <span class="op">(</span><span class="va">B12</span> <span class="op">+</span> <span class="va">B8A</span><span class="op">)</span>,</span>
 <span>  output_dir <span class="op">=</span> <span class="st">"./tempdir/chp5"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb102"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb100"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Plot the NBR for the first date</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">reg_cube</span>, band <span class="op">=</span> <span class="st">"NBR"</span>, palette <span class="op">=</span> <span class="st">"Reds"</span><span class="op">)</span></span></code></pre></div>
 <div class="figure" style="text-align: center">
 <span style="display:block;" id="fig:nbr"></span>
-<img src="05-cubeoperations_files/figure-html/nbr-1.png" alt="NBR ratio using Sentinel-2 B11 and B8A (&amp;copy;: EU Copernicus Programme modified by authors)." width="100%"><p class="caption">
-Figure 42: NBR ratio using Sentinel-2 B11 and B8A (©: EU Copernicus Programme modified by authors).
+<img src="05-cubeoperations_files/figure-html/nbr-1.png" alt="NBR ratio using Sentinel-2 B11 and B8A (&amp;copy; EU Copernicus Programme modified by authors)." width="100%"><p class="caption">
+Figure 42: NBR ratio using Sentinel-2 B11 and B8A (© EU Copernicus Programme modified by authors).
 </p>
 </div>
 </div>
@@ -208,7 +209,7 @@ Figure 42: NBR ratio using Sentinel-2 B11 and B8A (©: EU Copernicus Programme m
 <h2>Support for non-normalized indexes<a class="anchor" aria-label="anchor" href="#support-for-non-normalized-indexes"><i class="fas fa-link"></i></a>
 </h2>
 <p>All data cube operations discussed so far produce normalized indexes. By default, the indexes generated by the sits_apply() function are normalized between -1 and 1, scaled by a factor of 0.0001. Normalized indexes are saved as INT2S (Integer with sign). If the normalized parameter is FALSE, no scaling factor will be applied and the index will be saved as FLT4S (Float with sign). The code below shows an exemple of the non-normalized index, CVI - chlorophyll vegetation index. CVI is a spectral index used to estimate the chlorophyll content and overall health of vegetation. It combines bands in visible and near-infrared (NIR) regions to assess vegetation characteristics. Since CVI is not normalized, we have to set the parameter <code>normalized</code> to <code>FALSE</code> to inform <code><a href="https://rdrr.io/pkg/sits/man/sits_apply.html">sits_apply()</a></code> to generate an FLT4S image.</p>
-<div class="sourceCode" id="cb103"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb101"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Calculate the NBR index</span></span>
 <span><span class="va">reg_cube</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_apply.html">sits_apply</a></span><span class="op">(</span><span class="va">reg_cube</span>,</span>
 <span>  CVI <span class="op">=</span> <span class="op">(</span><span class="va">B8A</span> <span class="op">/</span> <span class="va">B03</span><span class="op">)</span> <span class="op">*</span> <span class="op">(</span><span class="va">B05</span> <span class="op">/</span> <span class="va">B03</span><span class="op">)</span>,</span>
@@ -218,8 +219,8 @@ Figure 42: NBR ratio using Sentinel-2 B11 and B8A (©: EU Copernicus Programme m
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">reg_cube</span>, band <span class="op">=</span> <span class="st">"CVI"</span>, palette <span class="op">=</span> <span class="st">"Greens"</span><span class="op">)</span></span></code></pre></div>
 <div class="figure" style="text-align: center">
 <span style="display:block;" id="fig:cviop"></span>
-<img src="05-cubeoperations_files/figure-html/cviop-1.png" alt="CVI index using bands B03, B05, and B8A (&amp;copy;: EU Copernicus Programme modified by authors)." width="100%"><p class="caption">
-Figure 43: CVI index using bands B03, B05, and B8A (©: EU Copernicus Programme modified by authors).
+<img src="05-cubeoperations_files/figure-html/cviop-1.png" alt="CVI index using bands B03, B05, and B8A (&amp;copy; EU Copernicus Programme modified by authors)." width="100%"><p class="caption">
+Figure 43: CVI index using bands B03, B05, and B8A (© EU Copernicus Programme modified by authors).
 </p>
 </div>
 </div>
@@ -260,7 +261,7 @@ Figure 43: CVI index using bands B03, B05, and B8A (©: EU Copernicus Programme 
 </ul>
 <p>The functions <code>t_sum()</code>, <code>t_std()</code>, <code>t_skewness()</code>, <code>t_kurtosis()</code>, and <code>t_mse()</code> produce values greater than the limit of a two-byte integer. Therefore, we save the images generated by these in floating point format.</p>
 <p>The following examples show an example temporal reduction operations.</p>
-<div class="sourceCode" id="cb104"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb102"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Calculate the NBR index</span></span>
 <span><span class="va">ave_cube</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_reduce.html">sits_reduce</a></span><span class="op">(</span><span class="va">reg_cube</span>,</span>
 <span>  NDVIMAX <span class="op">=</span> <span class="fu">t_max</span><span class="op">(</span><span class="va">NDVI</span><span class="op">)</span>,</span>
@@ -269,8 +270,8 @@ Figure 43: CVI index using bands B03, B05, and B8A (©: EU Copernicus Programme 
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">ave_cube</span>, band <span class="op">=</span> <span class="st">"NDVIMAX"</span>, palette <span class="op">=</span> <span class="st">"Greens"</span><span class="op">)</span></span></code></pre></div>
 <div class="figure" style="text-align: center">
 <span style="display:block;" id="fig:redmax"></span>
-<img src="05-cubeoperations_files/figure-html/redmax-1.png" alt="maximum NDVI for Sentinel-2 cube (&amp;copy;: EU Copernicus Programme modified by authors)." width="100%"><p class="caption">
-Figure 44: maximum NDVI for Sentinel-2 cube (©: EU Copernicus Programme modified by authors).
+<img src="05-cubeoperations_files/figure-html/redmax-1.png" alt="maximum NDVI for Sentinel-2 cube (&amp;copy; EU Copernicus Programme modified by authors)." width="100%"><p class="caption">
+Figure 44: maximum NDVI for Sentinel-2 cube (© EU Copernicus Programme modified by authors).
 </p>
 </div>
 </div>
@@ -285,7 +286,7 @@ R_i = \sum_{j=1}^N a_{i,j}*x_j + \epsilon_i, i \in {1,...M}, M &gt; N,
 where <span class="math inline">\(i=1,..M\)</span> is the set of spectral bands and <span class="math inline">\(j=1,..N\)</span> is the set of land classes. For each pixel, <span class="math inline">\(R_i\)</span> is the reflectance in the i-th spectral band, <span class="math inline">\(x_j\)</span> is the reflectance value due to the j-th endmember, and <span class="math inline">\(a_{i,j}\)</span> is the proportion between the j-th endmember and the i-th spectral band. To solve this system of equations and obtain the proportion of each endmember, <code>sits</code> uses a non-negative least squares (NNLS) regression algorithm, which is available in the R package <code>RStoolbox</code> and was developed by Jakob Schwalb-Willmann, based on the sequential coordinate-wise algorithm (SCA) proposed on Franc et al. <span class="citation"><a href="references.html#ref-Franc2005">[15]</a></span>.</p>
 <p>To run the mixture model in <code>sits</code>, it is necessary to inform the values of pixels which represent spectral responses of a unique class. These are the so-called “pure” pixels. Because the quality of the resulting endmember images depends on the quality of the pure pixels, they should be chosen carefully and based on expert knowledge of the area. Since <code>sits</code> supports multiple endmember spectral mixture analysis <span class="citation"><a href="references.html#ref-Roberts1998">[16]</a></span>, users can specify more than one pure pixel per endmember to account for natural variability.</p>
 <p>In <code>sits</code>, spectral mixture analysis is done by <code><a href="https://rdrr.io/pkg/sits/man/sits_mixture_model.html">sits_mixture_model()</a></code>, which has two mandatory parameters: <code>cube</code> (a data cube) and <code>endmembers</code>, a named table (or equivalent) that defines the pure pixels. The <code>endmembers</code> table must have the following named columns: (a) <code>type</code>, which defines the class associated with an endmember; (b) names, the names of the bands. Each line of the table must contain the value of each endmember for all bands (see example). To improve readability, we suggest that the <code>endmembers</code> parameters be defined as a <code>tribble</code>. A <code>tribble</code> is a <code>tibble</code> with an easier to read row-by-row layout. In the example below, we define three endmembers for classes <code>Forest</code>, <code>Soil</code>, and <code>Water</code>. Note that the values for each band are expressed as integers ranging from 0 to 10,000.</p>
-<div class="sourceCode" id="cb105"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb103"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Define the endmembers for three classes and six bands</span></span>
 <span><span class="va">em</span> <span class="op">&lt;-</span> <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/tribble.html">tribble</a></span><span class="op">(</span></span>
 <span>  <span class="op">~</span><span class="va">class</span>,   <span class="op">~</span><span class="va">B02</span>, <span class="op">~</span><span class="va">B03</span>, <span class="op">~</span><span class="va">B04</span>, <span class="op">~</span><span class="va">B8A</span>, <span class="op">~</span><span class="va">B11</span>, <span class="op">~</span><span class="va">B12</span>,</span>
@@ -301,16 +302,16 @@ where <span class="math inline">\(i=1,..M\)</span> is the set of spectral bands 
 <span>  memsize <span class="op">=</span> <span class="fl">12</span>,</span>
 <span>  output_dir <span class="op">=</span> <span class="st">"./tempdir/chp5"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb106"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb104"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Plot the FOREST for the first date using the Greens palette</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">reg_cube</span>, band <span class="op">=</span> <span class="st">"FOREST"</span>, palette <span class="op">=</span> <span class="st">"Greens"</span><span class="op">)</span></span></code></pre></div>
 <div class="figure" style="text-align: center">
 <span style="display:block;" id="fig:mixfor"></span>
-<img src="05-cubeoperations_files/figure-html/mixfor-1.png" alt="Percentage of forest per pixel estimated by mixture model ((&amp;copy;: EU Copernicus Programme modified by authors)." width="100%"><p class="caption">
-Figure 45: Percentage of forest per pixel estimated by mixture model ((©: EU Copernicus Programme modified by authors).
+<img src="05-cubeoperations_files/figure-html/mixfor-1.png" alt="Percentage of forest per pixel estimated by mixture model ((&amp;copy; EU Copernicus Programme modified by authors)." width="100%"><p class="caption">
+Figure 45: Percentage of forest per pixel estimated by mixture model ((© EU Copernicus Programme modified by authors).
 </p>
 </div>
-<div class="sourceCode" id="cb107"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb105"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Plot the water endmember for the first date using the Blues palette</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">reg_cube</span>, band <span class="op">=</span> <span class="st">"WATER"</span>, palette <span class="op">=</span> <span class="st">"Blues"</span><span class="op">)</span></span></code></pre></div>
 <div class="figure" style="text-align: center">
@@ -319,7 +320,7 @@ Figure 45: Percentage of forest per pixel estimated by mixture model ((©: EU Co
 Figure 46: Percentage of water per pixel estimated by mixture model (source: authors).
 </p>
 </div>
-<div class="sourceCode" id="cb108"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb106"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Plot the SOIL endmember for the first date using the orange red (OrRd) palette</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">reg_cube</span>, band <span class="op">=</span> <span class="st">"SOIL"</span>, palette <span class="op">=</span> <span class="st">"OrRd"</span><span class="op">)</span></span></code></pre></div>
 <div class="figure" style="text-align: center">
@@ -363,7 +364,7 @@ Figure 47: Percentage of soil per pixel estimated by mixture model (source: auth
 <footer class="bg-primary text-light mt-5"><div class="container"><div class="row">
 
   <div class="col-12 col-md-6 mt-3">
-    <p>"<strong><strong>sits</strong>: Satellite Image Time Series Analysis on Earth Observation Data Cubes</strong>" was written by Gilberto Camara, Rolf Simoes, Felipe Souza, Felipe Menino, Charlotte Pelletier, Pedro R. Andrade, Karine Ferreira, Gilberto Queiroz. It was last built on 2024-08-18.</p>
+    <p>"<strong><strong>sits</strong>: Satellite Image Time Series Analysis on Earth Observation Data Cubes</strong>" was written by Gilberto Camara, Rolf Simoes, Felipe Souza, Felipe Menino, Charlotte Pelletier, Pedro R. Andrade, Karine Ferreira, Gilberto Queiroz. It was last built on 2024-08-23.</p>
   </div>
 
   <div class="col-12 col-md-6 mt-3">

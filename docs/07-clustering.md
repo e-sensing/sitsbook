@@ -6,11 +6,11 @@
 <a href="https://www.kaggle.com/code/esensing/improving-quality-of-training-samples" target="_blank"><img src="https://kaggle.com/static/images/open-in-kaggle.svg"/></a>
 
 
-Selecting good training samples for machine learning classification of satellite images is critical to achieving accurate results. Experience with machine learning methods has demonstrated that the number and quality of training samples are crucial factors in obtaining accurate results [@Maxwell2018]. Large and accurate datasets are preferable, regardless of the algorithm used, while noisy training samples can negatively impact classification performance [@Frenay2014]. Thus, it is beneficial to use pre-processing methods to improve the quality of samples and eliminate those that may have been incorrectly labeled or possess low discriminatory power.
+Selecting good training samples for machine learning classification of satellite images is critical to achieving accurate results. Experience with machine learning methods has shown that the number and quality of training samples are crucial factors in obtaining accurate results [@Maxwell2018]. Large and accurate datasets are preferable, regardless of the algorithm used, while noisy training samples can negatively impact classification performance [@Frenay2014]. Thus, it is beneficial to use pre-processing methods to improve the quality of samples and eliminate those that may have been incorrectly labeled or possess low discriminatory power.
 
-It is necessary to distinguish between wrongly labeled samples and differences resulting from the natural variability of class signatures. When training data belongs to a large geographic region, the variability of vegetation phenology leads to different patterns being assigned to the same label. A related issue is the limitation of crisp boundaries to describe the natural world. Class definitions use idealized descriptions (e.g., "a savanna woodland has tree cover of 50% to 90% ranging from 8 to 15 m in height"). In practice, the boundaries between classes are fuzzy and sometimes overlap, making it hard to distinguish between them. To improve sample quality, `sits` provides methods for evaluating the training data.
+It is necessary to distinguish between wrongly labeled samples and differences resulting from the natural variability of class signatures. When working in a large geographic region, the variability of vegetation phenology leads to different patterns being assigned to the same label. A related issue is the limitation of crisp boundaries to describe the natural world. Class definitions use idealized descriptions (e.g., "a savanna woodland has tree cover of 50% to 90% ranging from 8 to 15 m in height"). Class boundaries are fuzzy and sometimes overlap, making it hard to distinguish between them. To improve sample quality, `sits` provides methods for evaluating the training data.
 
-Given a set of training samples, experts should first perform a cross-validation of the training set, to be able to assess their inherent prediction error. The results indicate whether the data is internally consistent. Since cross-validation is not a predictor of actual model performance, this chapter provides additional tools for improving the quality of training sets. More detailed information is available on Chapter [Validation and accuracy measurements](https://e-sensing.github.io/sitsbook/validation-and-accuracy-measurements.html).
+Given a set of training samples, experts should first cross-validate the training set to assess their inherent prediction error. The results show whether the data is internally consistent. Since cross-validation does not predict actual model performance, this chapter provides additional tools for improving the quality of training sets. More detailed information is available on Chapter [Validation and accuracy measurements](https://e-sensing.github.io/sitsbook/validation-and-accuracy-measurements.html).
 
 ## Datasets used in this chapter{-}
 
@@ -84,97 +84,97 @@ rfor_validate
 #> 
 #>                   Reference
 #> Prediction         Pasture Dense_Woodland Rocky_Savanna Savanna_Parkland
-#>   Pasture             6618             23             9                5
-#>   Dense_Woodland       496           9674           604                0
-#>   Rocky_Savanna          8             62          7309               27
-#>   Savanna_Parkland       4              0            50             2641
-#>   Savanna               56            200            33               26
+#>   Pasture             6628             27            11                3
+#>   Dense_Woodland       494           9672           605                0
+#>   Rocky_Savanna          8             69          7317               27
+#>   Savanna_Parkland       2              0            41             2642
+#>   Savanna               47            191            31               27
 #>   Dunes                  0              0             0                0
-#>   Soy_Corn               9              0             0                0
+#>   Soy_Corn              10              0             0                0
 #>   Soy_Cotton             1              0             0                0
-#>   Soy_Fallow            11              0             0                0
+#>   Soy_Fallow            12              0             0                0
 #>   Fallow_Cotton          3              0             0                0
-#>   Silviculture           0              7             0                0
+#>   Silviculture           1              7             0                0
 #>   Millet_Cotton          0              0             0                0
 #>                   Reference
 #> Prediction         Savanna Dunes Soy_Corn Soy_Cotton Soy_Fallow Fallow_Cotton
-#>   Pasture              114     0       36         12         25            41
-#>   Dense_Woodland       138     0        3          2          1             0
-#>   Rocky_Savanna          9     0        0          0          0             0
-#>   Savanna_Parkland      15     0        1          0          1             1
-#>   Savanna             8896     0        9          0          1             0
+#>   Pasture              114     0       38         10         23            37
+#>   Dense_Woodland       134     0        2          0          2             0
+#>   Rocky_Savanna          8     0        0          0          0             0
+#>   Savanna_Parkland      17     0        1          0          1             0
+#>   Savanna             8899     0        8          1          0             0
 #>   Dunes                  0   550        0          0          0             0
-#>   Soy_Corn               0     0     4851         58        355             8
-#>   Soy_Cotton             0     0       40       4041          0            19
-#>   Soy_Fallow             0     0       29          0       1710             1
-#>   Fallow_Cotton          0     0        2          3          5           555
+#>   Soy_Corn               0     0     4854         60        362             6
+#>   Soy_Cotton             0     0       40       4041          0            28
+#>   Soy_Fallow             0     0       27          0       1706             1
+#>   Fallow_Cotton          0     0        1          2          4           554
 #>   Silviculture           0     0        0          0          0             0
-#>   Millet_Cotton          0     0        0          8          0             5
+#>   Millet_Cotton          0     0        0         10          0             4
 #>                   Reference
 #> Prediction         Silviculture Millet_Cotton
-#>   Pasture                     1             1
-#>   Dense_Woodland            102             0
+#>   Pasture                     2             1
+#>   Dense_Woodland            105             0
 #>   Rocky_Savanna               0             0
 #>   Savanna_Parkland            0             0
-#>   Savanna                     8             0
+#>   Savanna                    11             0
 #>   Dunes                       0             0
-#>   Soy_Corn                    0             3
-#>   Soy_Cotton                  0            21
+#>   Soy_Corn                    0             2
+#>   Soy_Cotton                  0            20
 #>   Soy_Fallow                  0             0
-#>   Fallow_Cotton               0            20
-#>   Silviculture              312             0
-#>   Millet_Cotton               0           271
+#>   Fallow_Cotton               0            23
+#>   Silviculture              305             0
+#>   Millet_Cotton               0           270
 #> 
 #> Overall Statistics
 #>                             
-#>  Accuracy : 0.9455          
-#>    95% CI : (0.9435, 0.9475)
+#>  Accuracy : 0.9457          
+#>    95% CI : (0.9437, 0.9477)
 #>                             
-#>     Kappa : 0.9365          
+#>     Kappa : 0.9367          
 #> 
 #> Statistics by Class:
 #> 
 #>                           Class: Pasture Class: Dense_Woodland
-#> Prod Acc (Sensitivity)            0.9184                0.9707
-#> Specificity                       0.9938                0.9665
-#> User Acc (Pos Pred Value)         0.9612                0.8779
-#> Neg Pred Value                    0.9864                0.9925
-#> F1 score                          0.9393                0.9219
+#> Prod Acc (Sensitivity)            0.9198                0.9705
+#> Specificity                       0.9938                0.9666
+#> User Acc (Pos Pred Value)         0.9614                0.8782
+#> Neg Pred Value                    0.9866                0.9925
+#> F1 score                          0.9401                0.9220
 #>                           Class: Rocky_Savanna Class: Savanna_Parkland
-#> Prod Acc (Sensitivity)                  0.9131                  0.9785
-#> Specificity                             0.9975                  0.9985
-#> User Acc (Pos Pred Value)               0.9857                  0.9735
-#> Neg Pred Value                          0.9837                  0.9988
-#> F1 score                                0.9480                  0.9760
+#> Prod Acc (Sensitivity)                  0.9141                  0.9789
+#> Specificity                             0.9973                  0.9987
+#> User Acc (Pos Pred Value)               0.9849                  0.9771
+#> Neg Pred Value                          0.9839                  0.9988
+#> F1 score                                0.9482                  0.9780
 #>                           Class: Savanna Class: Dunes Class: Soy_Corn
-#> Prod Acc (Sensitivity)            0.9699            1          0.9759
-#> Specificity                       0.9919            1          0.9904
-#> User Acc (Pos Pred Value)         0.9639            1          0.9181
-#> Neg Pred Value                    0.9933            1          0.9973
-#> F1 score                          0.9669            1          0.9461
+#> Prod Acc (Sensitivity)            0.9702            1          0.9765
+#> Specificity                       0.9923            1          0.9903
+#> User Acc (Pos Pred Value)         0.9657            1          0.9169
+#> Neg Pred Value                    0.9933            1          0.9974
+#> F1 score                          0.9680            1          0.9457
 #>                           Class: Soy_Cotton Class: Soy_Fallow
-#> Prod Acc (Sensitivity)               0.9799            0.8151
-#> Specificity                          0.9982            0.9991
-#> User Acc (Pos Pred Value)            0.9803            0.9766
-#> Neg Pred Value                       0.9982            0.9920
-#> F1 score                             0.9801            0.8885
+#> Prod Acc (Sensitivity)               0.9799            0.8132
+#> Specificity                          0.9981            0.9992
+#> User Acc (Pos Pred Value)            0.9785            0.9771
+#> Neg Pred Value                       0.9982            0.9919
+#> F1 score                             0.9792            0.8876
 #>                           Class: Fallow_Cotton Class: Silviculture
-#> Prod Acc (Sensitivity)                  0.8810              0.7376
-#> Specificity                             0.9993              0.9999
-#> User Acc (Pos Pred Value)               0.9439              0.9781
-#> Neg Pred Value                          0.9985              0.9978
-#> F1 score                                0.9113              0.8410
+#> Prod Acc (Sensitivity)                  0.8794              0.7210
+#> Specificity                             0.9993              0.9998
+#> User Acc (Pos Pred Value)               0.9438              0.9744
+#> Neg Pred Value                          0.9985              0.9976
+#> F1 score                                0.9104              0.8288
 #>                           Class: Millet_Cotton
-#> Prod Acc (Sensitivity)                  0.8576
+#> Prod Acc (Sensitivity)                  0.8544
 #> Specificity                             0.9997
-#> User Acc (Pos Pred Value)               0.9542
+#> User Acc (Pos Pred Value)               0.9507
 #> Neg Pred Value                          0.9991
-#> F1 score                                0.9033
+#> F1 score                                0.9000
 ```
 
 The results show a good validation, reaching 94% accuracy. However, this accuracy does not guarantee a good classification result. It only shows if the training data is internally consistent. In what follows, we present additional methods for improving sample quality.
 
-The cross-validation results have to be interpreted carefully. Cross-validation measures how well the model fits the training data. Using these results to measure classification accuracy is only valid if the training data is a good sample of the entire dataset. In practice, training data is subject to various sources of bias. In most cases of land classification, some classes are much more frequent than others, and as such, the training dataset will be imbalanced. For large areas, regional differences in soil and climate condition will lead the same classes to have different spectral responses. When collecting samples for large areas, field analysts may be restricted to areas where they have access (e.g., along roads). An additional problem is that of mixed pixels. Expert interpreters tend to select samples that stand out in fieldwork or reference images. Border pixels are unlikely to be chosen as part of the training data. For all these reasons, cross-validation results should not be considered indicative of accuracy measurement over the entire dataset. 
+Cross-validation measures how well the model fits the training data. Using these results to measure classification accuracy is only valid if the training data is a good sample of the entire dataset. Training data is subject to various sources of bias. In land classification, some classes are much more frequent than others, so the training dataset will be imbalanced.  Regional differences in soil and climate conditions for large areas will lead the same classes to have different spectral responses. Field analysts may be restricted to places they have access (e.g., along roads) when collecting samples. An additional problem is mixed pixels. Expert interpreters select samples that stand out in fieldwork or reference images. Border pixels are unlikely to be chosen as part of the training data. For all these reasons, cross-validation results do not measure classification accuracy for the entire dataset. 
 
 ## Hierarchical clustering for sample quality control{-}
 

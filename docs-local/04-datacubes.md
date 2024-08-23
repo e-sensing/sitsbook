@@ -4,27 +4,13 @@
 
 <a href="https://www.kaggle.com/code/esensing/creating-data-cubes-in-sits" target="_blank"><img src="https://kaggle.com/static/images/open-in-kaggle.svg"/></a>
 
-## Brief introduction to remote sensing images and terminology{-}
-
-### Optical surface reflectance images{-}
-
-Optical satellite sensors are instruments onboard satellites designed to capture images of the Earth's surface using visible, near-infrared, and sometimes shortwave infrared light. These sensors detect reflected sunlight. To be useful for analysis, the signals captured by optical sensors are converted to surface reflectance values, which represent the fraction of sunlight reflected by the Earth's surface. This correction accounts for sensor characteristics, atmospheric scattering, and varying solar illumination conditions. The images are also corrected for geometric distortions caused by the sensor's angle of view. Finally, the images are accurately aligned with geographic coordinates. Additional information provided together with optical images include cloud detection masks. Pixels which are affected by clouds or shadows are marked to allow additional corrections and gap filling. 
-
-### Synthetic aperture radar (SAR) images{-}
-
-Synthetic Aperture Radar (SAR) images are acquired by satellites using a specialized radar system that sends out microwave signals. When the microwave pulses hit the Earth's surface, they are scattered in various directions. A portion of these scattered signals, known as backscatter, is reflected back towards the satellite. The SAR antenna on the satellite receives the backscattered signals. Because the satellite is moving along its orbit, it collects data from different positions, which helps in synthesizing a larger aperture than the physical size of the antenna. 
-
-The received signals are processed using complex algorithms. This processing involves combining the signals from multiple pulses and different positions to create a high-resolution image. The technique of combining these signals to simulate a larger antenna is called aperture synthesis. The processed data is then used to generate SAR images, which represent the backscatter intensity from the Earth's surface. SAR imaging has several advantages. SAR can penetrate clouds and work in all weather conditions, including rain and fog. Since SAR uses microwave signals, it does not rely on sunlight and can capture images both day and night.
-
-### Analysis-ready data(ARD){-}
+## Analysis-ready data(ARD){-}
 
 Analysis Ready Data (CEOS-ARD) are satellite data that have been processed to meet the [ARD standards](https://ceos.org/ard/) defined by the Committee on Earth Observation Satellites (CEOS). ARD data simplify and accelerate the analysis of Earth observation data by providing consistent and high-quality data that are standardized across different sensors and platforms. 
 
 ARD images processing includes geometric corrections, radiometric corrections, and sometimes atmospheric corrections. Images are georeferenced, meaning they are accurately aligned with a coordinate system. Optical ARD images include cloud and shadow masking information. These masks indicate which pixels affected by clouds or cloud shadows. For optical sensors, CEOS-ARD images have to be converted to surface reflectance values, which represent the fraction of light that is reflected by the surface. This makes the data more comparable across different times and locations.
 
 For SAR images, CEOS-ARD specification require images to undergo Radiometric Terrain Correction (RTC) and are provided in the GammaNought ($\gamma_0$) backscatter values. This value which mitigates the variations from diverse observation geometries and is recommended for most land applications. 
-
-## Analysis-ready data image collections{-}
 
 ARD images are available from various satellite platforms, including Landsat, Sentinel, and commercial satellites. This provides a wide range of spatial, spectral, and temporal resolutions to suit different applications. They are organised as a collection of  files, where each pixel contains a single value for each spectral band for a given date. These collections are available in cloud services such as Brazil Data Cube, Digital Earth Africa, and Microsoft's Planetary Computer. In general, the timelines of the images of an ARD collection are different. Images still contain cloudy or missing pixels; bands for the images in the collection may have different resolutions. Figure \@ref(fig:ardt) shows an example of the Landsat ARD image collection. 
 
@@ -128,8 +114,8 @@ plot(s2_23MMU_cube,
 ```
 
 <div class="figure" style="text-align: center">
-<img src="./images/aws_s2.png" alt="Sentinel-2 image in an area of the Northeastern coast of Brazil (&amp;copy;: EU Copernicus Sentinel Programme; source: AWS)." width="100%" />
-<p class="caption">(\#fig:aws)Sentinel-2 image in an area of the Northeastern coast of Brazil (&copy;: EU Copernicus Sentinel Programme; source: AWS).</p>
+<img src="./images/aws_s2.png" alt="Sentinel-2 image in an area of the Northeastern coast of Brazil (&amp;copy; EU Copernicus Sentinel Programme; source: AWS)." width="100%" />
+<p class="caption">(\#fig:aws)Sentinel-2 image in an area of the Northeastern coast of Brazil (&copy; EU Copernicus Sentinel Programme; source: AWS).</p>
 </div>
 
 
@@ -160,8 +146,8 @@ plot(s2_20LKP_cube_MPC,
 ```
 
 <div class="figure" style="text-align: center">
-<img src="./images/mpc_s2.png" alt="Sentinel-2 image in an area of the state of Rondonia, Brazil (&amp;copy;: EU Copernicus Sentinel Programme; source: Microsoft)." width="100%" />
-<p class="caption">(\#fig:mpc1)Sentinel-2 image in an area of the state of Rondonia, Brazil (&copy;: EU Copernicus Sentinel Programme; source: Microsoft).</p>
+<img src="./images/mpc_s2.png" alt="Sentinel-2 image in an area of the state of Rondonia, Brazil (&amp;copy; EU Copernicus Sentinel Programme; source: Microsoft)." width="100%" />
+<p class="caption">(\#fig:mpc1)Sentinel-2 image in an area of the state of Rondonia, Brazil (&copy; EU Copernicus Sentinel Programme; source: Microsoft).</p>
 </div>
 
 ### LANDSAT-C2-L2 images in MPC{-}
@@ -221,8 +207,8 @@ plot(cube_s1_grd, band = "VV", palette = "Greys")
 ```
 
 <div class="figure" style="text-align: center">
-<img src="./images/mpc3.png" alt="Sentinel-1 image in an area in Mato Grosso, Brazil (&amp;copy;: EU Copernicus Sentinel Programme; source: Microsoft)." width="100%" />
-<p class="caption">(\#fig:mpc3)Sentinel-1 image in an area in Mato Grosso, Brazil (&copy;: EU Copernicus Sentinel Programme; source: Microsoft).</p>
+<img src="./images/mpc3.png" alt="Sentinel-1 image in an area in Mato Grosso, Brazil (&amp;copy; EU Copernicus Sentinel Programme; source: Microsoft)." width="100%" />
+<p class="caption">(\#fig:mpc3)Sentinel-1 image in an area in Mato Grosso, Brazil (&copy; EU Copernicus Sentinel Programme; source: Microsoft).</p>
 </div>
 
 As explained earlier in this chapter, in areas with areas with large elevation differences, Sentinel-1 GRD images will have geometric distortions. For this reason, whenever possible, we recommend the use of RTC (radiometrically terrain corrected) images as described in the next session. 
@@ -251,8 +237,8 @@ plot(cube_s1_rtc, band = "VV", palette = "Greys")
 ```
 
 <div class="figure" style="text-align: center">
-<img src="./images/mpcrtcol.png" alt="Sentinel-1-RTC image of an area in Colombia (&amp;copy;: EU Copernicus Sentinel Programme; source: Microsoft)." width="100%" />
-<p class="caption">(\#fig:mpcrtcol)Sentinel-1-RTC image of an area in Colombia (&copy;: EU Copernicus Sentinel Programme; source: Microsoft).</p>
+<img src="./images/mpcrtcol.png" alt="Sentinel-1-RTC image of an area in Colombia (&amp;copy; EU Copernicus Sentinel Programme; source: Microsoft)." width="100%" />
+<p class="caption">(\#fig:mpcrtcol)Sentinel-1-RTC image of an area in Colombia (&copy; EU Copernicus Sentinel Programme; source: Microsoft).</p>
 </div>
 
 
@@ -362,8 +348,8 @@ plot(lena_cube, date = "2023-07-06", red = "B12", green = "B8A", blue = "B04")
 ```
 
 <div class="figure" style="text-align: center">
-<img src="./images/s2_lena_delta.png" alt="Sentinel-2 image of the Lena river delta in summertime (&amp;copy;: EU Copernicus Sentinel Programme; source: CDSE)." width="100%" />
-<p class="caption">(\#fig:lena)Sentinel-2 image of the Lena river delta in summertime (&copy;: EU Copernicus Sentinel Programme; source: CDSE).</p>
+<img src="./images/s2_lena_delta.png" alt="Sentinel-2 image of the Lena river delta in summertime (&amp;copy; EU Copernicus Sentinel Programme; source: CDSE)." width="100%" />
+<p class="caption">(\#fig:lena)Sentinel-2 image of the Lena river delta in summertime (&copy; EU Copernicus Sentinel Programme; source: CDSE).</p>
 </div>
 
 ### SENTINEL-1-RTC images in CDSE{-}
@@ -390,8 +376,8 @@ plot(s1_cube, band = "VV", date = c("2023-03-03"), palette = "Greys")
 ```
 
 <div class="figure" style="text-align: center">
-<img src="./images/s1_rtc_cdse.png" alt="Sentinel-1-RTC image of the Rift Valley in Ethiopia (&amp;copy;: EU Copernicus Sentinel Programme; source: CDSE)." width="100%" />
-<p class="caption">(\#fig:cdsertc)Sentinel-1-RTC image of the Rift Valley in Ethiopia (&copy;: EU Copernicus Sentinel Programme; source: CDSE).</p>
+<img src="./images/s1_rtc_cdse.png" alt="Sentinel-1-RTC image of the Rift Valley in Ethiopia (&amp;copy; EU Copernicus Sentinel Programme; source: CDSE)." width="100%" />
+<p class="caption">(\#fig:cdsertc)Sentinel-1-RTC image of the Rift Valley in Ethiopia (&copy; EU Copernicus Sentinel Programme; source: CDSE).</p>
 </div>
 
 
@@ -430,8 +416,8 @@ plot(dea_s2_cube, red = "B04", blue = "B02", green = "B08")
 ```
 
 <div class="figure" style="text-align: center">
-<img src="./images/deafrica_s2.png" alt="Sentinel-2 image in an area over Madagascar (&amp;copy;: EU Copernicus Sentinel Programme; source: Digital Earth Africa)." width="100%" />
-<p class="caption">(\#fig:dea1)Sentinel-2 image in an area over Madagascar (&copy;: EU Copernicus Sentinel Programme; source: Digital Earth Africa).</p>
+<img src="./images/deafrica_s2.png" alt="Sentinel-2 image in an area over Madagascar (&amp;copy; EU Copernicus Sentinel Programme; source: Digital Earth Africa)." width="100%" />
+<p class="caption">(\#fig:dea1)Sentinel-2 image in an area over Madagascar (&copy; EU Copernicus Sentinel Programme; source: Digital Earth Africa).</p>
 </div>
 
 The next example retrieves a set of ARD Landsat-9 data, covering the Serengeti plain in Tanzania. 
@@ -479,8 +465,8 @@ plot(dea_alos_cube, band = "HH")
 ```
 
 <div class="figure" style="text-align: center">
-<img src="./images/alos_palsar_hh_lake_kivu.png" alt="ALOS-PALSAC mosaic in the Congo forest area (&amp;copy;: JAXA EORC; source: Digital Earth Africa)." width="100%" />
-<p class="caption">(\#fig:lakekivu)ALOS-PALSAC mosaic in the Congo forest area (&copy;: JAXA EORC; source: Digital Earth Africa).</p>
+<img src="./images/alos_palsar_hh_lake_kivu.png" alt="ALOS-PALSAC mosaic in the Congo forest area (&amp;copy; JAXA EORC; source: Digital Earth Africa)." width="100%" />
+<p class="caption">(\#fig:lakekivu)ALOS-PALSAC mosaic in the Congo forest area (&copy; JAXA EORC; source: Digital Earth Africa).</p>
 </div>
 
 
@@ -521,8 +507,8 @@ plot(s2_56KKV, green = "NIR-2", blue = "BLUE", red = "SWIR-2", date = "2023-10-1
 ```
 
 <div class="figure" style="text-align: center">
-<img src="./images/s2_56KKV.png" alt="Plot of Sentinel-2 image obtained from the DEAUSTRALIA collection for date 2023-10-14 showing MGRS tile 56KKV (&amp;copy;: EU Copernicus Sentinel Programme; source: Digital Earth Australia)." width="100%" />
-<p class="caption">(\#fig:goldcoast)Plot of Sentinel-2 image obtained from the DEAUSTRALIA collection for date 2023-10-14 showing MGRS tile 56KKV (&copy;: EU Copernicus Sentinel Programme; source: Digital Earth Australia).</p>
+<img src="./images/s2_56KKV.png" alt="Plot of Sentinel-2 image obtained from the DEAUSTRALIA collection for date 2023-10-14 showing MGRS tile 56KKV (&amp;copy; EU Copernicus Sentinel Programme; source: Digital Earth Australia)." width="100%" />
+<p class="caption">(\#fig:goldcoast)Plot of Sentinel-2 image obtained from the DEAUSTRALIA collection for date 2023-10-14 showing MGRS tile 56KKV (&copy; EU Copernicus Sentinel Programme; source: Digital Earth Australia).</p>
 </div>
 ## Harmonized Landsat-Sentinel {-}
 
@@ -583,8 +569,8 @@ plot(hls_cube_s2, red = "RED", green = "GREEN", blue = "BLUE", date = "2020-06-2
 ```
 
 <div class="figure" style="text-align: center">
-<img src="./images/hls_ilhabela_s2.png" alt="Plot of Sentinel-2 image obtained from the NASA HLS collection for date 2020-06-15 showing the island of Ilhabela in the Brazilian coast  (&amp;copy;:EU Copernicus Sentinel Programme; source: NASA)." width="100%" />
-<p class="caption">(\#fig:hlssen)Plot of Sentinel-2 image obtained from the NASA HLS collection for date 2020-06-15 showing the island of Ilhabela in the Brazilian coast  (&copy;:EU Copernicus Sentinel Programme; source: NASA).</p>
+<img src="./images/hls_ilhabela_s2.png" alt="Plot of Sentinel-2 image obtained from the NASA HLS collection for date 2020-06-15 showing the island of Ilhabela in the Brazilian coast  (&amp;copy;EU Copernicus Sentinel Programme; source: NASA)." width="100%" />
+<p class="caption">(\#fig:hlssen)Plot of Sentinel-2 image obtained from the NASA HLS collection for date 2020-06-15 showing the island of Ilhabela in the Brazilian coast  (&copy;EU Copernicus Sentinel Programme; source: NASA).</p>
 </div>
 Images from the HLS Landsat and Sentinel-2 collections are accessed separately and can be combined with `sits_merge()`. The script below creates an HLS Landsat cube over the same area as the Sentinel-2 cube above bands. The two cubes are then merged. 
 
@@ -662,8 +648,8 @@ plot(hls_cube_merged,
 ```
 
 <div class="figure" style="text-align: center">
-<img src="./images/hls_ilhabela_l8.png" alt="Plot of Sentinel-2 image obtained from merging NASA HLS collection and Sentinel-2 collection for date 2020-06-15 showing the island of Ilhabela in the Brazilian coast (&amp;copy;: EU Copernicus Sentinel Programme; source: NASA)." width="100%" />
-<p class="caption">(\#fig:hlsmerge)Plot of Sentinel-2 image obtained from merging NASA HLS collection and Sentinel-2 collection for date 2020-06-15 showing the island of Ilhabela in the Brazilian coast (&copy;: EU Copernicus Sentinel Programme; source: NASA).</p>
+<img src="./images/hls_ilhabela_l8.png" alt="Plot of Sentinel-2 image obtained from merging NASA HLS collection and Sentinel-2 collection for date 2020-06-15 showing the island of Ilhabela in the Brazilian coast (&amp;copy; EU Copernicus Sentinel Programme; source: NASA)." width="100%" />
+<p class="caption">(\#fig:hlsmerge)Plot of Sentinel-2 image obtained from merging NASA HLS collection and Sentinel-2 collection for date 2020-06-15 showing the island of Ilhabela in the Brazilian coast (&copy; EU Copernicus Sentinel Programme; source: NASA).</p>
 </div>
 
 ## EO products from TERRASCOPE{-}
@@ -692,8 +678,8 @@ plot(world_cover_2021_20LBL)
 ```
 
 <div class="figure" style="text-align: center">
-<img src="./images/world_cover_2021.png" alt="Plot of World Cover 2021 map covering MGRS tile 22LBL (&amp;copy;: TerraScope)." width="100%" />
-<p class="caption">(\#fig:worldcover)Plot of World Cover 2021 map covering MGRS tile 22LBL (&copy;: TerraScope).</p>
+<img src="./images/world_cover_2021.png" alt="Plot of World Cover 2021 map covering MGRS tile 22LBL (&amp;copy; TerraScope)." width="100%" />
+<p class="caption">(\#fig:worldcover)Plot of World Cover 2021 map covering MGRS tile 22LBL (&copy; TerraScope).</p>
 </div>
 
 ## Planet data as ARD local files{-}
@@ -731,8 +717,8 @@ plot(planet_cube, red = "B3", green = "B2", blue = "B1")
 
 
 <div class="figure" style="text-align: center">
-<img src="./images/planet.png" alt="Planet image over an area in Colombia (&amp;copy;: Planet - reproduction based on fair use doctrine)." width="100%" />
-<p class="caption">(\#fig:planet)Planet image over an area in Colombia (&copy;: Planet - reproduction based on fair use doctrine).</p>
+<img src="./images/planet.png" alt="Planet image over an area in Colombia (&amp;copy; Planet - reproduction based on fair use doctrine)." width="100%" />
+<p class="caption">(\#fig:planet)Planet image over an area in Colombia (&copy; Planet - reproduction based on fair use doctrine).</p>
 </div>
 
 ## Reading classified images as local data cube{-}
@@ -775,8 +761,8 @@ plot(Rondonia_class_cube)
 ```
 
 <div class="figure" style="text-align: center">
-<img src="04-datacubes_files/figure-html/mapdata-1.png" alt="Classified data cube for the year 2020/2021 in Rondonia, Brazil (&amp;copy;: EU Copernicus Sentinel Programme; source: authors)." width="100%" />
-<p class="caption">(\#fig:mapdata)Classified data cube for the year 2020/2021 in Rondonia, Brazil (&copy;: EU Copernicus Sentinel Programme; source: authors).</p>
+<img src="04-datacubes_files/figure-html/mapdata-1.png" alt="Classified data cube for the year 2020/2021 in Rondonia, Brazil (&amp;copy; EU Copernicus Sentinel Programme; source: authors)." width="100%" />
+<p class="caption">(\#fig:mapdata)Classified data cube for the year 2020/2021 in Rondonia, Brazil (&copy; EU Copernicus Sentinel Programme; source: authors).</p>
 </div>
 
 ## Regularizing data cubes{-}
@@ -826,8 +812,8 @@ s2_cube_rondonia |>
 ```
 
 <div class="figure" style="text-align: center">
-<img src="04-datacubes_files/figure-html/unnamed-chunk-27-1.png" alt="Sentinel-2 tile 20LLP for date 2018-07-03 (&amp;copy;: EU Copernicus Sentinel Programme; source: authors)." width="100%" />
-<p class="caption">(\#fig:unnamed-chunk-27)Sentinel-2 tile 20LLP for date 2018-07-03 (&copy;: EU Copernicus Sentinel Programme; source: authors).</p>
+<img src="04-datacubes_files/figure-html/unnamed-chunk-27-1.png" alt="Sentinel-2 tile 20LLP for date 2018-07-03 (&amp;copy; EU Copernicus Sentinel Programme; source: authors)." width="100%" />
+<p class="caption">(\#fig:unnamed-chunk-27)Sentinel-2 tile 20LLP for date 2018-07-03 (&copy; EU Copernicus Sentinel Programme; source: authors).</p>
 </div>
 
 Because of the different acquisition orbits of the Sentinel-2 and Sentinel-2A satellites, the two tiles also have different timelines. Tile `20LKP` has 12 instances, while tile `20LLP` has 24 instances for the chosen period. The function  `sits_regularize()` builds a data cube with a regular timeline and a best estimate of a valid pixel for each interval. The `period` parameter sets the time interval between two images. Values of `period` use the ISO8601 time period specification, which defines time intervals as `P[n]Y[n]M[n]D`, where "Y" stands for years, "M" for months, and "D" for days. Thus, `P1M` stands for a one-month period, `P15D` for a fifteen-day period. When joining different images to get the best image for a period, `sits_regularize()` uses an aggregation method that organizes the images for the chosen interval in order of increasing cloud cover and then selects the first cloud-free pixel. In the example, we use a small spatial resolution for the regular cube to speed up processing; in actual case, we suggest using a 10-meter spatial resolution for the cube.
@@ -851,8 +837,8 @@ reg_cube_rondonia |>
 ```
 
 <div class="figure" style="text-align: center">
-<img src="04-datacubes_files/figure-html/senroreg-1.png" alt="Regularized image for tile Sentinel-2 tile 20LLP (&amp;copy;: EU Copernicus Sentinel Programme; source: authors)." width="100%" />
-<p class="caption">(\#fig:senroreg)Regularized image for tile Sentinel-2 tile 20LLP (&copy;: EU Copernicus Sentinel Programme; source: authors).</p>
+<img src="04-datacubes_files/figure-html/senroreg-1.png" alt="Regularized image for tile Sentinel-2 tile 20LLP (&amp;copy; EU Copernicus Sentinel Programme; source: authors)." width="100%" />
+<p class="caption">(\#fig:senroreg)Regularized image for tile Sentinel-2 tile 20LLP (&copy; EU Copernicus Sentinel Programme; source: authors).</p>
 </div>
 
 ### Regularizing Sentinel-1 images{-}
@@ -875,8 +861,8 @@ plot(cube_s1_rtc, band = "VH", palette = "Greys", scale = 0.7)
 ```
 
 <div class="figure" style="text-align: center">
-<img src="./images/cube_s1_rtc_tile_22LBL.png" alt="Original Sentinel-1 image covering tile 22LBL (&amp;copy;: EU Copernicus Sentinel Programme; source: Microsoft)." width="100%" />
-<p class="caption">(\#fig:sargrdorig)Original Sentinel-1 image covering tile 22LBL (&copy;: EU Copernicus Sentinel Programme; source: Microsoft).</p>
+<img src="./images/cube_s1_rtc_tile_22LBL.png" alt="Original Sentinel-1 image covering tile 22LBL (&amp;copy; EU Copernicus Sentinel Programme; source: Microsoft)." width="100%" />
+<p class="caption">(\#fig:sargrdorig)Original Sentinel-1 image covering tile 22LBL (&copy; EU Copernicus Sentinel Programme; source: Microsoft).</p>
 </div>
 
 After creating an irregular data cube from the data available in MPC, we use `sits_regularize()` to produce a SAR data cube that matches MGRS tile "22LBL". For plotting the SAR image, we select a multidate plot for the "VH" band, where the first date will be displayed in red, the second in green and the third in blue, so as to show an RGB map where changes are visually enhanced.
@@ -905,8 +891,8 @@ plot(cube_s1_reg,
 ```
 
 <div class="figure" style="text-align: center">
-<img src="./images/cube_s1_rtc_tile_22LBL_reg_rgb.png" alt="Regular Sentinel-1 image covering tile 22LBL (&amp;copy;: EU Copernicus Sentinel Programme; source: Microsoft)." width="100%" />
-<p class="caption">(\#fig:sarrtcreg)Regular Sentinel-1 image covering tile 22LBL (&copy;: EU Copernicus Sentinel Programme; source: Microsoft).</p>
+<img src="./images/cube_s1_rtc_tile_22LBL_reg_rgb.png" alt="Regular Sentinel-1 image covering tile 22LBL (&amp;copy; EU Copernicus Sentinel Programme; source: Microsoft)." width="100%" />
+<p class="caption">(\#fig:sarrtcreg)Regular Sentinel-1 image covering tile 22LBL (&copy; EU Copernicus Sentinel Programme; source: Microsoft).</p>
 </div>
 
 ### Merging Sentinel-1 and Sentinel-2 images{-}
@@ -928,8 +914,8 @@ plot(cube_s2, red = "B11", green = "B8A", blue = "B02", date = "2021-07-07")
 ```
 
 <div class="figure" style="text-align: center">
-<img src="./images/s2_tile_22LBL.png" alt="Sentinel-2 image covering tile 22LBL (&amp;copy;: EU Copernicus Sentinel Programme; source: authors)." width="100%" />
-<p class="caption">(\#fig:senlbl)Sentinel-2 image covering tile 22LBL (&copy;: EU Copernicus Sentinel Programme; source: authors).</p>
+<img src="./images/s2_tile_22LBL.png" alt="Sentinel-2 image covering tile 22LBL (&amp;copy; EU Copernicus Sentinel Programme; source: authors)." width="100%" />
+<p class="caption">(\#fig:senlbl)Sentinel-2 image covering tile 22LBL (&copy; EU Copernicus Sentinel Programme; source: authors).</p>
 </div>
 
 The next step is to create a regular data cube for tile "20LBL". 

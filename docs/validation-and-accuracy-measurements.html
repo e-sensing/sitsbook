@@ -13,15 +13,15 @@
 <meta name="author" content="Pedro R. Andrade">
 <meta name="author" content="Karine Ferreira">
 <meta name="author" content="Gilberto Queiroz">
-<meta name="description" content="Introduction Statistically robust and transparent approaches for assessing accuracy and estimating the area of change are essential to maintain the integrity of land change information. The sits...">
+<meta name="description" content="Introduction Statistically robust and transparent approaches for assessing accuracy are essential parts of the land classification process. The sits package supports the “good practice”...">
 <meta name="generator" content="bookdown 0.39 with bs4_book()">
 <meta property="og:title" content="Validation and accuracy measurements | sits: Satellite Image Time Series Analysis on Earth Observation Data Cubes">
 <meta property="og:type" content="book">
 <meta property="og:image" content="/images/cover_sits_book.png">
-<meta property="og:description" content="Introduction Statistically robust and transparent approaches for assessing accuracy and estimating the area of change are essential to maintain the integrity of land change information. The sits...">
+<meta property="og:description" content="Introduction Statistically robust and transparent approaches for assessing accuracy are essential parts of the land classification process. The sits package supports the “good practice”...">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Validation and accuracy measurements | sits: Satellite Image Time Series Analysis on Earth Observation Data Cubes">
-<meta name="twitter:description" content="Introduction Statistically robust and transparent approaches for assessing accuracy and estimating the area of change are essential to maintain the integrity of land change information. The sits...">
+<meta name="twitter:description" content="Introduction Statistically robust and transparent approaches for assessing accuracy are essential parts of the land classification process. The sits package supports the “good practice”...">
 <meta name="twitter:image" content="/images/cover_sits_book.png">
 <!-- JS --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/6.4.6/fuse.js" integrity="sha512-zv6Ywkjyktsohkbp9bb45V6tEMoWhzFzXis+LrMehmJZZSys19Yxf1dopHx7WzIKxr5tK2dVcYmaCk2uqdjF4A==" crossorigin="anonymous"></script><script src="https://kit.fontawesome.com/6ecbd6c532.js" crossorigin="anonymous"></script><script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="libs/bootstrap-4.6.0/bootstrap.min.css" rel="stylesheet">
@@ -92,6 +92,7 @@
 <li><a class="" href="uncertainty-and-active-learning.html">Uncertainty and active learning</a></li>
 <li><a class="" href="ensemble-prediction-from-multiple-models.html">Ensemble prediction from multiple models</a></li>
 <li><a class="" href="object-based-time-series-image-analysis.html">Object-based time series image analysis</a></li>
+<li><a class="" href="data-visualisation-in-sits.html">Data visualisation in sits</a></li>
 <li><a class="" href="technical-annex.html">Technical annex</a></li>
 <li><a class="" href="references.html">References</a></li>
 </ul>
@@ -107,10 +108,10 @@
 <div id="introduction-2" class="section level2 unnumbered">
 <h2>Introduction<a class="anchor" aria-label="anchor" href="#introduction-2"><i class="fas fa-link"></i></a>
 </h2>
-<p>Statistically robust and transparent approaches for assessing accuracy and estimating the area of change are essential to maintain the integrity of land change information. The <code>sits</code> packages supports a set of “good practice” recommendations for designing and implementing an accuracy assessment of a change map and estimating the area based on reference sample data. These recommendations address three major components: sampling design, response design, and analysis <span class="citation"><a href="references.html#ref-Olofsson2014">[83]</a></span>.
+<p>Statistically robust and transparent approaches for assessing accuracy are essential parts of the land classification process. The <code>sits</code> package supports the “good practice” recommendations for designing and implementing an accuracy assessment of a change map and estimating the area based on reference sample data. These recommendations address three components: sampling design, reference data collection, and accuracy estimates <span class="citation"><a href="references.html#ref-Olofsson2014">[83]</a></span>.
 .
-The sampling design is implemented as a random stratified approach, ensure that every land use and land cover class in the population is included in the sample. Design-based inference methods provide support for sampling designs that provide making unbiased estimates. Each of the evaluation samples needs to be evaluated accurately, using high-quality reference data, ideally collected through field visits or high-resolution imagery, to validate classifications. In this way, we obtain a “reference classification” which is more accurate than the map classification being evaluated.</p>
-<p>The accuracy assessment is reported as an error matrix in terms of the proportion of area and estimates of overall accuracy, user’s accuracy and producer’s accuracy. Based on the error matrix, it is possible to estimate the proportion of each class and to adjust for classification errors. The estimated area includes confidence intervals.</p>
+The sampling design is implemented as a random stratified approach, ensuring that every land use and land cover class in the population is included in the sample. Sampling designs use established statistical methods aimed at providing unbiased estimates. Based on a chosen design, <code>sits</code> supports a selection of random samples per class. These samples should be evaluated accurately using high-quality reference data, ideally collected through field visits or using high-resolution imagery. In this way, we get a reference classification that is more accurate than the map classification being evaluated.</p>
+<p>The accuracy assessment is reported as an error matrix. It supports estimates of overall accuracy, user’s and producer’s accuracy. Based on the error matrix, it is possible to estimate each class’s proportion and adjust for classification errors. The estimated area includes confidence intervals.</p>
 </div>
 <div id="example-data-set" class="section level2 unnumbered">
 <h2>Example data set<a class="anchor" aria-label="anchor" href="#example-data-set"><i class="fas fa-link"></i></a>
@@ -119,7 +120,7 @@ The sampling design is implemented as a random stratified approach, ensure that 
 <p>We used Sentinel-2 and Sentinel-2A ARD (analysis ready) images from 2022-01-01 to 2022-12-31. Using all 10 spectral bands, we produced a regular data cube with a 16-day interval, with 23 instances per year. The best pixels for each period were selected to obtain as low cloud cover as possible. Persistent cloud cover pixels remaining in each period are then temporally interpolated to obtain estimated values. As a result, each pixel is associated with a valid time series. To fully cover RO, we used 41 MGRS tiles; the final data cube has 1.1 TB.</p>
 <p>The work considered nine LUCC classes: (a) stable natural land cover, including <code>Forest</code> and <code>Water</code>; (b) events associated with clear-cuts, including <code>Clear_Cut_Vegetation</code>, <code>Clear_Cut_Bare_Soil</code>, and <code>Clear_Cut_Burned_Area</code>; (c) natural areas with seasonal variability, <code>Wetland</code>, <code>Seasonally_Flooded_Forest</code>, and <code>Riparian_Forest</code>; (d) stable forest areas subject to topographic effects, including <code>Mountainside_Forest</code>.</p>
 <p>In this chapter, we will take the classification map as our starting point for accuracy assessment. This map can be retrieved from the <code>sitsdata</code> package as follows.</p>
-<div class="sourceCode" id="cb204"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb202"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># define the classes of the probability cube</span></span>
 <span><span class="va">labels</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span></span>
 <span>  <span class="st">"1"</span> <span class="op">=</span> <span class="st">"Clear_Cut_Bare_Soil"</span>,</span>
@@ -144,7 +145,7 @@ The sampling design is implemented as a random stratified approach, ensure that 
 <span>  labels <span class="op">=</span> <span class="va">labels</span>,</span>
 <span>  version <span class="op">=</span> <span class="st">"mosaic"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb205"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb203"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># plot the classification map</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">rondonia_2022_class</span><span class="op">)</span></span></code></pre></div>
 <div class="figure" style="text-align: center">
@@ -196,7 +197,7 @@ S_i = \sqrt{U_i(1 - U_i)}
 <code>rare_class_prop</code>: proportional area limit to determine which are the rare classes.</li>
 </ul>
 <p>In the case of Rondonia, the following sampling design was adopted.</p>
-<div class="sourceCode" id="cb206"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb204"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ro_sampling_design</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_sampling_design.html">sits_sampling_design</a></span><span class="op">(</span></span>
 <span>  cube <span class="op">=</span> <span class="va">rondonia_2022_class</span>,</span>
 <span>  expected_ua <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span></span>
@@ -254,7 +255,7 @@ S_i = \sqrt{U_i(1 - U_i)}
 <code>progress</code>: show progress bar?</li>
 </ul>
 <p>In the example below, we chose the “alloc_120” option from the sampling design to generate a set of stratified samples. The output of the function is an <code>sf</code> object with points with location (latitude and longitude) and class assigned in the map. We can also generate a SHP file with the sample information. The script below shows how to usee <code><a href="https://rdrr.io/pkg/sits/man/sits_stratified_sampling.html">sits_stratified_sampling()</a></code> and also how to convert an <code>sf</code> object to a CSV file.</p>
-<div class="sourceCode" id="cb208"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb206"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ro_samples_sf</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_stratified_sampling.html">sits_stratified_sampling</a></span><span class="op">(</span></span>
 <span>  cube <span class="op">=</span> <span class="va">rondonia_2022_class</span>,</span>
 <span>  sampling_design <span class="op">=</span> <span class="va">ro_sampling_design</span>,</span>
@@ -262,10 +263,11 @@ S_i = \sqrt{U_i(1 - U_i)}
 <span>  multicores <span class="op">=</span> <span class="fl">4</span>,</span>
 <span>  shp_file <span class="op">=</span> <span class="st">"./tempdir/chp11/ro_samples.shp"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<pre><code>#&gt; Writing layer `ro_samples' to data source 
+<pre><code>#&gt; Deleting layer `ro_samples' using driver `ESRI Shapefile'
+#&gt; Writing layer `ro_samples' to data source 
 #&gt;   `./tempdir/chp11/ro_samples.shp' using driver `ESRI Shapefile'
-#&gt; Writing 2261 features with 1 fields and geometry type Point.</code></pre>
-<div class="sourceCode" id="cb210"><pre class="downlit sourceCode r">
+#&gt; Writing 2254 features with 1 fields and geometry type Point.</code></pre>
+<div class="sourceCode" id="cb208"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># save sf object as CSV file</span></span>
 <span><span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_write.html">st_write</a></span><span class="op">(</span><span class="va">ro_samples_sf</span>,</span>
 <span>  <span class="st">"./tempdir/chp11/ro_samples.csv"</span>,</span>
@@ -275,7 +277,7 @@ S_i = \sqrt{U_i(1 - U_i)}
 <pre><code>#&gt; Writing layer `ro_samples' to data source 
 #&gt;   `./tempdir/chp11/ro_samples.csv' using driver `CSV'
 #&gt; options:        GEOMETRY=AS_XY 
-#&gt; Writing 2261 features with 1 fields and geometry type Point.</code></pre>
+#&gt; Writing 2254 features with 1 fields and geometry type Point.</code></pre>
 <p>Using the CSV file (or the optional shapefile) users can visualize the points in a standard GIS such as QGIS. For each point, they will indicate what is the correct class. In this way, they will obtain a confusion matrix which will be used for accuracy assessment. The <code>overhead</code> parameter is useful for users to discard border or doubtful pixels where the interpreter cannot be confident of her class assignment. By discarding points whose attribution is uncertain, they will improve the quality of the assessment.</p>
 <p>After all sampling points are labelled in QGIS (or similar), users should produce a CSV file, a SHP file, a data frame, or an <code>sf</code> object, with at least three columns: <code>latitude</code>, <code>longitude</code> and <code>label</code>. See the next section for an example on how to use this data set for accuracay assessment.</p>
 </div>
@@ -301,7 +303,7 @@ where the total area of the map is <span class="math inline">\(A_{tot}\)</span>,
 </ul>
 <p>In the example below, we use a validation set produced by the researchers which produced the Rondonia data set, described above. We selected this data set both to serve as an example of <code><a href="https://rdrr.io/pkg/sits/man/sits_accuracy.html">sits_accuracy()</a></code> and to illustrate the pitfalls of using visual interpretation of results of image time series classification. In this case, the validation team used an image from a single date late in 2022 to assess the results. This choice is not adequate for assessing results of time series classification. In many cases, including the example used in this chapter, the training set includes transitional classes such as <code>Clear_Cut_Burned_Area</code> and <code>Clear_Cut_Vegetation</code>. The associated samples refer to events that occur in specific times of the year. An area may start the year as a <code>Forest</code> land cover, only to be cut and burned during the peak of the dry season and later be completely clean. The classifier will recognize the signs of burned area and will signal that such event occurred. When using only a single date to evaluate the classification results, this correct estimate by the classifier will be missed by the interpreter. For this reason, the results shown below are merely illustrative and do not reflect a correct accuracy assessment.</p>
 <p>The validation team used QGIS to produce a CSV file with validation data, which is then used to assess the area accuracy using the best practices recommended by <span class="citation"><a href="references.html#ref-Olofsson2014">[83]</a></span>.</p>
-<div class="sourceCode" id="cb212"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb210"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Get ground truth points</span></span>
 <span><span class="va">valid_csv</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html">system.file</a></span><span class="op">(</span><span class="st">"extdata/Rondonia-Class-2022-Mosaic/rondonia_samples_validation.csv"</span>,</span>
 <span>  package <span class="op">=</span> <span class="st">"sitsdata"</span></span>
@@ -350,7 +352,7 @@ where the total area of the map is <span class="math inline">\(A_{tot}\)</span>,
 #&gt; Seasonally_Flooded              58098.50
 #&gt; Wetland                        163726.86</code></pre>
 <p>The confusion matrix is also available, as follows.</p>
-<div class="sourceCode" id="cb214"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb212"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">area_acc</span><span class="op">$</span><span class="va">error_matrix</span></span></code></pre></div>
 <pre><code>#&gt;                        
 #&gt;                         Clear_Cut_Bare_Soil Clear_Cut_Burned_Area
@@ -418,7 +420,7 @@ where the total area of the map is <span class="math inline">\(A_{tot}\)</span>,
 <footer class="bg-primary text-light mt-5"><div class="container"><div class="row">
 
   <div class="col-12 col-md-6 mt-3">
-    <p>"<strong><strong>sits</strong>: Satellite Image Time Series Analysis on Earth Observation Data Cubes</strong>" was written by Gilberto Camara, Rolf Simoes, Felipe Souza, Felipe Menino, Charlotte Pelletier, Pedro R. Andrade, Karine Ferreira, Gilberto Queiroz. It was last built on 2024-08-18.</p>
+    <p>"<strong><strong>sits</strong>: Satellite Image Time Series Analysis on Earth Observation Data Cubes</strong>" was written by Gilberto Camara, Rolf Simoes, Felipe Souza, Felipe Menino, Charlotte Pelletier, Pedro R. Andrade, Karine Ferreira, Gilberto Queiroz. It was last built on 2024-08-23.</p>
   </div>
 
   <div class="col-12 col-md-6 mt-3">

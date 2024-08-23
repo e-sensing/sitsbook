@@ -29,8 +29,8 @@ plot(rondonia_20LMR, date = "2022-07-16", band = "NDVI")
 ```
 
 <div class="figure" style="text-align: center">
-<img src="09-rasterclassification_files/figure-html/rcndvi-1.png" alt="Color composite image of the cube for date 2023-07-16 (&amp;copy;: EU Copernicus Sentinel Programme; source: Microsoft)." width="90%" />
-<p class="caption">(\#fig:rcndvi)Color composite image of the cube for date 2023-07-16 (&copy;: EU Copernicus Sentinel Programme; source: Microsoft).</p>
+<img src="09-rasterclassification_files/figure-html/rcndvi-1.png" alt="Color composite image of the cube for date 2023-07-16 (&amp;copy; EU Copernicus Sentinel Programme; source: Microsoft)." width="90%" />
+<p class="caption">(\#fig:rcndvi)Color composite image of the cube for date 2023-07-16 (&copy; EU Copernicus Sentinel Programme; source: Microsoft).</p>
 </div>
 
 ## Training data for the case study{-}
