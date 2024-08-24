@@ -10,7 +10,7 @@ author:
 - Pedro R. Andrade
 - Karine Ferreira
 - Gilberto Queiroz
-date: "2024-08-23"
+date: "2024-08-24"
 output:
   html_document: 
     df_print: tibble
@@ -100,15 +100,13 @@ description: |
 
 <a href="https://github.com/e-sensing/sitsbook"><img class="cover" src="images/cover_sits_book.png" width="326" align="right" alt="Cover image" /></a>
 
-Petabytes of Earth observation (EO) data are now open, making the full extent of image archives available. Users can extract satellite image time series from these big EO data sets, covering the same areas at different times. These time series can range from days to decades. They are a powerful tool for observing the Earth's surface and its changes over time, enabling insights and analysis that would be difficult or impossible to achieve with single snapshots. Using image time series, analysts make best use of big Earth observation data collections, capturing subtle changes in ecosystem health and condition and improving the distinction between different land classes.
-
-Satellite image time series provide an unparalleled view of the Earth’s surface, offering users accurate ways to measure environmental changes, including deforestation, forest degradation, and desertification. They are also crucial in monitoring agricultural production and showing harvesting times. Organizing big EO data in data cubes that support time series is the most effective approach to address global challenges like climate change, natural resource depletion, and urban expansion.
+Welcome to the age of big Earth observation data! Petabytes of images are now openly accessible in cloud services. Having free access to massive data sets, we need new methods to measure change on our planet using image data. An essential contribution of big EO data has been to provide access to image time series that capture signals from the same locations continually. Time series are a powerful tool for monitoring change, providing insights and information that single snapshots cannot achieve. Better measurement of natural resources depletion caused by deforestation, forest degradation, and desertification is possible. Experts improve the production of agricultural statistics. Using image time series, analysts can use large data collections to detect subtle changes in ecosystem health and distinguish between various land classes more effectively. Time series analysis is an innovative way to address global challenges like climate change, biodiversity preservation, and sustainable agriculture. 
 
 This book introduces `sits`, an open-source **R** package of big Earth observation data analysis using satellite image time series. Users build regular data cubes from cloud services such as Amazon Web Services, Microsoft Planetary Computer, Copernicus Data Space Ecosystem, NASA Harmonized Landsat-Sentinel, Brazil Data Cube, Swiss Data Cube, Digital Earth Australia, and Digital Earth Africa. The `sits` API includes training sample quality measures, machine learning and deep learning classification algorithms, and Bayesian post-processing methods for smoothing and uncertainty assessment. To evaluate results, `sits` supports best practice accuracy assessments.
 
 ## How much R knowledge is required?{-}
 
-The `sits` package is designed for remote sensing experts in the Earth Sciences field who want to use advanced data analysis techniques without a lot of programming knowledge. The package provides a clear and direct set of functions that are easy to learn and master. Users with a minimal background in R programming can start using `sits` right away. Those familiar with Python or JavaScript may consider lack of **R** knowledge as a barrier to use `sits.` Fear not. Those unfamiliar with **R** can rely on their programming knowledge since **R** scripts in `sits` are easy to follow. Users only need a basic understanding of core concepts of how functions work, which is also required for Python or JavaScript. A minimal investment will be rewarded with access to a package with no equivalents in other programming languages.
+The `sits` package is designed for remote sensing experts in the Earth Sciences field who want to use advanced data analysis techniques with basic programming knowledge. The package provides a clear and direct set of functions that are easy to learn and master. Users with a minimal background in R programming can start using `sits` right away. Those familiar with Python or JavaScript may consider lack of **R** knowledge as a barrier to use `sits.` Fear not. Those unfamiliar with **R** can rely on their programming knowledge since **R** scripts in `sits` are easy to follow. Users only need a basic understanding of core concepts of how functions work, which is also required for Python or JavaScript. A minimal investment will be rewarded with access to a package with a rich set of tools.
 
 To quickly master what is needed to run `sits`, please read Parts 1 and 2 of Garrett Golemund's book, [Hands-On Programming with R](https://rstudio-education.github.io/hopr/). Although not needed to run `sits`, your **R** skills will benefit from the book by Hadley Wickham and Gareth Golemund, [R for Data Science (2nd edition)](https://r4ds.hadley.nz/). Important concepts of spatial analysis are presented by Edzer Pebesma and Roger Bivand in their book [Spatial Data Science](https://r-spatial.org/book/).
 
@@ -5970,20 +5968,20 @@ New functions that build on the `sits` API should follow the general principles 
 
 - The sits code relies on the packages of the `tidyverse` to work with tables and list. We use `dplyr` and `tidyr` for data selection and wrangling, `purrr` and `slider` for loops on lists and table, `lubridate` to handle dates and times. 
 
-- For vector data, we use `sf` and for raster data, we mostly use `terra`. 
+- For vector data, we use `sf`; for raster data, we use `terra` and access to GDAL via `sf`. 
 
 - Functions that use the `torch` package use the R6 model to be compatible with that package. To convert `pyTorch` code to R and include it is straightforward. See for example, the code in `sits_tempcnn.R` and `api_torch.R`. 
 
 
 ### Adherence to the `sits` data types{-}
 
-The `sits` package in built on top of three data types: time series tibble, data cubes and models. Most `sits` functions have one or more of these types as inputs and one of them as return values. The time series tibble contains data and metadata. The first six columns contain the metadata: spatial and temporal information, the label assigned to the sample, and the data cube from where the data has been extracted. The time_series column contains the time series data for each spatiotemporal location. All time series tibbles are objects of class `sits`. 
+The `sits` package in built on top of three data types: `time series`, `cube` and `ml_model`. Most `sits` functions have one or more of these types as inputs and one of them as return values. Time series are organised as tibbles containing data and metadata. The first six columns contain the metadata: spatial and temporal information, the label assigned to the sample, and the data cube from where the data has been extracted. The time_series column contains the time series data for each spatiotemporal location. All time series tibbles are objects of class `sits`. 
 
-The `cube` data type is designed to store metadata about image files. In principle, images which are part of a data cube share the same geographical region, have the same bands, and have been regularized to fit into a pre-defined temporal interval. Data cubes in `sits` are organized by tiles. A tile is an element of a satellite's mission reference system, for example MGRS for Sentinel-2 and WRS2 for Landsat. A `cube` is a tibble where each row contains information about data covering one tile. Each row of the cube tibble contains a column named `file_info`; this column contains a list that stores a tibble 
+The `cube` type is designed to store metadata about image files. Images which are part of a data cube share the same geographical region, have the same bands, and have been regularized to fit into a pre-defined temporal interval. Data cubes in `sits` are organized by tiles. A tile is an element of a satellite's mission reference system, for example MGRS for Sentinel-2 and WRS2 for Landsat. Metadata for a `cube` is described in a tibble where each row contains information about data covering one tile. Each row of the tibble contains a column named `file_info`; this column contains a list that stores a tibble. The `file_info` tibble provides information on individual image files.  
 
-The `cube` data type is specialised in `raster_cube` (ARD images), `vector_cube` (ARD cube with segmentation vectors). `probs_cube` (probabilities produced by classification algorithms on raster data), `probs_vector_cube`(probabilites generated by vector classification of segments),  `uncertainty_cube` (cubes with uncertainty information), and `class_cube` (labelled maps). See the code in `sits_plot.R` as an example of specialisation of `plot` to handle different classes of raster data. 
+The `cube` data type is specialized in `raster_cube` (ARD images), `vector_cube` (ARD cube with segmentation vectors). `probs_cube` (probabilities produced by classification algorithms on raster data), `probs_vector_cube`(probabilites generated by vector classification of segments),  `uncertainty_cube` (cubes with uncertainty information), and `class_cube` (labelled maps). See the code in `sits_plot.R` as an example of specialisation of `plot` to handle different classes of raster data. 
 
-All ML/DL models in `sits` which are the result of `sits_train` belong to the `ml_model` class. In addition, models are assigned a second class, which is unique to ML models (e.g, `rfor_model`, `svm_model`) and generic for all DL `torch` based models (`torch_model`). The class information is used for plotting models and for establishing if a model can run on GPUs. 
+All ML/DL models in `sits` which are the result of `sits_train` belong to the `ml_model` class. In addition, models are assigned a second class, which is either unique to ML models (e.g, `rfor_model`, `svm_model`) and generic for all DL `torch` based models (`torch_model`). The class information is used for plotting models and for establishing if a model can run on GPUs. 
 
 ### Literal values, error messages, and testing{-}
 
@@ -6127,7 +6125,7 @@ sits_lightgbm <- function(samples = NULL,
                           num_iterations = 100,
                           n_iter_no_change = 10,
                           validation_split = 0.2, ...) {
-  # function that returns MASS::lda model based on a sits sample tibble
+  # function that returns a lightGBM model based on a set of labelled time series
   train_fun <- function(samples) {
     # Extract the predictors
     train_samples <- sits_predictors(samples)
@@ -6206,7 +6204,7 @@ sits_lightgbm <- function(samples = NULL,
 }
 ```
 
-The above code has two nested functions: `train_fun()` and `predict_fun()`. When `sits_lightgbm()` is called, `train_fun()` transforms the input samples into predictors and uses them to train the algorithm, creating a model (`lgbm_model`). This model is included as part of the function's closure and becomes available at classification time. Inside `train_fun()`, we include `predict_fun()`, which applies the `lgbm_model` object to classify to the input values. The `train_fun` object is then returned as a closure, using the `sits_factory_function` constructor. This function allows the model to be called either as part of `sits_train()` or to be called independently, with the same result.
+The above code has two nested functions: `train_fun()` and `predict_fun()`. When `sits_lightgbm()` is called, `train_fun()` transforms the input samples into predictors and uses them to train the algorithm, creating a model (`lgbm_model`). This model is included as part of the function's closure and becomes available at classification time. Inside `train_fun()`, we include `predict_fun()`, which applies the `lightgbm_model` object to classify to the input values. The `train_fun` object is then returned as a closure, using the `sits_factory_function` constructor. This function allows the model to be called either as part of `sits_train()` or to be called independently, with the same result.
 
 
 ``` r
@@ -6250,10 +6248,9 @@ During classification,  `predict_fun()` is called in parallel by each CPU. At th
 lgbm_model <- lightgbm::lgb.load(model_str = lgbm_model_string)
 ```
 
-
 Therefore, using function factories that produce closures, `sits` keeps the classification function independent of the machine learning or deep learning algorithm. This policy allows independent proposal, testing, and development of new classification methods. It also enables improvements on parallel processing methods without affecting the existing classification methods.
 
-To illustrate this separation between training and classification, the new algorithm developed in the chapter using `lightgbm` will be used to classify a data cube. The code is the same as the one in Chapter [Introduction](https://e-sensing.github.io/sitsbook/introduction.html) as an example of data cube classification, except for the use of `lgb_method()`. 
+To illustrate this separation between training and classification, the new algorithm developed in the chapter using `lightgbm` will be used to classify a data cube. The code is the same as the one in Chapter [Introduction](https://e-sensing.github.io/sitsbook/introduction.html) as an example of data cube classification, except for the use of function `sits_lightgbm()`. 
 
 
 ``` r
@@ -6280,19 +6277,19 @@ sinop_probs <- sits_classify(
   ml_model = lgb_model,
   multicores = 2,
   memsize = 8,
-  output_dir = "./tempdir/chp15"
+  output_dir = "./tempdir/chp16"
 )
 # Perform spatial smoothing
 sinop_bayes <- sits_smooth(
   cube = sinop_probs,
   multicores = 2,
   memsize = 8,
-  output_dir = "./tempdir/chp15"
+  output_dir = "./tempdir/chp16"
 )
 # Label the smoothed file
 sinop_map <- sits_label_classification(
   cube = sinop_bayes,
-  output_dir = "./tempdir/chp15"
+  output_dir = "./tempdir/chp16"
 )
 # plot the result
 plot(sinop_map, title = "Sinop Classification Map")
