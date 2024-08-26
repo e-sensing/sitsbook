@@ -10,7 +10,7 @@ author:
 - Pedro R. Andrade
 - Karine Ferreira
 - Gilberto Queiroz
-date: "2024-08-09"
+date: "2024-08-24"
 output:
   html_document: 
     df_print: tibble
@@ -48,7 +48,7 @@ description: |
 ```
 
 ```
-## Loaded sits v1.5.1.
+## Loaded sits v1.5.2.
 ##         See ?sits for help, citation("sits") for use in publication.
 ##         Documentation avaliable in https://e-sensing.github.io/sitsbook/.
 ```
@@ -100,19 +100,13 @@ description: |
 
 <a href="https://github.com/e-sensing/sitsbook"><img class="cover" src="images/cover_sits_book.png" width="326" align="right" alt="Cover image" /></a>
 
-Petabytes of Earth observation (EO) data are now open and free, making the full extent of image archives available. From these big EO data sets, users can extract satellite image time series, which are sequences of satellite images taken over the same area at different times. These time series can range from days to decades. They are a powerful tool for observing the Earth's surface and its changes over time, enabling insights and analysis that would be difficult or impossible to achieve with single snapshots.   Using image time series, analysts make best use of big Earth observation data collections, capturing subtle changes in ecosystem health and condition and improving the distinction between different land classes.
+Welcome to the age of big Earth observation data! Petabytes of images are now openly accessible in cloud services. Having free access to massive data sets, we need new methods to measure change on our planet using image data. An essential contribution of big EO data has been to provide access to image time series that capture signals from the same locations continually. Time series are a powerful tool for monitoring change, providing insights and information that single snapshots cannot achieve. Better measurement of natural resources depletion caused by deforestation, forest degradation, and desertification is possible. Experts improve the production of agricultural statistics. Using image time series, analysts can use large data collections to detect subtle changes in ecosystem health and distinguish between various land classes more effectively. Time series analysis is an innovative way to address global challenges like climate change, biodiversity preservation, and sustainable agriculture. 
 
-Satellite image time series are relevant for tracking environmental changes, such as deforestation, forest degradation and desertification. They help to understand the impacts of climate change on natural ecosystems. Time serises can monitor agricultural production and indicate harvesting times. Following natural disasters like floods, earthquakes, and wildfires, image time series can assess damage and monitor recovery.  By monitoring changes in water bodies, they support the management of water resources. 
-
-Satellite image time series offer an unparalleled view of the Earth's surface over time, providing critical data for a wide range of applications that impact society, the environment, and the global economy. Their relevance continues to grow as we face global challenges like climate change, natural resource depletion, and urban expansion.
-
-This book introduces `sits`, an open-source **R** package of big Earth observation data analysis using satellite image time series. Users build regular data cubes from cloud services such as Amazon Web Services, Microsoft Planetary Computer, Copernicus Data Space Ecosyste, NASA Harmonized Landsat-Sentinel, Brazil Data Cube, Swiss Data Cube, Digital Earth Australia and Digital Earth Africa. The `sits` API includes an assessment of training sample quality, machine learning and deep learning classification algorithms, and Bayesian post-processing methods for smoothing and uncertainty assessment. To evaluate results, `sits` supports best practice accuracy assessments.
+This book introduces `sits`, an open-source **R** package of big Earth observation data analysis using satellite image time series. Users build regular data cubes from cloud services such as Amazon Web Services, Microsoft Planetary Computer, Copernicus Data Space Ecosystem, NASA Harmonized Landsat-Sentinel, Brazil Data Cube, Swiss Data Cube, Digital Earth Australia, and Digital Earth Africa. The `sits` API includes training sample quality measures, machine learning and deep learning classification algorithms, and Bayesian post-processing methods for smoothing and uncertainty assessment. To evaluate results, `sits` supports best practice accuracy assessments.
 
 ## How much R knowledge is required?{-}
 
-The target audience for `sits` is the community of remote sensing experts with Earth Sciences background who want to use state-of-the-art data analysis methods with minimal investment in programming skills. The package provides a clear and direct set of functions, which are easy to learn and master. Users with a minimal background on **R** programming can start using `sits` right away. 
-
-Many Earth Sciences experts that are familiar with Python or JavaScript, and may consider their lack of **R** knowledge as a barrier for using `sits`. Fear not. Those not yet familiar with **R** can rely on their programming knowledge, since **R** scripts in `sits` are easy to follow. Users only need a basic understanding of core concepts of how functions work, which is also required for Python or JavaScript. A minimal investment will be rewarded with access to a package that currently has no equivalents in other programming languages.
+The `sits` package is designed for remote sensing experts in the Earth Sciences field who want to use advanced data analysis techniques with basic programming knowledge. The package provides a clear and direct set of functions that are easy to learn and master. Users with a minimal background in R programming can start using `sits` right away. Those familiar with Python or JavaScript may consider lack of **R** knowledge as a barrier to use `sits.` Fear not. Those unfamiliar with **R** can rely on their programming knowledge since **R** scripts in `sits` are easy to follow. Users only need a basic understanding of core concepts of how functions work, which is also required for Python or JavaScript. A minimal investment will be rewarded with access to a package with a rich set of tools.
 
 To quickly master what is needed to run `sits`, please read Parts 1 and 2 of Garrett Golemund's book, [Hands-On Programming with R](https://rstudio-education.github.io/hopr/). Although not needed to run `sits`, your **R** skills will benefit from the book by Hadley Wickham and Gareth Golemund, [R for Data Science (2nd edition)](https://r4ds.hadley.nz/). Important concepts of spatial analysis are presented by Edzer Pebesma and Roger Bivand in their book [Spatial Data Science](https://r-spatial.org/book/).
 

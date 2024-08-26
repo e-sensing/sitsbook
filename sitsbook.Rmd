@@ -97,17 +97,14 @@ Placeholder
 ## Who is this book for?{-}
 ## Why work with satellite image time series?{-}
 ## Time-first, space-later{-}
-## How `sits` works {.unnumbered}
 ## Land use and land cover{-}
-## Classes and labels{-}
+## How `sits` works {.unnumbered}
 ## Creating a data cube {.unnumbered}
 ## The time series tibble {-}
 ## Training a machine learning model {.unnumbered}
 ## Data cube classification {.unnumbered}
 ## Spatial smoothing {.unnumbered}
 ## Labeling a probability data cube {.unnumbered}
-## Plotting{-}
-## Visualization of data cubes in interactive maps {.unnumbered}
 
 <!--chapter:end:03-intro.Rmd-->
 
@@ -117,11 +114,7 @@ Placeholder
 Placeholder
 
 
-## Brief introduction to remote sensing images and terminology{-}
-### Optical surface reflectance images{-}
-### Synthetic aperture radar (SAR) images{-}
-### Analysis-ready data(ARD){-}
-## Analysis-ready data image collections{-}
+## Analysis-ready data(ARD){-}
 ## Image collections handled by sits{-}
 ## Regular image data cubes{-}
 ## Creating data cubes{-}
@@ -255,211 +248,16 @@ Placeholder
 
 <!--chapter:end:10-bayesiansmoothing.Rmd-->
 
+
 # Validation and accuracy measurements{-}
 
+Placeholder
 
-```{r, include = FALSE, echo = FALSE}
-source("common.R")
-library(sits)
-library(sitsdata)
-if (!file.exists("./tempdir/chp11"))
-  dir.create("./tempdir/chp11")
-```
 
 ## Introduction{-}
-
-Statistically robust and transparent approaches for assessing accuracy and estimating the area of change are essential to maintain the integrity of land change information. The `sits` packages supports a set of “good practice” recommendations for designing and implementing an accuracy assessment of a change map and estimating the area based on reference sample data. These recommendations address three major components: sampling design, response design, and analysis [@Olofsson2014].
-.
-The sampling design is implemented as a random stratified approach, ensure that every land use and land cover class in the population is included in the sample. Design-based inference methods provide support for sampling designs that provide making unbiased estimates. Each of the evaluation samples needs to be evaluated accurately, using high-quality reference data, ideally collected through field visits or high-resolution imagery, to validate classifications. In this way, we obtain a “reference classification” which is more accurate than the map classification being evaluated. 
-
-The accuracy assessment is reported as an error matrix in terms of the proportion of area and estimates of overall accuracy, user’s accuracy and producer’s accuracy. Based on the error matrix, it is possible to estimate the proportion of each class and to adjust for classification errors. The estimated area includes confidence intervals.  
-
 ## Example data set{-} 
-
-Our study area is the state of Rondonia (RO) in the Brazilian Amazon, which has a total area of \SI{237576}{\kilo\metre\squared}. According to official Brazilian government statistics, as of 2021, there are \SI{125752.41}{\kilo\metre\squared} of tropical forests in RO, which corresponds to 53\% of the state's total area. Significant human occupation started in 1970, led by settlement projects promoted by then Brazil's military government [@Alves2003]. Small and large-scale cattle ranching occupies most deforested areas. Deforestation in Rondonia is highly fragmented, partly due to the original occupation by small settlers. Such fragmentation poses considerable challenges for automated methods to distinguish between clear-cut and highly degraded areas. While visual interpreters rely upon experience and field knowledge, researchers must carefully train automated methods to achieve the same distinction.
-
-We used Sentinel-2 and Sentinel-2A ARD (analysis ready) images from 2022-01-01 to 2022-12-31. Using all 10 spectral bands, we produced a regular data cube with a 16-day interval, with 23 instances per year. The best pixels for each period were selected to obtain as low cloud cover as possible. Persistent cloud cover pixels remaining in each period are then temporally interpolated to obtain estimated values. As a result, each pixel is associated with a valid time series. To fully cover RO, we used 41 MGRS tiles; the final data cube has 1.1 TB.  
-
-The work considered nine LUCC classes: (a) stable  natural land cover, including \textit{Natural Forest} and \textit{Water Bodies}; (b) events associated with clear-cuts, including \textit{Clear Cut with Vegetation}, \textit{Clear Cut with Bare Soil}, and \textit{Clear Cut with Burned Area}; (c) natural areas with seasonal variability, including \textit{Wetlands}, \textit{Seasonally-flooded Forest}, and \textit{Riparian Forest}; (d) stable forest areas subject to topographic effects, including \textit{Mountainside Forest}.  
-
-In this chapter, we will take the classification map as our starting point for accuracy assessment. This map can be retrieved from the `sitsdata` package as follows.
-
-```{r valromosaic, tidy = "styler", out.width = "100%", fig.align="center", fig.cap="Classified mosaic for land cover in Rondonia, Brazil for 2022 (source: authors)."}
-# define the classes of the probability cube
-labels <- c("1" = "Clear_Cut_Bare_Soil",
-            "2" = "Clear_Cut_Burned_Area", 
-            "3" = "Mountainside_Forest", 
-            "4" = "Forest", 
-            "5" = "Riparian_Forest", 
-            "6" = "Clear_Cut_Vegetation", 
-            "7" = "Water",
-            "8" = "Seasonally_Flooded",
-            "9" = "Wetland")
-
-# directory where the data is stored 
-data_dir <- system.file("extdata/Rondonia-Class-2022-Mosaic/", package = "sitsdata")
-# create a probability data cube from a file 
-rondonia_2022_class <- sits_cube(
-    source = "MPC",
-    collection = "SENTINEL-2-L2A",
-    data_dir = data_dir,
-    bands = "class",
-    labels = labels,
-    version = "mosaic"
-)
-
-# plot the classification map
-plot(rondonia_2022_class)
-```
-
-
-
 ## Stratified sampling design and allocation{-} 
-
-The sampling design outlines the method for selecting a subset of the map, which serves as the foundation for the accuracy assessment. The subset needs to satisfy a compromise between statistical and practical consideration. The subset needs to provide enough data for statistically-valid quality assessment, and also ensure that each element of the the sample can be evaluated correctly. Selection of the sample size thus combines an expected level of user's accuracy for each class with a viable choice of size and location. 
-
-Following the recommended best practices for estimating accuracy of LUCC maps [@Olofsson2014], `sits` uses Cochran's method for stratified random sampling [@Cochran1977]. The method divides the population into homogeneous subgroups, or strata, and then applying random sampling within each stratum. In the case of LUCC, we take the classification map as the basis for the stratification. The area occupied by each class is considered as an homogeneous subgroup. Cochran's method for stratified random sampling helps to increase the precision of the estimates by reducing the overall variance, particularly when there is significant variability between strata but relatively less variability within each stratum.
-
-To determine the overall number of samples to measure accuracy, we use the following formula [@Cochran1977]:
-
-$$
-n = \left( \frac{\sum_{i=1}^L W_i S_i}{S(\hat{O})} \right)^2
-$$
-where
-
-- $L$ is the number of classes
-- $S(\hat{O})$ is the expected standard error of the accuracy estimate
-- $S_i$ is the standard deviation of the estimated area for class $i$
-- $W_i$ is is the mapped proportion of area of class $i$
-
-The standard deviation per class (stratum) is estimated based on the expected user's accuracy $U_i$ for each class as 
-
-$$
-S_i = \sqrt{U_i(1 - U_i)}
-$$
-
-Therefore, the total number of samples depends on the assumptions about the user's accuracies $U_i$ and the expected standard error $S(\hat{O})$. Once the sample size is estimated, there are several methods for allocating samples per class[@Olofsson2014]. One option is proportional allocation, when sample size in each stratum is proportional to the stratum’s size in the population. In land use mapping, some classes often have small areas compared to the more frequent ones. Using proportional allocation, rare classes will have small sample sizes decreasing their accuracy. Another option is equal allocation, where all classes will have the same number of samples; however, equal allocation may fail to capture the natural variation of classes with large areas.
-
-As alternatives to proportional and equal allocation, [@Olofsson2014] suggests ad-hoc approaches where each class is assigned a minimum number of samples. He proposes three allocations where 50, 75 and 100 sample units are allocated to the less common classes, and proportional allocation is used for more frequent ones. These allocation methods should be considered as suggestions, and users should be flexible to select alternative sampling designs. 
-
-The allocation methods proposed by [@Olofsson2014] are supported by function `sits_sampling_design()`, which has the following parameters:
-
-- `cube`: a classified data cube;
-- `expected_ua`: a named vector with the expected user's accuracies for each class;
-- `alloc_options`: fixed sample allocation for rare classes;
-- `std_err`: expected standard error of the accuracy estimate;
-- `rare_class_prop`: proportional area limit to determine which are the rare classes.
-
-In the case of Rondonia, the following sampling design was adopted.
-
-```{r}
-ro_sampling_design <- sits_sampling_design(
-    cube = rondonia_2022_class,
-    expected_ua = c(
-        "Clear_Cut_Bare_Soil" = 0.75,
-        "Clear_Cut_Burned_Area" = 0.70, 
-        "Mountainside_Forest" = 0.70, 
-        "Forest" = 0.75,  
-        "Riparian_Forest" = 0.70, 
-        "Clear_Cut_Vegetation" = 0.70,  
-        "Water" = 0.70, 
-        "Seasonally_Flooded" = 0.70, 
-         "Wetland" = 0.70
-    ),
-    alloc_options = c(120, 100),
-    std_err = 0.01,
-    rare_class_prop = 0.1
-)
-# show sampling desing
-ro_sampling_design
-```
-The next step is to chose one of the options for sampling design to generate a set of points for stratified sampling. These points can then be used for accuracy assessment. This is achieved by function `sits_stratified_sampling()` which takes the following parameters: 
-
-- `cube`: a classified data cube;
-- `sampling_design`: the output of function `sits_sampling_design()`;
-- `alloc`: one of the sampling allocation options produced by `sits_sampling_design()`;
-- `overhead`: additional proportion of number of samples per class (see below);
-- `multicores`:  number of cores to run the function in parallel;
-- `shp_file`: name of shapefile to save results for later use (optional);
-- `progress`: show progress bar?
-
-In the example below, we chose the "alloc_120" option from the sampling design to generate a set of stratified samples. The output of the function is an `sf` object with points with location (latitude and longitude) and class assigned in the map. We can also generate a SHP file with the sample information.
-
-```{r, eval = TRUE, echo = FALSE, messa}
-if (file.exists("./tempdir/chp11/ro_samples.csv"))
-  file.remove("./tempdir/chp11/ro_samples.csv")
-```
-
-
-
-```{r, message = FALSE, warning = FALSE}
-ro_samples_sf <- sits_stratified_sampling(
-    cube = rondonia_2022_class,
-    sampling_design = ro_sampling_design,
-    alloc = "alloc_120",
-    multicores = 4,
-    shp_file = "./tempdir/chp11/ro_samples.shp"
-)
-# save sf object as CSV file
-sf::st_write(ro_samples_sf, 
-    "./tempdir/chp11/ro_samples.csv", 
-    layer_options = "GEOMETRY=AS_XY",
-    append = FALSE
-)
-```
-
- Using this CSV file (or the optional shapefile) users can visualize the points in a standard GIS such as QGIS. For each point, they will indicate what is the correct class. In this way, they will obtain a confusion matrix which will be used for accuracy assessment. The `overhead` parameter is useful for users to discard border or doubtful pixels where the interpreter cannot be confident of her class assignment. By discarding points whose attribution is uncertain, they will improve the quality of the assessment. 
-
-After all sampling points are labelled in QGIS (or similar), users should produce a CSV file, a SHP file, a data frame, or an `sf` object,  with at least three columns: `latitude`, `longitude` and `label`. See the next section for an example on how to use this data set for accuracay assessment.
-
 ## Accuracy assessment of classified images{-}
-
-To measure the accuracy of classified images, `sits_accuracy()` uses an area-weighted technique, following the best practices proposed by Olofsson et al. [@Olofsson2013]. The need for area-weighted estimates arises because the land classes are not evenly distributed in space. In some applications (e.g., deforestation) where the interest lies in assessing how much of the image has changed, the area mapped as deforested is likely to be a small fraction of the total area. If users disregard the relative importance of small areas where change is taking place, the overall accuracy estimate will be inflated and unrealistic. For this reason, Olofsson et al.  argue that "mapped areas should be adjusted to eliminate bias attributable to map classification error, and these error-adjusted area estimates should be accompanied by confidence intervals to quantify the sampling variability of the estimated area" [@Olofsson2013].
-
-With this motivation, when measuring the accuracy of classified images, `sits_accuracy()` follows the procedure set by Olofsson et al. [@Olofsson2013]. Given a classified image and a validation file, the first step calculates the confusion matrix in the traditional way, i.e., by identifying the commission and omission errors. Then it calculates the unbiased estimator of the proportion of area in cell $i,j$ of the error matrix
-
-$$
-\hat{p_{i,j}} = W_i\frac{n_{i,j}}{n_i},
-$$
-where the total area of the map is $A_{tot}$, the mapping area of class $i$ is $A_{m,i}$ and the proportion of area mapped as class $i$ is $W_i = {A_{m,i}}/{A_{tot}}$. Adjusting for area size allows producing an unbiased estimation of the total area of class $j$, defined as a stratified estimator
-$$
-\hat{A_j} = A_{tot}\sum_{i=1}^KW_i\frac{n_{i,j}}{n_i}.
-$$
-
-This unbiased area estimator includes the effect of false negatives (omission error) while not considering the effect of false positives (commission error). The area estimates also allow for an unbiased estimate of the user's and producer's accuracy for each class. Following Olofsson et al. @Olofsson2013, we provide the 95% confidence interval for $\hat{A_j}$. 
-
-To produce the adjusted area estimates for classified maps, `sits_accuracy()` uses the following parameters:
-
-- `data`: a classified data cube;
-- `validation`:  a CSV file, SHP file, GPKG file, `sf` object or data frame containing at least three columns: `latitude`, `longitude` and `label`, containing a set of well-selected labeled points obtained from the samples suggested by `sits_stratified_sample()`.  
-
-In the example below, we use a validation set produced by the researchers which produced the Rondonia data set, described above. We selected this data set both to serve as an example of `sits_accuracy()` and to illustrate the pitfalls of using visual interpretation of results of image time series classification. In this case, the validation team used an image from a single date late in 2022 to assess the results. This choice is not adequate for assessing results of time series classification. In many cases, including the example used in this chapter, the training set includes transitional classes such as `Clear_Cut_Burned_Area` and `Clear_Cut_Vegetation`. The associated samples refer to events that occur in specific times of the year. An area may start the year as a `Forest` land cover, only to be cut and burned during the peak of the dry season and later be completely clean. The classifier will recognize the signs of burned area and will signal that such event occurred. When using only a single date to evaluate the classification results, this correct estimate by the classifier will be missed by the interpreter. For this reason, the results shown below are merely illustrative and do not reflect a correct accuracy assessment. 
-
-The validation team used QGIS to produce a CSV file with validation data, which is then used to assess the area accuracy using the best practices recommended by @Olofsson2014. 
-
-```{r, eval = TRUE, echo = TRUE}
-# Get ground truth points
-valid_csv <- system.file("extdata/Rondonia-Class-2022-Mosaic/rondonia_samples_validation.csv",
-                         package = "sitsdata")
-# Calculate accuracy according to Olofsson's method
-area_acc <- sits_accuracy(rondonia_2022_class, 
-                          validation = valid_csv,
-                          multicores = 4)
-# Print the area estimated accuracy 
-area_acc
-```
-
-The confusion matrix is also available, as follows.
-
-```{r, eval = TRUE, echo = TRUE}
-area_acc$error_matrix
-```
-
-These results show the challenges of conducting validation assessments with image time series. While stable classes like `Forest` and `Clear_Cut_Bare_Soil` exhibit high user's accuracy (UA) and producer's accuracy (PA), the transitional classes (`Clear_Cut_Burned_Area` and `Clear_Cut_Vegetation`) have low PA. This discrepancy is not a true reflection of classification accuracy, but rather a result of inadequate visual interpretation practices. As mentioned earlier, the visual interpretation for quality assessment utilised only a single date, a method traditionally used for single images, but ineffective for image time series.
-
-A detailed examination of the confusion matrix reveals a clear distinction between natural areas (e.g., `Forest` and `Riparian_Forest`) and areas associated with deforestation (e.g., `Clear_Cut_Bare_Soil` and `Clear_Cut_Burned_Area`). The low producer's accuracy values for transitional classes `Clear_Cut_Burned_Area` and `Clear_Cut_Vegetation` are artefacts of the validation procedure. Validation relied on only one date near the end of the calendar year, causing transitional classes to be overlooked.
-
-This chapter provides an example of the recommended statistical methods for designing stratified samples for accuracy assessment. However, these sampling methods depend on perfect or near-perfect validation by end-users. Ensuring best practices in accuracy assessment involves a well-designed sample set and a sample interpretation that aligns with the classifier's training set.
 
 <!--chapter:end:11-validation.Rmd-->
 
@@ -496,24 +294,654 @@ Placeholder
 <!--chapter:end:14-obia.Rmd-->
 
 
-# Technical annex {-}
+# Data visualisation in `sits` {-}
 
 Placeholder
 
 
+## Plotting{-}
+### Plotting false color maps{-}
+### Plotting RGB color composite maps{-}
+### Plotting classified maps{-}
+## Visualization of data cubes in interactive maps {.unnumbered}
 ## How colors work in sits{-}
-## How parallel processing works in virtual machines with CPUs{-}
-## Including new methods for machine learning{-}
+## Exporting colors to QGIS{-}
+
+<!--chapter:end:15-visualisation.Rmd-->
+
+# Technical annex {-}
+
+```{r, eval = TRUE, echo = FALSE, include = FALSE}
+source("common.R")
+library(sits)
+library(sitsdata)
+if (!file.exists("./tempdir/chp16"))
+  dir.create("./tempdir/chp16")
+```
+
+This Chapter contains technical details on the algorithms available in `sits`. It is intended to support those that want to understand how the package works and also want to contribute to its development.
+
 ## Adding functions to the `sits` API{-}
+
 ### General principles{-}
+
+New functions that build on the `sits` API should follow the general principles below.
+
+- The target audience for `sits` is the community of remote sensing experts with Earth Sciences background who want to use state-of-the-art data analysis methods with minimal investment in programming skills. The design of the `sits` API considers the typical workflow for land classification using satellite image time series and thus provides a clear and direct set of functions, which are easy to learn and master.
+
+- For this reason, we welcome contributors that provide useful additions to the existing API, such as new ML/DL classification algorithms. In case of a new API function, before making a pull request please raise an issue stating your rationale for a new function.
+
+- Most functions in `sits` use the S3 programming model with a strong emphasis on generic methods wich are specialized depending on the input data type. See for example the implementation of the `sits_bands()` function.
+
+- Please do not include contributed code using the S4 programming model. Doing so would break the structure and the logic of existing code. Convert your code from S4 to S3.
+
+- Use generic functions as much as possible, as they improve modularity and maintenance. If your code has decision points using `if-else` clauses, such as `if A, do X; else do Y` consider using generic functions.
+
+- Functions that use the `torch` package use the R6 model to be compatible with that package. See for example, the code in `sits_tempcnn.R` and `api_torch.R`. To convert `pyTorch` code to R and include it is straightforward. Please see the [Technical Annex](https://e-sensing.github.io/sitsbook/technical-annex.html) of the sits on-line book.
+
+- The sits code relies on the packages of the `tidyverse` to work with tables and list. We use `dplyr` and `tidyr` for data selection and wrangling, `purrr` and `slider` for loops on lists and table, `lubridate` to handle dates and times.
+
 ### Adherence to the `sits` data types{-}
+
+The `sits` package in built on top of three data types: time series tibble, data cubes and models. Most `sits` functions have one or more of these types as inputs and one of them as return values. The time series tibble contains data and metadata. The first six columns contain the metadata: spatial and temporal information, the label assigned to the sample, and the data cube from where the data has been extracted. The time_series column contains the time series data for each spatiotemporal location. All time series tibbles are objects of class `sits`.
+
+The `cube` data type is designed to store metadata about image files. In principle, images which are part of a data cube share the same geographical region, have the same bands, and have been regularized to fit into a pre-defined temporal interval. Data cubes in `sits` are organized by tiles. A tile is an element of a satellite's mission reference system, for example MGRS for Sentinel-2 and WRS2 for Landsat. A `cube` is a tibble where each row contains information about data covering one tile. Each row of the cube tibble contains a column named `file_info`; this column contains a list that stores a tibble
+
+The `cube` data type is specialised in `raster_cube` (ARD images), `vector_cube` (ARD cube with segmentation vectors). `probs_cube` (probabilities produced by classification algorithms on raster data), `probs_vector_cube`(probabilites generated by vector classification of segments),  `uncertainty_cube` (cubes with uncertainty information), and `class_cube` (labelled maps). See the code in `sits_plot.R` as an example of specialisation of `plot` to handle different classes of raster data.
+
+All ML/DL models in `sits` which are the result of `sits_train` belong to the `ml_model` class. In addition, models are assigned a second class, which is unique to ML models (e.g, `rfor_model`, `svm_model`) and generic for all DL `torch` based models (`torch_model`). The class information is used for plotting models and for establishing if a model can run on GPUs.
+
 ### Literal values, error messages, and testing{-}
-### Supporting new STAC-based image catalogues 
+
+The internal `sits` code has no literal values, which are all stored in the YAML configuration files `./inst/extdata/config.yml` and `./inst/extdata/config_internals.yml`. The first file contains configuration parameters that are relevant to users, related to visualisation and plotting; the second contains parameters that are relevant only for developers. These values are accessible using the `.conf` function. For example, the value of the default size for ploting COG files is accessed using the command `.conf["plot", "max_size"]`.
+
+Error messages are also stored outside of the code in the YAML configuration file `./inst/extdata/config_messages.yml`. These values are accessible using the `.conf` function. For example, the error associated to an invalid NA value for an input parameter is accessible using th function `.conf("messages", ".check_na_parameter")`.
+
+We strive for high code coverage (> 90\%). Every parameter of all `sits` function (including internal ones) is checked for consistency. Please see `api_check.R`.
+
+
+### Supporting new STAC-based image catalogues{-}
+
+If you want to include a STAC-based catalogue not yet supported by `sits`, we encourage you to look at existing implementations of catalogues such as Microsoft Planetary Computer (MPC), Digital Earth Africa (DEA) and AWS. STAC-based catalogues in `sits` are associated to YAML description files, which are available in the directory `.inst/exdata/sources`. For example, the YAML file `config_source_mpc.yml` describes the contents of the MPC collections supported by `sits`. Please first provide an YAML file which lists the detailed contents of the new catalogue you wish to include. Follow the examples provided.
+
+After writing the YAML file, you need to consider how to access and query the new catalogue. The entry point for access to all catalogues is the `sits_cube.stac_cube()` function, which in turn calls a sequence of functions which are described in the generic interface `api_source.R`. Most calls of this API are handled by the functions of `api_source_stac.R` which provides an interface to the `rstac` package and handles STAC queries.
+
+Each STAC catalogue is different. The STAC specification allows providers to implement their data descriptions with specific information. For this reason, the generic API described in `api_source.R` needs to be specialized for each provider. Whenever a provider needs specific implementations of parts of the STAC protocol, we include them in separate files. For example, `api_source_mpc.R` implements specific quirks of the MPC platform. Similarly, specific support for CDSE (Copernicus Data Space Environment) is available in `api_source_cdse.R`.
+
+
 ## Exporting data to JSON{-}
 
-<!--chapter:end:15-annex.Rmd-->
+Both the data cube and the time series tibble can be exported to exchange formats such as JSON.
+
+```{r, tidy = "styler", eval = FALSE}
+library(jsonlite)
+# Export the data cube to JSON
+jsonlite::write_json(
+  x = sinop,
+  path = "./data_cube.json",
+  pretty = TRUE)
+
+# Export the time series to JSON
+jsonlite::write_json(
+  x = samples_prodes_4classes,
+  path = "./time_series.json",
+  pretty = TRUE)
+```
+
+## SITS and Google Earth Engine APIs: A side-by-side exploration{-}
+
+This section presents a side-by-side exploration of the `sits` and Google Earth 
+Engine (`gee`) APIs, focusing on their respective capabilities in handling 
+satellite data. The exploration is structured around three key examples: 
+(1) creating a mosaic, (2) calculating the Normalized Difference Vegetation 
+Index (NDVI), and (3) performing a Land Use and Land Cover (LULC) classification. 
+Each example demonstrates how these tasks are executed using `sits` and `gee`, 
+offering a clear view of their methodologies and highlighting the similarities 
+and the unique approaches each API employs.
+
+### Example 1: Creating a Mosaic{-}
+
+A common application among scientists and developers in the field of Remote 
+Sensing is the creation of satellite image mosaics. These mosaics are formed by 
+combining two or more images, typically used for visualization in various 
+applications. In this example, we will demonstrate how to create an image 
+mosaic using `sits` and `gee` APIs.
+
+#### Define Region of Interest data{-}
+
+In this example, a Region of Interest (ROI) is defined using a bounding box
+with longitude and latitude coordinates. Below are the code snippets for 
+specifying this ROI in both `sits` and `gee` environments.
+
+
+**sits**
+
+```{r, eval = FALSE}
+roi <- c("lon_min" = -63.410, "lat_min" = -9.783,
+         "lon_max" = -62.614, "lat_max" = -9.331)
+```
+
+**gee**
+
+```js
+var roi = ee.Geometry.Rectangle([-63.410,-9.783,-62.614,-9.331]);
+```
+
+#### Load Satellite Imagery{-}
+
+Next, we will load the satellite imagery. For this example, we used data from [Sentinel-2](https://sentinels.copernicus.eu/web/sentinel/copernicus/sentinel-2). 
+In `sits`, several providers offer Sentinel-2 ARD images. In this example, 
+we will use images provided by the Microsoft Planetary Computer (**MPC**).
+
+**sits**
+
+```{r, eval = FALSE}
+data <- sits_cube(
+  source     = "MPC",
+  collection = "SENTINEL-2-L2A",
+  bands      = c("B02", "B03", "B04"),
+  tiles      = c("20LNQ", "20LMQ"),
+  start_date = "2024-08-01",
+  end_date   = "2024-08-03"
+)
+```
+
+**gee**
+
+```js
+var data = ee.ImageCollection('COPERNICUS/S2_SR_HARMONIZED')
+  .filterDate('2024-08-01', '2024-08-03')
+  .filter(ee.Filter.inList('MGRS_TILE', ['20LNQ', '20LMQ']))
+  .select(['B4', 'B3', 'B2']);
+```
+
+> `sits` provides search filters for a collection as parameters in the 
+`sits_cube()` function, whereas `gee` offers these filters as methods of an 
+`ImageCollection` object.
+
+#### Mosaic Creation{-}
+
+In `sits`, we will use the `sits_mosaic()` function to create mosaics of our 
+images. In `gee`, we will utilize the `mosaic()` method. 
+`sits_mosaic()` function crops the mosaic based on the `roi` parameter. 
+In `gee`, cropping is performed using the `clip()` method. 
+We will use the same `roi` that was used to filter the images to perform 
+the cropping on the mosaic. See the following code:
+
+**sits**
+
+```{r, eval = FALSE}
+mosaic <- sits_mosaic(
+  cube       = data,
+  roi        = roi,
+  multicores = 4,
+  output_dir = tempdir()
+)
+```
+
+**gee**
+
+```js
+var mosaic = data.mosaic().clip(roi);
+```
+
+#### View Result{-}
+
+Finally, the results can be visualized in an interactive map.
+
+**sits**
+
+```{r, eval = FALSE}
+sits_view(
+  x     = mosaic,
+  red   = "B04",
+  green = "B03",
+  blue  = "B02"
+)
+```
+
+```{r, echo = FALSE, out.width = "100%", out.height = "50%"}
+knitr::include_graphics("./images/sitsgee/mosaic-sits.png")
+```
+
+**gee**
+
+```js
+// Define view region
+Map.centerObject(roi, 10);
+
+// Add mosaic Image
+Map.addLayer(mosaic, {
+    min: 0, 
+    max: 3000
+}, 'Mosaic');
+```
+
+```{r, echo = FALSE, out.width = "100%", out.height = "50%"}
+knitr::include_graphics("./images/sitsgee/mosaic-gee.png")
+```
+
+### Example 2: Calculating NDVI{-}
+
+This example demonstrates how to generate time-series of Normalized Difference 
+Vegetation Index (NDVI) using both the `sits` and `gee` APIs.
+
+#### Define Region of Interest data{-}
+
+In this example, a Region of Interest (ROI) is defined using the `sinop_roi.shp` 
+file. Below are the code snippets for specifying this file in both `sits` and 
+`gee` environments.
+
+> To reproduce the example, you can download the shapefile using [this link](data/sits-gee/sinop_roi.zip). 
+In `sits`, you can just use it. In `gee`, it would be required to upload the 
+file in your user space.
+
+**sits**
+
+```{r, eval = FALSE}
+roi_data <- "sinop_roi.shp"
+```
+
+**gee**
+
+```js
+var roi_data = ee.FeatureCollection("/path/to/sinop_roi");
+```
+
+#### Load Satellite Imagery{-}
+
+Next, we load the satellite imagery. For this example, we use data from [Landsat-8](https://www.usgs.gov/landsat-missions/landsat-8). 
+In `sits`, this data is retrieved from the Brazil Data Cube, although 
+other sources are available. For `gee`, the data provided by the platform is used.
+
+In `sits`, when the data is loaded, all necessary transformations to make the 
+data ready for use (e.g., `factor`, `offset`, `cloud masking`) are applied 
+automatically. In `gee`, users are responsible for performing these 
+transformations themselves.
+
+**sits**
+
+```{r, eval = FALSE}
+data <- sits_cube(
+    source      = "BDC",
+    collection  = "LANDSAT-OLI-16D",
+    bands       = c("RED", "NIR08", "CLOUD"),
+    roi         = roi_data,
+    start_date  = "2019-05-01",
+    end_date    = "2019-07-01"
+)
+```
+
+**gee**
+
+```js
+var data = ee.ImageCollection("LANDSAT/LC08/C02/T1_L2")
+  .filterBounds(roi_data)
+  .filterDate("2019-05-01", "2019-07-01")
+  .select(["SR_B4", "SR_B5", "QA_PIXEL"]);
+
+// factor and offset
+data = data.map(function(image) {
+  var opticalBands = image.select('SR_B.').multiply(0.0000275).add(-0.2);
+  return image.addBands(opticalBands, null, true);
+});
+
+data = data.map(function(image) {
+  // Select the pixel_qa band
+  var qa = image.select('QA_PIXEL');
+
+  // Create a mask to identify cloud and cloud shadow
+  var cloudMask = qa.bitwiseAnd(1 << 5).eq(0) // Clouds
+           .and(qa.bitwiseAnd(1 << 3).eq(0)); // Cloud shadows
+
+  // Apply the cloud mask to the image
+  return image.updateMask(cloudMask);
+});
+```
+
+#### Generate NDVI{-}
+
+After loading the satellite imagery, the NDVI can be generated. In `sits`, a 
+function allows users to specify the formula used to create a new attribute, 
+in this case, NDVI. In `gee`, a callback function is used, where the NDVI is 
+calculated for each image.
+
+**sits**
+
+```{r, eval = FALSE}
+data_ndvi <- sits_apply(
+  data        = data,
+  NDVI        = (NIR08 - RED) / (NIR08 + RED),
+  output_dir  = tempdir(),
+  multicores  = 4,
+  progress    = TRUE
+)
+```
+
+**gee**
+
+```js
+var data_ndvi = data.map(function(image) {
+  var ndvi = image.normalizedDifference(["SR_B5", "SR_B4"]).rename('NDVI');
+
+  return image.addBands(ndvi);
+});
+
+data_ndvi = data_ndvi.select("NDVI");
+```
+
+#### Crop Result{-}
+
+The results are clipped to the ROI defined at the beginning of the 
+example to facilitate visualization.
+
+> In both APIs, you can define a ROI before performing the 
+operation to optimize resource usage. However, in this example, the data is 
+cropped after the calculation.
+
+**sits**
+
+```{r, eval = FALSE}
+data_ndvi <- sits_mosaic(
+  cube       = data_ndvi,
+  roi        = roi_data,
+  output_dir = tempdir(),
+  multicores = 4
+)
+```
+
+**gee**
+
+```js
+data_ndvi = data_ndvi.map(function(image) {
+  return image.clip(roi_data);
+});
+```
+
+#### View Result{-}
+
+Finally, the results can be visualized in an interactive map.
+
+**sits**
+
+```{r, eval = FALSE}
+sits_view(data_ndvi, band = "NDVI", date = "2019-05-25", opacity = 1)
+```
+
+```{r, echo = FALSE, out.width = "100%", out.height = "50%"}
+knitr::include_graphics("./images/sitsgee/ndvi-sits.png")
+```
+
+**gee**
+
+```js
+// Define view region
+Map.centerObject(roi_data, 10);
+
+// Add classification map (colors from sits)
+Map.addLayer(data_ndvi, {
+    min: 0, 
+    max: 1, 
+    palette: ["red", 'white', 'green']
+}, "NDVI Image");
+```
+
+```{r, echo = FALSE, out.width = "100%", out.height = "50%"}
+knitr::include_graphics("./images/sitsgee/ndvi-gee.png")
+```
+
+### Example 3: Land Use and Land Cover (LULC) Classification{-}
+
+This example demonstrates how to perform Land Use and Land Cover (LULC) 
+classification using satellite image time series and machine-learning models in 
+both `sits` and `gee`.
+
+#### Define Region of Interest data{-}
+
+This example defines the region of interest (ROI) using a shapefile named 
+`sinop_roi.shp`. Below are the code snippets for specifying this file in both 
+`sits` and `gee` environments.
+
+> To reproduce the example, you can download the shapefile using [this link](data/sits-gee/sinop_roi.zip). 
+In `sits`, you can just use it. In `gee`, it would be required to upload the 
+file in your user space.
+
+**sits**
+
+```r
+roi_data <- "sinop_roi.shp"
+```
+
+**gee**
+
+```js
+var roi_data = ee.FeatureCollection("/path/to/sinop_roi");
+```
+
+#### Define Sample Data{-}
+
+To train a classifier, sample data with labels representing the behavior of 
+each class to be identified is necessary. In this example, we use a small set 
+with `18` samples. The following code snippets show how these samples are defined 
+in each environment.
+
+In `sits`, labels can be of type `string`, whereas `gee` requires labels to be 
+`integers`. To accommodate this difference, two versions of the same sample set 
+were created: (1) one with `string` labels for use with `sits`, and (2) another 
+with `integer` labels for use with `gee`.
+
+> To download these samples, you can use the following links: 
+[samples_sinop_crop for sits](data/sits-gee/samples_sinop_crop.zip) or [samples_sinop_crop for gee](data/sits-gee/samples_sinop_crop_gee.zip)
+
+**sits**
+
+```r
+samples <- "samples_sinop_crop.shp"
+```
+
+**gee**
+
+```js
+var samples = ee.FeatureCollection("samples_sinop_crop_gee");
+```
+
+#### Load Satellite Imagery{-}
+
+Next, we load the satellite imagery. For this example, we use data from [MOD13Q1](https://ladsweb.modaps.eosdis.nasa.gov/missions-and-measurements/products/MOD13Q1) . 
+In `sits`, this data is retrieved from the Brazil Data Cube, but other 
+sources are also available. In `gee`, the platform directly provides this data.
+
+In `sits`, all necessary data transformations for classification tasks are 
+handled automatically. In contrast, `gee` requires users to manually transform 
+the data into the correct format.
+
+In this context it's important to note that, in the `gee` code, transforming all 
+images into bands mimics the approach used by `sits` for non-temporal classifiers. 
+However, this method is not inherently scalable in `gee` and may need adjustments 
+for larger datasets or more bands. Additionally, for temporal classifiers like 
+TempCNN, other transformations are necessary and must be manually implemented by 
+the user in `gee`.
+
+In contrast, `sits` provides a consistent API experience, regardless of the data 
+size or machine learning algorithm.
+
+**sits**
+
+```r
+data <- sits_cube(
+    source      = "BDC",
+    collection  = "MOD13Q1-6.1",
+    bands       = c("NDVI"),
+    roi         = roi_data,
+    start_date  = "2013-09-01",
+    end_date    = "2014-08-29"
+)
+```
+
+**gee**
+
+```js
+var data = ee.ImageCollection("MODIS/061/MOD13Q1")
+  .filterBounds(roi_data)
+  .filterDate("2013-09-01", "2014-09-01")
+  .select(["NDVI"]);
+
+// Transform all images to bands
+data = data.toBands();
+```
+
+#### Extract sample time-series{-}
+
+In this example, we'll use a Random Forest classifier to create a LULC map. To 
+train the classifier, we need sample data linked to time-series.
+
+This step shows how to extract and associate time-series with samples.
+
+**sits**
+
+```r
+samples_ts <- sits_get_data(
+    cube       = data,
+    samples    = samples,
+    multicores = 4
+)
+```
+
+**gee**
+
+```js
+var samples_ts = data.sampleRegions({
+  collection: samples,
+  properties: ["label"]
+});
+```
+
+#### Train classification model{-}
+
+With the time-series data extracted for each sample, we can now train the Random
+Forest classifier
+
+**sits**
+
+```r
+classifier <- sits_train(
+    samples_ts, sits_rfor(num_trees = 100)
+)
+```
+
+**gee**
+
+```js
+var classifier = ee.Classifier.smileRandomForest(100).train({
+  features: samples_ts,
+  classProperty: "label",
+  inputProperties: data.bandNames()
+});
+```
+
+#### Generate classification map{-}
+
+Now, it is possible to generate the classification map using the trained Random 
+Forest model.
+
+In `sits`, the classification process starts with a probability map. 
+This map provides the probability of each class for every pixel, offering insights 
+into the classifier's performance. It also allows for refining the results using
+methods like Bayesian probability smoothing. After generating the probability map, 
+it is possible to produce the class map, where each pixel is assigned to the class 
+with the highest probability.
+
+In `gee`, while it is possible to generate probabilities, it is not strictly 
+required to produce the classification map. Yet, as of the date of this document, 
+there is no out-of-the-box solution available for utilizing these probabilities 
+to enhance classification results, as presented in `sits`
+
+**sits**
+
+```r
+probabilities <- sits_classify(
+    data       = data,
+    ml_model   = classifier,
+    multicores = 4,
+    roi        = roi_data,
+    output_dir = tempdir()
+)
+
+class_map <- sits_label_classification(
+    cube       = probabilities,
+    output_dir = tempdir(),
+    multicores = 4
+)
+```
+
+**gee**
+
+```js
+var probs_map = data.classify(classifier.setOutputMode("MULTIPROBABILITY"));
+var class_map = data.classify(classifier);
+```
+
+#### Crop Result{-}
+
+The results are clipped to the ROI defined at the beginning of the example to 
+facilitate visualization.
+
+> In both APIs, it's possible to define an ROI before processing. However, this 
+was not applied in this example.
+
+**sits**
+
+```r
+class_map <- sits_mosaic(
+    cube       = class_map,
+    roi        = roi_data,
+    output_dir = tempdir(),
+    multicores = 4
+)
+```
+
+**gee**
+
+```js
+class_map = class_map.clip(roi_data);
+```
+
+#### View Result{-}
+
+Finally, the results can be visualized on an interactive map.
+
+**sits**
+
+```r
+sits_view(class_map, opacity = 1)
+```
+
+```{r, echo = FALSE, out.width = "100%", out.height = "50%"}
+knitr::include_graphics("./images/sitsgee/classification-sits.png")
+```
+
+**gee**
+
+```js
+// Define view region
+Map.centerObject(roi_data, 10);
+
+// Add classification map (colors from sits)
+Map.addLayer(class_map, {
+    min: 1,
+    max: 4,
+    palette: ["#FAD12D", "#1E8449", "#D68910", "#a2d43f"]
+}, "Classification map");
+```
+
+```{r, echo = FALSE, out.width = "100%", out.height = "50%"}
+knitr::include_graphics("./images/sitsgee/classification-gee.png")
+```
+>>>>>>> 8712241aad54bee8b0ba9c8623758144364623a4:15-annex.Rmd
+
+<!--chapter:end:16-annex.Rmd-->
 
 # References{-}
 
-<!--chapter:end:16-references.Rmd-->
+<!--chapter:end:17-references.Rmd-->
 

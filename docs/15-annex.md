@@ -14,7 +14,7 @@ In examples provided in the book, the color legend is taken from a predefined co
 ```
 
 ```
-#> # A tibble: 236 × 2
+#> # A tibble: 241 × 2
 #>    name                             color  
 #>    <chr>                            <chr>  
 #>  1 Evergreen_Broadleaf_Forest       #1E8449
@@ -27,7 +27,7 @@ In examples provided in the book, the color legend is taken from a predefined co
 #>  8 Mountainside_Forest              #229C59
 #>  9 Mountainside_Forests             #229C59
 #> 10 Open_Forest                      #53A145
-#> # ℹ 226 more rows
+#> # ℹ 231 more rows
 ```
 
 These colors are grouped by typical legends used by the Earth observation community, which include "IGBP", "UMD", "ESA_CCI_LC", "WORLDCOVER", "PRODES", "PRODES_VISUAL", "TERRA_CLASS", "TERRA_CLASS_PT". The following commands shows the colors associated with the IGBP legend [@Herold2009].
@@ -418,7 +418,7 @@ Error messages are also stored outside of the code in the YAML configuration fil
 We strive for high code coverage (> 90\%). Every parameter of all `sits` function (including internal ones) is checked for consistency. Please see `api_check.R`. 
 
 
-### Supporting new STAC-based image catalogues 
+### Supporting new STAC-based image catalogues{-}
 
 If you want to include a STAC-based catalogue not yet supported by `sits`, we encourage you to look at existing implementations of catalogues such as Microsoft Planetary Computer (MPC), Digital Earth Africa (DEA) and AWS. STAC-based catalogues in `sits` are associated to YAML description files, which are available in the directory `.inst/exdata/sources`. For example, the YAML file `config_source_mpc.yml` describes the contents of the MPC collections supported by `sits`. Please first provide an YAML file which lists the detailed contents of the new catalogue you wish to include. Follow the examples provided.
 

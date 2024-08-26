@@ -27,7 +27,7 @@ When a set of time series organized as tibble is taken as input to the classifie
 
 ## Random forest{-}
 
-Random forest is a machine learning algorithm that uses an ensemble learning method for classification tasks. The algorithm consists of multiple decision trees, each trained on a different subset of the training data and with a different subset of features. To make a prediction, each decision tree in the forest independently classifies the input data. The final prediction is made based on the majority vote of all the decision trees. The randomness in the algorithm comes from the random subsets of data and features used to train each decision tree, which helps to reduce overfitting and improve the accuracy of the model. This classifier measures the importance of each feature in the classification task, which can be helpful in feature selection and data visualization. Pelletier et al.  discuss the robustness of random forest method for satellite image time series classification [@Pelletier2016]. 
+Random forest is a machine learning algorithm that uses an ensemble learning method for classification tasks. The algorithm consists of multiple decision trees, each trained on a different subset of the training data and with a different subset of features. To make a prediction, each decision tree in the forest independently classifies the input data. The final prediction is made based on the majority vote of all the decision trees. The randomness in the algorithm comes from the random subsets of data and features used to train each decision tree, which helps to reduce overfitting and improve the accuracy of the model. This classifier measures the importance of each feature in the classification task, which can be helpful in feature selection and data visualization. For an in-depth discussion of the robustness of random forest method for satellite image time series classification, please see Pelletier et al [@Pelletier2016]. 
 
 <div class="figure" style="text-align: center">
 <img src="./images/random_forest.png" alt="Random forest algorithm (Source: Venkata Jagannath in Wikipedia - licenced as CC-BY-SA 4.0)." width="90%" />
@@ -50,7 +50,7 @@ plot(rfor_model)
 ```
 
 <div class="figure" style="text-align: center">
-<img src="08-machinelearning_files/figure-html/mlrformodel-1.png" alt="Most important variables in random forest model (source: authors)." width="90%" />
+<img src="./images/mlrformodel.png" alt="Most important variables in random forest model (source: authors)." width="90%" />
 <p class="caption">(\#fig:mlrformodel)Most important variables in random forest model (source: authors).</p>
 </div>
 
@@ -67,10 +67,16 @@ point_class <- sits_classify(
 plot(point_class, bands = c("NDVI", "EVI"))
 ```
 
+
+``` r
+knitr::include_graphics("./images/mlrforplot.png")
+```
+
 <div class="figure" style="text-align: center">
-<img src="08-machinelearning_files/figure-html/mlrforplot-1.png" alt="Classification of time series using random forest (source: authors)." width="90%" />
+<img src="./images/mlrforplot.png" alt="Classification of time series using random forest (source: authors)." width="90%" />
 <p class="caption">(\#fig:mlrforplot)Classification of time series using random forest (source: authors).</p>
 </div>
+
 
 The result shows that the area started as a forest in 2000, was deforested from 2004 to 2005, used as pasture from 2006 to 2007, and for double-cropping agriculture from 2009 onwards. This behavior is consistent with expert evaluation of land change process in this region of Amazonia.
 
@@ -111,9 +117,10 @@ plot(point_class, bands = c("NDVI", "EVI"))
 ```
 
 <div class="figure" style="text-align: center">
-<img src="08-machinelearning_files/figure-html/mlsvmplot-1.png" alt="Classification of time series using SVM (source: authors)." width="90%" />
+<img src="./images/mlsvmplot.png" alt="Classification of time series using SVM (source: authors)." width="90%" />
 <p class="caption">(\#fig:mlsvmplot)Classification of time series using SVM (source: authors).</p>
 </div>
+
 The SVM classifier is less stable and less robust to outliers than the random forest method. In this example, it tends to misclassify some of the data. In 2008, it is likely that the correct land class was still `Pasture` rather than `Soy_Millet` as produced by the algorithm, while the `Soy_Cotton` class in 2012 is also inconsistent with the previous and latter classification of `Soy_Corn`.
 
 ## Extreme gradient boosting{-}
@@ -151,11 +158,11 @@ point_class_xgb <- sits_classify(
 plot(point_class_xgb, bands = c("NDVI", "EVI"))
 ```
 
+
 <div class="figure" style="text-align: center">
-<img src="08-machinelearning_files/figure-html/mlxgbplot-1.png" alt="Classification of time series using XGBoost (source: authors)." width="90%" />
+<img src="./images/mlxgbplot.png" alt="Classification of time series using XGBoost (source: authors)." width="90%" />
 <p class="caption">(\#fig:mlxgbplot)Classification of time series using XGBoost (source: authors).</p>
 </div>
-
 
 ## Deep learning using multilayer perceptron{-}
 
@@ -199,8 +206,8 @@ plot(mlp_model)
 ```
 
 <div class="figure" style="text-align: center">
-<img src="08-machinelearning_files/figure-html/mlmlpplot-1.png" alt="Evolution of training accuracy of MLP model (source: authors)." width="80%" />
-<p class="caption">(\#fig:mlmlpplot)Evolution of training accuracy of MLP model (source: authors).</p>
+<img src="./images/mlmlpmodel.png" alt="Evolution of training accuracy of MLP model (source: authors)." width="80%" />
+<p class="caption">(\#fig:mlmlpmodel)Evolution of training accuracy of MLP model (source: authors).</p>
 </div>
 
 Then, we classify a 16-year time series using the multilayer perceptron model.
@@ -214,9 +221,10 @@ point_mt_mod13q1 |>
 ```
 
 <div class="figure" style="text-align: center">
-<img src="08-machinelearning_files/figure-html/unnamed-chunk-6-1.png" alt="Classification of time series using MLP (source: authors)." width="90%" />
-<p class="caption">(\#fig:unnamed-chunk-6)Classification of time series using MLP (source: authors).</p>
+<img src="./images/mlmlpplot.png" alt="Classification of time series using MLP (source: authors)." width="90%" />
+<p class="caption">(\#fig:mlmlpplot)Classification of time series using MLP (source: authors).</p>
 </div>
+
 
 In theory, multilayer perceptron model can capture more subtle changes than random forest and XGBoost In this specific case, the result is similar to theirs. Although the model mixes the `Soy_Corn` and `Soy_Millet` classes, the distinction between their temporal signatures is quite subtle. Also, in this case, this suggests the need to improve the number of samples. In this example, the MLP model shows an increase in sensitivity compared to previous models. We recommend to compare different configurations since the MLP model is sensitive to changes in its parameters.
 
@@ -224,9 +232,7 @@ In theory, multilayer perceptron model can capture more subtle changes than rand
 
 Convolutional neural networks (CNN) are deep learning methods that apply convolution filters (sliding windows) to the input data sequentially. The Temporal Convolutional Neural Network (TempCNN) is a neural network architecture specifically designed to process sequential data such as time series. In the case of time series, a 1D CNN applies a moving temporal window to the time series to produce another time series as the result of the convolution. 
 
-TempCNN applies one-dimensional convolutions on the input sequence to capture temporal dependencies, allowing the network to learn long-term dependencies in the input sequence. Each layer of the model captures temporal dependencies at a different scale. Due to its multi-scale approach, TempCNN can capture complex temporal patterns in the data and produce accurate predictions.
-
-The TempCNN architecture for satellite image time series classification is proposed by Pelletier et al. [@Pelletier2019].  It has three 1D convolutional layers and a final softmax layer for classification (see Figure \@ref(fig:mltcnnfig)). The authors combine different methods to avoid overfitting and reduce the vanishing gradient effect, including dropout, regularization, and batch normalization. In the TempCNN reference paper [@Pelletier2019], the authors favourably compare their model with the Recurrent Neural Network proposed by Russwurm and Körner [@Russwurm2018]. Figure \@ref(fig:mltcnnfig) shows the architecture of the TempCNN model.
+The TempCNN architecture for satellite image time series classification is proposed by Pelletier et al. [@Pelletier2019].  It has three 1D convolutional layers and a final softmax layer for classification (see Figure \@ref(fig:mltcnnfig)). The authors combine different methods to avoid overfitting and reduce the vanishing gradient effect, including dropout, regularization, and batch normalization. In the TempCNN reference paper [@Pelletier2019], the authors favourably compare their model with the Recurrent Neural Network proposed by Russwurm and Körner [@Russwurm2018]. Figure \@ref(fig:mltcnnfig) shows the architecture of the TempCNN model. TempCNN applies one-dimensional convolutions on the input sequence to capture temporal dependencies, allowing the network to learn long-term dependencies in the input sequence. Each layer of the model captures temporal dependencies at a different scale. Due to its multi-scale approach, TempCNN can capture complex temporal patterns in the data and produce accurate predictions.
 
 <div class="figure" style="text-align: center">
 <img src="./images/tempcnn.png" alt="Structure of tempCNN architecture (Source: Pelletier et al. (2019). Reproduction under fair use doctrine). " width="100%" />
@@ -260,11 +266,11 @@ plot(tempcnn_model)
 ```
 
 <div class="figure" style="text-align: center">
-<img src="08-machinelearning_files/figure-html/mltcnnmodel-1.png" alt="Training evolution of TempCNN model (source: authors)." width="80%" />
+<img src="./images/mltcnnmodel.png" alt="Training evolution of TempCNN model (source: authors)." width="80%" />
 <p class="caption">(\#fig:mltcnnmodel)Training evolution of TempCNN model (source: authors).</p>
 </div>
 
-Then, we classify a 16-year time series using the TempCNN model.
+Using the TempCNN model, we classify a 16-year time series.
 
 
 ``` r
@@ -278,6 +284,17 @@ point_mt_mod13q1 |>
 <img src="08-machinelearning_files/figure-html/mltccnplot-1.png" alt="Classification of time series using TempCNN (source: authors)." width="90%" />
 <p class="caption">(\#fig:mltccnplot)Classification of time series using TempCNN (source: authors).</p>
 </div>
+
+
+``` r
+knitr::include_graphics("./images/mltcnnplot.png")
+```
+
+<div class="figure" style="text-align: center">
+<img src="./images/mltcnnplot.png" alt="Classification of time series using TempCNN (source: authors)." width="90%" />
+<p class="caption">(\#fig:mltcnnplot)Classification of time series using TempCNN (source: authors).</p>
+</div>
+
 
 The result has important differences from the previous ones. The TempCNN model indicates the `Soy_Cotton` class as the most likely one in 2004. While this result is possibly wrong, it shows that the time series for 2004 is different from those of Forest and Pasture classes. One possible explanation is that there was forest degradation in 2004, leading to a signature that is a mix of forest and bare soil. In this case, including forest degradation samples could improve the training data. In our experience, TempCNN models are a reliable way of classifying image time series [@Simoes2021]. Recent work which compares different models also provides evidence that TempCNN models have satisfactory behavior, especially in the case of crop classes [@Russwurm2020].
 
@@ -322,7 +339,7 @@ plot(tae_model)
 ```
 
 <div class="figure" style="text-align: center">
-<img src="08-machinelearning_files/figure-html/mltaemodel-1.png" alt="Training evolution of Temporal Self-Attention model (source: authors)." width="100%" />
+<img src="./images/mltaemodel.png" alt="Training evolution of Temporal Self-Attention model (source: authors)." width="100%" />
 <p class="caption">(\#fig:mltaemodel)Training evolution of Temporal Self-Attention model (source: authors).</p>
 </div>
 
@@ -337,9 +354,10 @@ point_mt_mod13q1 |>
 ```
 
 <div class="figure" style="text-align: center">
-<img src="08-machinelearning_files/figure-html/mltaeplot-1.png" alt="Classification of time series using TAE (source: authors)." width="100%" />
+<img src="./images/mltaeplot.png" alt="Classification of time series using TAE (source: authors)." width="100%" />
 <p class="caption">(\#fig:mltaeplot)Classification of time series using TAE (source: authors).</p>
 </div>
+
 
 Garnot and co-authors also proposed the Lightweight Temporal Self-Attention Encoder (LTAE) [@Garnot2020b], which the authors claim can achieve high classification accuracy with fewer parameters compared to other neural network models. It is a good choice for applications where computational resources are limited. The `sits_lighttae()` function implements this algorithm. The most important parameter to be set is the learning rate `lr`. Values ranging from 0.001 to 0.005 should produce good results. See also the section below on model tuning. 
 
@@ -361,7 +379,7 @@ plot(ltae_model)
 ```
 
 <div class="figure" style="text-align: center">
-<img src="08-machinelearning_files/figure-html/mlltaemodel-1.png" alt="Training evolution of Lightweight Temporal Self-Attention model (source: authors)." width="80%" />
+<img src="./images/mlltaemodel.png" alt="Training evolution of Lightweight Temporal Self-Attention model (source: authors)." width="80%" />
 <p class="caption">(\#fig:mlltaemodel)Training evolution of Lightweight Temporal Self-Attention model (source: authors).</p>
 </div>
 
@@ -376,7 +394,7 @@ point_mt_mod13q1 |>
 ```
 
 <div class="figure" style="text-align: center">
-<img src="08-machinelearning_files/figure-html/mlltaeplot-1.png" alt="Classification of time series using LightTAE (source: authors)." width="100%" />
+<img src="./images/mlltaeplot.png" alt="Classification of time series using LightTAE (source: authors)." width="100%" />
 <p class="caption">(\#fig:mlltaeplot)Classification of time series using LightTAE (source: authors).</p>
 </div>
 
@@ -395,8 +413,6 @@ Deep learning algorithms try to find the optimal point representing the best val
 To reduce the learning curve, `sits` provides default values for all machine learning and deep learning methods, ensuring a reasonable baseline performance. However, refininig model hyperparameters might be necessary, especially for more complex models such as `sits_lighttae()` or `sits_tempcnn()`. To that end, the package provides the `sits_tuning()` function. 
 
 The most straightforward approach to model tuning is to run a grid search; this involves defining a range for each hyperparameter and then testing all possible combinations. This approach leads to a combinatorial explosion and thus is not recommended. Instead, Bergstra and Bengio propose randomly chosen trials [@Bergstra2012]. Their paper shows that randomized trials are more efficient than grid search trials, selecting adequate hyperparameters at a fraction of the computational cost. The `sits_tuning()` function follows Bergstra and Bengio by using a random search on the chosen hyperparameters.
-
-
 
 Experiments with image time series show that other optimizers may have better performance for the specific problem of land classification. For this reason, the authors developed the  `torchopt` R package, which includes several recently proposed optimizers, including Madgrad [@Defazio2021], and Yogi [@Zaheer2018]. Using the `sits_tuning()` function allows testing these and other optimizers available in `torch` and `torch_opt` packages.  
 

@@ -4,7 +4,7 @@
 
 
 
-Ensemble prediction is a powerful technique for combining predictions from multiple models to produce more accurate and robust predictions. In general, ensemble predictions produce better predictions than using a single model. This is because the errors of individual models can cancel out or be reduced when combined with the predictions of other models. As a result, ensemble predictions can lead to better overall accuracy and reduce the risk of overfitting. This can be especially useful when working with complex or uncertain data. By combining the predictions of multiple models, users can identify which features or factors are most important for making accurate predictions. When using ensemble methods, choosing diverse models with different sources of error is important to ensure that the ensemble predictions are more accurate and robust.
+Ensemble prediction is a powerful technique for combining predictions from multiple models to produce more accurate and robust predictions. Errors of individual models cancel out or are reduced when combined with the predictions of other models. As a result, ensemble predictions can lead to better overall accuracy and reduce the risk of overfitting. This can be especially useful when working with complex or uncertain data. By combining the predictions of multiple models, users can identify which features or factors are most important for making accurate predictions. When using ensemble methods, choosing diverse models with different sources of error is essential to ensure that the ensemble predictions are more precise and robust.
 
 The `sits` package provides `sits_combine_predictions()` to estimate ensemble predictions using probability cubes produced by `sits_classify()` and optionally post-processed with `sits_smooth()`. There are two ways to make ensemble predictions from multiple models:
 
@@ -36,8 +36,8 @@ plot(ro_cube_20LMR, blue = "B02", green = "B8A", red = "B11", date = "2022-08-17
 ```
 
 <div class="figure" style="text-align: center">
-<img src="13-ensembleprediction_files/figure-html/ensmapfirst-1.png" alt="Subset of Sentinel-2 tile 20LMR (source: authors)." width="100%" />
-<p class="caption">(\#fig:ensmapfirst)Subset of Sentinel-2 tile 20LMR (source: authors).</p>
+<img src="13-ensembleprediction_files/figure-html/ensmapfirst-1.png" alt="Subset of Sentinel-2 tile 20LMR ((&amp;copy;: EU Copernicus Sentinel Programme; source: Microsoft)." width="100%" />
+<p class="caption">(\#fig:ensmapfirst)Subset of Sentinel-2 tile 20LMR ((&copy;: EU Copernicus Sentinel Programme; source: Microsoft).</p>
 </div>
 
 We will train three models: Random Forests (RF), Light Temporal Attention Encoder (LTAE), and Temporal Convolution Neural Networks (TempCNN), classify the cube with them, and then combine their results. The example uses all spectral bands. We first run the RF classification.
@@ -124,7 +124,7 @@ ro_cube_20LMR_rfor_class <- sits_label_classification(
 
 ``` r
 plot(ro_cube_20LMR_rfor_class,
-  tmap_options = list("legend_text_size" = 0.71)
+  legend_text_size = 0.7, legend_position = "outside"
 )
 ```
 
@@ -199,7 +199,7 @@ ro_cube_20LMR_tcnn_class <- sits_label_classification(
 
 ``` r
 plot(ro_cube_20LMR_tcnn_class,
-  tmap_options = list("legend_text_size" = 0.7)
+  legend_text_size = 0.7, legend_position = "outside"
 )
 ```
 
@@ -273,7 +273,7 @@ ro_cube_20LMR_ltae_class <- sits_label_classification(
 
 ``` r
 plot(ro_cube_20LMR_ltae_class,
-  tmap_options = list("legend_text_size" = 0.7)
+  legend_text_size = 0.7, legend_position = "outside"
 )
 ```
 
@@ -353,7 +353,7 @@ ro_cube_20LMR_average_class <- sits_label_classification(
 ``` r
 # Plot the second version of the classified cube
 plot(ro_cube_20LMR_average_class,
-  tmap_options = list("legend_text_size" = 0.7)
+  legend_text_size = 0.7, legend_position = "outside"
 )
 ```
 
@@ -395,9 +395,7 @@ As expected, the ensemble map combines information from the three models. Taking
 
 The average map provides a compromise between RF's strong empahsis on the most frequent classes and the tendency of deep learning methods to produce outliers based on temporal relationship. The average map is less grainy and more spatially consistent than the LTAE and TempCNN maps, while introducing variability which is not present in the RF map. 
 
-This chapter shows the possibilities of ensemble prediction. There are many ways to get better results than those presented here. Increasing the number of spectral bands would improve the final accuracy. Also, Bayesian smoothing for deep learning models should not rely on default parameters; rather it needs to rely on variance analysis, increase the spatial window and provide more informed hyperparameters. 
-
-In general, ensemble prediction should be consider in all situations where one is not satisfied with the results of individual models. Combining model output increses the reliability of the result and thus shouls be considered in all situations where similar classes are present.
+This chapter shows the possibilities of ensemble prediction. There are many ways to get better results than those presented here. Increasing the number of spectral bands would improve the final accuracy. Also, Bayesian smoothing for deep learning models should not rely on default parameters; rather it needs to rely on variance analysis, increase the spatial window and provide more informed hyperparameters. In general, ensemble prediction should be consider in all situations where one is not satisfied with the results of individual models. Combining model output increses the reliability of the result and thus shouls be considered in all situations where similar classes are present.
 
 
 
