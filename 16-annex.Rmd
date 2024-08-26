@@ -96,8 +96,6 @@ combining two or more images, typically used for visualization in various
 applications. In this example, we will demonstrate how to create an image 
 mosaic using `sits` and `gee` APIs.
 
-#### Define Region of Interest data{-}
-
 In this example, a Region of Interest (ROI) is defined using a bounding box
 with longitude and latitude coordinates. Below are the code snippets for 
 specifying this ROI in both `sits` and `gee` environments.
@@ -115,8 +113,6 @@ roi <- c("lon_min" = -63.410, "lat_min" = -9.783,
 ```js
 var roi = ee.Geometry.Rectangle([-63.410,-9.783,-62.614,-9.331]);
 ```
-
-#### Load Satellite Imagery{-}
 
 Next, we will load the satellite imagery. For this example, we used data from [Sentinel-2](https://sentinels.copernicus.eu/web/sentinel/copernicus/sentinel-2). 
 In `sits`, several providers offer Sentinel-2 ARD images. In this example, 
@@ -148,7 +144,6 @@ var data = ee.ImageCollection('COPERNICUS/S2_SR_HARMONIZED')
 `sits_cube()` function, whereas `gee` offers these filters as methods of an 
 `ImageCollection` object.
 
-#### Mosaic Creation{-}
 
 In `sits`, we will use the `sits_mosaic()` function to create mosaics of our 
 images. In `gee`, we will utilize the `mosaic()` method. 
@@ -173,8 +168,6 @@ mosaic <- sits_mosaic(
 ```js
 var mosaic = data.mosaic().clip(roi);
 ```
-
-#### View Result{-}
 
 Finally, the results can be visualized in an interactive map.
 
@@ -215,8 +208,6 @@ knitr::include_graphics("./images/sitsgee/mosaic-gee.png")
 This example demonstrates how to generate time-series of Normalized Difference 
 Vegetation Index (NDVI) using both the `sits` and `gee` APIs.
 
-#### Define Region of Interest data{-}
-
 In this example, a Region of Interest (ROI) is defined using the `sinop_roi.shp` 
 file. Below are the code snippets for specifying this file in both `sits` and 
 `gee` environments.
@@ -236,8 +227,6 @@ roi_data <- "sinop_roi.shp"
 ```js
 var roi_data = ee.FeatureCollection("/path/to/sinop_roi");
 ```
-
-#### Load Satellite Imagery{-}
 
 Next, we load the satellite imagery. For this example, we use data from [Landsat-8](https://www.usgs.gov/landsat-missions/landsat-8). 
 In `sits`, this data is retrieved from the Brazil Data Cube, although 
@@ -288,8 +277,6 @@ data = data.map(function(image) {
 });
 ```
 
-#### Generate NDVI{-}
-
 After loading the satellite imagery, the NDVI can be generated. In `sits`, a 
 function allows users to specify the formula used to create a new attribute, 
 in this case, NDVI. In `gee`, a callback function is used, where the NDVI is 
@@ -319,8 +306,6 @@ var data_ndvi = data.map(function(image) {
 data_ndvi = data_ndvi.select("NDVI");
 ```
 
-#### Crop Result{-}
-
 The results are clipped to the ROI defined at the beginning of the 
 example to facilitate visualization.
 
@@ -346,8 +331,6 @@ data_ndvi = data_ndvi.map(function(image) {
   return image.clip(roi_data);
 });
 ```
-
-#### View Result{-}
 
 Finally, the results can be visualized in an interactive map.
 
@@ -385,8 +368,6 @@ This example demonstrates how to perform Land Use and Land Cover (LULC)
 classification using satellite image time series and machine-learning models in 
 both `sits` and `gee`.
 
-#### Define Region of Interest data{-}
-
 This example defines the region of interest (ROI) using a shapefile named 
 `sinop_roi.shp`. Below are the code snippets for specifying this file in both 
 `sits` and `gee` environments.
@@ -406,8 +387,6 @@ roi_data <- "sinop_roi.shp"
 ```js
 var roi_data = ee.FeatureCollection("/path/to/sinop_roi");
 ```
-
-#### Define Sample Data{-}
 
 To train a classifier, sample data with labels representing the behavior of 
 each class to be identified is necessary. In this example, we use a small set 
@@ -433,8 +412,6 @@ samples <- "samples_sinop_crop.shp"
 ```js
 var samples = ee.FeatureCollection("samples_sinop_crop_gee");
 ```
-
-#### Load Satellite Imagery{-}
 
 Next, we load the satellite imagery. For this example, we use data from [MOD13Q1](https://ladsweb.modaps.eosdis.nasa.gov/missions-and-measurements/products/MOD13Q1) . 
 In `sits`, this data is retrieved from the Brazil Data Cube, but other 
@@ -479,8 +456,6 @@ var data = ee.ImageCollection("MODIS/061/MOD13Q1")
 data = data.toBands();
 ```
 
-#### Extract sample time-series{-}
-
 In this example, we'll use a Random Forest classifier to create a LULC map. To 
 train the classifier, we need sample data linked to time-series.
 
@@ -505,8 +480,6 @@ var samples_ts = data.sampleRegions({
 });
 ```
 
-#### Train classification model{-}
-
 With the time-series data extracted for each sample, we can now train the Random
 Forest classifier
 
@@ -528,8 +501,6 @@ var classifier = ee.Classifier.smileRandomForest(100).train({
 });
 ```
 
-#### Generate classification map{-}
-
 Now, it is possible to generate the classification map using the trained Random 
 Forest model.
 
@@ -543,7 +514,7 @@ with the highest probability.
 In `gee`, while it is possible to generate probabilities, it is not strictly 
 required to produce the classification map. Yet, as of the date of this document, 
 there is no out-of-the-box solution available for utilizing these probabilities 
-to enhance classification results, as presented in `sits`
+to enhance classification results, as presented in `sits`.
 
 **sits**
 
@@ -570,8 +541,6 @@ var probs_map = data.classify(classifier.setOutputMode("MULTIPROBABILITY"));
 var class_map = data.classify(classifier);
 ```
 
-#### Crop Result{-}
-
 The results are clipped to the ROI defined at the beginning of the example to 
 facilitate visualization.
 
@@ -594,8 +563,6 @@ class_map <- sits_mosaic(
 ```js
 class_map = class_map.clip(roi_data);
 ```
-
-#### View Result{-}
 
 Finally, the results can be visualized on an interactive map.
 
@@ -626,4 +593,3 @@ Map.addLayer(class_map, {
 ```{r, echo = FALSE, out.width = "100%", out.height = "50%"}
 knitr::include_graphics("./images/sitsgee/classification-gee.png")
 ```
->>>>>>> 8712241aad54bee8b0ba9c8623758144364623a4:15-annex.Rmd

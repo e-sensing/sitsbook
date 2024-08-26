@@ -93,7 +93,7 @@ Given this situation, we apply the proposed method. Suppose the local variance o
 
 Setting $\sigma^2_{k}$ will be based on our confidence in the local variability of each class around pixel ${i}$. If we considered the local variability to be high, we can take both  $\sigma^2_1$ for class A and $\sigma^2_2$ for class B to be both 10. In this case, the Bayesian  estimated probability for class A is $0.52$  and for class B is $0.48$ and the pixel will be relabeled as being class A. 
 
-By contrast, if we consider local variability to be high If we set $\sigma^2$ to be 5 for both classes A and B, the Bayesian probability estimate will be $0.48$ for class A and $0.52$ for class B. In this case, the original class will be kept. Therefore, the result is sensitive to the subjective choice of the hyperparameter. In the example below, we will show hoq to use the local logit variance to set the appropriate values of $\sigma^2$.
+By contrast, if we consider local variability to be high If we set $\sigma^2$ to be 5 for both classes A and B, the Bayesian probability estimate will be $0.48$ for class A and $0.52$ for class B. In this case, the original class will be kept. Therefore, the result is sensitive to the subjective choice of the hyperparameter. In the example below, we will show how to use the local logit variance to set the appropriate values of $\sigma^2$.
 
 ## Running Bayesian smoothing {-}
 
@@ -165,7 +165,7 @@ rondonia_20LLQ_class <- sits_label_classification(
 
 # Plot the result
 plot(rondonia_20LLQ_class,
-  legend_text_size = 0.7
+  legend_text_size = 0.8, legend_position = "outside"
 )
 ```
 

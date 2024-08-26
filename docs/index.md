@@ -10,7 +10,7 @@ author:
 - Pedro R. Andrade
 - Karine Ferreira
 - Gilberto Queiroz
-date: "2024-08-24"
+date: "2024-08-26"
 output:
   html_document: 
     df_print: tibble
