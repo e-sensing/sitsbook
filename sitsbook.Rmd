@@ -321,72 +321,72 @@ if (!file.exists("./tempdir/chp16"))
 
 This Chapter contains technical details on the algorithms available in `sits`. It is intended to support those that want to understand how the package works and also want to contribute to its development.
 
-<!-- ## Adding functions to the `sits` API{-} -->
+## Adding functions to the `sits` API{-}
 
-<!-- ### General principles{-} -->
+### General principles{-}
 
-<!-- New functions that build on the `sits` API should follow the general principles below. -->
+New functions that build on the `sits` API should follow the general principles below.
 
-<!-- - The target audience for `sits` is the community of remote sensing experts with Earth Sciences background who want to use state-of-the-art data analysis methods with minimal investment in programming skills. The design of the `sits` API considers the typical workflow for land classification using satellite image time series and thus provides a clear and direct set of functions, which are easy to learn and master.  -->
+- The target audience for `sits` is the community of remote sensing experts with Earth Sciences background who want to use state-of-the-art data analysis methods with minimal investment in programming skills. The design of the `sits` API considers the typical workflow for land classification using satellite image time series and thus provides a clear and direct set of functions, which are easy to learn and master.
 
-<!-- - For this reason, we welcome contributors that provide useful additions to the existing API, such as new ML/DL classification algorithms. In case of a new API function, before making a pull request please raise an issue stating your rationale for a new function. -->
+- For this reason, we welcome contributors that provide useful additions to the existing API, such as new ML/DL classification algorithms. In case of a new API function, before making a pull request please raise an issue stating your rationale for a new function.
 
-<!-- - Most functions in `sits` use the S3 programming model with a strong emphasis on generic methods wich are specialized depending on the input data type. See for example the implementation of the `sits_bands()` function.  -->
+- Most functions in `sits` use the S3 programming model with a strong emphasis on generic methods wich are specialized depending on the input data type. See for example the implementation of the `sits_bands()` function.
 
-<!-- - Please do not include contributed code using the S4 programming model. Doing so would break the structure and the logic of existing code. Convert your code from S4 to S3. -->
+- Please do not include contributed code using the S4 programming model. Doing so would break the structure and the logic of existing code. Convert your code from S4 to S3.
 
-<!-- - Use generic functions as much as possible, as they improve modularity and maintenance. If your code has decision points using `if-else` clauses, such as `if A, do X; else do Y` consider using generic functions.  -->
+- Use generic functions as much as possible, as they improve modularity and maintenance. If your code has decision points using `if-else` clauses, such as `if A, do X; else do Y` consider using generic functions.
 
-<!-- - Functions that use the `torch` package use the R6 model to be compatible with that package. See for example, the code in `sits_tempcnn.R` and `api_torch.R`. To convert `pyTorch` code to R and include it is straightforward. Please see the [Technical Annex](https://e-sensing.github.io/sitsbook/technical-annex.html) of the sits on-line book. -->
+- Functions that use the `torch` package use the R6 model to be compatible with that package. See for example, the code in `sits_tempcnn.R` and `api_torch.R`. To convert `pyTorch` code to R and include it is straightforward. Please see the [Technical Annex](https://e-sensing.github.io/sitsbook/technical-annex.html) of the sits on-line book.
 
-<!-- - The sits code relies on the packages of the `tidyverse` to work with tables and list. We use `dplyr` and `tidyr` for data selection and wrangling, `purrr` and `slider` for loops on lists and table, `lubridate` to handle dates and times.  -->
+- The sits code relies on the packages of the `tidyverse` to work with tables and list. We use `dplyr` and `tidyr` for data selection and wrangling, `purrr` and `slider` for loops on lists and table, `lubridate` to handle dates and times.
 
-<!-- ### Adherence to the `sits` data types{-} -->
+### Adherence to the `sits` data types{-}
 
-<!-- The `sits` package in built on top of three data types: time series tibble, data cubes and models. Most `sits` functions have one or more of these types as inputs and one of them as return values. The time series tibble contains data and metadata. The first six columns contain the metadata: spatial and temporal information, the label assigned to the sample, and the data cube from where the data has been extracted. The time_series column contains the time series data for each spatiotemporal location. All time series tibbles are objects of class `sits`.  -->
+The `sits` package in built on top of three data types: time series tibble, data cubes and models. Most `sits` functions have one or more of these types as inputs and one of them as return values. The time series tibble contains data and metadata. The first six columns contain the metadata: spatial and temporal information, the label assigned to the sample, and the data cube from where the data has been extracted. The time_series column contains the time series data for each spatiotemporal location. All time series tibbles are objects of class `sits`.
 
-<!-- The `cube` data type is designed to store metadata about image files. In principle, images which are part of a data cube share the same geographical region, have the same bands, and have been regularized to fit into a pre-defined temporal interval. Data cubes in `sits` are organized by tiles. A tile is an element of a satellite's mission reference system, for example MGRS for Sentinel-2 and WRS2 for Landsat. A `cube` is a tibble where each row contains information about data covering one tile. Each row of the cube tibble contains a column named `file_info`; this column contains a list that stores a tibble  -->
+The `cube` data type is designed to store metadata about image files. In principle, images which are part of a data cube share the same geographical region, have the same bands, and have been regularized to fit into a pre-defined temporal interval. Data cubes in `sits` are organized by tiles. A tile is an element of a satellite's mission reference system, for example MGRS for Sentinel-2 and WRS2 for Landsat. A `cube` is a tibble where each row contains information about data covering one tile. Each row of the cube tibble contains a column named `file_info`; this column contains a list that stores a tibble
 
-<!-- The `cube` data type is specialised in `raster_cube` (ARD images), `vector_cube` (ARD cube with segmentation vectors). `probs_cube` (probabilities produced by classification algorithms on raster data), `probs_vector_cube`(probabilites generated by vector classification of segments),  `uncertainty_cube` (cubes with uncertainty information), and `class_cube` (labelled maps). See the code in `sits_plot.R` as an example of specialisation of `plot` to handle different classes of raster data.  -->
+The `cube` data type is specialised in `raster_cube` (ARD images), `vector_cube` (ARD cube with segmentation vectors). `probs_cube` (probabilities produced by classification algorithms on raster data), `probs_vector_cube`(probabilites generated by vector classification of segments),  `uncertainty_cube` (cubes with uncertainty information), and `class_cube` (labelled maps). See the code in `sits_plot.R` as an example of specialisation of `plot` to handle different classes of raster data.
 
-<!-- All ML/DL models in `sits` which are the result of `sits_train` belong to the `ml_model` class. In addition, models are assigned a second class, which is unique to ML models (e.g, `rfor_model`, `svm_model`) and generic for all DL `torch` based models (`torch_model`). The class information is used for plotting models and for establishing if a model can run on GPUs.  -->
+All ML/DL models in `sits` which are the result of `sits_train` belong to the `ml_model` class. In addition, models are assigned a second class, which is unique to ML models (e.g, `rfor_model`, `svm_model`) and generic for all DL `torch` based models (`torch_model`). The class information is used for plotting models and for establishing if a model can run on GPUs.
 
-<!-- ### Literal values, error messages, and testing{-} -->
+### Literal values, error messages, and testing{-}
 
-<!-- The internal `sits` code has no literal values, which are all stored in the YAML configuration files `./inst/extdata/config.yml` and `./inst/extdata/config_internals.yml`. The first file contains configuration parameters that are relevant to users, related to visualisation and plotting; the second contains parameters that are relevant only for developers. These values are accessible using the `.conf` function. For example, the value of the default size for ploting COG files is accessed using the command `.conf["plot", "max_size"]`.  -->
+The internal `sits` code has no literal values, which are all stored in the YAML configuration files `./inst/extdata/config.yml` and `./inst/extdata/config_internals.yml`. The first file contains configuration parameters that are relevant to users, related to visualisation and plotting; the second contains parameters that are relevant only for developers. These values are accessible using the `.conf` function. For example, the value of the default size for ploting COG files is accessed using the command `.conf["plot", "max_size"]`.
 
-<!-- Error messages are also stored outside of the code in the YAML configuration file `./inst/extdata/config_messages.yml`. These values are accessible using the `.conf` function. For example, the error associated to an invalid NA value for an input parameter is accessible using th function `.conf("messages", ".check_na_parameter")`.  -->
+Error messages are also stored outside of the code in the YAML configuration file `./inst/extdata/config_messages.yml`. These values are accessible using the `.conf` function. For example, the error associated to an invalid NA value for an input parameter is accessible using th function `.conf("messages", ".check_na_parameter")`.
 
-<!-- We strive for high code coverage (> 90\%). Every parameter of all `sits` function (including internal ones) is checked for consistency. Please see `api_check.R`.  -->
-
-
-<!-- ### Supporting new STAC-based image catalogues{-} -->
-
-<!-- If you want to include a STAC-based catalogue not yet supported by `sits`, we encourage you to look at existing implementations of catalogues such as Microsoft Planetary Computer (MPC), Digital Earth Africa (DEA) and AWS. STAC-based catalogues in `sits` are associated to YAML description files, which are available in the directory `.inst/exdata/sources`. For example, the YAML file `config_source_mpc.yml` describes the contents of the MPC collections supported by `sits`. Please first provide an YAML file which lists the detailed contents of the new catalogue you wish to include. Follow the examples provided. -->
-
-<!-- After writing the YAML file, you need to consider how to access and query the new catalogue. The entry point for access to all catalogues is the `sits_cube.stac_cube()` function, which in turn calls a sequence of functions which are described in the generic interface `api_source.R`. Most calls of this API are handled by the functions of `api_source_stac.R` which provides an interface to the `rstac` package and handles STAC queries.  -->
-
-<!-- Each STAC catalogue is different. The STAC specification allows providers to implement their data descriptions with specific information. For this reason, the generic API described in `api_source.R` needs to be specialized for each provider. Whenever a provider needs specific implementations of parts of the STAC protocol, we include them in separate files. For example, `api_source_mpc.R` implements specific quirks of the MPC platform. Similarly, specific support for CDSE (Copernicus Data Space Environment) is available in `api_source_cdse.R`.  -->
+We strive for high code coverage (> 90\%). Every parameter of all `sits` function (including internal ones) is checked for consistency. Please see `api_check.R`.
 
 
-<!-- ## Exporting data to JSON{-} -->
+### Supporting new STAC-based image catalogues{-}
 
-<!-- Both the data cube and the time series tibble can be exported to exchange formats such as JSON. -->
+If you want to include a STAC-based catalogue not yet supported by `sits`, we encourage you to look at existing implementations of catalogues such as Microsoft Planetary Computer (MPC), Digital Earth Africa (DEA) and AWS. STAC-based catalogues in `sits` are associated to YAML description files, which are available in the directory `.inst/exdata/sources`. For example, the YAML file `config_source_mpc.yml` describes the contents of the MPC collections supported by `sits`. Please first provide an YAML file which lists the detailed contents of the new catalogue you wish to include. Follow the examples provided.
 
-<!-- ```{r, tidy = "styler", eval = FALSE} -->
-<!-- library(jsonlite) -->
-<!-- # Export the data cube to JSON -->
-<!-- jsonlite::write_json( -->
-<!--   x = sinop, -->
-<!--   path = "./data_cube.json", -->
-<!--   pretty = TRUE) -->
+After writing the YAML file, you need to consider how to access and query the new catalogue. The entry point for access to all catalogues is the `sits_cube.stac_cube()` function, which in turn calls a sequence of functions which are described in the generic interface `api_source.R`. Most calls of this API are handled by the functions of `api_source_stac.R` which provides an interface to the `rstac` package and handles STAC queries.
 
-<!-- # Export the time series to JSON -->
-<!-- jsonlite::write_json( -->
-<!--   x = samples_prodes_4classes, -->
-<!--   path = "./time_series.json", -->
-<!--   pretty = TRUE) -->
-<!-- ``` -->
+Each STAC catalogue is different. The STAC specification allows providers to implement their data descriptions with specific information. For this reason, the generic API described in `api_source.R` needs to be specialized for each provider. Whenever a provider needs specific implementations of parts of the STAC protocol, we include them in separate files. For example, `api_source_mpc.R` implements specific quirks of the MPC platform. Similarly, specific support for CDSE (Copernicus Data Space Environment) is available in `api_source_cdse.R`.
+
+
+## Exporting data to JSON{-}
+
+Both the data cube and the time series tibble can be exported to exchange formats such as JSON.
+
+```{r, tidy = "styler", eval = FALSE}
+library(jsonlite)
+# Export the data cube to JSON
+jsonlite::write_json(
+  x = sinop,
+  path = "./data_cube.json",
+  pretty = TRUE)
+
+# Export the time series to JSON
+jsonlite::write_json(
+  x = samples_prodes_4classes,
+  path = "./time_series.json",
+  pretty = TRUE)
+```
 
 ## SITS and Google Earth Engine APIs: A side-by-side exploration{-}
 
@@ -456,13 +456,13 @@ var data = ee.ImageCollection('COPERNICUS/S2_SR_HARMONIZED')
 ```
 
 > `sits` provides search filters for a collection as parameters in the 
-`sits_cube` function, whereas `gee` offers these filters as methods of an 
+`sits_cube()` function, whereas `gee` offers these filters as methods of an 
 `ImageCollection` object.
 
 #### Mosaic Creation{-}
 
-In `sits`, we will use the `sits_mosaic` function to create mosaics of our 
-images. In `gee`, we will utilize the `mosaic` method. 
+In `sits`, we will use the `sits_mosaic()` function to create mosaics of our 
+images. In `gee`, we will utilize the `mosaic()` method. 
 `sits_mosaic()` function crops the mosaic based on the `roi` parameter. 
 In `gee`, cropping is performed using the `clip()` method. 
 We will use the same `roi` that was used to filter the images to perform 
