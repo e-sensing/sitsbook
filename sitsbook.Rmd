@@ -97,9 +97,8 @@ Placeholder
 ## Who is this book for?{-}
 ## Why work with satellite image time series?{-}
 ## Time-first, space-later{-}
-## How `sits` works {.unnumbered}
 ## Land use and land cover{-}
-## Classes and labels{-}
+## How `sits` works {.unnumbered}
 ## Creating a data cube {.unnumbered}
 ## The time series tibble {-}
 ## Training a machine learning model {.unnumbered}
@@ -115,11 +114,7 @@ Placeholder
 Placeholder
 
 
-## Brief introduction to remote sensing images and terminology{-}
-### Optical surface reflectance images{-}
-### Synthetic aperture radar (SAR) images{-}
-### Analysis-ready data(ARD){-}
-## Analysis-ready data image collections{-}
+## Analysis-ready data(ARD){-}
 ## Image collections handled by sits{-}
 ## Regular image data cubes{-}
 ## Creating data cubes{-}
@@ -298,182 +293,651 @@ Placeholder
 
 <!--chapter:end:14-obia.Rmd-->
 
+
 # Data visualisation in `sits` {-}
+
+Placeholder
+
+
+## Plotting{-}
+### Plotting false color maps{-}
+### Plotting RGB color composite maps{-}
+### Plotting classified maps{-}
+## Visualization of data cubes in interactive maps {.unnumbered}
+## How colors work in sits{-}
+## Exporting colors to QGIS{-}
+
+<!--chapter:end:15-visualisation.Rmd-->
+
+# Technical annex {-}
 
 ```{r, eval = TRUE, echo = FALSE, include = FALSE}
 source("common.R")
 library(sits)
 library(sitsdata)
+if (!file.exists("./tempdir/chp16"))
+  dir.create("./tempdir/chp16")
 ```
 
-This Chapter contains a discussion on plotting and visualisation of data cubes in `sits`. 
+This Chapter contains technical details on the algorithms available in `sits`. It is intended to support those that want to understand how the package works and also want to contribute to its development.
 
-## Plotting{-}
+<!-- ## Adding functions to the `sits` API{-} -->
 
-The `plot()` function produces a graphical display of data cubes, time series, models, and SOM maps. For each type of data, there is a dedicated version of the `plot()` function. See `?plot.sits` for details. Plotting of time series, models and SOM outputs uses the `ggplot2` package; maps are plotted using the `tmap` package. When plotting images and classified maps, users can control the output, which appropriate parameters for each type of image. In this chapter, we provide examples of the options available for plotting different types of maps.
+<!-- ### General principles{-} -->
 
-Plotting and visualisation function in `sits` use COG overview if available. COG overviews are reduced-resolution versions of the main image, stored within the same file. Overviews allow for quick rendering at lower zoom levels, improving performance when dealing with large images. Usually, a single GeoTIFF will have many overviews, to match different zoom levels
+<!-- New functions that build on the `sits` API should follow the general principles below. -->
 
-### Plotting false color maps{-}
+<!-- - The target audience for `sits` is the community of remote sensing experts with Earth Sciences background who want to use state-of-the-art data analysis methods with minimal investment in programming skills. The design of the `sits` API considers the typical workflow for land classification using satellite image time series and thus provides a clear and direct set of functions, which are easy to learn and master.  -->
 
-We refer to false color maps as images which are plotted on a color scale. Usually these are single bands, indexes such as NDVI or DEMs. For these data sets, the parameters for `plot()` are:
-        
-- `cube`: data cube containing data to be visualised;
-- `band`:  band or index to be plotted;
-- `pallete`: color scheme to be used for false color maps, which should be one of the `RColorBrewer` palettes. These palettes have been designed to be effective for map display by Prof Cynthia Brewer as described at the [Brewer website](http://colorbrewer2.org). By default, optical images use the `RdYlGn` scheme, SAR images use `Greys`, and DEM cubes use `Spectral`. 
-- `rev`: whether the color palette should be reversed; `TRUE` for DEM cubes, and `FALSE` otherwise.
-- `scale`: global scale parameter used by `tmap`. All font sizes, symbol sizes, border widths, and line widths are controlled by this value. Default is 0.75; users should vary this parameter and see the results.
-- `first_quantile`: 1st quantile for stretching images (default = 0.05).
-- `last_quantile`: last quantile for stretching images (default = 0.95).
-- `max_cog_size`: for cloud-oriented geotiff files (COG), sets the maximum number of lines or columns of the COG overview to be used for plotting.   
+<!-- - For this reason, we welcome contributors that provide useful additions to the existing API, such as new ML/DL classification algorithms. In case of a new API function, before making a pull request please raise an issue stating your rationale for a new function. -->
 
-The following optional parameters are available to allow for detailed control over the plot output:
-- `graticules_labels_size`: size of coordinates labels (default = 0.8).
-- `legend_title_size`: relative size of legend title (default = 1.0).
-- `legend_text_size`: relative size of legend text (default = 1.0).
-- `legend_bg_color`: color of legend background (default = "white").
-- `legend_bg_alpha`: legend opacity (default = 0.5).
-- `legend_position`: where to place the legend (options = "inside" or "outside" with "inside" as default).
+<!-- - Most functions in `sits` use the S3 programming model with a strong emphasis on generic methods wich are specialized depending on the input data type. See for example the implementation of the `sits_bands()` function.  -->
 
-The following example shows a plot of an NDVI index of a data cube. This data cube covers part of MGRS tile `20LMR` and contains bands "B02", "B03", "B04", "B05", "B06",  "B07", "B08", "B11", "B12", "B8A", "EVI", "NBR", and "NDVI" for the period 2022-01-05 to 2022-12-23. We will use parameters with other than their defaults.
+<!-- - Please do not include contributed code using the S4 programming model. Doing so would break the structure and the logic of existing code. Convert your code from S4 to S3. -->
 
-```{r visndvi, echo = TRUE, tidy= "styler", out.width="120%", fig.align="center", fig.cap="Sentinel-2 NDVI index covering tile 20LMR (&copy; EU Copernicus Sentinel Programme; source: Microsoft modified by authors)."}
-# set the directory where the data is 
-data_dir <- system.file("extdata/Rondonia-20LMR", package = "sitsdata")
-# read the data cube
-ro_20LMR <- sits_cube(
-  source = "MPC", 
+<!-- - Use generic functions as much as possible, as they improve modularity and maintenance. If your code has decision points using `if-else` clauses, such as `if A, do X; else do Y` consider using generic functions.  -->
+
+<!-- - Functions that use the `torch` package use the R6 model to be compatible with that package. See for example, the code in `sits_tempcnn.R` and `api_torch.R`. To convert `pyTorch` code to R and include it is straightforward. Please see the [Technical Annex](https://e-sensing.github.io/sitsbook/technical-annex.html) of the sits on-line book. -->
+
+<!-- - The sits code relies on the packages of the `tidyverse` to work with tables and list. We use `dplyr` and `tidyr` for data selection and wrangling, `purrr` and `slider` for loops on lists and table, `lubridate` to handle dates and times.  -->
+
+<!-- ### Adherence to the `sits` data types{-} -->
+
+<!-- The `sits` package in built on top of three data types: time series tibble, data cubes and models. Most `sits` functions have one or more of these types as inputs and one of them as return values. The time series tibble contains data and metadata. The first six columns contain the metadata: spatial and temporal information, the label assigned to the sample, and the data cube from where the data has been extracted. The time_series column contains the time series data for each spatiotemporal location. All time series tibbles are objects of class `sits`.  -->
+
+<!-- The `cube` data type is designed to store metadata about image files. In principle, images which are part of a data cube share the same geographical region, have the same bands, and have been regularized to fit into a pre-defined temporal interval. Data cubes in `sits` are organized by tiles. A tile is an element of a satellite's mission reference system, for example MGRS for Sentinel-2 and WRS2 for Landsat. A `cube` is a tibble where each row contains information about data covering one tile. Each row of the cube tibble contains a column named `file_info`; this column contains a list that stores a tibble  -->
+
+<!-- The `cube` data type is specialised in `raster_cube` (ARD images), `vector_cube` (ARD cube with segmentation vectors). `probs_cube` (probabilities produced by classification algorithms on raster data), `probs_vector_cube`(probabilites generated by vector classification of segments),  `uncertainty_cube` (cubes with uncertainty information), and `class_cube` (labelled maps). See the code in `sits_plot.R` as an example of specialisation of `plot` to handle different classes of raster data.  -->
+
+<!-- All ML/DL models in `sits` which are the result of `sits_train` belong to the `ml_model` class. In addition, models are assigned a second class, which is unique to ML models (e.g, `rfor_model`, `svm_model`) and generic for all DL `torch` based models (`torch_model`). The class information is used for plotting models and for establishing if a model can run on GPUs.  -->
+
+<!-- ### Literal values, error messages, and testing{-} -->
+
+<!-- The internal `sits` code has no literal values, which are all stored in the YAML configuration files `./inst/extdata/config.yml` and `./inst/extdata/config_internals.yml`. The first file contains configuration parameters that are relevant to users, related to visualisation and plotting; the second contains parameters that are relevant only for developers. These values are accessible using the `.conf` function. For example, the value of the default size for ploting COG files is accessed using the command `.conf["plot", "max_size"]`.  -->
+
+<!-- Error messages are also stored outside of the code in the YAML configuration file `./inst/extdata/config_messages.yml`. These values are accessible using the `.conf` function. For example, the error associated to an invalid NA value for an input parameter is accessible using th function `.conf("messages", ".check_na_parameter")`.  -->
+
+<!-- We strive for high code coverage (> 90\%). Every parameter of all `sits` function (including internal ones) is checked for consistency. Please see `api_check.R`.  -->
+
+
+<!-- ### Supporting new STAC-based image catalogues{-} -->
+
+<!-- If you want to include a STAC-based catalogue not yet supported by `sits`, we encourage you to look at existing implementations of catalogues such as Microsoft Planetary Computer (MPC), Digital Earth Africa (DEA) and AWS. STAC-based catalogues in `sits` are associated to YAML description files, which are available in the directory `.inst/exdata/sources`. For example, the YAML file `config_source_mpc.yml` describes the contents of the MPC collections supported by `sits`. Please first provide an YAML file which lists the detailed contents of the new catalogue you wish to include. Follow the examples provided. -->
+
+<!-- After writing the YAML file, you need to consider how to access and query the new catalogue. The entry point for access to all catalogues is the `sits_cube.stac_cube()` function, which in turn calls a sequence of functions which are described in the generic interface `api_source.R`. Most calls of this API are handled by the functions of `api_source_stac.R` which provides an interface to the `rstac` package and handles STAC queries.  -->
+
+<!-- Each STAC catalogue is different. The STAC specification allows providers to implement their data descriptions with specific information. For this reason, the generic API described in `api_source.R` needs to be specialized for each provider. Whenever a provider needs specific implementations of parts of the STAC protocol, we include them in separate files. For example, `api_source_mpc.R` implements specific quirks of the MPC platform. Similarly, specific support for CDSE (Copernicus Data Space Environment) is available in `api_source_cdse.R`.  -->
+
+
+<!-- ## Exporting data to JSON{-} -->
+
+<!-- Both the data cube and the time series tibble can be exported to exchange formats such as JSON. -->
+
+<!-- ```{r, tidy = "styler", eval = FALSE} -->
+<!-- library(jsonlite) -->
+<!-- # Export the data cube to JSON -->
+<!-- jsonlite::write_json( -->
+<!--   x = sinop, -->
+<!--   path = "./data_cube.json", -->
+<!--   pretty = TRUE) -->
+
+<!-- # Export the time series to JSON -->
+<!-- jsonlite::write_json( -->
+<!--   x = samples_prodes_4classes, -->
+<!--   path = "./time_series.json", -->
+<!--   pretty = TRUE) -->
+<!-- ``` -->
+
+## SITS and Google Earth Engine APIs: A side-by-side exploration{-}
+
+This section presents a side-by-side exploration of the `sits` and Google Earth 
+Engine (`gee`) APIs, focusing on their respective capabilities in handling 
+satellite data. The exploration is structured around three key examples: 
+(1) creating a mosaic, (2) calculating the Normalized Difference Vegetation 
+Index (NDVI), and (3) performing a Land Use and Land Cover (LULC) classification. 
+Each example demonstrates how these tasks are executed using `sits` and `gee`, 
+offering a clear view of their methodologies and highlighting the similarities 
+and the unique approaches each API employs.
+
+### Example 1: Creating a Mosaic{-}
+
+A common application among scientists and developers in the field of Remote 
+Sensing is the creation of satellite image mosaics. These mosaics are formed by 
+combining two or more images, typically used for visualization in various 
+applications. In this example, we will demonstrate how to create an image 
+mosaic using `sits` and `gee` APIs.
+
+#### Define Region of Interest data{-}
+
+In this example, a Region of Interest (ROI) is defined using a bounding box
+with longitude and latitude coordinates. Below are the code snippets for 
+specifying this ROI in both `sits` and `gee` environments.
+
+
+**sits**
+
+```{r, eval = FALSE}
+roi <- c("lon_min" = -63.410, "lat_min" = -9.783,
+         "lon_max" = -62.614, "lat_max" = -9.331)
+```
+
+**gee**
+
+```js
+var roi = ee.Geometry.Rectangle([-63.410,-9.783,-62.614,-9.331]);
+```
+
+#### Load Satellite Imagery{-}
+
+Next, we will load the satellite imagery. For this example, we used data from [Sentinel-2](https://sentinels.copernicus.eu/web/sentinel/copernicus/sentinel-2). 
+In `sits`, several providers offer Sentinel-2 ARD images. In this example, 
+we will use images provided by the Microsoft Planetary Computer (**MPC**).
+
+**sits**
+
+```{r, eval = FALSE}
+data <- sits_cube(
+  source     = "MPC",
   collection = "SENTINEL-2-L2A",
-  data_dir = data_dir
+  bands      = c("B02", "B03", "B04"),
+  tiles      = c("20LNQ", "20LMQ"),
+  start_date = "2024-08-01",
+  end_date   = "2024-08-03"
 )
-# plot the NDVI for date 2022-08-01
-plot(ro_20LMR, 
-     band = "NDVI", 
-     date = "2022-08-01", 
-     palette = "Greens",
-     legend_position = "outside",
-     scale = 1.0)
-```
-    
-- For RGB color maps:
-    - `red`: band or index associated to the red color;
-    - `green`: band or index associated to the green color;
-    - `blue`: band or index associated to the blue color;
-    - `first_quantile`: 1st quantile for stretching images (default = 0.05)
-    - `last_quantile`: last quantile for stretching images (default = 0.95)
-    
-- For classified maps:
-    - `legend`: legend which associated colors to the classes; should be a named vector with classes as names and valid R colors as values. For example, `c("Forest" = "green", "Water" = "blue")` or `c("Forest" = "#1E8449", "Water" = "#2980B9")`. 
-    - `scale`: global scale parameter used by `tmap`.
-    - `max_cog_size`: max number of lines or columns to be read when COG files are available;
-    - `palette`: color palette to be used if legend is not available and colors are not defined in the `sits` color table.
-
-
-
-## Visualization of data cubes in interactive maps {.unnumbered}
-
- Data cubes and samples can also be shown as interactive maps using `sits_view()`. This function creates tiled overlays of different kinds of data cubes, allowing comparison between the original, intermediate and final results. It also includes background maps. The following example creates an interactive map combining the original data cube with the classified map.
-
-```{r, echo = TRUE, eval = FALSE, tidy = "styler"}
-sits_view(sinop, band = "NDVI", class_cube = sinop_map)
 ```
 
-```{r, echo = FALSE, out.width="90%", fig.caption = "Leaflet visualization of classification of Sinop, MT, Brasil (Source: Authors).", fig.align="center"}
-knitr::include_graphics("./images/view_sinop.png")
+**gee**
+
+```js
+var data = ee.ImageCollection('COPERNICUS/S2_SR_HARMONIZED')
+  .filterDate('2024-08-01', '2024-08-03')
+  .filter(ee.Filter.inList('MGRS_TILE', ['20LNQ', '20LMQ']))
+  .select(['B4', 'B3', 'B2']);
 ```
 
-## How colors work in sits{-}
+> `sits` provides search filters for a collection as parameters in the 
+`sits_cube` function, whereas `gee` offers these filters as methods of an 
+`ImageCollection` object.
 
-In examples provided in the book, the color legend is taken from a predefined color pallete provided by `sits`. The default color definition file used by `sits` has 220 class names, which can be shown using `sits_colors()`
+#### Mosaic Creation{-}
 
-```{r, tidy = "styler", out.width = "100%", out.height = "100%", echo = FALSE, fig.align="center", fig.cap="Default colors used in the sits package (source: authors)."}
-# Point default `sits` colors
-sits_colors()
-```
+In `sits`, we will use the `sits_mosaic` function to create mosaics of our 
+images. In `gee`, we will utilize the `mosaic` method. 
+`sits_mosaic()` function crops the mosaic based on the `roi` parameter. 
+In `gee`, cropping is performed using the `clip()` method. 
+We will use the same `roi` that was used to filter the images to perform 
+the cropping on the mosaic. See the following code:
 
-These colors are grouped by typical legends used by the Earth observation community, which include "IGBP", "UMD", "ESA_CCI_LC", "WORLDCOVER", "PRODES", "PRODES_VISUAL", "TERRA_CLASS", "TERRA_CLASS_PT". The following commands shows the colors associated with the IGBP legend [@Herold2009].
+**sits**
 
-```{r, tidy = "styler", out.width = "100%", out.height = "100%", fig.align="center", fig.cap="Colors used in the sits package to represeny IGBP legend (source: authors)."}
-# Display default `sits` colors
-sits_colors_show(legend = "IGBP")
-```
-
-
-The default color table can be extended using `sits_colors_set()`. As an example of a user-defined color table, consider a definition that covers level 1 of the Anderson Classification System used in the US National Land Cover Data, obtained by defining a set of colors associated to a new legend. The colors should be defined by HEX values and the color names should consist of a single string; multiple names need to be connected with an underscore("_").
-```{r colors, tidy = "styler", out.width = "100%", out.height = "80%", fig.align="center", fig.cap="Example of defining colors for the Anderson Land Classification Scheme(source: authors)."}
-# Define a color table based on the Anderson Land Classification System
-us_nlcd <- tibble::tibble(name = character(), color = character())
-us_nlcd <- us_nlcd |>  
-  tibble::add_row(name = "Urban_Built_Up", color =  "#85929E") |> 
-  tibble::add_row(name = "Agricultural_Land", color = "#F0B27A") |>  
-  tibble::add_row(name = "Rangeland", color = "#F1C40F") |> 
-  tibble::add_row(name = "Forest_Land", color = "#27AE60") |>  
-  tibble::add_row(name = "Water", color = "#2980B9") |>  
-  tibble::add_row(name = "Wetland", color = "#D4E6F1") |> 
-  tibble::add_row(name = "Barren_Land", color = "#FDEBD0") |> 
-  tibble::add_row(name = "Tundra", color = "#EBDEF0") |> 
-  tibble::add_row(name = "Snow_and_Ice", color = "#F7F9F9")
-# Load the color table into `sits`
-sits_colors_set(colors = us_nlcd, legend = "US_NLCD")
-# Show the new legend
-sits_colors_show(legend = "US_NLCD")
-```
-
-The original default `sits` color table can be restored using `sits_colors_reset()`. 
-
-```{r, eval = TRUE, echo = FALSE, warning = FALSE, message = FALSE} 
-# Reset the color table
-sits_colors_reset()
-```
-
-## Building a legend with colors{-}
-
-
-
-## Exporting colors to QGIS{-}
-
-To simplify the process of importing your data to QGIS, the color palette used to display classified maps in `sits` can be exported as a QGIS style using `sits_colors_qgis`. The function takes two parameters: (a) `cube`, a classified data cube; and (b) `file`, the file where the QGIS style in XML will be written to. In this case study, we first retrieve and plot a classified data cube and then export the colors to a QGIS XML style.
-
-```{r visqgis, tidy="styler", out.width="120%", fig.align="center", fig.cap="Classified data cube for the year 2020/2021 in Rondonia, Brazil (&copy; EU Copernicus Sentinel Programme; source: authors)."}
-# Create a cube based on a classified image 
-data_dir <- system.file("extdata/Rondonia-20LLP", 
-                        package = "sitsdata")
-# File name  "SENTINEL-2_MSI_20LLP_2020-06-04_2021-08-26_class_v1.tif" 
-rondonia_class_cube <- sits_cube(
-    source = "AWS",
-    collection = "SENTINEL-S2-L2A-COGS",
-    bands = "class",
-    labels = c("1" = "Burned_Area", "2" = "Cleared_Area", 
-               "3" = "Highly_Degraded", "4" =  "Forest"),
-    data_dir = data_dir
+```{r, eval = FALSE}
+mosaic <- sits_mosaic(
+  cube       = data,
+  roi        = roi,
+  multicores = 4,
+  output_dir = tempdir()
 )
-# Plot the classified cube
-plot(rondonia_class_cube, scale = 1.0)
 ```
 
-```{r}
-# Show the location of the classification file
-sits_colors_qgis(rondonia_class_cube, file = "./tempdir/chp15/qgis_style.xml")
+**gee**
+
+```js
+var mosaic = data.mosaic().clip(roi);
 ```
 
+#### View Result{-}
 
-<!--chapter:end:15-visualisation.Rmd-->
+Finally, the results can be visualized in an interactive map.
 
+**sits**
 
-# Technical annex {-}
+```{r, eval = FALSE}
+sits_view(
+  x     = mosaic,
+  red   = "B04",
+  green = "B03",
+  blue  = "B02"
+)
+```
 
-Placeholder
+```{r, echo = FALSE, out.width = "100%", out.height = "50%"}
+knitr::include_graphics("./images/sitsgee/mosaic-sits.png")
+```
 
+**gee**
 
-## How colors work in sits{-}
-## How parallel processing works in virtual machines with CPUs{-}
-## Including new methods for machine learning{-}
-## Adding functions to the `sits` API{-}
-### General principles{-}
-### Adherence to the `sits` data types{-}
-### Literal values, error messages, and testing{-}
-### Supporting new STAC-based image catalogues{-}
-## Exporting data to JSON{-}
+```js
+// Define view region
+Map.centerObject(roi, 10);
+
+// Add mosaic Image
+Map.addLayer(mosaic, {
+    min: 0, 
+    max: 3000
+}, 'Mosaic');
+```
+
+```{r, echo = FALSE, out.width = "100%", out.height = "50%"}
+knitr::include_graphics("./images/sitsgee/mosaic-gee.png")
+```
+
+### Example 2: Calculating NDVI{-}
+
+This example demonstrates how to generate time-series of Normalized Difference 
+Vegetation Index (NDVI) using both the `sits` and `gee` APIs.
+
+#### Define Region of Interest data{-}
+
+In this example, a Region of Interest (ROI) is defined using the `sinop_roi.shp` 
+file. Below are the code snippets for specifying this file in both `sits` and 
+`gee` environments.
+
+> To reproduce the example, you can download the shapefile using [this link](data/sits-gee/sinop_roi.zip). 
+In `sits`, you can just use it. In `gee`, it would be required to upload the 
+file in your user space.
+
+**sits**
+
+```{r, eval = FALSE}
+roi_data <- "sinop_roi.shp"
+```
+
+**gee**
+
+```js
+var roi_data = ee.FeatureCollection("/path/to/sinop_roi");
+```
+
+#### Load Satellite Imagery{-}
+
+Next, we load the satellite imagery. For this example, we use data from [Landsat-8](https://www.usgs.gov/landsat-missions/landsat-8). 
+In `sits`, this data is retrieved from the Brazil Data Cube, although 
+other sources are available. For `gee`, the data provided by the platform is used.
+
+In `sits`, when the data is loaded, all necessary transformations to make the 
+data ready for use (e.g., `factor`, `offset`, `cloud masking`) are applied 
+automatically. In `gee`, users are responsible for performing these 
+transformations themselves.
+
+**sits**
+
+```{r, eval = FALSE}
+data <- sits_cube(
+    source      = "BDC",
+    collection  = "LANDSAT-OLI-16D",
+    bands       = c("RED", "NIR08", "CLOUD"),
+    roi         = roi_data,
+    start_date  = "2019-05-01",
+    end_date    = "2019-07-01"
+)
+```
+
+**gee**
+
+```js
+var data = ee.ImageCollection("LANDSAT/LC08/C02/T1_L2")
+  .filterBounds(roi_data)
+  .filterDate("2019-05-01", "2019-07-01")
+  .select(["SR_B4", "SR_B5", "QA_PIXEL"]);
+
+// factor and offset
+data = data.map(function(image) {
+  var opticalBands = image.select('SR_B.').multiply(0.0000275).add(-0.2);
+  return image.addBands(opticalBands, null, true);
+});
+
+data = data.map(function(image) {
+  // Select the pixel_qa band
+  var qa = image.select('QA_PIXEL');
+
+  // Create a mask to identify cloud and cloud shadow
+  var cloudMask = qa.bitwiseAnd(1 << 5).eq(0) // Clouds
+           .and(qa.bitwiseAnd(1 << 3).eq(0)); // Cloud shadows
+
+  // Apply the cloud mask to the image
+  return image.updateMask(cloudMask);
+});
+```
+
+#### Generate NDVI{-}
+
+After loading the satellite imagery, the NDVI can be generated. In `sits`, a 
+function allows users to specify the formula used to create a new attribute, 
+in this case, NDVI. In `gee`, a callback function is used, where the NDVI is 
+calculated for each image.
+
+**sits**
+
+```{r, eval = FALSE}
+data_ndvi <- sits_apply(
+  data        = data,
+  NDVI        = (NIR08 - RED) / (NIR08 + RED),
+  output_dir  = tempdir(),
+  multicores  = 4,
+  progress    = TRUE
+)
+```
+
+**gee**
+
+```js
+var data_ndvi = data.map(function(image) {
+  var ndvi = image.normalizedDifference(["SR_B5", "SR_B4"]).rename('NDVI');
+
+  return image.addBands(ndvi);
+});
+
+data_ndvi = data_ndvi.select("NDVI");
+```
+
+#### Crop Result{-}
+
+The results are clipped to the ROI defined at the beginning of the 
+example to facilitate visualization.
+
+> In both APIs, you can define a ROI before performing the 
+operation to optimize resource usage. However, in this example, the data is 
+cropped after the calculation.
+
+**sits**
+
+```{r, eval = FALSE}
+data_ndvi <- sits_mosaic(
+  cube       = data_ndvi,
+  roi        = roi_data,
+  output_dir = tempdir(),
+  multicores = 4
+)
+```
+
+**gee**
+
+```js
+data_ndvi = data_ndvi.map(function(image) {
+  return image.clip(roi_data);
+});
+```
+
+#### View Result{-}
+
+Finally, the results can be visualized in an interactive map.
+
+**sits**
+
+```{r, eval = FALSE}
+sits_view(data_ndvi, band = "NDVI", date = "2019-05-25", opacity = 1)
+```
+
+```{r, echo = FALSE, out.width = "100%", out.height = "50%"}
+knitr::include_graphics("./images/sitsgee/ndvi-sits.png")
+```
+
+**gee**
+
+```js
+// Define view region
+Map.centerObject(roi_data, 10);
+
+// Add classification map (colors from sits)
+Map.addLayer(data_ndvi, {
+    min: 0, 
+    max: 1, 
+    palette: ["red", 'white', 'green']
+}, "NDVI Image");
+```
+
+```{r, echo = FALSE, out.width = "100%", out.height = "50%"}
+knitr::include_graphics("./images/sitsgee/ndvi-gee.png")
+```
+
+### Example 3: Land Use and Land Cover (LULC) Classification{-}
+
+This example demonstrates how to perform Land Use and Land Cover (LULC) 
+classification using satellite image time series and machine-learning models in 
+both `sits` and `gee`.
+
+#### Define Region of Interest data{-}
+
+This example defines the region of interest (ROI) using a shapefile named 
+`sinop_roi.shp`. Below are the code snippets for specifying this file in both 
+`sits` and `gee` environments.
+
+> To reproduce the example, you can download the shapefile using [this link](data/sits-gee/sinop_roi.zip). 
+In `sits`, you can just use it. In `gee`, it would be required to upload the 
+file in your user space.
+
+**sits**
+
+```r
+roi_data <- "sinop_roi.shp"
+```
+
+**gee**
+
+```js
+var roi_data = ee.FeatureCollection("/path/to/sinop_roi");
+```
+
+#### Define Sample Data{-}
+
+To train a classifier, sample data with labels representing the behavior of 
+each class to be identified is necessary. In this example, we use a small set 
+with `18` samples. The following code snippets show how these samples are defined 
+in each environment.
+
+In `sits`, labels can be of type `string`, whereas `gee` requires labels to be 
+`integers`. To accommodate this difference, two versions of the same sample set 
+were created: (1) one with `string` labels for use with `sits`, and (2) another 
+with `integer` labels for use with `gee`.
+
+> To download these samples, you can use the following links: 
+[samples_sinop_crop for sits](data/sits-gee/samples_sinop_crop.zip) or [samples_sinop_crop for gee](data/sits-gee/samples_sinop_crop_gee.zip)
+
+**sits**
+
+```r
+samples <- "samples_sinop_crop.shp"
+```
+
+**gee**
+
+```js
+var samples = ee.FeatureCollection("samples_sinop_crop_gee");
+```
+
+#### Load Satellite Imagery{-}
+
+Next, we load the satellite imagery. For this example, we use data from [MOD13Q1](https://ladsweb.modaps.eosdis.nasa.gov/missions-and-measurements/products/MOD13Q1) . 
+In `sits`, this data is retrieved from the Brazil Data Cube, but other 
+sources are also available. In `gee`, the platform directly provides this data.
+
+In `sits`, all necessary data transformations for classification tasks are 
+handled automatically. In contrast, `gee` requires users to manually transform 
+the data into the correct format.
+
+In this context it's important to note that, in the `gee` code, transforming all 
+images into bands mimics the approach used by `sits` for non-temporal classifiers. 
+However, this method is not inherently scalable in `gee` and may need adjustments 
+for larger datasets or more bands. Additionally, for temporal classifiers like 
+TempCNN, other transformations are necessary and must be manually implemented by 
+the user in `gee`.
+
+In contrast, `sits` provides a consistent API experience, regardless of the data 
+size or machine learning algorithm.
+
+**sits**
+
+```r
+data <- sits_cube(
+    source      = "BDC",
+    collection  = "MOD13Q1-6.1",
+    bands       = c("NDVI"),
+    roi         = roi_data,
+    start_date  = "2013-09-01",
+    end_date    = "2014-08-29"
+)
+```
+
+**gee**
+
+```js
+var data = ee.ImageCollection("MODIS/061/MOD13Q1")
+  .filterBounds(roi_data)
+  .filterDate("2013-09-01", "2014-09-01")
+  .select(["NDVI"]);
+
+// Transform all images to bands
+data = data.toBands();
+```
+
+#### Extract sample time-series{-}
+
+In this example, we'll use a Random Forest classifier to create a LULC map. To 
+train the classifier, we need sample data linked to time-series.
+
+This step shows how to extract and associate time-series with samples.
+
+**sits**
+
+```r
+samples_ts <- sits_get_data(
+    cube       = data,
+    samples    = samples,
+    multicores = 4
+)
+```
+
+**gee**
+
+```js
+var samples_ts = data.sampleRegions({
+  collection: samples,
+  properties: ["label"]
+});
+```
+
+#### Train classification model{-}
+
+With the time-series data extracted for each sample, we can now train the Random
+Forest classifier
+
+**sits**
+
+```r
+classifier <- sits_train(
+    samples_ts, sits_rfor(num_trees = 100)
+)
+```
+
+**gee**
+
+```js
+var classifier = ee.Classifier.smileRandomForest(100).train({
+  features: samples_ts,
+  classProperty: "label",
+  inputProperties: data.bandNames()
+});
+```
+
+#### Generate classification map{-}
+
+Now, it is possible to generate the classification map using the trained Random 
+Forest model.
+
+In `sits`, the classification process starts with a probability map. 
+This map provides the probability of each class for every pixel, offering insights 
+into the classifier's performance. It also allows for refining the results using
+methods like Bayesian probability smoothing. After generating the probability map, 
+it is possible to produce the class map, where each pixel is assigned to the class 
+with the highest probability.
+
+In `gee`, while it is possible to generate probabilities, it is not strictly 
+required to produce the classification map. Yet, as of the date of this document, 
+there is no out-of-the-box solution available for utilizing these probabilities 
+to enhance classification results, as presented in `sits`
+
+**sits**
+
+```r
+probabilities <- sits_classify(
+    data       = data,
+    ml_model   = classifier,
+    multicores = 4,
+    roi        = roi_data,
+    output_dir = tempdir()
+)
+
+class_map <- sits_label_classification(
+    cube       = probabilities,
+    output_dir = tempdir(),
+    multicores = 4
+)
+```
+
+**gee**
+
+```js
+var probs_map = data.classify(classifier.setOutputMode("MULTIPROBABILITY"));
+var class_map = data.classify(classifier);
+```
+
+#### Crop Result{-}
+
+The results are clipped to the ROI defined at the beginning of the example to 
+facilitate visualization.
+
+> In both APIs, it's possible to define an ROI before processing. However, this 
+was not applied in this example.
+
+**sits**
+
+```r
+class_map <- sits_mosaic(
+    cube       = class_map,
+    roi        = roi_data,
+    output_dir = tempdir(),
+    multicores = 4
+)
+```
+
+**gee**
+
+```js
+class_map = class_map.clip(roi_data);
+```
+
+#### View Result{-}
+
+Finally, the results can be visualized on an interactive map.
+
+**sits**
+
+```r
+sits_view(class_map, opacity = 1)
+```
+
+```{r, echo = FALSE, out.width = "100%", out.height = "50%"}
+knitr::include_graphics("./images/sitsgee/classification-sits.png")
+```
+
+**gee**
+
+```js
+// Define view region
+Map.centerObject(roi_data, 10);
+
+// Add classification map (colors from sits)
+Map.addLayer(class_map, {
+    min: 1,
+    max: 4,
+    palette: ["#FAD12D", "#1E8449", "#D68910", "#a2d43f"]
+}, "Classification map");
+```
+
+```{r, echo = FALSE, out.width = "100%", out.height = "50%"}
+knitr::include_graphics("./images/sitsgee/classification-gee.png")
+```
+>>>>>>> 8712241aad54bee8b0ba9c8623758144364623a4:15-annex.Rmd
 
 <!--chapter:end:16-annex.Rmd-->
 
