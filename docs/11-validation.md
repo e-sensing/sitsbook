@@ -170,10 +170,9 @@ ro_samples_sf <- sits_stratified_sampling(
 ```
 
 ```
-#> Deleting layer `ro_samples' using driver `ESRI Shapefile'
 #> Writing layer `ro_samples' to data source 
 #>   `./tempdir/chp11/ro_samples.shp' using driver `ESRI Shapefile'
-#> Writing 2254 features with 1 fields and geometry type Point.
+#> Writing 2261 features with 1 fields and geometry type Point.
 ```
 
 ``` r
@@ -189,7 +188,7 @@ sf::st_write(ro_samples_sf,
 #> Writing layer `ro_samples' to data source 
 #>   `./tempdir/chp11/ro_samples.csv' using driver `CSV'
 #> options:        GEOMETRY=AS_XY 
-#> Writing 2254 features with 1 fields and geometry type Point.
+#> Writing 2261 features with 1 fields and geometry type Point.
 ```
 
 Using the CSV file (or the optional shapefile) users can visualize the points in a standard GIS such as QGIS. For each point, they will indicate what is the correct class. In this way, they will obtain a confusion matrix which will be used for accuracy assessment. The `overhead` parameter is useful for users to discard border or doubtful pixels where the interpreter cannot be confident of her class assignment. By discarding points whose attribution is uncertain, they will improve the quality of the assessment. 

@@ -295,7 +295,7 @@ sf_shape <- sf::st_read(shp_file)
 
 ```
 #> Reading layer `mt' from data source 
-#>   `/Library/Frameworks/R.framework/Versions/4.4-x86_64/Resources/library/sits/extdata/shapefiles/mato_grosso/mt.shp' 
+#>   `/Library/Frameworks/R.framework/Versions/4.4-arm64/Resources/library/sits/extdata/shapefiles/mato_grosso/mt.shp' 
 #>   using driver `ESRI Shapefile'
 #> Simple feature collection with 1 feature and 3 fields
 #> Geometry type: MULTIPOLYGON

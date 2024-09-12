@@ -702,21 +702,21 @@ ARD collections available in AWS, MPC, USGS, and DEAFRICA are not regular in spa
 
 In the following example, the user has created an irregular data cube from the Sentinel-2 collection available in Microsoft's Planetary Computer (MPC) for tiles `20LKP` and `20LLP` in the state of Rondonia, Brazil. We first build an irregular data cube using `sits_cube()`.
 
-```{r, cache = TRUE, tidy="styler"}
+```{r, echo = TRUE, tidy="styler"}
 # Creating an irregular data cube from MPC
 s2_cube_rondonia <- sits_cube(
     source = "MPC",
     collection = "SENTINEL-2-L2A",
     tiles = c("20LKP", "20LLP"),
     bands = c("B02", "B8A", "B11", "CLOUD"),
-    start_date = as.Date("2018-07-01"),
+    start_date = as.Date("2018-06-30"),
     end_date = as.Date("2018-08-31"))
 # Show the different timelines of the cube tiles
 sits_timeline(s2_cube_rondonia)
 ```
 
 
-```{r cache = TRUE, tidy="styler", out.width="100%", fig.align="center", fig.cap="Sentinel-2 tile 20LLP for date 2018-07-03 (&copy; EU Copernicus Sentinel Programme; source: authors)."}
+```{r echo = TRUE, tidy="styler", out.width="100%", fig.align="center", fig.cap="Sentinel-2 tile 20LLP for date 2018-07-03 (&copy; EU Copernicus Sentinel Programme; source: authors)."}
 # plot the first image of the irregular cube
 s2_cube_rondonia |>  
     dplyr::filter(tile == "20LLP") |>  
@@ -725,7 +725,7 @@ s2_cube_rondonia |>
 
 Because of the different acquisition orbits of the Sentinel-2 and Sentinel-2A satellites, the two tiles also have different timelines. Tile `20LKP` has 12 instances, while tile `20LLP` has 24 instances for the chosen period. The function  `sits_regularize()` builds a data cube with a regular timeline and a best estimate of a valid pixel for each interval. The `period` parameter sets the time interval between two images. Values of `period` use the ISO8601 time period specification, which defines time intervals as `P[n]Y[n]M[n]D`, where "Y" stands for years, "M" for months, and "D" for days. Thus, `P1M` stands for a one-month period, `P15D` for a fifteen-day period. When joining different images to get the best image for a period, `sits_regularize()` uses an aggregation method that organizes the images for the chosen interval in order of increasing cloud cover and then selects the first cloud-free pixel. In the example, we use a small spatial resolution for the regular cube to speed up processing; in actual case, we suggest using a 10-meter spatial resolution for the cube.
 
-```{r senroreg, cache = TRUE, tidy="styler", message = FALSE, results='hide', out.width="100%", fig.align="center", fig.cap="Regularized image for tile Sentinel-2 tile 20LLP (&copy; EU Copernicus Sentinel Programme; source: authors)."}
+```{r senroreg, tidy="styler", message = FALSE, results='hide', out.width="100%", fig.align="center", fig.cap="Regularized image for tile Sentinel-2 tile 20LLP (&copy; EU Copernicus Sentinel Programme; source: authors)."}
 # Regularize the cube to 15 day intervals
 reg_cube_rondonia <- sits_regularize(
           cube       = s2_cube_rondonia,

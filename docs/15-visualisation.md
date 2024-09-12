@@ -173,7 +173,7 @@ In examples provided in the book, the color legend is taken from a predefined co
 ```
 
 ```
-#> # A tibble: 236 × 2
+#> # A tibble: 241 × 2
 #>    name                             color  
 #>    <chr>                            <chr>  
 #>  1 Evergreen_Broadleaf_Forest       #1E8449
@@ -186,7 +186,7 @@ In examples provided in the book, the color legend is taken from a predefined co
 #>  8 Mountainside_Forest              #229C59
 #>  9 Mountainside_Forests             #229C59
 #> 10 Open_Forest                      #53A145
-#> # ℹ 226 more rows
+#> # ℹ 231 more rows
 ```
 
 These colors are grouped by typical legends used by the Earth observation community, which include "IGBP", "UMD", "ESA_CCI_LC", "WORLDCOVER", "PRODES", "PRODES_VISUAL", "TERRA_CLASS", "TERRA_CLASS_PT". The following commands shows the colors associated with the IGBP legend [@Herold2009].
@@ -283,7 +283,7 @@ ro_class[["file_info"]][[1]]$path
 ```
 
 ```
-#> [1] "/Library/Frameworks/R.framework/Versions/4.4-x86_64/Resources/library/sitsdata/extdata/Rondonia-Class-2022-Mosaic/SENTINEL-2_MSI_MOSAIC_2022-01-05_2022-12-23_class_mosaic.tif"
+#> [1] "/Library/Frameworks/R.framework/Versions/4.4-arm64/Resources/library/sitsdata/extdata/Rondonia-Class-2022-Mosaic/SENTINEL-2_MSI_MOSAIC_2022-01-05_2022-12-23_class_mosaic.tif"
 ```
 
 The color schema can be exported to QGIS as follows.
