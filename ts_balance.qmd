@@ -1,0 +1,63 @@
+# Reducing sample imbalance
+
+Many training samples for Earth observation data analysis are imbalanced. This situation arises when the distribution of samples associated with each label is uneven. One example is the Cerrado dataset used in this Chapter. The three most frequent labels (`Dense Woodland`, `Savanna`, and `Pasture`) include 53% of all samples, while the three least frequent labels (`Millet-Cotton`, `Silviculture`, and `Dunes`) comprise only 2.5% of the dataset. Sample imbalance is an undesirable property of a training set since machine learning algorithms tend to be more accurate for classes with many samples. The instances belonging to the minority group are misclassified more often than those belonging to the majority group. Thus, reducing sample imbalance can positively affect classification accuracy [@Johnson2019]. 
+
+The function `sits_reduce_imbalance()` deals with training set imbalance; it increases the number of samples of least frequent labels, and reduces the number of samples of most frequent labels. Oversampling requires generating synthetic samples. The package uses the SMOTE method that estimates new samples by considering the cluster formed by the nearest neighbors of each minority label. SMOTE takes two samples from this cluster and produces a new one by randomly interpolating them [@Chawla2002].
+
+To perform undersampling, `sits_reduce_imbalance()` builds a SOM map for each majority label based on the required number of samples to be selected. Each dimension of the SOM is set to `ceiling(sqrt(new_number_samples/4))` to allow a reasonable number of neurons to group similar samples. After calculating the SOM map, the algorithm extracts four samples per neuron to generate a reduced set of samples that approximates the variation of the original one. 
+
+The `sits_reduce_imbalance()` algorithm has two parameters: `n_samples_over` and `n_samples_under`. The first parameter indicates the minimum number of samples per class. All classes with samples less than its value are oversampled. The second parameter controls the maximum number of samples per class; all classes with more samples than its value are undersampled. The following example uses `sits_reduce_imbalance()` with the Cerrado samples. We generate a balanced dataset where all classes have a minimum of 1000 and and a maximum of 1500 samples. We use `sits_som_evaluate_cluster()` to estimate the confusion between classes of the balanced dataset.
+
+```{r, tidy = "styler", eval = FALSE, echo = TRUE}
+# Reducing imbalances in the Cerrado dataset
+balanced_samples <- sits_reduce_imbalance(
+    samples = samples_cerrado_mod13q1_2bands,
+    n_samples_over = 1000,
+    n_samples_under = 1500,
+    multicores = 4)
+```
+
+```{r, tidy = "styler", eval = TRUE, echo = FALSE}
+# Reducing imbalances in the Cerrado dataset
+library(sits)
+library(kohonen)
+balanced_samples <- readRDS("./etc/balanced_samples.rds")
+```
+
+```{r, tidy = "styler"}
+# Print the balanced samples
+# Some classes have more than 1500 samples due to the SOM map
+# Each label has between 10% and 6% of the full set
+summary(balanced_samples)
+```
+
+```{r, tidy = "styler",  eval = FALSE, echo = TRUE}
+# Clustering time series using SOM
+som_cluster_bal <- sits_som_map(
+    data = balanced_samples,
+    grid_xdim = 15,
+    grid_ydim = 15,
+    alpha = 1.0,
+    distance = "dtw",
+    rlen = 20,
+    mode = "pbatch")
+```
+
+```{r, tidy = "styler", eval = TRUE, echo = FALSE}
+# Clustering time series using SOM
+library(sits)
+library(kohonen)
+som_cluster_bal <- readRDS("./etc/som_cluster_bal.rds")
+```
+
+```{r}
+# Produce a tibble with a summary of the mixed labels
+som_eval <- sits_som_evaluate_cluster(som_cluster_bal)
+```
+
+```{r seval, fig.align="center", out.width="90%", fig.cap="Confusion by cluster for the balanced dataset (source: authors)."}
+# Show the result
+plot(som_eval) 
+```
+
+As shown in Figure \@ref(fig:seval), the balanced dataset shows less confusion per label than the unbalanced one. In this case, many classes that were confused with others in the original confusion map are now better represented. Reducing sample imbalance should be tried as an alternative to reducing the number of samples of the classes using SOM. In general, users should balance their training data for better performance. 

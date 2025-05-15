@@ -1,0 +1,80 @@
+# Data cubes from local files
+
+## Building data cubes from local files
+
+To build a data cube from local files, users must provide information about the original source from which the data was obtained. In this case, `sits_cube()` needs the parameters:
+
+(a) `source`, the cloud provider from where the data has been obtained (in this case, the Brazil Data Cube "BDC");
+(b) `collection`, the collection of the cloud provider from where the images have been extracted. In this case, data comes from the MOD13Q1 collection 6;
+(c) `data_dir`, the local directory where the image files are stored;
+(d) `parse_info`, a vector of strings stating how file names store information on "tile", "band", and "date". In this case, local images are stored in files whose names are similar to `TERRA_MODIS_012010_EVI_2014-07-28.tif`. This file represents an image obtained by the MODIS sensor onboard the TERRA satellite, covering part of tile 012010 in the EVI band for date 2014-07-28.
+
+## Planet data as ARD local files{-}
+
+ARD images downloaded from cloud collections to a local computer are not associated with a STAC endpoint that describes them. They must be organized and named to allow `sits` to create a data cube from them. All local files have to be in the same directory and have the same spatial resolution and projection. Each file must contain a single image band for a single date. Each file name needs to include tile, date, and band information. Users must provide information about the original data source to allow `sits` to retrieve information about image attributes such as band names, missing values, etc. When working with local cubes,  `sits_cube()` needs the following parameters: 
+
+- `source`: Name of the original data provider; for a list of providers and collections, use `sits_list_collections()`. 
+- `collection`:  Collection from where the data was extracted. 
+- `data_dir`: Local directory for images.
+- `bands`: Optional parameter to describe the bands to be retrieved.
+- `parse_info`: Information to parse the file names. File names need to contain information on tile, date, and band, separated by a delimiter (usually `"_"`).
+- `delim`: Separator character between descriptors in the file name (default is `"_"`).
+
+To be able to read local files, they must belong to a collection registered by `sits`. All collections known to `sits` by default are shown using `sits_list_collections()`. To register a new collection, please see the information provided in the Technical Annex.
+
+The example shows how to define a data cube using Planet images from the `sitsdata` package.  The dataset contains monthly PlanetScope mosaics for tile "604-1043" for August to October 2022, with bands B01, B02, B04, and B04. 
+
+In general, `sits` users need to match the local file names to the values provided by the `parse_info` parameter. The file names of this dataset use the format `PLANETSCOPE_MOSAIC_604-1043_B4_2022-10-01.tif`, which fits the default value for `parse_info` which is `c("source", "collection", "tile", "band", "date")` and for `delim` which is "_",  it is not necessary to set these values when creating a data cube from the local files. 
+
+
+```{r tidy="styler", eval = FALSE}
+# Define the directory where Planet files are stored
+data_dir <- system.file("extdata/Planet", package = "sitsdata")
+# Create a data cube from local files
+planet_cube <- sits_cube(
+    source = "PLANET",
+    collection = "MOSAIC",
+    data_dir = data_dir
+)
+
+# Plot the first instance of the Planet data in natural colors
+plot(planet_cube, red = "B3", green = "B2", blue = "B1")
+```
+
+
+```{r planet, tidy="styler", echo = FALSE, out.width="100%", fig.align="center", fig.cap="Planet image over an area in Colombia (&copy; Planet - reproduction based on fair use doctrine)."}
+knitr::include_graphics("./images/planet.png") 
+```
+
+
+## Reading classified images as local data cube{-}
+
+It is also possible to create local cubes based on results that have been produced by classification or post-classification algorithms. In this case, more parameters are required, and the parameter `parse_info` is specified differently, as follows:
+
+- `source`:  Name of the original data provider. 
+- `collection`: Name of the collection from where the data was extracted. 
+- `data_dir`: Local directory for the classified images.
+- `band`: Band name associated with the type of result. Use: (a) `probs` for probability cubes produced by `sits_classify()`; (b) `bayes`, for cubes produced by `sits_smooth()`; (c) `entropy`, `least`, `ratio` or `margin`, according to the method selected when using `sits_uncertainty()`; and (d) `class` for classified cubes.
+- `labels`: Labels associated with the names of the classes (not required for cubes produced by `sits_uncertainty()`).
+- `version`: Version of the result (default = `v1`).
+- `parse_info`: File name parsing information to allow `sits` to deduce the values of `tile`, `start_date`, `end_date`, `band`, and `version` from the file name. Unlike non-classified image files, cubes produced by classification and post-classification have both `start_date` and `end_date`. 
+
+The following code creates a results cube based on the classification of deforestation in Brazil.  This classified cube was obtained by a large data cube of Sentinel-2 images, covering the state of Rondonia, Brazil comprising 40 tiles, 10 spectral bands, and covering the period from 2020-06-01 to 2021-09-11. Samples of four classes were trained by a random forest classifier. Internally, classified images use integers to represent classes. Thus, labels have to be associated to the integers that represent each class name.
+
+```{r mapdata, tidy="styler", out.width="100%", fig.align="center", fig.cap="Classified data cube for the year 2020/2021 in Rondonia, Brazil (&copy; EU Copernicus Sentinel Programme; source: authors)."}
+# Create a cube based on a classified image 
+data_dir <- system.file("extdata/Rondonia-20LLP", 
+                        package = "sitsdata")
+# File name  "SENTINEL-2_MSI_20LLP_2020-06-04_2021-08-26_class_v1.tif" 
+Rondonia_class_cube <- sits_cube(
+    source = "AWS",
+    collection = "SENTINEL-S2-L2A-COGS",
+    bands = "class",
+    labels = c("1" = "Burned_Area", "2" = "Cleared_Area", 
+               "3" = "Highly_Degraded", "4" =  "Forest"),
+    data_dir = data_dir,
+    parse_info = c("satellite", "sensor", "tile", "start_date", "end_date", 
+                   "band", "version"))
+# Plot the classified cube
+plot(Rondonia_class_cube)
+```

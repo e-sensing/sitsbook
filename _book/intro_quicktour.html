@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.361">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<meta name="author" content="Gilberto Camara, Rolf Simoes, Felipe Souza, Felipe Carlos, Pedro Andrade, Karine Ferreira, Lorena Santos and Charlotte Pelletier">
+<title>Satellite Image Time Series Analysis on Earth Observation Data Cubes - 1&nbsp; A quick tour of SITS</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./intro_examples.html" rel="next">
+<link href="./introduction.html" rel="prev">
+<link href="./cover_sits_book.jpg" rel="icon" type="image/jpeg">
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light"><script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+</head>
+<body class="nav-sidebar floating">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top"><nav class="quarto-secondary-nav"><div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+      <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./introduction.html">Introduction</a></li><li class="breadcrumb-item"><a href="./intro_quicktour.html"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">A quick tour of SITS</span></a></li></ol></nav>
+      <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+      </a>
+      <button type="button" class="btn quarto-search-button" aria-label="" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav></header><!-- content --><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal sidebar-navigation floating overflow-auto"><div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">Satellite Image Time Series Analysis on Earth Observation Data Cubes</a> 
+        <div class="sidebar-tools-main">
+    <a href="https://github.com/e-sensing/sitsbook" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
+  <a href="" class="quarto-reader-toggle quarto-navigation-tool px-1" onclick="window.quartoToggleReader(); return false;" title="Toggle reader mode">
+  <div class="quarto-reader-toggle-btn">
+  <i class="bi"></i>
+  </div>
+</a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Welcome</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./setup.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Setup</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./acknowledgements.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Acknowledgements</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./introduction.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Introduction</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./intro_quicktour.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">A quick tour of SITS</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./intro_examples.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Example scripts</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./intro_visualisation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Data visualisation</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./datacubes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Earth observation data cubes</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./dc_ardcollections.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Access to ARD Image collections</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./dc_regularize.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Producing regular data cubes and merging multi-source data</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./dc_localcubes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Data cubes from local files</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./dc_cubeoperations.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Operations on data cubes{-}</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./timeseries.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Satellite Image Time Series</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ts_basics.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Working with time series{-}</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ts_quality.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Improving the quality of training samples{-}</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ts_balance.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Reducing sample imbalance</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./classification.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Machine learning classification{-}</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./cl_machinelearning.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Machine learning algorithms{-}</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./cl_rasterclassification.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Classification of raster data cubes{-}</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./cl_smoothing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Bayesian smoothing for post-processing{-}</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./cl_uncertainty.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Uncertainty and active learning{-}</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./cl_ensembleprediction.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Ensemble prediction from multiple models{-}</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./validation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">validation.html</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./val_kfold.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">val_kfold.html</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./val_map.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Validation and accuracy measurements{-}</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./vector_datacubes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">vector_datacubes.html</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./vec_obia.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Object-based time series image analysis</span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./annex.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Technical annex</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./references.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">References{-}</span></span></a>
+  </div>
+</li>
+    </ul>
+</div>
+</nav><div id="quarto-sidebar-glass" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active"><h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+<li><a href="#creating-a-data-cube" id="toc-creating-a-data-cube" class="nav-link active" data-scroll-target="#creating-a-data-cube"><span class="header-section-number">1.1</span> Creating a data cube</a></li>
+  <li><a href="#the-time-series-tibble" id="toc-the-time-series-tibble" class="nav-link" data-scroll-target="#the-time-series-tibble"><span class="header-section-number">1.2</span> The time series tibble</a></li>
+  <li><a href="#training-a-machine-learning-model" id="toc-training-a-machine-learning-model" class="nav-link" data-scroll-target="#training-a-machine-learning-model"><span class="header-section-number">1.3</span> Training a machine learning model</a></li>
+  <li><a href="#data-cube-classification" id="toc-data-cube-classification" class="nav-link" data-scroll-target="#data-cube-classification"><span class="header-section-number">1.4</span> Data cube classification</a></li>
+  <li><a href="#spatial-smoothing" id="toc-spatial-smoothing" class="nav-link" data-scroll-target="#spatial-smoothing"><span class="header-section-number">1.5</span> Spatial smoothing</a></li>
+  <li><a href="#labeling-a-probability-data-cube" id="toc-labeling-a-probability-data-cube" class="nav-link" data-scroll-target="#labeling-a-probability-data-cube"><span class="header-section-number">1.6</span> Labeling a probability data cube</a></li>
+  </ul><div class="toc-actions"><div><i class="bi bi-github"></i></div><div class="action-links"><p><a href="https://github.com/e-sensing/sitsbook/edit/quarto/intro_quicktour.qmd" class="toc-action">Edit this page</a></p><p><a href="https://github.com/e-sensing/sitsbook/issues/new" class="toc-action">Report an issue</a></p></div></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block default"><div class="quarto-title">
+<h1 class="title">
+<span class="chapter-number">1</span>&nbsp; <span class="chapter-title">A quick tour of SITS</span>
+</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+</header><p><a href="https://www.kaggle.com/esensing/introduction-to-sits" target="_blank"><img src="https://kaggle.com/static/images/open-in-kaggle.svg"></a></p>
+<section id="creating-a-data-cube" class="level2" data-number="1.1"><h2 data-number="1.1" class="anchored" data-anchor-id="creating-a-data-cube">
+<span class="header-section-number">1.1</span> Creating a data cube</h2>
+<p>There are two kinds of data cubes in <code>sits</code>: (a) irregular data cubes generated by selecting image collections on cloud providers such as AWS and Planetary Computer; (b) regular data cubes with images fully covering a chosen area, where each image has the same spectral bands and spatial resolution, and images follow a set of adjacent and regular time intervals. Machine learning applications need regular data cubes. Please refer to Chapter <a href="https://e-sensing.github.io/sitsbook/earth-observation-data-cubes.html">Earth observation data cubes</a> for further details.</p>
+<p>The first step in using <code>sits</code> is loading the required libraries, as shown below.</p>
+<div class="cell">
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># load package "tibble"</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://tibble.tidyverse.org/">tibble</a></span><span class="op">)</span></span>
+<span><span class="co"># load packages "sits" and "sitsdata"</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/e-sensing/sits/">sits</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/e-sensing/sitsdata/">sitsdata</a></span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The first steps in using <code>sits</code> are: (a) select an analysis-ready data image collection available in a cloud provider or stored locally using <code><a href="https://rdrr.io/pkg/sits/man/sits_cube.html">sits_cube()</a></code>; (b) if the collection is not regular, use <code><a href="https://rdrr.io/pkg/sits/man/sits_regularize.html">sits_regularize()</a></code> to build a regular data cube.</p>
+<p>This example builds a data cube from local images already organized as a regular data cube. The data cube is composed of MODIS MOD13Q1 images for the region close to the city of Sinop in Mato Grosso, Brazil. This region is one of the world’s largest producers of soybeans. All images have indexes NDVI and EVI covering a one-year period from 2013-09-14 to 2014-08-29 (we use “year-month-day” for dates). There are 23 time instances, each covering a 16-day period. This data is available in the package <code>sitsdata</code>. For more details on building data cubes from local files, see Chapter “Data cubes from local files”.</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Create a data cube using local files</span></span>
+<span><span class="va">sinop_cube</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_cube.html">sits_cube</a></span><span class="op">(</span></span>
+<span>  source <span class="op">=</span> <span class="st">"BDC"</span>, </span>
+<span>  collection  <span class="op">=</span> <span class="st">"MOD13Q1-6.1"</span>,</span>
+<span>  bands <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"NDVI"</span>, <span class="st">"EVI"</span><span class="op">)</span>,</span>
+<span>  data_dir <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html">system.file</a></span><span class="op">(</span><span class="st">"extdata/sinop"</span>, package <span class="op">=</span> <span class="st">"sitsdata"</span><span class="op">)</span>,  </span>
+<span>  parse_info <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"satellite"</span>, <span class="st">"sensor"</span>, <span class="st">"tile"</span>, <span class="st">"band"</span>, <span class="st">"date"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co"># Plot the NDVI for the first date (2013-09-14)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">sinop_cube</span>, </span>
+<span>     band <span class="op">=</span> <span class="st">"NDVI"</span>, </span>
+<span>     dates <span class="op">=</span> <span class="st">"2013-09-14"</span>,</span>
+<span>     palette <span class="op">=</span> <span class="st">"RdYlGn"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div id="fig-intro-ndvi" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure"><p><img src="intro_quicktour_files/figure-html/fig-intro-ndvi-1.png" style="width:100.0%;height:100.0%" class="figure-img"></p>
+<figcaption class="figure-caption">Figure&nbsp;1.1: False color MODIS image for NDVI band in 2013-09-14.</figcaption></figure>
+</div>
+</div>
+</div>
+<p>The aim of the <code>parse_info</code> parameter is to extract <code>tile</code>, <code>band</code>, and <code>date</code> information from the file name. Given the large variation in image file names generated by different produces, it includes designators such as <code>X1</code> and <code>X2</code>; these are place holders for parts of the file name that is not relevant to <code><a href="https://rdrr.io/pkg/sits/man/sits_cube.html">sits_cube()</a></code>.</p>
+<p>The R object returned by <code><a href="https://rdrr.io/pkg/sits/man/sits_cube.html">sits_cube()</a></code> contains the metadata describing the contents of the data cube. It includes data source and collection, satellite, sensor, tile in the collection, bounding box, projection, and list of files. Each file refers to one band of an image at one of the temporal instances of the cube.</p>
+<div class="cell">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Show the description of the data cube</span></span>
+<span><span class="va">sinop_cube</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1 × 11
+  source collection satellite sensor tile     xmin    xmax    ymin    ymax crs  
+  &lt;chr&gt;  &lt;chr&gt;      &lt;chr&gt;     &lt;chr&gt;  &lt;chr&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt; &lt;chr&gt;
+1 BDC    MOD13Q1-6… TERRA     MODIS  0120… -6.18e6 -5.96e6 -1.35e6 -1.23e6 "PRO…
+# ℹ 1 more variable: file_info &lt;list&gt;</code></pre>
+</div>
+</div>
+<p>The list of image files which make up the data cube is stored as a data frame in the column <code>file_info</code>. For each file, <code>sits</code> stores information about spectral band, reference date, size, spatial resolution, coordinate reference system, bounding box, path to file location and cloud cover information (when available).</p>
+<div class="cell">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Show information on the images files which are part of a data cube</span></span>
+<span><span class="va">sinop_cube</span><span class="op">$</span><span class="va">file_info</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 69 × 13
+   fid   band  date       nrows ncols  xres  yres      xmin      ymin      xmax
+   &lt;chr&gt; &lt;chr&gt; &lt;date&gt;     &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;     &lt;dbl&gt;
+ 1 1     CLOUD 2013-09-14   551   944  232.  232. -6181982. -1353336. -5963298.
+ 2 1     EVI   2013-09-14   551   944  232.  232. -6181982. -1353336. -5963298.
+ 3 1     NDVI  2013-09-14   551   944  232.  232. -6181982. -1353336. -5963298.
+ 4 2     CLOUD 2013-09-30   551   944  232.  232. -6181982. -1353336. -5963298.
+ 5 2     EVI   2013-09-30   551   944  232.  232. -6181982. -1353336. -5963298.
+ 6 2     NDVI  2013-09-30   551   944  232.  232. -6181982. -1353336. -5963298.
+ 7 3     CLOUD 2013-10-16   551   944  232.  232. -6181982. -1353336. -5963298.
+ 8 3     EVI   2013-10-16   551   944  232.  232. -6181982. -1353336. -5963298.
+ 9 3     NDVI  2013-10-16   551   944  232.  232. -6181982. -1353336. -5963298.
+10 4     CLOUD 2013-11-01   551   944  232.  232. -6181982. -1353336. -5963298.
+# ℹ 59 more rows
+# ℹ 3 more variables: ymax &lt;dbl&gt;, crs &lt;chr&gt;, path &lt;chr&gt;</code></pre>
+</div>
+</div>
+<p>A key attribute of a data cube is its timeline, as shown below. The command <code><a href="https://rdrr.io/pkg/sits/man/sits_timeline.html">sits_timeline()</a></code> lists the temporal references associated to <code>sits</code> objects, including samples, data cubes and models.</p>
+<div class="cell">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Show the R object that describes the data cube</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_timeline.html">sits_timeline</a></span><span class="op">(</span><span class="va">sinop_cube</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] "2013-09-14" "2013-09-30" "2013-10-16" "2013-11-01" "2013-11-17"
+ [6] "2013-12-03" "2013-12-19" "2014-01-01" "2014-01-17" "2014-02-02"
+[11] "2014-02-18" "2014-03-06" "2014-03-22" "2014-04-07" "2014-04-23"
+[16] "2014-05-09" "2014-05-25" "2014-06-10" "2014-06-26" "2014-07-12"
+[21] "2014-07-28" "2014-08-13" "2014-08-29"</code></pre>
+</div>
+</div>
+<p>The timeline of the <code>sinop_cube</code> data cube has 23 intervals with a temporal difference of 16 days. The chosen dates capture the agricultural calendar in Mato Grosso, Brazil. The agricultural year starts in September-October with the sowing of the summer crop (usually soybeans) which is harvested in February-March. Then the winter crop (mostly Corn, Cotton or Millet) is planted in March and harvested in June-July. For LULC classification, the training samples and the date cube should share a timeline with the same number of intervals and similar start and end dates.</p>
+</section><section id="the-time-series-tibble" class="level2" data-number="1.2"><h2 data-number="1.2" class="anchored" data-anchor-id="the-time-series-tibble">
+<span class="header-section-number">1.2</span> The time series tibble</h2>
+<p>To handle time series information, <code>sits</code> uses a <code>tibble</code>. Tibbles are extensions of the <code>data.frame</code> tabular data structures provided by the <code>tidyverse</code> set of packages. The example below shows a tibble with 1,837 time series obtained from MODIS MOD13Q1 images. Each series has four attributes: two bands (NIR and MIR) and two indexes (NDVI and EVI). This dataset is available in package <code>sitsdata</code>.</p>
+<p>The time series tibble contains data and metadata. The first six columns contain the metadata: spatial and temporal information, the label assigned to the sample, and the data cube from where the data has been extracted. The <code>time_series</code> column contains the time series data for each spatiotemporal location. This data is also organized as a tibble, with a column with the dates and the other columns with the values for each spectral band.</p>
+<div class="cell">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Load the MODIS samples for Mato Grosso from the "sitsdata" package</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://tibble.tidyverse.org/">tibble</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/e-sensing/sitsdata/">sitsdata</a></span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html">data</a></span><span class="op">(</span><span class="st">"samples_matogrosso_mod13q1"</span>, package <span class="op">=</span> <span class="st">"sitsdata"</span><span class="op">)</span></span>
+<span><span class="va">samples_matogrosso_mod13q1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1,837 × 7
+   longitude latitude start_date end_date   label   cube     time_series      
+       &lt;dbl&gt;    &lt;dbl&gt; &lt;date&gt;     &lt;date&gt;     &lt;chr&gt;   &lt;chr&gt;    &lt;list&gt;           
+ 1     -57.8    -9.76 2006-09-14 2007-08-29 Pasture bdc_cube &lt;tibble [23 × 5]&gt;
+ 2     -59.4    -9.31 2014-09-14 2015-08-29 Pasture bdc_cube &lt;tibble [23 × 5]&gt;
+ 3     -59.4    -9.31 2013-09-14 2014-08-29 Pasture bdc_cube &lt;tibble [23 × 5]&gt;
+ 4     -57.8    -9.76 2006-09-14 2007-08-29 Pasture bdc_cube &lt;tibble [23 × 5]&gt;
+ 5     -55.2   -10.8  2013-09-14 2014-08-29 Pasture bdc_cube &lt;tibble [23 × 5]&gt;
+ 6     -51.9   -13.4  2014-09-14 2015-08-29 Pasture bdc_cube &lt;tibble [23 × 5]&gt;
+ 7     -56.0   -10.1  2005-09-14 2006-08-29 Pasture bdc_cube &lt;tibble [23 × 5]&gt;
+ 8     -54.6   -10.4  2013-09-14 2014-08-29 Pasture bdc_cube &lt;tibble [23 × 5]&gt;
+ 9     -52.5   -11.0  2013-09-14 2014-08-29 Pasture bdc_cube &lt;tibble [23 × 5]&gt;
+10     -52.1   -14.0  2013-09-14 2014-08-29 Pasture bdc_cube &lt;tibble [23 × 5]&gt;
+# ℹ 1,827 more rows</code></pre>
+</div>
+</div>
+<p>The timeline for all time series associated with the samples follows the same agricultural calendar, starting in September 14th and ending in August 28th. All samples contain 23 values, corresponding to the same temporal interval as those of the <code>sinop</code> data cube. Notice that that although the years for the samples are different, the samples for a given year follow the same agricultural calendar.</p>
+<p>The time series can be displayed by showing the <code>time_series</code> column.</p>
+<div class="cell">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Load the time series for MODIS samples for Mato Grosso</span></span>
+<span><span class="va">samples_matogrosso_mod13q1</span><span class="op">[</span><span class="fl">1</span>,<span class="op">]</span><span class="op">$</span><span class="va">time_series</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 23 × 5
+   Index       NDVI   EVI   NIR    MIR
+   &lt;date&gt;     &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt;
+ 1 2006-09-14 0.500 0.263 0.230 0.139 
+ 2 2006-09-30 0.485 0.330 0.359 0.161 
+ 3 2006-10-16 0.716 0.397 0.264 0.0757
+ 4 2006-11-01 0.654 0.415 0.332 0.124 
+ 5 2006-11-17 0.591 0.433 0.400 0.172 
+ 6 2006-12-03 0.662 0.439 0.348 0.125 
+ 7 2006-12-19 0.734 0.444 0.295 0.0784
+ 8 2007-01-01 0.739 0.502 0.348 0.0887
+ 9 2007-01-17 0.768 0.526 0.351 0.0761
+10 2007-02-02 0.797 0.550 0.355 0.0634
+# ℹ 13 more rows</code></pre>
+</div>
+</div>
+<p>The distribution of samples per class can be obtained using the <code><a href="https://rdrr.io/r/base/summary.html">summary()</a></code> command. The classification schema uses nine labels, four associated to crops (<code>Soy_Corn</code>, <code>Soy_Cotton</code>, <code>Soy_Fallow</code>, <code>Soy_Millet</code>), two with natural vegetation (<code>Cerrado</code>, <code>Forest</code>) and one to <code>Pasture</code>.</p>
+<div class="cell">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Load the MODIS samples for Mato Grosso from the "sitsdata" package</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html">summary</a></span><span class="op">(</span><span class="va">samples_matogrosso_mod13q1</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 7 × 3
+  label      count   prop
+  &lt;chr&gt;      &lt;int&gt;  &lt;dbl&gt;
+1 Cerrado      379 0.206 
+2 Forest       131 0.0713
+3 Pasture      344 0.187 
+4 Soy_Corn     364 0.198 
+5 Soy_Cotton   352 0.192 
+6 Soy_Fallow    87 0.0474
+7 Soy_Millet   180 0.0980</code></pre>
+</div>
+</div>
+<p>It is helpful to plot the dispersion of the time series. In what follows, for brevity, we will filter only one label (<code>Forest</code>) and select one index (NDVI). Note that for filtering the label we use a function from <code>dplyr</code> package, while for selecting the index we use <code><a href="https://rdrr.io/pkg/sits/man/sits_select.html">sits_select()</a></code>. We use two different functions for selection because of they way metadata is stored in a samples files. The labels for the samples are listed in column <code>label</code> in the samples tibble, as shown above. In this case, one can use functions from the <code>dplyr</code> package to extract subsets. In particular, the function <code><a href="https://dplyr.tidyverse.org/reference/filter.html">dplyr::filter</a></code> retaining all rows that satisfy a given condition. In the above example, the result of <code><a href="https://dplyr.tidyverse.org/reference/filter.html">dplyr::filter</a></code> is the set of samples associated to the “Forest” label. The second selection involves obtaining only the values for the NDVI band. This operation requires access to the <code>time_series</code> column, which is stored as a list. In this case, selection with <code><a href="https://dplyr.tidyverse.org/reference/filter.html">dplyr::filter</a></code> will not work. To handle such cases, <code>sits</code> provides <code><a href="https://rdrr.io/pkg/sits/man/sits_select.html">sits_select()</a></code> to select subsets inside the <code>time_series</code> list.</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># select all samples with label "Forest"</span></span>
+<span><span class="va">samples_forest</span> <span class="op">&lt;-</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span><span class="op">(</span></span>
+<span>    <span class="va">samples_matogrosso_mod13q1</span>, </span>
+<span>    <span class="va">label</span> <span class="op">==</span> <span class="st">"Forest"</span></span>
+<span><span class="op">)</span> <span class="op">|&gt;</span> </span>
+<span><span class="co"># select the NDVI band for all samples with label "Forest"</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_select.html">sits_select</a></span><span class="op">(</span></span>
+<span>    band <span class="op">=</span> <span class="st">"NDVI"</span></span>
+<span><span class="op">)</span> <span class="op">|&gt;</span> </span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div id="fig-ts-forest-1" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure"><p><img src="intro_quicktour_files/figure-html/fig-ts-forest-1.png" class="img-fluid figure-img" style="width:80.0%"></p>
+<figcaption class="figure-caption">Figure&nbsp;1.2: Joint plot of all samples in band NDVI for label Forest.</figcaption></figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div id="fig-ts-forest-2" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure"><p><img src="intro_quicktour_files/figure-html/fig-ts-forest-2.png" class="img-fluid figure-img" style="width:80.0%"></p>
+<figcaption class="figure-caption">Figure&nbsp;1.3: Joint plot of all samples in band NDVI for label Forest.</figcaption></figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div id="fig-ts-forest-3" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure"><p><img src="intro_quicktour_files/figure-html/fig-ts-forest-3.png" class="img-fluid figure-img" style="width:80.0%"></p>
+<figcaption class="figure-caption">Figure&nbsp;1.4: Joint plot of all samples in band NDVI for label Forest.</figcaption></figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div id="fig-ts-forest-4" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure"><p><img src="intro_quicktour_files/figure-html/fig-ts-forest-4.png" class="img-fluid figure-img" style="width:80.0%"></p>
+<figcaption class="figure-caption">Figure&nbsp;1.5: Joint plot of all samples in band NDVI for label Forest.</figcaption></figure>
+</div>
+</div>
+</div>
+<p>The above figure shows all the time series associated with label <code>Forest</code> and band NDVI (in light blue), highlighting the median (shown in dark red) and the first and third quartiles (shown in brown). The spikes are noise caused by the presence of clouds.</p>
+</section><section id="training-a-machine-learning-model" class="level2" data-number="1.3"><h2 data-number="1.3" class="anchored" data-anchor-id="training-a-machine-learning-model">
+<span class="header-section-number">1.3</span> Training a machine learning model</h2>
+<p>The next step is to train a machine learning (ML) model using <code><a href="https://rdrr.io/pkg/sits/man/sits_train.html">sits_train()</a></code>. It takes two inputs, <code>samples</code> (a time series tibble) and <code>ml_method</code> (a function that implements a machine learning algorithm). The result is a model that is used for classification. Each ML algorithm requires specific parameters that are user-controllable. For novice users, <code>sits</code> provides default parameters that produce good results. Please see Chapter <a href="https://e-sensing.github.io/sitsbook/machine-learning-for-data-cubes.html">Machine learning for data cubes</a> for more details.</p>
+<p>Since the time series data has four attributes (EVI, NDVI, NIR, and MIR) and the data cube images have only two, we select the NDVI and EVI values and use the resulting data for training. To build the classification model, we use a random forest model called by <code><a href="https://rdrr.io/pkg/sits/man/sits_rfor.html">sits_rfor()</a></code>. Results from the random forest model can vary between different runs, due to the stochastic nature of the algorithm, For this reason, in the code fragment below, we set the seed of R’s pseudo-random number generation explicitly to ensure the same results are produced for documentation purposes.</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span><span class="op">(</span><span class="fl">03022024</span><span class="op">)</span></span>
+<span><span class="co"># Select the bands NDVI and EVI</span></span>
+<span><span class="va">samples_2bands</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_select.html">sits_select</a></span><span class="op">(</span></span>
+<span>    data <span class="op">=</span> <span class="va">samples_matogrosso_mod13q1</span>, </span>
+<span>    bands <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"NDVI"</span>, <span class="st">"EVI"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co"># Train a random forest model</span></span>
+<span><span class="va">rf_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_train.html">sits_train</a></span><span class="op">(</span></span>
+<span>    samples <span class="op">=</span> <span class="va">samples_2bands</span>, </span>
+<span>    ml_method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_rfor.html">sits_rfor</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co"># Plot the most important variables of the model</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">rf_model</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Registered S3 method overwritten by 'GGally':
+  method from   
+  +.gg   ggplot2</code></pre>
+</div>
+<div class="cell-output-display">
+<div id="fig-rf-intro" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure"><p><img src="intro_quicktour_files/figure-html/fig-rf-intro-1.png" class="img-fluid figure-img" style="width:80.0%"></p>
+<figcaption class="figure-caption">Figure&nbsp;1.6: Most relevant variables of trained random forest model.</figcaption></figure>
+</div>
+</div>
+</div>
+</section><section id="data-cube-classification" class="level2" data-number="1.4"><h2 data-number="1.4" class="anchored" data-anchor-id="data-cube-classification">
+<span class="header-section-number">1.4</span> Data cube classification</h2>
+<p>After training the machine learning model, the next step is to classify the data cube using <code><a href="https://rdrr.io/pkg/sits/man/sits_classify.html">sits_classify()</a></code>. This function produces a set of raster probability maps, one for each class. For each of these maps, the value of a pixel is proportional to the probability that it belongs to the class. This function has two mandatory parameters: <code>data</code>, the data cube or time series tibble to be classified; and <code>ml_model</code>, the trained ML model. Optional parameters include: (a) <code>multicores</code>, number of cores to be used; (b) <code>memsize</code>, RAM used in the classification; (c) <code>output_dir</code>, the directory where the classified raster files will be written. Details of the classification process are available in Chapter <a href="https://e-sensing.github.io/sitsbook/rasterclassification.html">Image classification in data cubes</a>.</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Classify the raster image</span></span>
+<span><span class="va">sinop_probs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_classify.html">sits_classify</a></span><span class="op">(</span></span>
+<span>    data <span class="op">=</span> <span class="va">sinop_cube</span>, </span>
+<span>    ml_model <span class="op">=</span> <span class="va">rf_model</span>,</span>
+<span>    multicores <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>    memsize <span class="op">=</span> <span class="fl">8</span>,</span>
+<span>    output_dir <span class="op">=</span> <span class="st">"./tempdir/R/chp3"</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co"># Plot the probability cube for class Forest</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">sinop_probs</span>, labels <span class="op">=</span> <span class="st">"Forest"</span>, palette <span class="op">=</span> <span class="st">"BuGn"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div id="fig-prob-intro" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure"><p><img src="intro_quicktour_files/figure-html/fig-prob-intro-1.png" class="img-fluid figure-img" style="width:90.0%"></p>
+<figcaption class="figure-caption">Figure&nbsp;1.7: Probability map for class Forest.</figcaption></figure>
+</div>
+</div>
+</div>
+<p>After completing the classification, we plot the probability maps for class <code>Forest</code>. Probability maps are helpful to visualize the degree of confidence the classifier assigns to the labels for each pixel. They can be used to produce uncertainty information and support active learning, as described in Chapter <a href="https://e-sensing.github.io/sitsbook/rasterclassification.html">Image classification in data cubes</a>.</p>
+</section><section id="spatial-smoothing" class="level2" data-number="1.5"><h2 data-number="1.5" class="anchored" data-anchor-id="spatial-smoothing">
+<span class="header-section-number">1.5</span> Spatial smoothing</h2>
+<p>When working with big Earth observation data, there is much variability in each class. As a result, some pixels will be misclassified. These errors are more likely to occur in transition areas between classes. To address these problems, <code><a href="https://rdrr.io/pkg/sits/man/sits_smooth.html">sits_smooth()</a></code> takes a probability cube as input and uses the class probabilities of each pixel’s neighborhood to reduce labeling uncertainty. Plotting the smoothed probability map for class Forest shows that most outliers have been removed.</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Perform spatial smoothing</span></span>
+<span><span class="va">sinop_bayes</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_smooth.html">sits_smooth</a></span><span class="op">(</span></span>
+<span>    cube <span class="op">=</span> <span class="va">sinop_probs</span>,</span>
+<span>    multicores <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>    memsize <span class="op">=</span> <span class="fl">8</span>,</span>
+<span>    output_dir <span class="op">=</span> <span class="st">"./tempdir/R/chp3"</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">sinop_bayes</span>, labels <span class="op">=</span> <span class="st">"Forest"</span>, palette <span class="op">=</span> <span class="st">"BuGn"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div id="fig-bayes-intro" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure"><p><img src="intro_quicktour_files/figure-html/fig-bayes-intro-1.png" class="img-fluid figure-img" style="width:90.0%"></p>
+<figcaption class="figure-caption">Figure&nbsp;1.8: Smoothed probability map for class Forest.</figcaption></figure>
+</div>
+</div>
+</div>
+</section><section id="labeling-a-probability-data-cube" class="level2" data-number="1.6"><h2 data-number="1.6" class="anchored" data-anchor-id="labeling-a-probability-data-cube">
+<span class="header-section-number">1.6</span> Labeling a probability data cube</h2>
+<p>After removing outliers using local smoothing, the final classification map can be obtained using <code><a href="https://rdrr.io/pkg/sits/man/sits_label_classification.html">sits_label_classification()</a></code>. This function assigns each pixel to the class with the highest probability.</p>
+<div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Label the probability file </span></span>
+<span><span class="va">sinop_map</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_label_classification.html">sits_label_classification</a></span><span class="op">(</span></span>
+<span>    cube <span class="op">=</span> <span class="va">sinop_bayes</span>, </span>
+<span>    output_dir <span class="op">=</span> <span class="st">"./tempdir/R/chp3"</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">sinop_map</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div id="fig-map-intro" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure"><p><img src="intro_quicktour_files/figure-html/fig-map-intro-1.png" class="img-fluid figure-img" style="width:100.0%"></p>
+<figcaption class="figure-caption">Figure&nbsp;1.9: Classification map for Sinop.</figcaption></figure>
+</div>
+</div>
+</div>
+<p>The resulting classification files can be read by QGIS. Links to the associated files are available in the <code>sinop_map</code> object in the nested table <code>file_info</code>.</p>
+<div class="cell">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Show the location of the classification file</span></span>
+<span><span class="va">sinop_map</span><span class="op">$</span><span class="va">file_info</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 1 × 12
+  band  start_date end_date   ncols nrows  xres  yres      xmin     xmax    ymin
+  &lt;chr&gt; &lt;date&gt;     &lt;date&gt;     &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;   &lt;dbl&gt;
+1 class 2013-09-14 2014-08-29   944   551  232.  232. -6181982.  -5.96e6 -1.35e6
+# ℹ 2 more variables: ymax &lt;dbl&gt;, path &lt;chr&gt;</code></pre>
+</div>
+</div>
+
+
+</section></main><!-- /main --><script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script><nav class="page-navigation"><div class="nav-page nav-page-previous">
+      <a href="./introduction.html" class="pagination-link">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Introduction</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./intro_examples.html" class="pagination-link">
+        <span class="nav-page-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Example scripts</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer"><div class="nav-footer">
+    <div class="nav-footer-left">The SITS book was written by Gilberto Camara, Rolf Simoes, Felipe Souza, Felipe Carlos, Pedro Andrade, Karine Ferreira, Lorena Santos and Charlotte Pelletier.</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">This book was built with <a href="https://quarto.org/">Quarto</a>.</div>
+  </div>
+</footer>
+
+
+</body></html>
