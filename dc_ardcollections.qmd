@@ -1,5 +1,46 @@
 # Access to ARD Image collections
 
+
+## Software configuration 
+
+The first step in using `sits` is configuring the environment to for running `R` and `Python` together. 
+::: {.panel-tabset}
+## R 
+```{r}
+#| echo: true
+#| eval: true
+#| output: false
+# load package "tibble"
+library(tibble)
+# load packages "sits" and "sitsdata"
+library(sits)
+library(sitsdata)
+```
+## Python
+```{python}
+#| output: false
+from pysits import *
+import pandas as pd
+pd.set_option("display.max_columns", 100)
+pd.set_option("display.max_rows", 4)
+```
+:::
+Please also provide the location of the python interpreter that supports the integration of `sits` in `Python`. 
+```{r}
+reticulate::use_python("/Users/gilbertocamara/.pyenv/versions/pysits/bin/python")
+```
+
+
+```{python}
+#| output: false
+from pysits import *
+import pandas as pd
+pd.set_option("display.max_columns", 100)
+pd.set_option("display.max_rows", 4)
+# set data directory
+sitsdata_dir = "/Library/Frameworks/R.framework/Versions/4.4-x86_64/Resources/library/sitsdata/"
+```
+
 ## What is Analysis-Ready Data?
 
 Analysis Ready Data (CEOS-ARD) are satellite data that have been processed to meet the [ARD standards](https://ceos.org/ard/) defined by the Committee on Earth Observation Satellites (CEOS). ARD data simplify and accelerate the analysis of Earth observation data by providing consistent and high-quality data that are standardized across different sensors and platforms. 
@@ -86,6 +127,8 @@ The result of `sits_cube()` is a tibble with a description of the selected image
 
 Amazon Web Services (AWS) holds two kinds of collections: *open-data* and *requester-pays*. Open data collections can be accessed without cost. Requester-pays collections require payment from an AWS account. Currently, `sits` supports collection `SENTINEL-2-L2A` which is open data.  The bands in 10 m resolution are B02, B03, B04, and B08. The  20 m bands are B05, B06, B07, B8A, B11, and B12. Bands B01 and B09 are available at 60 m resolution. A CLOUD band is also available. The example below shows how to access one tile of the open data `SENTINEL-2-L2A` collection.  The `tiles` parameter allows selecting the desired area according to the MGRS reference system. 
 
+::: {.panel-tabset}
+## R
 ```{r}
 #| eval: false
 #| echo: true
@@ -105,6 +148,27 @@ plot(s2_23MMU_cube,
      date = "2018-10-05"
 )
 ```
+## Python
+```{python}
+#| eval: false
+#| echo: true
+# Create a data cube covering an area in Brazil
+s2_23MMU_cube = sits_cube(
+    source = "AWS",
+    collection = "SENTINEL-2-L2A",
+    tiles = "23MMU",
+    bands = ["B02", "B8A", "B11", "CLOUD"],
+    start_date = "2018-07-12",
+    end_date = "2019-07-28"
+)
+plot(s2_23MMU_cube, 
+     red = "B11", 
+     blue = "B02", 
+     green = "B8A", 
+     date = "2018-10-05"
+)
+```
+:::
 
 ```{r}
 #| echo: FALSE
@@ -126,8 +190,10 @@ The `sits` package supports access to open data collection from Microsoft's Plan
 
 The SENTINEL-2/2A ARD images available in MPC have the same bands and resolutions as those available in AWS (see above). The example below shows how to access the `SENTINEL-2-L2A` collection. 
 
+::: {.panel-tabset}
+## R
 ```{r}
-#| eval: FALSE
+#| eval: false
 # Create a data cube covering an area in the Brazilian Amazon
 s2_20LKP_cube_MPC <- sits_cube(
       source = "MPC",
@@ -142,8 +208,26 @@ plot(s2_20LKP_cube_MPC, red = "B11", blue = "B02", green = "B8A",
      date = "2019-07-18"
 )
 ```
+## Python
+```{python}
+#| eval: false
+# Create a data cube covering an area in the Brazilian Amazon
+s2_20LKP_cube_MPC = sits_cube(
+      source = "MPC",
+      collection = "SENTINEL-2-L2A",
+      tiles = "20LKP",
+      bands = ["B02", "B8A", "B11", "CLOUD"],
+      start_date = "2019-07-01",
+      end_date = "2019-07-28"
+)
+# Plot a color composite of one date of the cube
+plot(s2_20LKP_cube_MPC, red = "B11", blue = "B02", green = "B8A", 
+     date = "2019-07-18"
+)
+```
+:::
 
-```{r mpc1, echo = FALSE, out.width="100%", fig.align="center", fig.cap= "Sentinel-2 image in an area of the state of Rondonia, Brazil (&copy; EU Copernicus Sentinel Programme; source: Microsoft)."}
+```{r}
 #| echo: FALSE
 #| label: fig-s2mpc-datacubes
 #| out-width: 100%
@@ -158,8 +242,10 @@ knitr::include_graphics("./images/mpc_s2.png")
 
 The `LANDSAT-C2-L2` collection provides access to data from Landsat-4/5/7/8/9 satellites. Images from these satellites have been intercalibrated to ensure data consistency. For compatibility between the different Landsat sensors, the band names are BLUE, GREEN, RED,  NIR08,  SWIR16, and SWIR22. All images have 30 m resolution. For this collection,  tile search is not supported; the `roi` parameter should be used. The example below shows how to retrieve data from a region of interest covering the city of Brasilia in Brazil. 
 
+::: {.panel-tabset}
+## R
 ```{r}
-#| eval: FALSE
+#| eval: false
 # Read a ROI that covers part of the Northeastern coast of Brazil
 roi <- c(lon_min = -43.5526, lat_min = -2.9644, 
          lon_max = -42.5124, lat_max = -2.1671)
@@ -173,9 +259,27 @@ s2_L8_cube_MPC <- sits_cube(
         end_date = "2019-09-01"
 )
 # Plot the tile that covers the Lencois Maranhenses
-plot(s2_L8_cube_MPC, red = "RED", green = "GREEN", blue = "BLUE",  
-     date = "2019-06-30")
+plot(s2_L8_cube_MPC)
 ```
+## Python
+```{python}
+#| eval: false
+# Read a ROI that covers part of the Northeastern coast of Brazil
+roi = {"lon_min" : -43.5526, "lat_min" : -2.9644, 
+         "lon_max" : -42.5124, "lat_max" : -2.1671}
+# Select the cube
+s2_L8_cube_MPC = sits_cube(
+        source = "MPC",
+        collection = "LANDSAT-C2-L2",
+        bands = ["BLUE", "RED", "GREEN", "NIR08", "SWIR16", "CLOUD"],
+        roi = roi,
+        start_date = "2019-06-01",
+        end_date = "2019-09-01"
+)
+# Plot the tile that covers the Lencois Maranhenses
+plot(s2_L8_cube_MPC)
+```
+:::
 
 ```{r}
 #| echo: false
@@ -192,11 +296,13 @@ knitr::include_graphics("./images/mpc_l8.png")
 Sentinel-1 GRD products consist of focused SAR data that has been detected, multi-looked and projected to ground range using the WGS84 Earth ellipsoid model. GRD images are subject for variations in the radar signal's intensity due to topographic effects, antenna pattern, range spreading loss, and other radiometric distortions. The most common types of distortions include foreshortening, layover and shadowing. 
 
 Foreshortening occurs when the radar signal strikes a steep terrain slope facing the radar, causing the slope to appear compressed in the image. Features like mountains can appear much steeper than they are, and their true heights can be difficult to interpret. Layover happens when the radar signal reaches the top of a tall feature (like a mountain or building) before it reaches the base. As a result, the top of the feature is displaced towards the radar and appears in front of its base. This results in a reversal of the order of features along the radar line-of-sight, making the image interpretation challenging. Shadowing occurs when a radar signal is obstructed by a tall object, casting a shadow on the area behind it that the radar cannot illuminate. The shadowed areas appear dark in SAR images, and no information is available from these regions, similar to optical shadows.
-
+ 
 Access to Sentinel-1 GRD images can be done either by MGRS tiles (`tiles`) or by region of interest (`roi`). We recommend using the MGRS tiling system for specifying the area of interest, since when these images are regularized, they will be re-projected into MGRS tiles. By default, only images in descending orbit are selected. 
 
 The following example shows how to create a data cube of S1 GRD images over a region in Mato Grosso Brazil that is an area of the Amazon forest that has been deforested. The resulting cube will not follow any specific projection and its coordinates will be stated as EPSG 4326 (latitude/longitude). Its geometry is derived from the SAR slant-range perspective; thus, it will appear included in relation to the Earth's longitude. 
 
+::: {.panel-tabset}
+## R
 ```{r}
 #| eval: false
 cube_s1_grd <-  sits_cube(
@@ -210,6 +316,22 @@ cube_s1_grd <-  sits_cube(
 )
 plot(cube_s1_grd, band = "VV", palette = "Greys")
 ```
+## Python
+```{python}
+#| eval: false
+cube_s1_grd =  sits_cube(
+  source = "MPC",
+  collection = "SENTINEL-1-GRD",
+  bands = ["VV"],
+  orbit = "descending",
+  tiles = ["21LUJ","21LVJ"],
+  start_date = "2021-08-01",
+  end_date = "2021-09-30"
+)
+plot(cube_s1_grd, band = "VV", palette = "Greys")
+
+```
+:::
 
 ```{r}
 #| echo: false
@@ -230,6 +352,8 @@ An RTC SAR image has undergone corrections for both geometric distortions and ra
 
 The terrain correction addresses geometric distortions caused by the side-looking geometry of SAR imaging, such as foreshortening, layover, and shadowing. It uses a Digital Elevation Model (DEM) to model the terrain and re-project the SAR image from the slant range (radar line-of-sight) to the ground range (true geographic coordinates). This process aligns the SAR image with the actual topography, providing a more accurate spatial representation.
 
+::: {.panel-tabset}
+## R
 ```{r}
 #| eval: false
 cube_s1_rtc <-  sits_cube(
@@ -243,6 +367,21 @@ cube_s1_rtc <-  sits_cube(
 )
 plot(cube_s1_rtc, band = "VV", palette = "Greys")
 ```
+## Python
+```{python}
+#| eval: false
+cube_s1_rtc =  sits_cube(
+  source = "MPC",
+  collection = "SENTINEL-1-RTC",
+  bands = ["VV", "VH"],
+  orbit = "descending",
+  tiles = "18NZM",
+  start_date = "2021-08-01",
+  end_date = "2021-09-30"
+)
+plot(cube_s1_rtc, band = "VV", palette = "Greys")
+```
+:::
 
 ```{r}
 #| echo: false
@@ -263,6 +402,8 @@ The Copernicus digital elevation model 30-meter global dataset (COP-DEM-GLO-30) 
 
 The Copernicus DEM 30 meter is organized in a 1$^\circ$ by 1$^\circ$ grid. In `sits`, access to COP-DEM-GLO-30 images can be done either by MGRS tiles (`tiles`) or by region of interest (`roi`). In both case, the cube is retrieved based on the parts of the grid that intersect the region of interest or the chosen tiles.
 
+::: {.panel-tabset}
+## R
 ```{r}
 #| eval: false
 cube_dem_30 <-  sits_cube(
@@ -273,6 +414,19 @@ cube_dem_30 <-  sits_cube(
 )
 plot(cube_dem_30, band = "ELEVATION", palette = "RdYlGn", rev = TRUE)
 ```
+## Python
+```{r}
+#| eval: false
+cube_dem_30 <-  sits_cube(
+  source = "MPC",
+  collection = "COP-DEM-GLO-30",
+  tiles = "20LMR",
+  band = "ELEVATION"
+)
+plot(cube_dem_30, band = "ELEVATION", palette = "RdYlGn", rev = TRUE)
+```
+
+
 
 
 ```{r}
@@ -664,5 +818,6 @@ plot(world_cover_2021_20LBL)
 knitr::include_graphics("./images/world_cover_2021.png") 
 ```
 
+## References{-}
 
 

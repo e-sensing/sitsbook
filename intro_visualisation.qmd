@@ -1,16 +1,33 @@
 # Data visualisation
 
-```{r, eval = TRUE, echo = FALSE, include = FALSE}
+This Chapter contains a discussion on plotting and visualisation of data cubes in `sits`. 
+
+:::{.panel-tabset}
+## R
+```{r}
 #| eval: true
-#| echo: false
+#| echo: true
 #| include: false
 library(sits)
 library(sitsdata)
 if (!file.exists("./tempdir/R/visualisation"))
   dir.create("./tempdir/R/visualisation")
+reticulate::use_python("/Users/gilbertocamara/.pyenv/versions/pysits/bin/python")
 ```
+## Python
+```{python}
+#| output: false
+from pysits import *
+import pandas as pd
+pd.set_option("display.max_columns", 100)
+pd.set_option("display.max_rows", 4)
 
-This Chapter contains a discussion on plotting and visualisation of data cubes in `sits`. 
+# directory where data is available
+sitsdata_dir = "/Library/Frameworks/R.framework/Versions/4.4-x86_64/Resources/library/sitsdata/"
+```
+:::
+  
+
 
 ## Plotting
 
@@ -41,6 +58,8 @@ The following optional parameters are available to allow for detailed control ov
 
 The following example shows a plot of an NDVI index of a data cube. This data cube covers part of MGRS tile `20LMR` and contains bands "B02", "B03", "B04", "B05", "B06",  "B07", "B08", "B11", "B12", "B8A", "EVI", "NBR", and "NDVI" for the period 2022-01-05 to 2022-12-23. We will use parameters with other than their defaults.
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| label: fig-vis-ndvi
 #| out-width: 100%
@@ -64,6 +83,26 @@ plot(ro_20LMR,
      legend_position = "outside",
      scale = 1.0)
 ```
+## Python
+```{python}
+# set the directory where the data is 
+data_dir = sitsdata_dir + "extdata/Rondonia-20LMR"
+# read the data cube
+ro_20LMR = sits_cube(
+  source = "MPC", 
+  collection = "SENTINEL-2-L2A",
+  data_dir = data_dir
+)
+# plot the NDVI for date 2022-08-01
+plot(ro_20LMR, 
+     band = "NDVI", 
+     date = "2022-08-01", 
+     palette = "Greens",
+     legend_position = "outside",
+     scale = 1.0)
+```
+:::
+
 ### Plotting RGB color composite maps
 
 For RGB color composite maps, the parameters for the `plot` function are:
@@ -81,22 +120,33 @@ For RGB color composite maps, the parameters for the `plot` function are:
 
 The optional parameters listed in the previous section are also available. An example follows:
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| label: fig-vis-rgb
 #| out-width: 100%
 #| fig-cap: |
 #|   Sentinel-2 color composite covering tile 20LMR
 #| fig-align: center
-# plot the NDVI for date 2022-08-01
+# plot a color composite for date 2022-08-01
 plot(ro_20LMR, 
      red = "B11", 
      green = "B8A",
      blue = "B02",
      date = "2022-08-01", 
-     palette = "Greens",
      scale = 1.0)
 ```
-
+## Python
+```{python}
+# plot a color composite for date 2022-08-01
+plot(ro_20LMR, 
+     red = "B11", 
+     green = "B8A",
+     blue = "B02",
+     date = "2022-08-01", 
+     scale = 1.0)
+```
+:::
 
 ### Plotting classified maps{-}
 
@@ -227,7 +277,7 @@ The original default `sits` color table can be restored using `sits_colors_reset
 sits_colors_reset()
 ```
 
-## Exporting colors to QGIS{-}
+## Exporting colors to QGIS
 
 To simplify the process of importing your data to QGIS, the color palette used to display classified maps in `sits` can be exported as a QGIS style using `sits_colors_qgis`. The function takes two parameters: (a) `cube`, a classified data cube; and (b) `file`, the file where the QGIS style in XML will be written to. In this case study, we first retrieve and plot a classified data cube and then export the colors to a QGIS XML style.
 
@@ -278,4 +328,4 @@ The color schema can be exported to QGIS as follows.
 sits_colors_qgis(ro_class, file = "./tempdir/R/visualisation/qgis_style.xml")
 ```
 
-## References
+## References {.unnumbered}
