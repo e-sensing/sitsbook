@@ -1,38 +1,149 @@
 # Producing regular data cubes and merging multi-source data
 
-ARD collections available in AWS, MPC, USGS, and DEAFRICA are not regular in space and time. Bands may have different resolutions, images may not cover the entire tile, and time intervals are irregular. For this reason, data from these collections need to be converted to regular data cubes by calling `sits_regularize()`, which uses the  *gdalcubes* package [@Appel2019]. After obtaining a regular data cube, users can perform data analysis and classification operations, as shown in the following chapters.
+### Configurations to run the chapter
+
+```{r}
+#| echo: false
+reticulate::use_python("/Users/gilbertocamara/.pyenv/versions/pysits/bin/python")
+```
+
+:::{.panel-tabset}
+# R
+```{r}
+#| echo: true
+#| eval: true
+#| output: false
+# load package "tibble"
+library(tibble)
+# load packages "sits" and "sitsdata"
+library(sits)
+library(sitsdata)
+# set tempdir if it does not exist 
+tempdir_r <- "~/sitsbook/tempdir/R/dc_regularize"
+dir.create(tempdir_r, showWarnings = FALSE)
+```
+## Python
+```{python}
+#| echo: true
+#| output: false
+from pysits import *
+import pandas as pd
+pd.set_option("display.max_columns", 100)
+pd.set_option("display.max_rows", 4)
+# set bookdir if it does not exist 
+from pathlib import Path
+home = str(Path.home())
+tempdir_py = home + "/sitsbook/tempdir/Python/dc_regularize"
+Path(tempdir_py).mkdir(parents=True, exist_ok=True)
+```
+:::
+
+## The need for regular EO data cubes
+
+ARD collections available in AWS, MPC, USGS, and DEAFRICA are not regular in space and time. Bands may have different resolutions, images may not cover the entire tile, and time intervals are irregular. Clouds and sensor artefacts introduce “holes” in the data, which need to be filled to obtain a consistent time series. Most ML/DL libraries expect tensors of identical shape (n_samples × n_features × time). If time steps differ or values are missing, batch training breaks and the model learns spurious correlations. Regular cubes guarantee fixed-length feature vectors & GPU-friendly batches. Regularisation turns heterogeneous image archives into a clean data structure that machine learning models can ingest directly. 
+
+Data from ARD collections can be converted to regular data cubes by calling `sits_regularize()`, which uses the  *gdalcubes* package [@Appel2019]. The `sits_regularize()` function has two components:
+
+1. Spatial harmonisation: re-project and resample everything onto the same tiling system and same spatial resolution. For examples, when Sentinel-1 and Sentinel-2 images are merged in `sits`, they are projected to tiles of the MGRS grid. 
+
+2. Temporal harmonisation: creates equispaced intervals (e.g., 16-day, monthly or seasonal composites) and fills gaps due to cloud cover and sensor errors. In `sits`, all images inside a chosen interval are combined by stacking. Images are ordered by decreasing percentage of cloud cover. The least-cloud filled image is taken as reference, and the other images are used to try to fill ist gaps. Pixels with persistent cloud-cover are marked as "NA" and are temporally interpolated during computation. 
+
+
 
 ## Regularizing Sentinel-2 images{-}
 
 In the following example, the user has created an irregular data cube from the Sentinel-2 collection available in Microsoft's Planetary Computer (MPC) for tiles `20LKP` and `20LLP` in the state of Rondonia, Brazil. We first build an irregular data cube using `sits_cube()`.
 
+:::{.panel-tabset}
+## R
 ```{r}
-# Creating an irregular data cube from MPC
+#| eval: false
+# Creating an irregular data cube from AWS
 s2_cube_rondonia <- sits_cube(
-    source = "MPC",
+    source = "AWS",
     collection = "SENTINEL-2-L2A",
-    tiles = c("20LKP", "20LLP"),
+    tiles = c("20LLP", "20LKP"),
     bands = c("B02", "B8A", "B11", "CLOUD"),
     start_date = as.Date("2018-06-30"),
-    end_date = as.Date("2018-08-31"))
+    end_date = as.Date("2018-08-31")
+)
 # Show the different timelines of the cube tiles
 sits_timeline(s2_cube_rondonia)
 ```
+## Python
+```{python}
+#| eval: false
+# Creating an irregular data cube from AWS
+s2_cube_rondonia =  sits_cube(
+    source = "AWS",
+    collection = "SENTINEL-2-L2A",
+    tiles = ["20LLP", "20LKP"],
+    bands = ["B02", "B8A", "B11", "CLOUD"],
+    start_date = "2018-06-30",
+    end_date = "2018-08-31"
+)
+# Show the different timelines of the cube tiles
+sits_timeline(s2_cube_rondonia)
+```
+:::
 
+```{r}
+#| echo: false
+s2_cube_rondonia_timeline <- readRDS("./etc/s2_cube_rondonia_timeline.rds")
+s2_cube_rondonia_timeline
+```
+
+:::{.panel-tabset}
+## R
+```{r}
+#| eval: false
+# plot the least cloudy image of the irregular cube
+s2_cube_rondonia |>  
+    dplyr::filter(tile == "20LLP") |>  
+    plot()
+```
+## Python
+```{python}
+#| eval: false
+plot(s2_cube_rondonia)
+```
+:::
 
 ```{r}
 #| label: fig-s220llp-dc
 #| out-width: 100%
 #| fig-cap: |
-#|   Sentinel-2 tile 20LLP.
+#|      Instance of non-regularized Sentinel-2 image covering only part of tile tile 20LLP .
 #| fig-align: center
-# plot the first image of the irregular cube
-s2_cube_rondonia |>  
-    dplyr::filter(tile == "20LLP") |>  
-    plot()
+knitr::include_graphics("./images/dc_regularize_s2_20llp_non_reg.png") 
 ```
 
-Because of the different acquisition orbits of the Sentinel-2 and Sentinel-2A satellites, the two tiles also have different timelines. Tile `20LKP` has 12 instances, while tile `20LLP` has 24 instances for the chosen period. The function  `sits_regularize()` builds a data cube with a regular timeline and a best estimate of a valid pixel for each interval. The `period` parameter sets the time interval between two images. Values of `period` use the ISO8601 time period specification, which defines time intervals as `P[n]Y[n]M[n]D`, where "Y" stands for years, "M" for months, and "D" for days. Thus, `P1M` stands for a one-month period, `P15D` for a fifteen-day period. When joining different images to get the best image for a period, `sits_regularize()` uses an aggregation method that organizes the images for the chosen interval in order of increasing cloud cover and then selects the first cloud-free pixel. In the example, we use a small spatial resolution for the regular cube to speed up processing; in actual case, we suggest using a 10-meter spatial resolution for the cube.
+Because of the different acquisition orbits of the Sentinel-2A and Sentinel-2B satellites, the two tiles also have different timelines. Tile `20LKP` has 12 instances, while tile `20LLP` has 24 instances for the chosen period. The function  `sits_regularize()` builds a data cube with a regular timeline and a best estimate of a valid pixel for each interval. The `period` parameter sets the time interval between two images. Values of `period` use the ISO8601 time period specification, which defines time intervals as `P[n]Y[n]M[n]D`, where "Y" stands for years, "M" for months, and "D" for days. Thus, `P1M` stands for a one-month period, `P15D` for a fifteen-day period. When joining different images to get the best image for a period, `sits_regularize()` uses an aggregation method that organizes the images for the chosen interval in order of increasing cloud cover and then selects the first cloud-free pixel. In the example, we use a spatial resolution of 40-meter for the regular cube to speed up processing; in actual case, we suggest using a 10-meter spatial resolution for the cube.
+
+Before regularizing the cube, we suggest copying the ARD data to a local directory to speed up processing. The original data will be temporally stored locally. In this way, the actual work of producing a regular data cube will be split into two parts: (a) downloading data from ARD collections; (b) building a data cube from local files. After the regular data cube has been built, the ARD imagens can be deleted. 
+
+:::{.panel-tabset}
+## R
+```{r}
+#| eval: false
+# Regularize the cube to 16-day intervals
+reg_cube_rondonia <- sits_regularize(
+          cube       = s2_cube_rondonia,
+          output_dir = tempdir_r,
+          res        = 40,
+          period     = "P16D",
+          multicores = 6)
+
+# Plot tile 20LLP of the regularized cube with the least cloud cover
+# The pixels of the regular data cube cover the full MGRS tile
+plot(reg_cube_rondonia)
+```
+## Python
+```{python}
+#| eval: false
+# To be completed (AA)
+```
+:::
 
 ```{r}
 #| label: fig-s2reg-dc
@@ -40,7 +151,7 @@ Because of the different acquisition orbits of the Sentinel-2 and Sentinel-2A sa
 #| fig-cap: |
 #|   Regularized image for tile Sentinel-2 tile 20LLP.
 #| fig-align: center
-# Regularize the cube to 15 day intervals
+# Regularize the cube to 16-day intervals
 reg_cube_rondonia <- sits_regularize(
           cube       = s2_cube_rondonia,
           output_dir = "./tempdir/R/datacubes",
@@ -50,10 +161,9 @@ reg_cube_rondonia <- sits_regularize(
 
 # Plot tile 20LLP of the regularized cube with the least cloud cover
 # The pixels of the regular data cube cover the full MGRS tile
-reg_cube_rondonia |>
-    dplyr::filter(tile == "20LLP") |>
-    plot()
+plot(reg_cube_rondonia)
 ```
+
 
 ## Regularizing Sentinel-1 images{-}
 

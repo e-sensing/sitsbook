@@ -1,11 +1,11 @@
 # Access to ARD Image collections
 
 
-## Software configuration 
 
-The first step in using `sits` is configuring the environment to for running `R` and `Python` together. 
-::: {.panel-tabset}
-## R 
+### Configurations to run the chapter
+
+:::{.panel-tabset}
+# R
 ```{r}
 #| echo: true
 #| eval: true
@@ -15,51 +15,32 @@ library(tibble)
 # load packages "sits" and "sitsdata"
 library(sits)
 library(sitsdata)
+# set tempdir if it does not exist 
+tempdir_r <- "~/sitsbook/tempdir/R/dc_ardcollections"
+dir.create(tempdir_r, showWarnings = FALSE)
 ```
 ## Python
 ```{python}
+#| echo: true
 #| output: false
 from pysits import *
 import pandas as pd
 pd.set_option("display.max_columns", 100)
 pd.set_option("display.max_rows", 4)
+# set bookdir if it does not exist 
+from pathlib import Path
+home = Path.home()
+tempdir_py = home + "/sitsbook/tempdir/Python/dc_ardcollections"
+Path(tempdir_py).mkdir(parents=True, exist_ok=True)
 ```
 :::
-Please also provide the location of the python interpreter that supports the integration of `sits` in `Python`. 
+
 ```{r}
+#| echo: false
 reticulate::use_python("/Users/gilbertocamara/.pyenv/versions/pysits/bin/python")
 ```
 
-
-```{python}
-#| output: false
-from pysits import *
-import pandas as pd
-pd.set_option("display.max_columns", 100)
-pd.set_option("display.max_rows", 4)
-# set data directory
-sitsdata_dir = "/Library/Frameworks/R.framework/Versions/4.4-x86_64/Resources/library/sitsdata/"
-```
-
-## What is Analysis-Ready Data?
-
-Analysis Ready Data (CEOS-ARD) are satellite data that have been processed to meet the [ARD standards](https://ceos.org/ard/) defined by the Committee on Earth Observation Satellites (CEOS). ARD data simplify and accelerate the analysis of Earth observation data by providing consistent and high-quality data that are standardized across different sensors and platforms. 
-
-ARD images processing includes geometric corrections, radiometric corrections, and sometimes atmospheric corrections. Images are georeferenced, meaning they are accurately aligned with a coordinate system. Optical ARD images include cloud and shadow masking information. These masks indicate which pixels affected by clouds or cloud shadows. For optical sensors, CEOS-ARD images have to be converted to surface reflectance values, which represent the fraction of light that is reflected by the surface. This makes the data more comparable across different times and locations.
-
-For SAR images, CEOS-ARD specification require images to undergo Radiometric Terrain Correction (RTC) and are provided in the GammaNought ($\gamma_0$) backscatter values. This value which mitigates the variations from diverse observation geometries and is recommended for most land applications. 
-
-ARD images are available from various satellite platforms, including Landsat, Sentinel, and commercial satellites. This provides a wide range of spatial, spectral, and temporal resolutions to suit different applications. They are organised as a collection of  files, where each pixel contains a single value for each spectral band for a given date. These collections are available in cloud services such as Brazil Data Cube, Digital Earth Africa, and Microsoft's Planetary Computer. In general, the timelines of the images of an ARD collection are different. Images still contain cloudy or missing pixels; bands for the images in the collection may have different resolutions. Figure @fig-ard-datacubes shows an example of the Landsat ARD image collection. 
-
-```{r}
-#| echo: FALSE
-#| label: fig-ard-datacubes
-#| out-width: 80%
-#| fig-cap: |
-#|   ARD image collection (source: USGS).
-#| fig-align: center
-knitr::include_graphics("./images/usgs_ard_tile.png")
-```
+## Introduction
 
 ARD image collections are organized in spatial partitions. Sentinel-2/2A images follow the Military Grid Reference System (MGRS) tiling system, which divides the world into 60 UTM zones of 8 degrees of longitude. Each zone has blocks of 6 degrees of latitude. Blocks are split into tiles of 110 $\times$ 110 km$^2$ with a 10 km overlap. Figure @fig-mgrs-datacubes shows the MGRS tiling system for a part of the Northeastern coast of Brazil, contained in UTM zone 24, block M. 
 
@@ -93,10 +74,10 @@ In version 1.5.3,`sits` supports access to the following ARD image cloud provide
 -  Brazil Data Cube (BDC): Open data collections of Sentinel-2/2A, Landsat-8, CBERS-4/4A, and MOD13Q1 products for Brazil. These collections are organized as regular data cubes. 
 - Copernicus Data Space Ecosystem (CDSE): Open data collections of Sentinel-1 RTC and Sentinel-2/2A images. 
 - Digital Earth Africa (DEAFRICA): Open data collections of Sentinel-1 RTC, Sentinel-2/2A, Landsat-5/7/8/9 for Africa. Additional products available include ALOS_PALSAR mosaics, DEM_COP_30, NDVI_ANOMALY based on Landsat data, and monthly and daily rainfall data from CHIRPS. 
-- Digital Earth Australia (DEAUSTRALIA): Open data ARD collections of Sentinel-2A/2B and Landsat-5/7/8/9 images; yearly geomedian of Landsat 5/7/8 images; yearly fractional land cover from 1986 to 2024. 
+- Digital Earth Australia (DEAUSTRALIA): Open data ARD collections of Sentinel-2A/2B and Landsat-5/7/8/9 images, yearly geomedian of Landsat 5/7/8 images; yearly fractional land cover from 1986 to 2024. 
 - Harmonized Landsat-Sentinel (HLS): HLS, provided by NASA, is an open data collection that processes Landsat 8 and Sentinel-2 imagery to a common standard.
-- Microsoft Planetary Computer (MPC): Open data collections of Sentinel-1 GRD, Sentinel-2/2A,  Landsat-4/5/7/8/9 images for the Earth's land areas. Also supported are Copernicus DEM-30 and MOD13Q1, MOD10A1 and MOD09A1 products. Sentinel-1 RTC collections are accessible but require payment.
-- Swiss Data Cube (SDC): Open data collection of Sentinel-2/2A and Landsat-8 images for Switzerland. 
+- Microsoft Planetary Computer (MPC): Open data collections of Sentinel-1 GRD, Sentinel-1 RTC, Sentinel-2/2A,  Landsat-4/5/7/8/9 images for the Earth's land areas. Also supported are Copernicus DEM-30 and MOD13Q1, MOD10A1 and MOD09A1 products, and the Harmonized Landsat-Sentinel collections (HLSL30 and HLSS30).
+- Swiss Data Cube (SDC): Collection of Sentinel-2/2A and Landsat-8 images for Switzerland. 
 - Terrascope: Cloud service with EO products which includes the ESA World Cover map.
 - USGS: Landsat-4/5/7/8/9 collections available in AWS, which require access payment. 
 
@@ -425,9 +406,7 @@ cube_dem_30 <-  sits_cube(
 )
 plot(cube_dem_30, band = "ELEVATION", palette = "RdYlGn", rev = TRUE)
 ```
-
-
-
+:::
 
 ```{r}
 #| echo: false
@@ -456,8 +435,17 @@ The BDC uses three hierarchical grids based on the Albers Equal Area projection 
 knitr::include_graphics("./images/bdc_grid.png")
 ```
 
-To access the BDC, users must provide their credentials using environment variables, as shown below. Obtaining a BDC access key is free. Users must register at the [BDC site](https://brazildatacube.dpi.inpe.br/portal/explore) to obtain a key. In the example below, the data cube is defined as one tile ("005004") of `CBERS-WFI-16D` collection, which holds CBERS AWFI images at 16 days resolution.
+To access the BDC, users must provide their credentials using environment variables, as shown below. Obtaining a BDC access key is free. Users must register at the [BDC site](https://brazildatacube.dpi.inpe.br/portal/explore) to obtain a key. Please include your BDC access key in your ".Rprofile". 
 
+```{r}
+#| eval: false
+Sys.setenv(BDC_ACCESS_KEY = "<your_bdc_access_key>")
+```
+
+In the example below, the data cube is defined as one tile ("005004") of `CBERS-WFI-16D` collection, which holds CBERS AWFI images at 16 days resolution.
+
+::: {.panel-tabset}
+## R
 ```{r}
 #| eval: false
 # Define a tile from the CBERS-4/4A AWFI collection
@@ -475,6 +463,25 @@ plot(cbers_tile,
      blue = "B13", 
      date = "2021-05-09")
 ```
+## Python
+```{python}
+#| eval: false
+# Define a tile from the CBERS-4/4A AWFI collection
+cbers_tile = sits_cube(
+    source = "BDC",
+    collection = "CBERS-WFI-16D",
+    tiles = "005004",
+    bands = ["B13", "B14", "B15", "B16", "CLOUD"],
+    start_date = "2021-05-01",
+    end_date = "2021-09-01")
+# Plot one time instance
+plot(cbers_tile, 
+     red = "B15", 
+     green = "B16", 
+     blue = "B13", 
+     date = "2021-05-09")
+```
+:::
 
 ```{r}
 #| echo: false
@@ -500,8 +507,8 @@ After registration, you will need to obtain access credentials to the S3 service
 Sys.setenv(
     AWS_ACCESS_KEY_ID = "your access key",
     AWS_SECRET_ACCESS_KEY = "your secret access key",
-	AWS_S3_ENDPOINT = "eodata.dataspace.copernicus.eu",
-	AWS_VIRTUAL_HOSTING = "FALSE"
+	  AWS_S3_ENDPOINT = "eodata.dataspace.copernicus.eu",
+	  AWS_VIRTUAL_HOSTING = "FALSE"
 )
 ```
 
@@ -511,6 +518,8 @@ After including these lines in your .Rprofile, restart `R` for the changes to ta
 
 CDSE hosts a global collection of Sentinel-2 Level-2A images, which are processed according to the [CEOS Analysis-Ready Data](https://ceos.org/ard/) specifications. One example is provided below, where we present a Sentinel-2 image of the Lena river delta in Siberia in summertime.
 
+::: {.panel-tabset}
+## R
 ```{r}
 #| eval: false
 # obtain a collection of images of a tile covering part of Lena delta
@@ -525,6 +534,23 @@ lena_cube <- sits_cube(
 # plot an image from summertime
 plot(lena_cube, date = "2023-07-06", red = "B12", green = "B8A", blue = "B04")
 ```
+## Python
+```{python}
+#| eval: false
+# obtain a collection of images of a tile covering part of Lena delta
+lena_cube = sits_cube(
+    source = "CDSE",
+    collection = "SENTINEL-2-L2A",
+    bands = ["B02", "B04", "B8A", "B11", "B12"],
+    start_date = "2023-05-01",
+    end_date = "2023-09-01",
+    tiles = "52XDF"
+)
+# plot an image from summertime
+plot(lena_cube, date = "2023-07-06", red = "B12", green = "B8A", blue = "B04")
+```
+:::
+
 
 ```{r}
 #| echo: false
@@ -544,6 +570,8 @@ All images are projected and gridded into the United States Military Grid Refere
 
 For more details, please refer to the [S1-NRB product website](https://sentinels.copernicus.eu/web/sentinel/sentinel-1-ard-normalised-radar-backscatter-nrb-product). Global coverage is expected to grow as ESA expands the S1-RTC archive. The following example shows an S1-RTC image for the Rift valley in Ethiopia.
 
+::: {.panel-tabset}
+## R
 ```{r}
 #| eval: false
 # retrieve a S1-RTC cube and plot
@@ -558,6 +586,23 @@ s1_cube <- sits_cube(
 )
 plot(s1_cube, band = "VV", date = c("2023-03-03"), palette = "Greys")
 ```
+## Python
+```{python}
+#| eval: false
+# retrieve a S1-RTC cube and plot
+s1_cube = sits_cube(
+    source = "CDSE",
+    collection = "SENTINEL-1-RTC",
+    bands = ["VV", "VH"],
+    orbit = "descending",
+    start_date = "2023-01-01",
+    end_date = "2023-12-31",
+    tiles = "37NCH"
+)
+plot(s1_cube, band = "VV", date = c("2023-03-03"), palette = "Greys")
+```
+:::
+
 
 ```{r}
 #| echo: false
@@ -588,6 +633,8 @@ Digital Earth Africa (DEAFRICA) is a cloud service that provides open-access Ear
 
 Access to DEAFRICA Sentinel-2 images can be done wither using `tiles` or `roi` parameter. In this example, the requested `roi` produces a cube that contains one MGRS tiles (“35LPH”) covering an area of Madagascar that includes the Betsiboka Estuary.
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
 dea_s2_cube <- sits_cube(
@@ -603,6 +650,23 @@ dea_s2_cube <- sits_cube(
 )
 plot(dea_s2_cube, red = "B04", blue = "B02", green = "B08")
 ```
+## Python
+```{python}
+#| eval: false
+dea_s2_cube = sits_cube(
+    source = "DEAFRICA",
+    collection = "SENTINEL-2-L2A",
+    roi = {
+    "lon_min" : 46.1, "lat_min" : -15.6,
+    "lon_max" : 46.6, "lat_max" : -16.1
+  },
+    bands = ["B02", "B04", "B08"],
+    start_date = "2019-04-01",
+    end_date = "2019-05-30"
+)
+plot(dea_s2_cube, red = "B04", blue = "B02", green = "B08")
+```
+:::
 
 ```{r}
 #| echo: false
@@ -616,6 +680,8 @@ knitr::include_graphics("./images/deafrica_s2.png")
 
 The next example retrieves a set of ARD Landsat-9 data, covering the Serengeti plain in Tanzania. 
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
 dea_l9_cube <- sits_cube(
@@ -632,6 +698,24 @@ dea_l9_cube <- sits_cube(
 plot(dea_l9_cube, date = "2023-06-26", 
      red = "B06", green = "B05", blue = "B04")
 ```
+## Python
+```{python}
+#| eval: false
+dea_l9_cube = sits_cube(
+    source = "DEAFRICA",
+    collection = "LS9-SR",
+    roi = {
+        "lon_min" : 33.0, "lat_min" : -3.60, 
+        "lon_max" : 33.6, "lat_max" : -3.00
+    },
+    bands = ["B04", "B05", "B06"],
+    start_date = "2023-05-01",
+    end_date = "2023-08-30"
+)
+plot(dea_l9_cube, date = "2023-06-26", 
+     red = "B06", green = "B05", blue = "B04")
+```
+:::
 
 ```{r}
 #| echo: false
@@ -645,9 +729,11 @@ knitr::include_graphics("./images/landsat9_serengeti.png")
 
 The following example shows how to retrieve a subset of the ALOS-PALSAR mosaic for year 2020, for an area near the border between Congo and Rwanda. 
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
-dea_alos_cube <- sits_cube(
+dea_alos_cube = sits_cube(
     source = "DEAFRICA",
     collection = "ALOS-PALSAR-MOSAIC",
     roi = c(
@@ -658,8 +744,25 @@ dea_alos_cube <- sits_cube(
     start_date = "2020-01-01",
     end_date = "2020-12-31"
 )
-plot(dea_alos_cube,band = "HH")
+plot(dea_alos_cube, band = "HH")
 ```
+## Python
+```{python}
+#| eval: false
+dea_alos_cube = sits_cube(
+    source = "DEAFRICA",
+    collection = "ALOS-PALSAR-MOSAIC",
+    roi = {
+       "lon_min" : 28.69, "lat_min" : -2.35, 
+       "lon_max" : 29.35, "lat_max" : -1.56
+    },
+    bands = ["HH", "HV"],
+    start_date = "2020-01-01",
+    end_date = "2020-12-31"
+)
+plot(dea_alos_cube, band = "HH")
+```
+:::
 
 ```{r}
 #| echo: false
@@ -673,7 +776,6 @@ knitr::include_graphics("./images/alos_palsar_hh_lake_kivu.png")
 
 
 ## Digital Earth Australia
-
 
 Digital Earth Australia (DEAUSTRALIA) is an initiative by Geoscience Australia that uses satellite data to monitor and analyze environmental changes and resources across the Australian continent. It provides many datasets that offer detailed information on phenomena such as droughts, agriculture, water availability, floods, coastal erosion, and urban development. The DEAUSTRALIA image collections in `sits` are:
 
@@ -691,6 +793,8 @@ Digital Earth Australia (DEAUSTRALIA) is an initiative by Geoscience Australia t
 
 The following code retrieves an image from Sentinel-2A.
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
 # get roi for an MGRS tile
@@ -707,6 +811,22 @@ s2_56KKV <- sits_cube(
 # plot the resulting map
 plot(s2_56KKV, green = "NIR-2", blue = "BLUE", red = "SWIR-2", date = "2023-10-14")
 ```
+## Python
+```{python}
+#| eval: false
+# retrieve the world cover map for the chosen tile
+s2_56KKV = sits_cube(
+  source = "DEAUSTRALIA",
+  collection = "GA_S2AM_ARD_3",
+  tiles = "56KKV",
+  bands = ["BLUE", "GREEN", "RED", "NIR-2", "SWIR-2", "CLOUD"],
+  start_date = "2023-09-01",
+  end_date = "2023-11-30"
+)
+# plot the resulting map
+plot(s2_56KKV, green = "NIR-2", blue = "BLUE", red = "SWIR-2", date = "2023-10-14")
+```
+:::
 
 ```{r}
 #| echo: false
@@ -717,6 +837,8 @@ plot(s2_56KKV, green = "NIR-2", blue = "BLUE", red = "SWIR-2", date = "2023-10-1
 #| fig-align: center
 knitr::include_graphics("./images/s2_56KKV.png") 
 ```
+
+
 ## Harmonized Landsat-Sentinel
 
 Harmonized Landsat Sentinel (HLS) is a NASA initiative that processes and harmonizes Landsat 8 and Sentinel-2 imagery to a common standard, including atmospheric correction, alignment, resampling, and corrections for BRDF (bidirectional reflectance distribution function). The purpose of the HLS project is to create a unified and consistent dataset that integrates the advantages of both systems, making it easier to work with the data.
@@ -738,7 +860,7 @@ login <username>
 password <password>
 ```
 
-We recommend using the earthdatalogin package to create a `.netrc` file with the `earthdatalogin::edl_netrc`. This function creates a properly configured .netrc file in the user's home directory and an environment variable GDAL_HTTP_NETRC_FILE, as shown in the example.
+We recommend using the earthdatalogin package to create a `.netrc` file with the `earthdatalogin::edl_netrc`. This function creates a properly configured .netrc file in the user's home directory and an environment variable GDAL_HTTP_NETRC_FILE, as shown in the example. As an alternative, we recommend using the HLS collections which are available in Microsoft Planetary Computer, which are a copy of the NASA collections and are faster to access. 
 
 ```{r}
 #| eval: false
@@ -750,9 +872,10 @@ password = "<your password>"
 ) 
 ```
 
-
 Access to images in NASA HLS is done by region of interest or by tiles. The following example shows an HLS Sentinel-2 image over the Brazilian coast. 
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
 # define a region of interest
@@ -772,6 +895,28 @@ hls_cube_s2 <- sits_cube(
 # plot the cube
 plot(hls_cube_s2, red = "RED", green = "GREEN", blue = "BLUE", date = "2020-06-20")
 ```
+## Python
+```{python}
+#| eval: false
+# define a region of interest
+roi = { "lon_min" : -45.6422, "lat_min" : -24.0335,
+        "lon_max" : -45.0840, "lat_max" : -23.6178 }
+
+# create a cube from the HLSS30 collection
+hls_cube_s2 = sits_cube(
+  source = "HLS",
+  collection = "HLSS30",
+  roi = roi,
+  bands = ["BLUE", "GREEN", "RED", "CLOUD"],
+  start_date = as.Date("2020-06-01"),
+  end_date = as.Date("2020-09-01"),
+  progress = FALSE
+)
+# plot the cube
+plot(hls_cube_s2, red = "RED", green = "GREEN", blue = "BLUE", date = "2020-06-20")
+```
+:::
+
 
 ```{r}
 #| echo: false
@@ -787,6 +932,8 @@ knitr::include_graphics("./images/hls_ilhabela_s2.png")
 
 Terrascope is online platform for accessing open-source satellite images. This service, operated by VITO, offers a range of Earth observation data and processing services that are accessible free of charge. Currently, `sits` supports the World Cover 2021 maps, produced by VITO with support form the European Commission and ESA. The following code shows how to access the World Cover 2021 convering tile "22LBL". The first step is to use `sits_mgrs_to_roi()` to get the region of interest expressed as a bounding box; this box is then entered as the `roi` parameter in the `sits_cube()` function. Since the World Cover data is available as a 3$^\circ$ by 3$^\circ$ grid, it is necessary to use `sits_cube_copy()` to extract the exact MGRS tile.
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
 # get roi for an MGRS tile
@@ -802,11 +949,33 @@ world_cover_2021_20LBL <- sits_cube_copy(
   cube = world_cover_2021,
   roi = bbox_22LBL,
   multicores = 6,
-  output_dir = "./tempdir/chp4"
+  output_dir = tempdir_r
 )
 # plot the resulting map
 plot(world_cover_2021_20LBL)
 ```
+## Python
+```{python}
+#| eval: false
+# get roi for an MGRS tile
+bbox_22LBL = sits_mgrs_to_roi("22LBL")
+# retrieve the world cover map for the chosen roi
+world_cover_2021 = sits_cube(
+  source = "TERRASCOPE",
+  collection = "WORLD-COVER-2021",
+  roi = bbox_22LBL
+)
+# cut the 3 x 3 degree grid to match the MGRS tile 22LBL
+world_cover_2021_20LBL = sits_cube_copy(
+  cube = world_cover_2021,
+  roi = bbox_22LBL,
+  multicores = 6,
+  output_dir = tempdir_py
+)
+# plot the resulting map
+plot(world_cover_2021_20LBL)
+```
+:::
 
 ```{r}
 #| echo: false
