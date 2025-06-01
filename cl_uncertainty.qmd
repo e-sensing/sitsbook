@@ -1,15 +1,53 @@
-# Uncertainty and active learning{-}
+# Uncertainty and active learning
+
+### Configurations to run this chapter{-}
+
+```{r}
+#| echo: false
+reticulate::use_python("/Users/gilbertocamara/.pyenv/versions/pysits/bin/python")
+```
+
+:::{.panel-tabset}
+## R
+```{r}
+#| echo: true
+#| eval: true
+#| output: false
+# load packages "torch" and "luz"
+library(torch)
+library(luz)
+torch::install_torch()
+# load packages "sits" and "sitsdata"
+library(sits)
+library(sitsdata)
+# set tempdir if it does not exist 
+tempdir_r <- "~/sitsbook/tempdir/R/cl_uncertainty"
+dir.create(tempdir_r, showWarnings = FALSE)
+```
+## Python
+```{python}
+#| echo: true
+#| eval: false
+#| output: false
+from pysits import *
+import pandas as pd
+pd.set_option("display.max_columns", 100)
+pd.set_option("display.max_rows", 4)
+# set bookdir if it does not exist 
+from pathlib import Path
+home = str(Path.home())
+tempdir_py = home + "/sitsbook/tempdir/Python/cl_uncertainty"
+Path(tempdir_py).mkdir(parents=True, exist_ok=True)
+```
+:::
 
 <a href="https://www.kaggle.com/code/esensing/uncertainty-and-active-learning" target="_blank"><img src="https://kaggle.com/static/images/open-in-kaggle.svg"/></a>
 
-```{r, echo = FALSE, include = FALSE}
-source("common.R")
-# create a directory to store files
-if (!file.exists("./tempdir/chp12"))
-    dir.create("./tempdir/chp12")
-```
+## Introduction
 
 Land classification tasks have unique characteristics that differ from other machine learning domains, such as image recognition and natural language processing. The main challenge for land classification is to describe the diversity of the planet's landscapes in a handful of labels. However, the diversity of the world's ecosystem makes all classification systems to be biased approximations of reality. As stated by Murphy: "The gradation of properties in the world means that our smallish number of categories will never map perfectly onto all objects" [@Murphy2002]. For this reason, `sits` provides tools to improve classifications using a process called active learning. 
+
+## Active learning
 
 Active learning is an iterative process of sample selection, labeling, and model retraining. The following steps provide a general overview of how to use active learning:
 
@@ -25,12 +63,18 @@ Active learning is an iterative process of sample selection, labeling, and model
 In traditional classification methods, experts provide a set of training samples and use a machine learning algorithm to produce a map. By contrast, the active learning approach puts the human in the loop [@Monarch2021]. At each iteration, an unlabeled set of samples is presented to the user, which assigns classes to them and includes them in the training set [@Crawford2013]. The process is repeated until the expert is satisfied with the result, as shown in Figure \@ref(fig:al). 
 
 ```{r al, echo = FALSE, out.width = "100%", fig.align="center", fig.cap="Active learning approach (Source: Crawford et al. (2013).  Reproduction under fair use doctrine)."}
+#| label: fig-uncert-1
+#| echo: false
+#| out.width: "80%"
+#| fig.align: "center"
+#| fig.cap: |
+#|   Active learning approach (source: [@Crawford2013]).
 knitr::include_graphics("./images/active_learning.png")
 ```
 
 Active learning aims to reduce bias and errors in sample selection and, as such, improve the accuracy of the result. At each interaction, experts are asked to review pixels where the machine learning classifier indicates a high uncertainty value. Sources of classification uncertainty include missing classes and or mislabeled samples. In `sits`, active learning is supported by functions `sits_uncertainty()` and `sits_uncertainty_sampling()`. 
 
-## Measuring uncertainty{-} 
+## Measuring uncertainty
 
 Uncertainty refers to the degree of doubt or ambiguity in the accuracy of the classification results. Several sources of uncertainty can arise during land classification using satellite data, including:
 
@@ -43,16 +87,16 @@ Quantifying uncertainty in land classification is important for ensuring that th
 
 The function `sits_uncertainty()` calculates the uncertainty cube based on the probabilities produced by the classifier. It takes a probability cube as input. The uncertainty measure is relevant in the context of active learning. It helps to increase the quantity and quality of training samples by providing information about the model's confidence. The supported types of uncertainty are 'entropy', 'least', 'margin', and 'ratio'. 
 
-Least confidence sampling is the difference between no uncertainty (100% confidence) and the probability of the most likely class, normalized by the number of classes. Let $P_1(i)$ be the higher class probability for pixel $i$. Then least confidence sampling is expressed as
+*Least confidence sampling* is the difference between no uncertainty (100% confidence) and the probability of the most likely class, normalized by the number of classes. Let $P_1(i)$ be the higher class probability for pixel $i$. Then least confidence sampling is expressed as
 
 $$
 \theta_{LC} = (1 - P_1(i)) * \frac{n}{n-1}.
 $$
 
-The margin of confidence sampling is the difference between the two most confident predictions, expressed from 0% (no uncertainty) to 100% (maximum uncertainty). Let $P_1(i)$ and $P_2(i)$ be the two higher class probabilities for pixel $i$. Then, the margin of confidence is expressed as 
+*Margin of confidence* is the difference between the two most confident predictions, expressed from 0% (no uncertainty) to 100% (maximum uncertainty). Let $P_1(i)$ and $P_2(i)$ be the two higher class probabilities for pixel $i$. Then, the margin of confidence is expressed as 
 
 $$
-\theta_{MC} = 1 - (P_1(i) - P_2(i)).
+\theta_{MC} = (P_1(i) - P_2(i)).
 $$
 
 The ratio of confidence is the measure of the ratio between the two most confident predictions, expressed in a range from 0% (no uncertainty) to 100% (maximum uncertainty). Let $P_1(i)$ and $P_2(i)$ be the two higher class probabilities for pixel $i$. Then, the ratio of confidence is expressed as 
@@ -75,7 +119,8 @@ The study area is close to the Samuel Hydroelectric Dam, located on the Madeira 
 
 The first step is to produce a regular data cube for the chosen area from 2020-06-01 to 2021-09-01. To reduce processing time and storage, we use only three bands (B02, B8A, and B11) plus the cloud band, and take a small area inside the tile. After obtaining a regular cube, we plot the study area in two dates during the temporal interval of the data cube. The first image is taken at the beginning of the dry season in 2020-07-04, when the inundation area of the dam was covered by shallow water. 
 
-```{r echo = TRUE, eval = FALSE, tidy = "styler"}
+```{r}
+#| eval: false
 # Select a S2 tile
 s2_cube_ro <- sits_cube(
       source = "AWS",
@@ -93,7 +138,7 @@ roi = c(lon_max = -63.25790, lon_min = -63.6078,
 # Regularize the small area cube
 s2_reg_cube_ro <- sits_regularize(
   cube = s2_cube_ro,
-  output_dir = "./tempdir/chp12/",
+  output_dir = tempdir_r,
   res = 20,
   roi = roi,
   period = "P16D",
@@ -102,15 +147,21 @@ s2_reg_cube_ro <- sits_regularize(
 )
 ```
 
-```{r echo = FALSE, eval = TRUE, tidy = "styler"}
+```{r}
+#| echo: false
 s2_reg_cube_ro <- sits_cube(
     source = "AWS",
     collection = "SENTINEL-S2-L2A-COGS",
-    data_dir = "./tempdir/chp12/"
+    data_dir = tempdir_r
 )
 ```
 
-```{r uncubefirst, tidy = "styler", out.width = "100%", fig.align="center", fig.cap="Area in Rondonia near Samuel dam (source: authors)."}
+```{r}
+#| label: fig-uncert-cube-july
+#| out.width: "90%"
+#| fig.align: "center"
+#| fig.cap: |
+#|   Area in Rondonia near Samuel dam in July 2020.
 plot(s2_reg_cube_ro, 
      red = "B11", 
      green = "B8A", 
@@ -120,7 +171,12 @@ plot(s2_reg_cube_ro,
 
 The second image is from 2020-11-09 and shows that most of the inundation area dries during the dry season. In early November 2020, after the end of the dry season, the inundation area is dry and has a response similar to bare soil and burned areas. The Madeira River can be seen running through the dried inundation area. 
 
-```{r uncubesec, tidy = "styler", out.width = "100%", fig.align="center", fig.cap="Area in Rondonia near Samuel dam in November 2021 (source: authors)."}
+```{r}
+#| label: fig-uncert-cube-nov
+#| out.width: "90%"
+#| fig.align: "center"
+#| fig.cap: |
+#|   Area in Rondonia near Samuel dam in November 2020.
 plot(s2_reg_cube_ro, 
      red = "B11", 
      green = "B8A", 
@@ -130,13 +186,24 @@ plot(s2_reg_cube_ro,
 
 The third image is from 2021-08-08. In early August 2021, after the wet season, the inundation area is again covered by a shallow water layer. Several burned and clear-cut areas can also be seen in the August 2021 image compared with the July 2020 one. Given the contrast between the wet and dry seasons, correct land classification of this area is hard. 
 
-```{r uncubethird, tidy = "styler", out.width = "100%", fig.align="center", fig.cap="Area in Rondonia near Samuel dam in August 2021 (source: authors)."}
+```{r}
+#| label: fig-uncert-cube-aug
+#| out.width: "90%"
+#| fig.align: "center"
+#| fig.cap: |
+#|   Area in Rondonia near Samuel dam in August 2021.
 plot(s2_reg_cube_ro, red = "B11", green = "B8A", blue = "B02", date = "2021-08-08")
 ```
 
 The next step is to classify this study area using a training set with 480 times series collected over the state of Rondonia (Brazil) for detecting deforestation. The training set uses 4 classes (`Burned_Area`, `Forest`,` `Highly_Degraded`, and `Cleared_Area`). The cube is classified using a Random Forest model, post-processed by Bayesian smoothing, and then labeled.
 
-```{r unmapbefore, tidy = "styler", out.width = "100%", fig.align="center", fig.cap="Classified map for area in Rondonia near Samuel dam (source: authors)."}
+```{r}
+#| label: fig-uncert-cube-class1
+#| out.width: "90%"
+#| fig.align: "center"
+#| fig.cap: |
+#|   First classified map for area in Rondonia near Samuel dam.
+set.seed(290356)
 library(sitsdata)
 # Load the training set
 data("samples_prodes_4classes")
@@ -154,35 +221,40 @@ rfor_model <- sits_train(
 s2_cube_probs <- sits_classify(
     data = s2_reg_cube_ro,
     ml_model = rfor_model,
-    output_dir = "./tempdir/chp12/",
+    output_dir = tempdir_r,
     memsize = 15,
     multicores = 5)
 
 # Post-process the probability cube
 s2_cube_bayes <- sits_smooth(
     cube = s2_cube_probs,
-    output_dir = "./tempdir/chp12/",
+    output_dir = tempdir_r,
     memsize = 16,
     multicores = 4)
 
 # Label the post-processed  probability cube
 s2_cube_label <- sits_label_classification(
     cube = s2_cube_bayes,
-    output_dir = "./tempdir/chp12/",
+    output_dir = tempdir_r,
     memsize = 16,
     multicores = 4)
 
 plot(s2_cube_label)
 ```
 
-The resulting map correctly identifies the forest area and the deforestation. However, it wrongly classifies the area covered by the Samuel hydroelectric dam. The reason is the lack of samples for classes related to surface water and wetlands. To improve the classification, we need to improve our samples. To do that, the first step is to calculate the uncertainty of the classification.
+The resulting map correctly identifies the forest area and the deforestation. However, it misclassifies the area covered by the Samuel hydroelectric dam. The reason is the lack of samples for classes related to surface water and wetlands. To improve the classification, we need to improve our samples. To do that, the first step is to calculate the uncertainty of the classification.
 
-```{r unmarginbefore, tidy = "styler", out.width = "100%", fig.align="center", fig.cap= "Uncertainty map for classification in Rondonia near Samuel dam (source: authors)."}
+```{r}
+#| label: fig-uncert-cube-margin
+#| out.width: "90%"
+#| fig.align: "center"
+#| fig.cap: |
+#|   Uncertainty map for classification in Rondonia near Samuel dam.
 # Calculate the uncertainty cube
 s2_cube_uncert <- sits_uncertainty(
     cube = s2_cube_bayes,
     type = "margin",
-    output_dir = "./tempdir/chp12/",
+    output_dir = tempdir_r,
     memsize = 16,
     multicores = 4)
 
@@ -191,33 +263,38 @@ plot(s2_cube_uncert)
 
 As expected, the places of highest uncertainty are those covered by surface water or associated with wetlands. These places are likely to be misclassified. For this reason, `sits` provides `sits_uncertainty_sampling()`, which takes the uncertainty cube as its input and produces a tibble with locations in WGS84 with high uncertainty. The function has three parameters: `n`, the number of uncertain points to be included; `min_uncert`, the minimum value of uncertainty for pixels to be included in the list; and `sampling_window`, which defines a window where only one sample will be selected. The aim of  `sampling_window` is to improve the spatial distribution of the new samples by avoiding points in the same neighborhood to be included. After running the function, we can use `sits_view()` to visualize the location of the samples.
 
-```{r, tidy = "styler", echo = TRUE, eval = FALSE}
+```{r}
 # Find samples with high uncertainty
 new_samples <- sits_uncertainty_sampling(
     uncert_cube = s2_cube_uncert,
     n = 20,
     min_uncert = 0.5,
     sampling_window = 10)
+```
 
-# View the location of the samples
+```{r}
+#| eval: false
 sits_view(new_samples)
 ```
 
-
-```{r unview, tidy = "styler", echo = FALSE, eval = TRUE, out.width = "100%", fig.align="center", fig.cap= "Location of uncertain pixel for classification in Rondonia near Samuel dam (source: authors)."}
-# Calculate the uncertainty cube
-new_samples <- sits_uncertainty_sampling(
-    uncert_cube = s2_cube_uncert,
-    n = 20,
-    min_uncert = 0.5,
-    sampling_window = 10)
-
+```{r}
+#| label: fig-uncert-cube-view
+#| echo: false
+#| out.width: "100%"
+#| fig.align: "center"
+#| fig.cap: |
+#|   Location of uncertain pixels for classification in Rondonia near Samuel dam.
 knitr::include_graphics("./images/samuel_dam.png")
 ```
 
 The visualization shows that the samples are located in the areas covered by the Samuel data. Thus, we designate these samples as Wetlands. A more detailed evaluation, which is recommended in practice, requires analysing these samples with an exploration software such as QGIS and individually labeling each sample. In our case, we will take a direct approach for illustration purposes.
 
-```{r unmapafter, tidy = "styler", out.width = "100%", fig.align="center", fig.cap= "New land classification in Rondonia near Samuel dam (source: authors)."}
+```{r}
+#| label: fig-uncert-cube-class2
+#| out.width: "90%"
+#| fig.align: "center"
+#| fig.cap: |
+#|    Classified map for area in Rondonia near Samuel dam with added samples.
 # Label the new samples
 new_samples$label <- "Wetland"
 # Obtain the time series from the regularized cube 
@@ -239,7 +316,7 @@ rfor_model_v2 <- sits_train(
 s2_cube_probs_v2 <- sits_classify(
     data = s2_reg_cube_ro,
     ml_model = rfor_model_v2,
-    output_dir = "./tempdir/chp12/",
+    output_dir = tempdir_r,
     version = "v2",
     memsize = 16,
     multicores = 4)
@@ -247,7 +324,7 @@ s2_cube_probs_v2 <- sits_classify(
 # Post-process the probability cube
 s2_cube_bayes_v2 <- sits_smooth(
     cube = s2_cube_probs_v2,
-    output_dir = "./tempdir/chp12/",
+    output_dir = tempdir_r,
     version = "v2",
     memsize = 16,
     multicores = 4)
@@ -255,7 +332,7 @@ s2_cube_bayes_v2 <- sits_smooth(
 # Label the post-processed  probability cube
 s2_cube_label_v2 <- sits_label_classification(
     cube = s2_cube_bayes_v2,
-    output_dir = "./tempdir/chp12/",
+    output_dir = tempdir_r,
     version = "v2",
     memsize = 16,
     multicores = 4)
@@ -266,12 +343,17 @@ plot(s2_cube_label_v2)
 
 The results show a significant quality gain over the earlier classification. There are still some areas of confusion in the exposed soils inside the inundation area, some of which have been classified as burned areas. It is also useful to show the uncertainty map associated with the second model. 
 
-```{r unentropy, tidy = "styler", out.width = "100%", fig.align="center", fig.cap= "Uncertainty map for classification in Rondonia near Samuel dam - improved model (source: authors)."}
+```{r}
+#| label: fig-uncert-cube-new
+#| out.width: "90%"
+#| fig.align: "center"
+#| fig.cap: |
+#|    Uncertainty map for classification in Rondonia near Samuel dam - improved model.
 # Calculate the uncertainty cube
 s2_cube_uncert_v2 <- sits_uncertainty(
     cube = s2_cube_bayes_v2,
     type = "margin",
-    output_dir = "./tempdir/chp12/",
+    output_dir = tempdir_r,
     version = "v2",
     memsize = 16,
     multicores = 4)
@@ -279,9 +361,13 @@ s2_cube_uncert_v2 <- sits_uncertainty(
 plot(s2_cube_uncert_v2)
 ```
  
-As the new uncertainty map shows, there is a significant improvement in the quality of the classification. The remaining areas of high uncertainty are those affected by the contrast between the wet and dry seasons close to the inundation area. These areas are low-laying places that sometimes are covered by water and sometimes are bare soil areas throughout the year, depending on the intensity of the rainy season. To further improve the classification quality, we could obtain new samples of those uncertain areas, label them, and add them to samples. In general, as this Chapter shows, combining uncertainty measurements with active learning is a recommended practice for improving classification results. 
+As the new uncertainty map shows, there is a significant improvement in the quality of the classification. The remaining areas of high uncertainty are those affected by the contrast between the wet and dry seasons close to the inundation area. These areas are low-laying places that sometimes are covered by water and sometimes are bare soil areas throughout the year, depending on the intensity of the rainy season. To further improve the classification quality, we could obtain new samples of those uncertain areas, label them, and add them to samples. 
 
+## Summary
 
+In general, as this Chapter shows, combining uncertainty measurements with active learning is a recommended practice for improving classification results. This approach offers several important benefits for remote sensing image classification, especially in contexts where obtaining high-quality labeled data is expensive and time-consuming. Uncertainty maps direct expert to places where new samples are required. In this way, combnining uncertainty with active learning minimizes the number of samples that need to be manually labeled by selecting the most informative ones.
+
+## References{-}
 
 
 

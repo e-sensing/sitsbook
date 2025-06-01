@@ -1,41 +1,84 @@
-```{r, include = FALSE, echo = FALSE, eval = TRUE}
-source("common.R")
-if (!file.exists("./tempdir/chp10"))
-  dir.create("./tempdir/chp10")
-library(sits)
-library(sitsdata)
+# Bayesian smoothing for post-processing
+
+### Configurations to run this chapter{-}
+
+```{r}
+#| echo: false
+reticulate::use_python("/Users/gilbertocamara/.pyenv/versions/pysits/bin/python")
 ```
 
-# Bayesian smoothing for post-processing{-}
+:::{.panel-tabset}
+## R
+```{r}
+#| echo: true
+#| eval: true
+#| output: false
+# load packages "torch" and "luz"
+library(torch)
+library(luz)
+torch::install_torch()
+# load packages "sits" and "sitsdata"
+library(sits)
+library(sitsdata)
+# set tempdir if it does not exist 
+tempdir_r <- "~/sitsbook/tempdir/R/cl_smoothing"
+dir.create(tempdir_r, showWarnings = FALSE)
+```
+## Python
+```{python}
+#| echo: true
+#| eval: false
+#| output: false
+from pysits import *
+import pandas as pd
+pd.set_option("display.max_columns", 100)
+pd.set_option("display.max_rows", 4)
+# set bookdir if it does not exist 
+from pathlib import Path
+home = str(Path.home())
+tempdir_py = home + "/sitsbook/tempdir/Python/cl_smoothing"
+Path(tempdir_py).mkdir(parents=True, exist_ok=True)
+```
+:::
 
 <a href="https://www.kaggle.com/code/esensing/bayesian-smoothing-for-post-processing" target="_blank"><img src="https://kaggle.com/static/images/open-in-kaggle.svg"/></a>
 
-## Introduction{-}
+## Introduction
 
 Machine learning algorithms rely on training samples that are derived from "pure" pixels, hand-picked by users to represent the desired output classes. Given the presence of mixed pixels in images regardless of resolution, and the considerable data variability within each class, these classifiers often produce results with outliers or misclassified pixels. Therefore, post-processing techniques have become crucial to refine the labels of a classified image [@Huang2014]. Post-processing methods reduce salt-and-pepper and border effects, where single pixels or small groups of pixels are classified differently from their larger surrounding areas; these effects lead to visual discontinuity and inconsistency. By mitigating these errors and minimizing noise, post-processing improves the quality of the initial classification results, bringing  a significant gain in the overall accuracy and interpretability of the final output [@Schindler2012].
 
 The `sits` package uses a *time-first, space-later* approach. Since machine learning classifiers in `sits` are mostly pixel-based, it is necessary to complement them with spatial smoothing methods. These methods improve the accuracy of land classification by incorporating spatial and contextual information into the classification process. The smoothing method available in `sits` uses an Empirical Bayes approach, adjusted to the specific properties of land classification. The assumption is that class probabilities at the local level should be similar and provide the baseline for comparison with the pixel values produced by the classifier. Based on these two elements, Bayesian smoothing adjusts the probabilities for the pixels, considering a spatial dependence.
 
-## The need for post-processing{-}
+## The need for post-processing
 
 The main idea behind our post-processing method is that a pixel-based classification should take into account its neighborhood pixels. Consider the figure blow which shows a class assignment produced by a random forest algorithm on a image time series. The classified map has been produced by taking, for each pixel, the class of higher probability produced by the algorithm. The resulting map has many noisy areas with a high spatial variability of class assignments. This happens more frequently in two cases: (a) small clusters of pixels of one class inside a larger area of a different class; (b) transition zones between classes. In general, images of heterogeneous landscapes with high spatial variability have many mixed pixels, whose spectral response combines different types of land cover in a single ground resolved cell. For example, many pixels in the border between areas of classes `Forest` and 
 `Clear_Cut_Bare_Soil` are wrongly assigned to the `Clear_Cut_Vegetation` class. This wrong assignment occurs because these pixels have a mixed response. Inside the ground cell captured by the sensor as a single pixel value, there are both trees and bare soil areas. Such results are undesirable and need to be corrected by post-processing.
 
-```{r bayesexnosmooth, echo=FALSE, out.width="80%", fig.align='center', fig.cap="Detail of labelled map produced by pixel-based random forest without smoothing (source: authors)"}
-
+```{r}
+#| label: fig-map-no-smooth
+#| echo: false
+#| out.width: "80%"
+#| fig.align: "center"
+#| fig.cap: |
+#|   Detail of labelled map produced by pixel-based random forest without smoothing.
 knitr::include_graphics("images/map_no_smooth_v2.png")
 ```
 
 To maintain consistency and coherence in our class representations, we should minimise small variations or misclassifications. We incorporate spatial coherence as a post-processing step to accomplish this. The probabilities associated with each pixel will change based on statistical inference, which depends on the values for each neighbourhood. Using the recalculated probabilities for each pixel, we get a better version of the final classified map. Consider the figure below, which is the result of Bayesian smoothing on the random forest algorithm outcomes. The noisy border pixels between two large areas of the same class have been removed. We have also removed small clusters of pixels belonging to one class inside larger areas of other classes. The outcome is a more uniform map, like the ones created through visual interpretation or object-based analysis. Details like narrow vegetation corridors or small forest roads might be missing in the smoothed image. However, the improved spatial consistency of the final map compensates for such losses, due to the removal of misclassified pixels that have mixed spectral responses. 
 
-```{r bayesexsmooth, echo=FALSE, out.width="70%", fig.align='center', fig.cap="Detail of labelled map produced by pixel-based random forest after smoothing (source: uthors)"}
+```{r}
+#| label: fig-map-smooth
+#| echo: false
+#| out.width: "80%"
+#| fig.align: "center"
+#| fig.cap: |
+#|   Detail of labelled map produced by pixel-based random forest after smoothing.
 
 knitr::include_graphics("images/map_smooth_v2.png")
 ```
 
 
-
-## Empirical Bayesian estimation{-}
+## Empirical Bayesian estimation
 
 The Bayesian estimate is based on the probabilities produced by the classifiers. Let $p_{i,k} \geq 0$ be the prior probability of the $i$-th pixel belonging to class $k \in \{1, \ldots, m\}$.  The probabilities $p_{i,k}$ are the classifier's output, being subject to noise, outliers, and classification errors. Our estimation aims to remove these effects and obtain values that approximate the actual class probability better. We convert the class probability values $p_{i,k}$  to log-odds values using the logit function, to transform probability values ranging from $0$ to $1$ to values from negative infinity to infinity. The conversion from probabilities logit values is helpful to support our assumption of normal distribution for our data. 
 
@@ -77,7 +120,7 @@ Bayesian smoothing for land classification assumes that image patches with simil
 
 There is usually no prior information to specify $m_{i,k}$ and $s^2_{i,k}$. Because of that, we adopt an Empirical Bayes (EB) approach to obtain estimates of these prior parameters by considering the pixel neighborhood. However, using a standard symmetrical neighborhood for each pixel, based uniquely on the distance between locations, would not produce reasonable results for border pixels. For this reason, our EB estimates uses non-isotropic neighbourhood, as explained below.
 
-## Using non-isotropic neighborhoods{-}
+## Using non-isotropic neighborhoods
 
 The fundamental idea behind Bayesian smoothing for land classification is that individual pixels area related to those close to it. Each pixel usually has the same class as most of its neighbors. These closeness relations are expressed in similar values of class probability. If we find a pixel assigned to `Water` surrounded by pixels labeled as `Forest`, such pixel may have been wrongly labelled. To check if the pixel has been mislabeled, we look at the class probabilities for the pixels and its neighbors. There are possible situations:
 
@@ -89,7 +132,7 @@ Pixels in the border between two areas of different classes pose a challenge. On
 
 Although this choice of neighborhood may seem unconventional, it is consistent with the assumption of non-continuity of the spatial processes describing each class. A dense forest patch, for example, will have pixels with strong spatial autocorrelation for values of the Forest class; however, this spatial autocorrelation doesn't extend across its border with other land classes.
 
-## Effect of the hyperparameter{-}
+## Effect of the hyperparameter
 
 The parameter $\sigma^2_k$ controls the level of smoothness. If $\sigma^2_k$ is zero, the value ${E}[\mu_{i,k} | x_{i,k}]$ will be equal to the pixel value $x_{i,k}$. The parameter $\sigma^2_k$ expresses confidence in the inherent variability of the distribution of values of a class $k$. The smaller the parameter $\sigma^2_k$, the more we trust the estimated probability values produced by the classifier for class $k$. Conversely, higher values of $\sigma^2_k$ indicate lower confidence in the classifier outputs and improved confidence in the local averages.
 
@@ -101,11 +144,12 @@ Setting $\sigma^2_{k}$ will be based on our confidence in the local variability 
 
 By contrast, if we consider local variability to be high If we set $\sigma^2$ to be 5 for both classes A and B, the Bayesian probability estimate will be $0.48$ for class A and $0.52$ for class B. In this case, the original class will be kept. Therefore, the result is sensitive to the subjective choice of the hyperparameter. In the example below, we will show how to use the local logit variance to set the appropriate values of $\sigma^2$.
 
-## Running Bayesian smoothing {-}
+## Running Bayesian smoothing
 
 We now show how to run Bayesian smoothing on a data cube covering an area of Sentinel-2 tile "20LLQ" in the period 2020-06-04 to 2021-08-26. The training data has six classes: (a) `Forest` for natural tropical forest; (b) `Water` for lakes and rivers; (c) "Wetlands" for areas where water covers the soil in the wet season; (d) `Clear_Cut_Burned_Area` for areas where fires cleared the land after tree removal; (e) `Clear_Cut_Bare_Soil` where the forest has been completely removed; (f) `Clear_Cut_Vegetation` where some vegetation remains after most trees have been removed. To simplify the example, our input is the probability cube generated by a random forest model. We recover the probability data cube and then plot the the results of the machine learning method for classes `Forest`, `Clear_Cut_Bare_Soil`, `Clear_Cut_Vegetation`, and `Clear_Cut_Burned_Area`.
 
-```{r bayesprobmapfor, warning = FALSE, tidy = "styler", out.width = "100%", fig.align="center", fig.cap="Probability map produced for classes Forest and Clear_Cut_Bare_Soil (source: authors)."}
+```{r}
+#| output: false
 # define the classes of the probability cube
 labels <- c("1" = "Water", 
             "2" = "Clear_Cut_Burned_Area", 
@@ -125,14 +169,27 @@ rondonia_20LLQ_probs <- sits_cube(
     labels = labels,
     parse_info = c("satellite", "sensor", "tile", 
                    "start_date", "end_date", "band", "version"))
+```
 
+
+```{r}
+#| label: fig-map-bayes-1
+#| fig.align: "center"
+#| fig-width: 8
+#| fig-height: 4
+#| fig.cap: "Probability map produced for classes Forest and Clear_Cut_Bare_Soil."
 # plot the probabilities for water and forest
 plot(rondonia_20LLQ_probs, 
      labels = c("Forest", "Clear_Cut_Bare_Soil"))
 ```
 
-```{r bayesprobmapveg, tidy = "styler", out.width = "100%", fig.align="center", fig.cap="Probability map produced for classes Forest and Clear_Cut_Bare_Soil (source: authors)."}
 
+```{r}
+#| label: fig-map-bayes-2
+#| fig-width: 8
+#| fig-height: 4
+#| fig.align: "center"
+#| fig.cap: "Probability map produced for classes Clear_Cut_Vegetation and Clear_Cut_Burned_Area."
 plot(rondonia_20LLQ_probs, 
      labels = c("Clear_Cut_Vegetation", "Clear_Cut_Burned_Area"))
 ```               
@@ -141,36 +198,56 @@ The probability map for `Forest` shows high values associated with compact patch
 
 The next step is to show the labelled map resulting from the raw class probabilites. We produce a  classification map by taking the class of higher probability to each pixel, without considering the spatial context. There are many places with the so-called "salt-and-pepper" effect which result from misclassified pixels. The non-smoothed labelled map shows the need for post-processing, since it contains a significant number of outliers and areas with mixed labelling. 
 
-```{r bayesmapnosmooth, tidy = "styler", out.width = "100%", fig.align="center", fig.cap="Classified map without smoothing (source: authors)."}
+```{r}
+#| output: false
 # Generate the thematic map
 rondonia_20LLQ_class <- sits_label_classification(
     cube = rondonia_20LLQ_probs,
     multicores = 4,
     memsize = 12,
-    output_dir = "./tempdir/chp10",
+    output_dir = tempdir_r,
     version = "no_smooth")
+```
 
+```{r}
+#| label: fig-map-bayes-no-smooth
+#| out.width: "90%"
+#| fig.align: "center"
+#| fig.cap: |
+#|   Classified map without smoothing.
 # Plot the result
 plot(rondonia_20LLQ_class,
      legend_text_size = 0.8, legend_position = "outside")
 ```
 
-## Assessing the local logit variance{-}
+
+## Assessing the local logit variance
 
 To determine appropriate settings for the $\sigma^2_{k}$ hyperparameter for each class to perform Bayesian smoothing, it is useful to calculate the local logit variances for each class. For each pixel, we estimate the local variance $s^2_{i,k}$ by considering the non-isotropic neighborhood. The local logit variances are estimated by `sits_variance()`; Its main parameters are: (a) `cube`, a probability data cube; (b) `window_size`, dimension of the local neighbourhood; (c) `neigh_fraction`, the percentage of pixels in the neighbourhood used to calculate the variance. The example below uses half of the pixels of a $7\times 7$ window to estimate the variance. The chosen pixels will be those with the highest probability pixels to be more representative of the actual class distribution. The output values are the logit variances in the vicinity of each pixel.  
 
 The choice of the $7 \times 7$ window size is a compromise between having enough values to  estimate the parameters of a normal distribution and the need to capture local effects  for class patches of small sizes. Classes such as `Water` tend to be spatially limited; a bigger window size could result in invalid values for their respective normal distributions.
 
-```{r bayesvarfor, tidy = "styler", echo=TRUE, eval=TRUE, out.width = "100%", fig.align="center", fig.cap="Variance map for classes Forest and Clear_Cut_Bare_Soil (source: authors)."}
+```{r}
+#| output: false
 # calculate variance
 rondonia_20LLQ_var <- sits_variance(
     cube = rondonia_20LLQ_probs,
     window_size = 7,
     neigh_fraction = 0.50,
-    output_dir = "./tempdir/chp10", 
+    output_dir = tempdir_r, 
     multicores = 4,
     memsize = 16
 )
+```
+
+```{r}
+#| label: fig-map-variance-1
+#| fig-width: 8
+#| fig-height: 4
+#| fig.align: "center"
+#| fig.cap: |
+#|   Variance map for classes Forest and Clear_Cut_Bare_Soil.
+# Plot variance map for classes Forest and Clear_Cut_Bare_Soil
 plot(rondonia_20LLQ_var, 
      labels = c("Forest", "Clear_Cut_Bare_Soil"), 
      palette = "Spectral", 
@@ -178,15 +255,23 @@ plot(rondonia_20LLQ_var,
 )
 ```
 
-```{r bayesvarveg, tidy = "styler", echo=TRUE, eval=TRUE, out.width = "100%", fig.align="center", fig.cap="Variance map for clases Clear_Cut_Vegetation and Clear_Cut_Burned_Area (source: authors)."}
 
+```{r}
+#| label: fig-map-variance-2
+#| echo: false
+#| fig-width: 8
+#| fig-height: 4
+#| fig.align: "center"
+#| fig.cap: |
+#|   Variance map for classes Clear_Cut_Vegetation and Clear_Cut_Burned_Area.
+ 
+# plot variance map for classes Clear_Cut_Vegetation and Clear_Cut_Burned_Area
 plot(rondonia_20LLQ_var, 
      labels = c("Clear_Cut_Vegetation", "Clear_Cut_Burned_Area"), 
      palette = "Spectral", 
      rev = TRUE
 )
 ```
-
 
 Comparing the variance maps with the probability maps, one sees that areas of high probability of classes `Forest` and `Clear_Cut_Bare_Soil` are mostly made of compact patches. Recall these are the two dominant classes in the area, and deforestation is a process that converts forest to bare soil. Many areas of high logit variance for these classes are related to border pixels which have a mixed response. Areas of large patches of high logit variance for these classes are associated to lower class probabilities and will not be relevant to the final result.
  
@@ -196,13 +281,13 @@ Instances of class `ClearCut_Burned_Area` arise following a forest fire. Most pi
 
 The distinct patterns of these classes are measured quantitatively by the `summary()` function. For variance cubes, this function provides information on the logit variance values of the higher inter-quartile values.
 
-```{r, tidy = "styler", echo=TRUE, eval=TRUE}
+```{r}
 # get the summary of the logit variance
 summary(rondonia_20LLQ_var)
 ```
 The summary statistics show that most local variance values are low, which is an expected result. Areas of low variance correspond to pixel neighborhoods of high logit values for one of the classes and low logit values for the others. High values of the local variances are relevant in areas of confusion between classes. 
 
-## Using the variance to select values of hyperparameters{-}
+## Using the variance to select values of hyperparameters
 
 We make the following recommendations for setting the $\sigma^2_{k}$ parameter, based on the local logit variance:
     
@@ -217,7 +302,8 @@ To remove the outliers and classification errors, we run a smoothing procedure w
 
 The parameters `window_size` and `neigh_fraction` control how many pixels in a neighborhood the Bayesian estimator will use to calculate the local statistics. For example, setting `window size` to $7$ and `neigh_fraction` to $0.50$ (the defaults) ensures that $25$ samples are used to estimate the local statistics. The `smoothness` values for the classes are set as recommended above.  
 
-```{r bayessmoothfor, tidy = "styler", out.width = "100%", fig.align="center", fig.cap="Probability maps after bayesian smoothing (source: authors)."}
+```{r}
+#| output: false
 # Compute Bayesian smoothing
 rondonia_20LLQ_smooth <- sits_smooth(
     cube = rondonia_20LLQ_probs,
@@ -231,26 +317,48 @@ rondonia_20LLQ_smooth <- sits_smooth(
                    "Wetland" = 0.40),
     multicores = 4,
     memsize = 12,
-    output_dir = "./tempdir/chp10"
+    output_dir = tempdir_r
 )
+```
 
+```{r}
+#| label: fig-map-probs-smooth
+#| out.width: "100%"
+#| fig.align: "center"
+#| fig.cap: |
+#|   Probability maps after bayesian smoothing.
 # Plot the result
 plot(rondonia_20LLQ_smooth, labels = c("Clear_Cut_Vegetation", "Forest"))
 ```
 
 Bayesian smoothing has removed some of the local variability associated with misclassified pixels that differ from their neighbors, specially in the case of transitional classes such as `Clear_Cut_Vegetation`. The smoothing impact is best appreciated by comparing the labeled map produced without smoothing to the one that follows the procedure, as shown below.
 
-```{r bayessmoothmap, tidy = "styler", out.width = "100%", fig.align="center", fig.cap="Final classification map after Bayesian smoothing with 7 x 7 window, using high smoothness values (source: authors)."}
+```{r}
+#| output: false
 # Generate the thematic map
 rondonia_20LLQ_class_v2 <- sits_label_classification(
     cube = rondonia_20LLQ_smooth,
     multicores = 4,
     memsize = 12,
-    output_dir = "./tempdir/chp10",
+    output_dir = tempdir_r,
     version = "smooth")
-
-plot(rondonia_20LLQ_class_v2, 
-     legend_text_size = 0.7)
 ```
 
-In the smoothed map, outliers inside forest areas and in the class borders have been removed. The salt-and-pepper effect associated to transitional classes has also been replaced by more coherent estimates. The smoothed map shown much improvements compared with the non-smoothed one. In conclusion, post-processing is a desirable step in any classification process. Bayesian smoothing improves the borders between the objects created by the classification and removes outliers that result from pixel-based classification. It is a reliable method that should be used in most situations. 
+```{r}
+#| label: fig-map-class-smooth
+#| out.width: "90%"
+#| fig.align: "center"
+#| fig.cap: |
+#|   Final classification map after Bayesian smoothing with 7 x 7 window, using high smoothness values.
+# plot the thematic map
+plot(rondonia_20LLQ_class_v2, legend_position = "outside")
+```
+
+In the smoothed map, outliers inside forest areas and in the class borders have been removed. The salt-and-pepper effect associated to transitional classes has also been replaced by more coherent estimates. The smoothed map shown much improvements compared with the non-smoothed one. 
+
+
+## Summary
+
+Post-processing is a desirable step in any classification process. Bayesian smoothing improves the borders between the objects created by the classification and removes outliers that result from pixel-based classification. It is a reliable method that should be used in most situations. 
+
+## References{-}

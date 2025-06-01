@@ -2,17 +2,25 @@
 
 This Chapter contains a discussion on plotting and visualisation of data cubes in `sits`. 
 
-### Configurations to run this chapter
+### Configurations to run this chapter{-}
+
+```{r}
+#| echo: false
+reticulate::use_python("/Users/gilbertocamara/.pyenv/versions/pysits/bin/python")
+```
+
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: true
 #| echo: true
-#| include: false
+#| output: false
 library(sits)
 library(sitsdata)
 tempdir_r <- "~/sitsbook/tempdir/R/intro_visulization"
 dir.create(tempdir_r, showWarnings = FALSE)
 ```
-
+## Python
 ```{python}
 #| output: false
 from pysits import *
@@ -27,18 +35,16 @@ home = str(Path.home())
 tempdir_py = home + "/sitsbook/tempdir/Python/intro_visualization"
 Path(tempdir_py).mkdir(parents=True, exist_ok=True)
 ```
-  
-```{r}
-#| echo: false
-reticulate::use_python("/Users/gilbertocamara/.pyenv/versions/pysits/bin/python")
-```
-
+:::  
 
 ## Plotting
 
 The `plot()` function produces a graphical display of data cubes, time series, models, and SOM maps. For each type of data, there is a dedicated version of the `plot()` function. See `?plot.sits` for details. Plotting of time series, models and SOM outputs uses the `ggplot2` package; maps are plotted using the `tmap` package. When plotting images and classified maps, users can control the output, which appropriate parameters for each type of image. In this chapter, we provide examples of the options available for plotting different types of maps.
 
-Plotting and visualisation function in `sits` use COG overview if available. COG overviews are reduced-resolution versions of the main image, stored within the same file. Overviews allow for quick rendering at lower zoom levels, improving performance when dealing with large images. Usually, a single GeoTIFF will have many overviews, to match different zoom levels.
+Plotting and visualisation function in `sits` use COG overviews if available. COG overviews are reduced-resolution versions of the main image, stored within the same file. Overviews allow for quick rendering at lower zoom levels, improving performance when dealing with large images. Usually, a single GeoTIFF will have many overviews, to match different zoom levels.
+
+In case of maps and images, the parameters discussed in the following sections are optional. Simply using `plot()` with a data cube or classified maps as the first parameter works. The function will search for the date with the least cloud cover and will select an RGB product based on the available bands. By default, `plot()` will try to produce a [standard color combination](https://custom-scripts.sentinel-hub.com/custom-scripts/sentinel-2/composites/). Otherwise, it produces a false color plot. 
+
 
 ### Plotting false color maps
 
@@ -54,24 +60,20 @@ We refer to false color maps as images which are plotted on a color scale. Usual
 - `max_cog_size`: for cloud-oriented geotiff files (COG), sets the maximum number of lines or columns of the COG overview to be used for plotting.   
 
 The following optional parameters are available to allow for detailed control over the plot output:
+
 - `graticules_labels_size`: size of coordinates labels (default = 0.8).
 - `legend_title_size`: relative size of legend title (default = 1.0).
 - `legend_text_size`: relative size of legend text (default = 1.0).
 - `legend_bg_color`: color of legend background (default = "white").
 - `legend_bg_alpha`: legend opacity (default = 0.5).
-- `legend_position`: where to place the legend (options = "inside" or "outside" with "inside" as default).
+- `legend_position`: where to place the legend (options = "inside" or "outside" with "inside", except for probability cubes).
 
 The following example shows a plot of an NDVI index of a data cube. This data cube covers part of MGRS tile `20LMR` and contains bands "B02", "B03", "B04", "B05", "B06",  "B07", "B08", "B11", "B12", "B8A", "EVI", "NBR", and "NDVI" for the period 2022-01-05 to 2022-12-23. We will use parameters with other than their defaults.
 
 :::{.panel-tabset}
 ## R
 ```{r}
-#| label: fig-vis-ndvi
-#| out-width: 100%
-#| out-height: 100%
-#| fig-cap: |
-#|   Sentinel-2 NDVI index covering tile 20LMR
-#| fig-align: center
+#| eval: false
 # set the directory where the data is 
 data_dir <- system.file("extdata/Rondonia-20LMR", package = "sitsdata")
 # read the data cube
@@ -90,6 +92,7 @@ plot(ro_20LMR,
 ```
 ## Python
 ```{python}
+#| eval: false
 # set the directory where the data is 
 data_dir = sitsdata_dir + "extdata/Rondonia-20LMR"
 # read the data cube
@@ -108,6 +111,15 @@ plot(ro_20LMR,
 ```
 :::
 
+```{r}
+#| echo: false
+#| label: fig-vis-ndvi
+#| out-width: 80%
+#| fig-cap: |
+#|   Sentinel-2 NDVI index covering tile 20LMR.
+#| fig-align: center
+knitr::include_graphics("./images/vis_ndvi.png")
+```
 ### Plotting RGB color composite maps
 
 For RGB color composite maps, the parameters for the `plot` function are:
@@ -128,11 +140,7 @@ The optional parameters listed in the previous section are also available. An ex
 :::{.panel-tabset}
 ## R
 ```{r}
-#| label: fig-vis-rgb
-#| out-width: 100%
-#| fig-cap: |
-#|   Sentinel-2 color composite covering tile 20LMR
-#| fig-align: center
+#| eval: false
 # plot a color composite for date 2022-08-01
 plot(ro_20LMR, 
      red = "B11", 
@@ -143,6 +151,7 @@ plot(ro_20LMR,
 ```
 ## Python
 ```{python}
+#| eval: false
 # plot a color composite for date 2022-08-01
 plot(ro_20LMR, 
      red = "B11", 
@@ -152,6 +161,16 @@ plot(ro_20LMR,
      scale = 1.0)
 ```
 :::
+
+```{r}
+#| echo: false
+#| label: fig-vis-rgb
+#| out-width: 80%
+#| fig-cap: |
+#|   Sentinel-2 color composite covering tile 20LMR
+#| fig-align: center
+knitr::include_graphics("./images/vis_rgb.png")
+```
 
 ### Plotting classified maps{-}
 
@@ -172,7 +191,7 @@ The optional parameters listed in the previous section are also available. For a
 
 ```{r}
 #| label: fig-vis-class
-#| out-width: 100%
+#| out-width: 80%
 #| fig-cap: |
 #|   Sentinel-2 color composite covering tile 20LMR
 #| fig-align: center
@@ -241,7 +260,7 @@ These colors are grouped by typical legends used by the Earth observation commun
 ```{r}
 #| label: fig-vis-igbp
 #| echo: false
-#| out-width: 100%
+#| out-width: 80%
 #| fig-cap: |
 #|   Colors used in the sits package to represeny IGBP legend.
 #| fig-align: center
@@ -252,8 +271,7 @@ sits_colors_show(legend = "IGBP")
 The default color table can be extended using `sits_colors_set()`. As an example of a user-defined color table, consider a definition that covers level 1 of the Anderson Classification System used in the US National Land Cover Data, obtained by defining a set of colors associated to a new legend. The colors should be defined by HEX values and the color names should consist of a single string; multiple names need to be connected with an underscore("_").
 ```{r}
 #| label: fig-vis-nlcd
-#| out-width: 100%
-#| out-height: 80%
+#| out-width: 80%
 #| fig-cap: |
 #|   Example of defining colors for the Anderson Land Classification Scheme.
 #| fig-align: center

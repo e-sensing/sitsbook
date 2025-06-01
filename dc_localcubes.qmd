@@ -1,5 +1,54 @@
 # Data cubes from local files
 
+### Configurations to run this chapter{-}
+
+```{r}
+#| echo: false
+reticulate::use_python("/Users/gilbertocamara/.pyenv/versions/pysits/bin/python")
+```
+
+:::{.panel-tabset}
+## R
+```{r}
+#| echo: true
+#| eval: true
+#| output: false
+# load package "tibble"
+library(tibble)
+# load packages "sits" and "sitsdata"
+library(sits)
+library(sitsdata)
+# set tempdir if it does not exist 
+tempdir_r <- "~/sitsbook/tempdir/R/dc_localcubes"
+dir.create(tempdir_r, showWarnings = FALSE)
+```
+## Python
+```{python}
+#| echo: true
+#| eval: false
+#| output: false
+from pysits import *
+import pandas as pd
+pd.set_option("display.max_columns", 100)
+pd.set_option("display.max_rows", 4)
+# set bookdir if it does not exist 
+from pathlib import Path
+home = str(Path.home())
+tempdir_py = home + "/sitsbook/tempdir/Python/dc_localcubes"
+Path(tempdir_py).mkdir(parents=True, exist_ok=True)
+```
+:::
+
+## Introduction
+
+In many cubes, users need to build data cubes from files installed in locally-accessible computers. The most common case is when one has obtained a data cube by downloading an ARD collection using `sits_cube()`, getting a regular cube using `sits_regularize()`. The result will be a local cube. In this case, STAC services are not available and we need to rely on file-specific information. 
+
+All regular cubes produced by `sits` use the same convention for file naming. Images are stored as TIFF COGs and follow the structure `<satellite>_<sensor>_<tile>_<band>_<date>.tif`. In this case, users only need to provide the names of the original cloud provider, the ARD collection from which the data was obtained, and the directory where data is stores. By default, `sits` scans the directory looking for files that are associated to a regular data cube. We recommend that users store their data cubes in different files. 
+
+A special situation is when users have obtained images by other means, such as downloading Planet collections. In this case, they have to organize the files so that each file corresponds to a single date/band combination and that the file name contains information on `tile`, `band` and `date`. We show an example with Planet data in this chapter. 
+
+Finally, users also may want to retrieve local files associated with processed data cubes, such as probability cubes or classified map. Information on how to proceed is also provided in what follows. 
+
 ## Building data cubes from local files
 
 To build a data cube from local files, users must provide information about the original source from which the data was obtained. In this case, `sits_cube()` needs the parameters:
@@ -7,7 +56,7 @@ To build a data cube from local files, users must provide information about the 
 (a) `source`, the cloud provider from where the data has been obtained (in this case, the Brazil Data Cube "BDC");
 (b) `collection`, the collection of the cloud provider from where the images have been extracted. In this case, data comes from the MOD13Q1 collection 6;
 (c) `data_dir`, the local directory where the image files are stored;
-(d) `parse_info`, a vector of strings stating how file names store information on "tile", "band", and "date". In this case, local images are stored in files whose names are similar to `TERRA_MODIS_012010_EVI_2014-07-28.tif`. This file represents an image obtained by the MODIS sensor onboard the TERRA satellite, covering part of tile 012010 in the EVI band for date 2014-07-28.
+(d) `parse_info` (optional), a vector of strings stating how file names store information on "tile", "band", and "date". In this case, local images are stored in files whose names are similar to `TERRA_MODIS_012010_EVI_2014-07-28.tif`. This file represents an image obtained by the MODIS sensor onboard the TERRA satellite, covering part of tile 012010 in the EVI band for date 2014-07-28.
 
 ## Planet data as ARD local files{-}
 
@@ -27,7 +76,8 @@ The example shows how to define a data cube using Planet images from the `sitsda
 In general, `sits` users need to match the local file names to the values provided by the `parse_info` parameter. The file names of this dataset use the format `PLANETSCOPE_MOSAIC_604-1043_B4_2022-10-01.tif`, which fits the default value for `parse_info` which is `c("source", "collection", "tile", "band", "date")` and for `delim` which is "_",  it is not necessary to set these values when creating a data cube from the local files. 
 
 
-```{r tidy="styler", eval = FALSE}
+```{r}
+#| eval: false
 # Define the directory where Planet files are stored
 data_dir <- system.file("extdata/Planet", package = "sitsdata")
 # Create a data cube from local files
@@ -42,7 +92,13 @@ plot(planet_cube, red = "B3", green = "B2", blue = "B1")
 ```
 
 
-```{r planet, tidy="styler", echo = FALSE, out.width="100%", fig.align="center", fig.cap="Planet image over an area in Colombia (&copy; Planet - reproduction based on fair use doctrine)."}
+```{r}
+#| label: fig-dclocalcubes-planet
+#| echo: false
+#| out.width: "100%"
+#| fig.align: "center"
+#| fig.cap: | 
+#|   Planet image over an area in Colombia.
 knitr::include_graphics("./images/planet.png") 
 ```
 
@@ -61,7 +117,12 @@ It is also possible to create local cubes based on results that have been produc
 
 The following code creates a results cube based on the classification of deforestation in Brazil.  This classified cube was obtained by a large data cube of Sentinel-2 images, covering the state of Rondonia, Brazil comprising 40 tiles, 10 spectral bands, and covering the period from 2020-06-01 to 2021-09-11. Samples of four classes were trained by a random forest classifier. Internally, classified images use integers to represent classes. Thus, labels have to be associated to the integers that represent each class name.
 
-```{r mapdata, tidy="styler", out.width="100%", fig.align="center", fig.cap="Classified data cube for the year 2020/2021 in Rondonia, Brazil (&copy; EU Copernicus Sentinel Programme; source: authors)."}
+```{r}
+#| label: fig-dclocal-mapdata
+#| out.width: "100%" 
+#| fig.align: "center"
+#| fig.cap: | 
+#|   Classified data cube for the year 2020/2021 in Rondonia, Brazil.
 # Create a cube based on a classified image 
 data_dir <- system.file("extdata/Rondonia-20LLP", 
                         package = "sitsdata")
@@ -78,3 +139,7 @@ Rondonia_class_cube <- sits_cube(
 # Plot the classified cube
 plot(Rondonia_class_cube)
 ```
+
+## Summary
+
+In this chapter, we explain how to create cubes from local files.  Sometimes, users stop a `sits` session after performing an operation and want to continue from that point onwards. In this case, they can use `sits_cube()` to retrieve data from local files. This feature is useful, for example, to retrieve data cubes that have been regularized or classified. 

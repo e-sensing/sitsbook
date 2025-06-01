@@ -1,6 +1,6 @@
-# Producing regular data cubes and merging multi-source data
+# Regular EO data cubes
 
-### Configurations to run the chapter
+### Configurations to run the chapter{-}
 
 ```{r}
 #| echo: false
@@ -8,7 +8,7 @@ reticulate::use_python("/Users/gilbertocamara/.pyenv/versions/pysits/bin/python"
 ```
 
 :::{.panel-tabset}
-# R
+## R
 ```{r}
 #| echo: true
 #| eval: true
@@ -25,6 +25,7 @@ dir.create(tempdir_r, showWarnings = FALSE)
 ## Python
 ```{python}
 #| echo: true
+#| eval: false
 #| output: false
 from pysits import *
 import pandas as pd
@@ -42,23 +43,23 @@ Path(tempdir_py).mkdir(parents=True, exist_ok=True)
 
 ARD collections available in AWS, MPC, USGS, and DEAFRICA are not regular in space and time. Bands may have different resolutions, images may not cover the entire tile, and time intervals are irregular. Clouds and sensor artefacts introduce “holes” in the data, which need to be filled to obtain a consistent time series. Most ML/DL libraries expect tensors of identical shape (n_samples × n_features × time). If time steps differ or values are missing, batch training breaks and the model learns spurious correlations. Regular cubes guarantee fixed-length feature vectors & GPU-friendly batches. Regularisation turns heterogeneous image archives into a clean data structure that machine learning models can ingest directly. 
 
-Data from ARD collections can be converted to regular data cubes by calling `sits_regularize()`, which uses the  *gdalcubes* package [@Appel2019]. The `sits_regularize()` function has two components:
+Data from ARD collections can be converted to regular data cubes by calling `sits_regularize()`, which uses the  `gdalcubes` package [@Appel2019]. The `sits_regularize()` function has two components:
 
 1. Spatial harmonisation: re-project and resample everything onto the same tiling system and same spatial resolution. For examples, when Sentinel-1 and Sentinel-2 images are merged in `sits`, they are projected to tiles of the MGRS grid. 
 
-2. Temporal harmonisation: creates equispaced intervals (e.g., 16-day, monthly or seasonal composites) and fills gaps due to cloud cover and sensor errors. In `sits`, all images inside a chosen interval are combined by stacking. Images are ordered by decreasing percentage of cloud cover. The least-cloud filled image is taken as reference, and the other images are used to try to fill ist gaps. Pixels with persistent cloud-cover are marked as "NA" and are temporally interpolated during computation. 
+2. Temporal harmonisation: creates equispaced intervals (e.g., 16-day, monthly or seasonal composites) and fills gaps due to cloud cover and sensor errors. In `sits`, all images inside a chosen interval are combined by stacking. Images are ordered by decreasing percentage of cloud cover. The least-cloud filled image is taken as reference, and the other images are used to try to fill ist gaps. Pixels with persistent cloud-cover are marked as `NA` and are estimated during computation by temporal interpolation. 
 
 
 
 ## Regularizing Sentinel-2 images{-}
 
-In the following example, the user has created an irregular data cube from the Sentinel-2 collection available in Microsoft's Planetary Computer (MPC) for tiles `20LKP` and `20LLP` in the state of Rondonia, Brazil. We first build an irregular data cube using `sits_cube()`.
+In the following example, the user has created a non-regular data cube from the Sentinel-2 collection available in Microsoft's Planetary Computer (MPC) for tiles `20LKP` and `20LLP` in the state of Rondonia, Brazil. We first retrieve a non-regular ARD collection using `sits_cube()`.
 
 :::{.panel-tabset}
 ## R
 ```{r}
 #| eval: false
-# Creating an irregular data cube from AWS
+# Retrieving a non-regular ARD collection from AWS
 s2_cube_rondonia <- sits_cube(
     source = "AWS",
     collection = "SENTINEL-2-L2A",
@@ -73,7 +74,7 @@ sits_timeline(s2_cube_rondonia)
 ## Python
 ```{python}
 #| eval: false
-# Creating an irregular data cube from AWS
+# Retrieving a non-regular ARD collection from AWS
 s2_cube_rondonia =  sits_cube(
     source = "AWS",
     collection = "SENTINEL-2-L2A",
@@ -97,7 +98,7 @@ s2_cube_rondonia_timeline
 ## R
 ```{r}
 #| eval: false
-# plot the least cloudy image of the irregular cube
+# plot the least cloudy image of the cube
 s2_cube_rondonia |>  
     dplyr::filter(tile == "20LLP") |>  
     plot()
@@ -110,64 +111,68 @@ plot(s2_cube_rondonia)
 :::
 
 ```{r}
+#| echo: false
 #| label: fig-s220llp-dc
-#| out-width: 100%
+#| out-width: 80%
 #| fig-cap: |
-#|      Instance of non-regularized Sentinel-2 image covering only part of tile tile 20LLP .
+#|      Instance of non-regularized Sentinel-2 image covering only part of tile tile 20LLP.
 #| fig-align: center
 knitr::include_graphics("./images/dc_regularize_s2_20llp_non_reg.png") 
 ```
 
 Because of the different acquisition orbits of the Sentinel-2A and Sentinel-2B satellites, the two tiles also have different timelines. Tile `20LKP` has 12 instances, while tile `20LLP` has 24 instances for the chosen period. The function  `sits_regularize()` builds a data cube with a regular timeline and a best estimate of a valid pixel for each interval. The `period` parameter sets the time interval between two images. Values of `period` use the ISO8601 time period specification, which defines time intervals as `P[n]Y[n]M[n]D`, where "Y" stands for years, "M" for months, and "D" for days. Thus, `P1M` stands for a one-month period, `P15D` for a fifteen-day period. When joining different images to get the best image for a period, `sits_regularize()` uses an aggregation method that organizes the images for the chosen interval in order of increasing cloud cover and then selects the first cloud-free pixel. In the example, we use a spatial resolution of 40-meter for the regular cube to speed up processing; in actual case, we suggest using a 10-meter spatial resolution for the cube.
 
-Before regularizing the cube, we suggest copying the ARD data to a local directory to speed up processing. The original data will be temporally stored locally. In this way, the actual work of producing a regular data cube will be split into two parts: (a) downloading data from ARD collections; (b) building a data cube from local files. After the regular data cube has been built, the ARD imagens can be deleted. 
+Before regularizing the cube, we suggest copying the ARD data to a local directory to speed up processing. The original data will be temporally stored locally. In this way, the actual work of producing a regular data cube will be split into two parts: (a) downloading data from ARD collections; (b) building a data cube from local files. After the regular data cube has been built, the ARD imagens can be deleted. Depending on the speed of your connection, the `sits_cube_copy()` may take some time.
+
+
 
 :::{.panel-tabset}
 ## R
 ```{r}
 #| eval: false
+# set output dir for ARD data if it does not exist 
+tempdir_r_s2 <- "~/sitsbook/tempdir/R/dc_regularize/s2"
+dir.create(tempdir_r_s2, showWarnings = FALSE)
+
+s2_cube_local <- sits_cube_copy(
+    cube = s2_cube_rondonia,
+    output_dir = tempdir_r_s2
+)
+# set output dir fir regular cube if it does not exist 
+tempdir_r_s2_reg <- "~/sitsbook/tempdir/R/dc_regularize/s2_reg"
+dir.create(tempdir_r_s2, showWarnings = FALSE)
+
 # Regularize the cube to 16-day intervals
 reg_cube_rondonia <- sits_regularize(
           cube       = s2_cube_rondonia,
-          output_dir = tempdir_r,
+          output_dir = tempdir_r_s2_reg,
           res        = 40,
           period     = "P16D",
           multicores = 6)
 
 # Plot tile 20LLP of the regularized cube with the least cloud cover
 # The pixels of the regular data cube cover the full MGRS tile
-plot(reg_cube_rondonia)
+plot(reg_cube_rondonia, tile = "20LLP")
 ```
 ## Python
 ```{python}
 #| eval: false
-# To be completed (AA)
+# To be completed
 ```
 :::
 
 ```{r}
+#| echo: false
 #| label: fig-s2reg-dc
-#| out-width: 100%
-#| fig-cap: |
-#|   Regularized image for tile Sentinel-2 tile 20LLP.
-#| fig-align: center
-# Regularize the cube to 16-day intervals
-reg_cube_rondonia <- sits_regularize(
-          cube       = s2_cube_rondonia,
-          output_dir = "./tempdir/R/datacubes",
-          res        = 40,
-          period     = "P16D",
-          multicores = 6)
-
-# Plot tile 20LLP of the regularized cube with the least cloud cover
-# The pixels of the regular data cube cover the full MGRS tile
-plot(reg_cube_rondonia)
+#| out-width: 80%
+#| fig-cap: Regularized image for tile Sentinel-2 tile 20LLP.
+knitr::include_graphics("./images/dc_regularize_20llp_reg.png")
 ```
 
 
 ## Regularizing Sentinel-1 images{-}
 
-Because of their acquisition mode, SAR images are usually stored following their geometry of acquisition, which is inclined with respect to the Earth. This is the case of GRD and RTC collections available in Microsoft Planetary Computer (MPC). To allow easier use of Sentinel-1 data and to merge them with Sentinel-2 images, regularization in sits reprojects SAR data to the MGRS grid, as shown in the following example. The example uses the "SENTINEL-1-RTC" collection from MPC. Readers that do not have a subscription can replace "SENTINEL-1-RTC" with "SENTINEL-1-GRD" in the example.
+Because of their acquisition mode, SAR images are usually stored following their geometry of acquisition, which is inclined with respect to the Earth. This is the case of GRD and RTC collections available in Microsoft Planetary Computer (MPC). To allow easier use of Sentinel-1 data and to merge them with Sentinel-2 images, regularization in sits reprojects SAR data to the MGRS grid, as shown in the following example. The example uses the "SENTINEL-1-RTC" collection from MPC. 
 
 ```{r}
 #| eval: false
@@ -187,21 +192,21 @@ plot(cube_s1_rtc, band = "VH", palette = "Greys", scale = 0.7)
 ```{r}
 #| echo: false
 #| label: fig-s1orig-dc
-#| out-width: 100%
+#| out-width: 80%
 #| fig-cap: |
 #|   "Original Sentinel-1 image covering tile 22LBL.
 #| fig-align: center
-knitr::include_graphics("./images/cube_s1_rtc_tile_22LBL.png") 
+knitr::include_graphics("./images/cube_s1_rtc_tile_22LBL_vh.png") 
 ```
 
-After creating an irregular data cube from the data available in MPC, we use `sits_regularize()` to produce a SAR data cube that matches MGRS tile "22LBL". For plotting the SAR image, we select a multidate plot for the "VH" band, where the first date will be displayed in red, the second in green and the third in blue, so as to show an RGB map where changes are visually enhanced.
+After retrieving a non-regular ARD collection from the data available in MPC, we use `sits_regularize()` to produce a SAR data cube that matches MGRS tile "22LBL". For plotting the SAR image, we select a multidate plot for the "VH" band, where the first date will be displayed in red, the second in green and the third in blue, so as to show an RGB map where changes are visually enhanced.
 
 ```{r}
 #| eval: false
 # define the output directory
-# # Create a directory to store files
-if (!file.exists("./tempdir/R/datacubes/sar"))
-    dir.create("./tempdir/R/datacubes/sar")
+# set outout dir if it does not exist 
+tempdir_r_sar <- "~/sitsbook/tempdir/R/dc_regularize/sar"
+dir.create(tempdir_r_sar, showWarnings = FALSE)
 # create a regular RTC cube from MPC collection for a tile 22LBL.
 cube_s1_reg <- sits_regularize(
     cube = cube_s1_rtc,
@@ -210,7 +215,7 @@ cube_s1_reg <- sits_regularize(
     tiles = c("22LBL"),
     memsize = 12,
     multicores = 6,
-    output_dir = "./tempdir/R/datacubes/sar"
+    output_dir = tempdir_r_sar
 )
 plot(cube_s1_reg, band = "VH", palette = "Greys", scale = 0.7, 
      dates = c("2021-06-06", "2021-07-24", "2021-09-26"))
@@ -219,256 +224,15 @@ plot(cube_s1_reg, band = "VH", palette = "Greys", scale = 0.7,
 ```{r}
 #| echo: false
 #| label: fig-s1reg-dc
-#| out-width: 100%
+#| out-width: 80%
 #| fig-cap: |
-#|   "Regularized Sentinel-1 image covering tile 22LBL.
+#|   Regularized Sentinel-1 image covering tile 22LBL.
 #| fig-align: center
-knitr::include_graphics("./images/cube_s1_rtc_tile_22LBL_reg_rgb.png") 
-```
-## Merging multi-source ARD data collections
-
-## Merging HLS Landsat and Sentinel-2 collections
-
-Images from the HLS Landsat and Sentinel-2 collections are accessed separately and can be combined with `sits_merge()`. We first create tow ARD collections, one for HLS Sentinel-2 and one for HLS Landsat over the same area. The two cubes are then merged. 
-
-```{r}
-#| eval: false
-# define a region of interest
-roi <- c(lon_min = -45.6422, lat_min = -24.0335,
-         lon_max = -45.0840, lat_max = -23.6178)
-# Retrieve an HLS Sentinel-2 collection
-hls_cube_s2 <- sits_cube(
-  source = "HLS",
-  collection = "HLSS30",
-  roi = roi,
-  bands = c("BLUE", "GREEN", "RED", "CLOUD"),
-  start_date = as.Date("2020-06-01"),
-  end_date = as.Date("2020-09-01"),
-  progress = FALSE
-)
-# create a cube from the HLS Landsat collection
-hls_cube_l8 <- sits_cube(
-  source = "HLS",
-  collection = "HLSL30",
-  roi = roi,
-  bands = c("BLUE", "GREEN", "RED", "CLOUD"),
-  start_date = as.Date("2020-06-01"),
-  end_date = as.Date("2020-09-01"),
-  progress = FALSE
-)
-# merge the Sentinel-2 and Landsat-8 cubes
-hls_cube_merged <- sits_merge(hls_cube_s2, hls_cube_l8)
+knitr::include_graphics("./images/dc_s1reg_three_dates.png")
 ```
 
-```{r}
-#| echo: false
-hls_cube_s2 <- readRDS(file = "./etc/hls_cube_s2.rds")
-hls_cube_l8 <- readRDS(file = "./etc/hls_cube_l8.rds")
-hls_cube_merged <- readRDS(file = "./etc/hls_cube_merged.rds")
-```
+## Summary 
 
+In this chapter, we learned how to produced regular EO cubes from non-regular subset of ARD collections. Regularization is a key operation when working with time series, since it allow the use of machine learning models on time series. In the next chapter, we will discuss how to merge sensors from different data sources and, when necessary, to combine these data sets with regularization operations. 
 
-Comparing the timelines of the original cubes and the merged one, one can see the benefits of the merged collection for time series data analysis. 
-
-```{r}
-# Timeline of the Sentinel-2 cube
-sits_timeline(hls_cube_s2)
-```
-
-```{r}
-# Timeline of the Landsat-8 cube
-sits_timeline(hls_cube_l8)
-```
-
-```{r}
-# Timeline of the Landsat-8 cube
-sits_timeline(hls_cube_merged)
-```
-Although The merged cube contains a tenser timeline. However, for further use in `sits`, we need to create a regularized cube to obtain a less cloud covered composite. 
-```{r}
-# plotting a harmonized Landsat image from the merged dataset 
-# plot the cube
-plot(hls_cube_merged, 
-     red = "RED", 
-     green = "GREEN", 
-     blue = "BLUE", 
-     date = "2020-07-11")
-```
-
-```{r hlsmerge, echo = FALSE, eval = TRUE, out.width="100%", fig.align="center", fig.cap="Plot of Sentinel-2 image obtained from merging NASA HLS collection and Sentinel-2 collection for date 2020-06-15 showing the island of Ilhabela in the Brazilian coast (&copy; EU Copernicus Sentinel Programme; source: NASA)."}
-knitr::include_graphics("./images/hls_ilhabela_l8.png") 
-```
-
-## Merging Sentinel-1 and Sentinel-2 images
-
-To combine Sentinel-1 and Sentinel-2 data, the first step is to produce regular data cubes for the same MGRS tiles with compatible time steps. The timelines do not have to be exactly the same, but they need to be close enough so that matching is acceptable and have the same number of time steps. This example uses the regular Sentinel-1 cube for tile "22LBL" produced in the previous sections. The next step is to produce a regular Sentinel-2 data cube for the same tile and regularize it. The cube below defines an irregular data cube retrieved from Planetary Computer. 
-
-```{r, echo = TRUE, tidy="styler", eval = FALSE}
-# define the output directory
-cube_s2 <-  sits_cube(
-    source = "MPC",
-    collection = "SENTINEL-2-L2A",
-    bands = c("B02", "B8A", "B11", "CLOUD"),
-    tiles = c("22LBL"),
-    start_date = "2021-06-01",
-    end_date = "2021-09-30"
-)
-plot(cube_s2, red = "B11", green = "B8A", blue = "B02", date = "2021-07-07")
-```
-
-```{r senlbl, echo = FALSE, out.width="100%", fig.align="center", fig.cap="Sentinel-2 image covering tile 22LBL (&copy; EU Copernicus Sentinel Programme; source: authors)."}
-knitr::include_graphics("./images/s2_tile_22LBL.png") 
-```
-
-The next step is to create a regular data cube for tile "20LBL". 
-```{r, echo = TRUE, tidy="styler", eval = FALSE}
-if (!file.exists("./tempdir/chp4/s2_opt"))
-    dir.create("./tempdir/chp4/s2_opt")
-# define the output directory
-cube_s2_reg <-  sits_regularize(
-    cube = cube_s2,
-    period = "P16D",
-    res = 40,
-    tiles = c("22LBL"),
-    memsize = 12,
-    multicores = 6,
-    output_dir = "./tempdir/chp4/s2_opt"
-)
-```
-
-After creating the two regular cubes, we can merge them. Before this step, one should first compare their timelines to see if they match. Timelines of regular cubes are constrained by acquisition dates, which in the case of Sentinel-1 and Sentinel-2 are different. Attentive readers will have noticed that the start and end dates of the cubes selected from the Planetary Computer (see code above) are slightly difference, because of the need to ensure both regular cubes have the same number of time steps. The timelines for both cubes are shown below.
-
-```{r, echo = FALSE, tidy="styler", eval = TRUE}
-# recover the Sentinel-2 cube
-cube_s2_reg <- sits_cube(
-  source = "MPC",
-  collection = "SENTINEL-2-L2A",
-  data_dir = "./tempdir/chp4/s2_opt/"
-)
-# recover the Sentinel-1 cube
-cube_s1_reg <- sits_cube(
-  source = "MPC",
-  collection = "SENTINEL-1-RTC",
-  data_dir = "./tempdir/chp4/sar/"
-)
-```
-
-```{r, echo = TRUE, tidy="styler", eval = TRUE}
-# timeline of the Sentinel-2 cube
-sits_timeline(cube_s2_reg)
-```
-
-```{r, echo = TRUE, tidy="styler", eval = TRUE}
-# timeline of the Sentinel-2 cube
-sits_timeline(cube_s1_reg)
-```
-
-Considering that the timelines are close enough so that the cubes can be combined, we can use the `sits_merge` function to produce a combined cube. As an example, we show a plot with both radar and optical bands.
-
-```{r saropt, echo = TRUE, tidy="styler", eval = TRUE, out.width="100%", fig.align="center", fig.cap="Sentinel-2 and Sentinel-1 RGB composite for tile 22LBL (source: authors)."}
-# merge Sentinel-1 and Sentinel-2 cubes
-cube_s1_s2 <- sits_merge(cube_s2_reg, cube_s1_reg)
-# plot a an image with both SAR and optical bands
-plot(cube_s1_s2, red = "B11", green = "B8A", blue = "VH")
-```
-
-## Combining multitemporal data cubes with digital elevation models{-}
-
-In many applications, especially in regions with large topographical, soil or climatic variations, is is useful to merge multitemporal data cubes with base information such as digital elevation models (DEM). Merging multitemporal satellite images with digital elevation models (DEMs) offers several advantages that enhance the analysis and interpretation of geospatial data. Elevation data provides an additional to the two-dimensional satellite images, which help to distinguish land use and land cover classes which are impacted by altitude gradients.  One example is the capacity to distinguish between low-altitude and high-altitude forests. In case where topography changes significantly, DEM information can improve the accuracy of classification algorithms.
-
-As an example of DEM integation in a data cube, we will consider an agricultural region of Chile which is located in a narrow area close to the Andes. There is a steep gradient so that the cube benefits from the inclusion of the DEM.
-
-```{r demsen, tidy="styler", echo = TRUE, eval = FALSE}
-s2_cube_19HBA <- sits_cube(
-  source = "MPC",
-  collection = "SENTINEL-2-L2A",
-  tiles = "19HBA",
-  bands = c("B04", "B8A", "B12", "CLOUD"),
-  start_date = "2021-01-01",
-  end_date = "2021-03-31"
-)
-plot(s2_cube_19HBA, red = "B12", green = "B8A", blue = "B04")
-```
-
-```{r, echo = FALSE, out.width="100%", fig.align="center", fig.cap="Sentinel-2 image covering tile 19HBA (source: authors)."}
-knitr::include_graphics("./images/s2_19HBA.png") 
-```
-
-Then, we produce a regular data cube to use for classification. In this example, we will use a reduced resolution (30 meters) to expedite processing. In practice, a resolution of 10 meters is recommended.
-
-```{r, tidy="styler", echo = TRUE, eval = FALSE}
-s2_cube_19HBA_reg <- sits_regularize(
-  cube = s2_cube_19HBA,
-  period = "P16D",
-  res = 30,
-  output_dir = "./tempdir/chp4/s2_19HBA"
-)
-```
-
-```{r, echo = FALSE, eval = TRUE}
-s2_cube_19HBA_reg <- sits_cube(
-  source = "MPC",
-  collection = "SENTINEL-2-L2A",
-  data_dir = "./tempdir/chp4/s2_19HBA"
-)
-```
-
-The next step is recover the DEM for the area. For this purpose, we will use the Copernicus Global DEM-30, and select the area covered by the tile. As explained in the MPC access section above, the Copernicus DEM tiles are stored as 1$^\circ$ by 1$^\circ$ grid. For them to match an MGRS tile, they have to be regularized in a similar way as the Sentinel-1 images, as shown below. To select a DEM, no temporal information is required.
-
-
-```{r, tidy="styler", echo = TRUE, eval = FALSE}
-# obtain the DEM cube for 
-dem_cube_19HBA <- sits_cube(
-  source = "MPC",
-  collection = "COP-DEM-GLO-30",
-  bands = "ELEVATION",
-  tiles = "19HBA"
-)
-```
-
-After obtaining the 1$^\circ$ by 1$^\circ$ data cube covering the selected tile, the next step is to regularize it. This is done using the `sits_regularize()` function. This function will produce a DEM which matches exactly the chosen tile. 
-
-```{r, tidy = "styler", echo = TRUE, eval = FALSE}
-# obtain the DEM cube for 
-dem_cube_19HBA_reg <- sits_regularize(
-  cube = dem_cube_19HBA,
-  res = 30,
-  bands = "ELEVATION",
-  tiles = "19HBA",
-  output_dir = "./tempdir/chp4/dem_19HBA"
-)
-# plot the DEM reversing the palette 
-plot(dem_cube_19HBA_reg, band = "ELEVATION", palette = "Spectral", rev = TRUE)
-```
-
-```{r, echo = FALSE, eval = TRUE}
-dem_cube_19HBA_reg <- sits_cube(
-    source = "MPC",
-    collection = "COP-DEM-GLO-30",
-    data_dir = "./tempdir/chp4/dem_19HBA"
-)
-```
-
-```{r demchile, echo = FALSE, eval = TRUE, out.width = "100%", fig.align="center",  fig.cap="Copernicus DEM-30 covering tile 19HBA (&copy; DLR e.V. 2010-2014 and &copy Airbus Defence and Space GmbH 2014-2018 provided under COPERNICUS by the European Union and ESA; source: Microsoft and authors)."}
-knitr::include_graphics("./images/demchile.png") 
-```
-
-After obtaining regular data cubes from satellite images and from DEMs, there are two ways to combine them. One option is to take the DEM band as a multitemporal information, and duplicate this band for every time step so that the DEM becomes one additional time series. The alternative is to use DEMs as base cubes, and take them as a single additional band. These options are discusses in what follows.
-
-## Merging multitemporal data cubes with DEM{-}
-
-There are two ways to combine multitemporal data cubes with DEM data. The first method takes the DEM as a base information, which is used in combination with the multispectral time series. For exemple, consider a situation of a data cube with 10 bands and 23 time steps, which has a 230-dimensional space. Adding DEM as a base cube will include one dimension to the attribute space. This combination is supported by function `sits_add_base_cube`. In the resulting cube, the information on the image time series and that of the DEM are stored separately. The data cube metadata will now include a column called `base_info`. 
-
-```{r, echo = TRUE, eval = TRUE}
-merged_cube_base <- sits_add_base_cube(s2_cube_19HBA_reg, dem_cube_19HBA_reg)
-merged_cube_base$base_info[[1]]
-```
-
-Although this combination is conceptually simple, it has drawbacks. Since the attribute space now mixes times series with fixed-time information, the only applicable classification method is random forests. Because of the way random forest works, not all attributes are used by every decision tree. During the training of each tree, at each node, a random subset of features is selected, and the best split is chosen based on this subset rather than all features. Thus, there may be a significant number of decision trees that do use the DEM attribute. As a result, the effect of the DEM information may be underestimated. 
-
-The alternative is to combine the image data cube and the DEM using `sits_merge`. In this case, the DEM becomes another band. Although it may look peculiar to replicate the DEM many time to build an artificial time series, there are many advantages in doing so. All classification algorithms available in `sits` (including the deep learning ones) can be used to classify the resulting cube. For cases where the DEM information is particularly important, such organisation places DEM data at a par with other spectral bands. Users are encouraged to compare the results obtained by direct merging of DEM with spectral bands with the method where DEM is taken as a base cube. 
-
-```{r, echo = TRUE, eval = TRUE}
-merged_cube <- sits_merge(s2_cube_19HBA_reg, dem_cube_19HBA_reg)
-merged_cube$file_info[[1]]
-```
+## References{-}
