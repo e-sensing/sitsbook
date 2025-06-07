@@ -1,14 +1,46 @@
-# Ensemble prediction from multiple models{-}
+# Ensemble prediction from multiple models
 
-```{r, echo = FALSE, include = FALSE}
-source("common.R")
+
+### Configurations to run this chapter{-}
+
+```{r}
+#| echo: false
+reticulate::use_python("/Users/gilbertocamara/.pyenv/versions/pysits/bin/python")
 ```
 
-```{r, echo = FALSE, eval = TRUE}
-# Create a directory to store files
-if (!file.exists("./tempdir/chp13"))
-    dir.create("./tempdir/chp13")
+:::{.panel-tabset}
+## R
+```{r}
+#| echo: true
+#| eval: true
+#| output: false
+# load package "tibble"
+library(tibble)
+# load packages "sits" and "sitsdata"
+library(sits)
+library(sitsdata)
+# set tempdir if it does not exist 
+tempdir_r <- "~/sitsbook/tempdir/R/cl_ensembleprediction"
+dir.create(tempdir_r, showWarnings = FALSE)
 ```
+## Python
+```{python}
+#| echo: true
+#| eval: false
+#| output: false
+from pysits import *
+import pandas as pd
+pd.set_option("display.max_columns", 100)
+pd.set_option("display.max_rows", 4)
+# set bookdir if it does not exist 
+from pathlib import Path
+home = str(Path.home())
+tempdir_py = home + "/sitsbook/tempdir/Python/cl_ensembleprediction"
+Path(tempdir_py).mkdir(parents=True, exist_ok=True)
+```
+:::
+
+## Introduction to ensemble prediction
 
 Ensemble prediction is a powerful technique for combining predictions from multiple models to produce more accurate and robust predictions. Errors of individual models cancel out or are reduced when combined with the predictions of other models. As a result, ensemble predictions can lead to better overall accuracy and reduce the risk of overfitting. This can be especially useful when working with complex or uncertain data. By combining the predictions of multiple models, users can identify which features or factors are most important for making accurate predictions. When using ensemble methods, choosing diverse models with different sources of error is essential to ensure that the ensemble predictions are more precise and robust.
 
@@ -18,11 +50,15 @@ The `sits` package provides `sits_combine_predictions()` to estimate ensemble pr
 
 * Uncertainty: Predictions from different models are compared in terms of their uncertainties on a pixel-by-pixel basis; predictions with lower uncertainty are chosen as being more likely to be valid. 
 
-In what follows, we will use the same sample dataset and data cube used in Chapter [Image classification in data cubes](https://e-sensing.github.io/sitsbook/image-classification-in-data-cubes.html) to illustrate how to produce an ensemble prediction. The dataset `samples_deforestation_rondonia` consists of 6007 samples collected from Sentinel-2 images covering the state of Rondonia. Each time series contains values from all Sentinel-2/2A spectral bands for year 2022 in 16-day intervals. The data cube is a subset of the Sentinel-2 tile "20LMR" which contains all spectral bands, plus spectral indices "NVDI", "EVI" and "NBR" for the year 2022. 
+In what follows, we will use the same sample dataset and data cube used in Chapter [Image classification in data cubes](https://e-sensing.github.io/sitsbook/cl_rasterclassification.html) to illustrate how to produce an ensemble prediction. The dataset `samples_deforestation_rondonia` consists of 6,007 samples collected from Sentinel-2 images covering the state of Rondonia. Each time series contains values from all Sentinel-2/2A spectral bands for year 2022 in 16-day intervals. The data cube is a subset of the Sentinel-2 tile "20LMR" which contains all spectral bands, plus spectral indices "NVDI", "EVI" and "NBR" for the year 2022. 
+
+## Recovering the data cube
 
 The first step is to recover the data cube which is available in the `sitsdata` package, and to select only the spectral bands. 
 
-```{r ensmapfirst, tidy = "styler", echo = TRUE, eval = TRUE, out.width="100%", fig.align="center", fig.cap= "Subset of Sentinel-2 tile 20LMR ((&copy;: EU Copernicus Sentinel Programme; source: Microsoft)."}
+```{r}
+#| echo: true
+#| eval: false 
 # Files are available in a local directory 
 data_dir <- system.file("extdata/Rondonia-20LMR/", package = "sitsdata")
 # Read data cube
@@ -40,25 +76,52 @@ ro_cube_20LMR <- sits_select(
 plot(ro_cube_20LMR, blue = "B02", green = "B8A", red = "B11", date = "2022-08-17")
 ```
 
+```{r}
+#|label: fig-ensprd-rgb 
+#|echo: false
+#|out.width: "100%"
+#|fig.align: "center"
+#|fig.cap: "Subset of Sentinel-2 tile 20LMR."
+knitr::include_graphics("./images/ensprd-rgb.png")
+```
+
+## Classification using Random Forests
+
 We will train three models: Random Forests (RF), Light Temporal Attention Encoder (LTAE), and Temporal Convolution Neural Networks (TempCNN), classify the cube with them, and then combine their results. The example uses all spectral bands. We first run the RF classification.
 
-```{r, tidy = "styler", echo = TRUE, eval = FALSE}
+```{r}
+#| eval: false
 # train a random forest model
 rfor_model <- sits_train(samples_deforestation_rondonia, sits_rfor())
 # classify the data cube
 ro_cube_20LMR_rfor_probs <- sits_classify(
     ro_cube_20LMR, 
     rfor_model,
-    output_dir = "./tempdir/chp13", 
+    output_dir = tempdir_r, 
     multicores = 6,
     memsize = 24,
     version = "rfor"
 )
+# plot the probabilities for class Forest
+plot(ro_cube_20LMR_rfor_probs, labels = "Forest")
+```
 
+```{r}
+#|label: fig-ensprd-plot-rfor
+#|echo: false
+#|out.width: "100%"
+#|fig.align: "center"
+#|fig.cap: | 
+#|  Plot of probabilities for class Forest produced by random forests algorithm.
+knitr::include_graphics("./images/ensprd-plot-rfor.png")
+```
+
+```{r}
+#| eval: false
 ro_cube_20LMR_rfor_variance <- sits_variance(
     ro_cube_20LMR_rfor_probs, 
     window_size = 9,
-    output_dir = "./tempdir/chp13", 
+    output_dir = tempdir_r, 
     multicores = 6,
     memsize = 24,
     version = "rfor"
@@ -66,38 +129,20 @@ ro_cube_20LMR_rfor_variance <- sits_variance(
 summary(ro_cube_20LMR_rfor_variance)
 ```
 
-
-
-```{r, tidy = "styler", echo = FALSE, eval = TRUE}
-labels <- sits_labels(samples_deforestation_rondonia)
-names(labels) <- seq_len(length(labels))
-data_dir <- "./tempdir/chp13"
-
-ro_cube_20LMR_rfor_probs <- sits_cube(
-    source = "MPC", 
-    collection = "SENTINEL-2-L2A",
-    data_dir = data_dir, 
-    bands = "probs",
-    labels = labels,
-    version = "rfor"
-)
-ro_cube_20LMR_rfor_variance <- sits_variance(
-    ro_cube_20LMR_rfor_probs, 
-    window_size = 9,
-    output_dir = "./tempdir/chp13", 
-    multicores = 6,
-    memsize = 24,
-    version = "rfor"
-)
-summary(ro_cube_20LMR_rfor_variance)
+```{r}
+#| echo: false
+summ_ro_cube_20LMR_rfor_variance <- 
+    readRDS("~/sitsbook/etc/summ_ro_cube_20LMR_rfor_variance.rds")
+summ_ro_cube_20LMR_rfor_variance
 ```
 
 Based on the variance values, we apply the smoothness hyperparameter according to the recommendations proposed before. We choose values of $\sigma^2_{k}$ that reflect our prior expectation of the spatial patterns of each class. For classes `Clear_Cut_Vegetation` and `Clear_Cut_Burned_Area`, to produce denser spatial clusters and remove "salt-and-pepper" outliers, we take $\sigma^2_{k}$ values in 95%-100% range.  In the case of the most frequent classes `Forest` and `Clear_Cut_Bare_Soil` we want to preserve their original spatial shapes as much as possible; the same logic applies to less frequent classes `Water` and `Wetland`. For this reason, we set  $\sigma^2_{k}$ values in the 75%-80% range for these classes. The class spatial patterns correspond to our prior expectations.
 
-```{r, tidy = "styler", echo = TRUE, eval = FALSE}
+```{r}
+#| eval: false
 ro_cube_20LMR_rfor_bayes <- sits_smooth(
     ro_cube_20LMR_rfor_probs,
-    output_dir = "./tempdir/chp13", 
+    output_dir = tempdir_r, 
     smoothness = c(  
       "Clear_Cut_Bare_Soil" = 5.25, 
       "Clear_Cut_Burned_Area" = 15.0, 
@@ -114,40 +159,30 @@ ro_cube_20LMR_rfor_bayes <- sits_smooth(
 )
 ro_cube_20LMR_rfor_class <- sits_label_classification(
     ro_cube_20LMR_rfor_bayes,
-    output_dir = "./tempdir/chp13", 
+    output_dir = tempdir_r, 
     multicores = 6,
     memsize = 24,
     version = "rfor"
 )
-```
-
-```{r, tidy = "styler", echo = FALSE, eval = TRUE}
-ro_cube_20LMR_rfor_bayes <- sits_cube(
-    source = "MPC", 
-    collection = "SENTINEL-2-L2A",
-    data_dir = data_dir, 
-    bands = "bayes",
-    labels = labels,
-    version = "rfor"
-)
-ro_cube_20LMR_rfor_class <- sits_cube(
-    source = "MPC", 
-    collection = "SENTINEL-2-L2A",
-    data_dir = data_dir, 
-    bands = "class",
-    labels = labels,
-    version = "rfor"
-)
-```
-
-
-```{r unrforclass, tidy = "styler", warning = FALSE, out.width = "100%", fig.align="center", fig.cap= "Land classification in Rondonia using a random forest algorithm  (source: authors)."}
 plot(ro_cube_20LMR_rfor_class, 
       legend_text_size = 0.7, legend_position = "outside")
 ```
 
+
+```{r}
+#|label: fig-ensprd-map-rfor
+#|echo: false
+#|out.width: "100%"
+#|fig.align: "center"
+#|fig.cap: "Plot of classified map produced by Random Forests algorithm."
+knitr::include_graphics("./images/ensprd-map-rfor.png")
+```
+
+## Classification using Temporal Convolution Neural Networks (TempCNN)
+
 The next step is to classify the same area using a tempCNN algorithm, as shown below. 
-```{r, tidy = "styler", echo = TRUE, eval = FALSE}
+```{r}
+#| eval: false
 # train a tempcnn model
 tcnn_model <- sits_train(samples_deforestation_rondonia, 
                          sits_tempcnn())
@@ -156,17 +191,30 @@ tcnn_model <- sits_train(samples_deforestation_rondonia,
 ro_cube_20LMR_tcnn_probs <- sits_classify(
     ro_cube_20LMR, 
     tcnn_model,
-    output_dir = "./tempdir/chp13", 
+    output_dir = tempdir_r, 
     multicores = 2,
     memsize = 8,
     gpu_memory = 8,
     version = "tcnn"
 )
+# plot the probabilities for class Forest
+plot(ro_cube_20LMR_tcnn_probs, labels = "Forest")
+```
+```{r}
+#|label: fig-ensprd-probs-tcnn
+#|echo: false
+#|out.width: "100%"
+#|fig.align: "center"
+#|fig.cap: "Plot of probabilities for class Forest produced by TempCNN algorithm."
+knitr::include_graphics("./images/ensprd-probs-tcnn.png")
+```
 
+```{r}
+#| eval: false
 ro_cube_20LMR_tcnn_variance <- sits_variance(
     ro_cube_20LMR_tcnn_probs,
     window_size = 9,
-    output_dir = "./tempdir/chp13", 
+    output_dir = tempdir_r, 
     multicores = 6,
     memsize = 24,
     version = "tcnn"
@@ -174,10 +222,18 @@ ro_cube_20LMR_tcnn_variance <- sits_variance(
 summary(ro_cube_20LMR_tcnn_variance)
 ```
 
-```{r, tidy = "styler", echo = TRUE, eval = FALSE}
+```{r}
+#| echo: false
+summ_ro_cube_20LMR_tcnn_variance <- 
+    readRDS("~/sitsbook/etc/summ_ro_cube_20LMR_tcnn_variance.rds")
+summ_ro_cube_20LMR_tcnn_variance
+```
+
+```{r}
+#| eval: false
 ro_cube_20LMR_tcnn_bayes <- sits_smooth(
     ro_cube_20LMR_tcnn_probs,
-    output_dir = "./tempdir/chp13", 
+    output_dir = tempdir_r, 
     window_size = 11,
     smoothness = c(  
       "Clear_Cut_Bare_Soil" = 1.5, 
@@ -195,52 +251,31 @@ ro_cube_20LMR_tcnn_bayes <- sits_smooth(
 )
 ro_cube_20LMR_tcnn_class <- sits_label_classification(
     ro_cube_20LMR_tcnn_bayes,
-    output_dir = "./tempdir/chp13", 
+    output_dir = tempdir_r, 
     multicores = 2,
     memsize = 6,
     version = "tcnn"
 )
-```
-
-```{r, tidy = "styler", echo = FALSE, eval = TRUE}
-labels <- sits_labels(samples_deforestation_rondonia)
-names(labels) <- seq_len(length(labels))
-data_dir <- "./tempdir/chp13"
-
-ro_cube_20LMR_tcnn_probs <- sits_cube(
-    source = "MPC", 
-    collection = "SENTINEL-2-L2A",
-    data_dir = data_dir, 
-    bands = "probs",
-    labels = labels,
-    version = "tcnn"
-)
-
-ro_cube_20LMR_tcnn_bayes <- sits_cube(
-    source = "MPC", 
-    collection = "SENTINEL-2-L2A",
-    data_dir = data_dir, 
-    bands = "bayes",
-    labels = labels,
-    version = "tcnn"
-)
-ro_cube_20LMR_tcnn_class <- sits_cube(
-    source = "MPC", 
-    collection = "SENTINEL-2-L2A",
-    data_dir = data_dir, 
-    bands = "class",
-    labels = labels,
-    version = "tcnn"
-)
-```
-
-```{r untcnnmap, tidy = "styler", warning = FALSE, out.width = "100%", fig.align="center", fig.cap= "Land classification in Rondonia using tempCNN (source: authors)."}
 plot(ro_cube_20LMR_tcnn_class,  
      legend_text_size = 0.7, legend_position = "outside")
 ```
 
-The third model is the Light Temporal Attention Encoder (LTAE), which has been discussed. 
-```{r, tidy = "styler", echo = TRUE, eval = FALSE}
+```{r}
+#|label: fig-ensprd-class-tcnn
+#|echo: false
+#|out.width: "100%"
+#|fig.align: "center"
+#|fig.cap: | 
+#|   Land classification in Rondonia using tempCNN.
+knitr::include_graphics("./images/ensprd-class-tcnn.png")
+```
+
+
+## Classification using Lightweight Temporal Attention Encoder (LTAE)
+
+The third model is the Light Temporal Attention Encoder (LTAE), which has been discussed in the Machine Learning chapter. 
+```{r}
+#| eval: false
 # train a tempcnn model
 ltae_model <- sits_train(samples_deforestation_rondonia, sits_lighttae())
 
@@ -248,30 +283,55 @@ ltae_model <- sits_train(samples_deforestation_rondonia, sits_lighttae())
 ro_cube_20LMR_ltae_probs <- sits_classify(
     ro_cube_20LMR, 
     ltae_model,
-    output_dir = "./tempdir/chp13", 
+    output_dir = tempdir_r, 
     multicores = 2,
     memsize = 8,
     gpu_memory = 8,
     version = "ltae"
 )
+# plot the probabilities for class Forest
+plot(ro_cube_20LMR_ltae_probs, labels = "Forest")
+```
+```{r}
+#|label: fig-ensprd-probs-ltae
+#|echo: false
+#|out.width: "100%"
+#|fig.align: "center"
+#|fig.cap: | 
+#|   Land classification in Rondonia using tempCNN.
+knitr::include_graphics("./images/ensprd-probs-ltae.png")
+```
 
+We then compute the variance of the probability cube produced by the LTAE algorithm.
+
+```{r}
+#| eval: false
 ro_cube_20LMR_ltae_variance <- sits_variance(
     ro_cube_20LMR_ltae_probs,
     window_size = 9,
-    output_dir = "./tempdir/chp13", 
+    output_dir = tempdir_r, 
     multicores = 6,
     memsize = 24,
     version = "ltae"
 )
 summary(ro_cube_20LMR_ltae_variance)
 ```
+
+
+```{r}
+#| echo: false
+summ_ro_cube_20LMR_ltae_variance <- 
+    readRDS("~/sitsbook/etc/summ_ro_cube_20LMR_ltae_variance.rds")
+summ_ro_cube_20LMR_ltae_variance
+```
+
 We use the same rationale for selecting the `smoothness` parameter for the Bayesian smoothing operation as in the cases above.
 
-
-```{r, tidy = "styler", echo = TRUE, eval = FALSE}
+```{r}
+#| eval: false
 ro_cube_20LMR_ltae_bayes <- sits_smooth(
     ro_cube_20LMR_tcnn_probs,
-    output_dir = "./tempdir/chp13", 
+    output_dir = tempdir_r, 
     window_size = 11,
     smoothness = c(  
       "Clear_Cut_Bare_Soil" = 1.2, 
@@ -287,55 +347,34 @@ ro_cube_20LMR_ltae_bayes <- sits_smooth(
     memsize = 6,
     version = "ltae"
 )
+# generate the classified map
 ro_cube_20LMR_ltae_class <- sits_label_classification(
     ro_cube_20LMR_ltae_bayes,
-    output_dir = "./tempdir/chp13", 
+    output_dir = tempdir_r, 
     multicores = 2,
     memsize = 6,
     version = "ltae"
 )
-```
-
-```{r, tidy = "styler", echo = FALSE, eval = TRUE}
-labels <- sits_labels(samples_deforestation)
-names(labels) <- seq_len(length(labels))
-data_dir <- "./tempdir/chp13"
-
-ro_cube_20LMR_ltae_probs <- sits_cube(
-    source = "MPC", 
-    collection = "SENTINEL-2-L2A",
-    data_dir = data_dir, 
-    bands = "probs",
-    labels = labels,
-    version = "ltae"
-)
-
-ro_cube_20LMR_ltae_bayes <- sits_cube(
-    source = "MPC", 
-    collection = "SENTINEL-2-L2A",
-    data_dir = data_dir, 
-    bands = "bayes",
-    labels = labels,
-    version = "ltae"
-)
-ro_cube_20LMR_ltae_class <- sits_cube(
-    source = "MPC", 
-    collection = "SENTINEL-2-L2A",
-    data_dir = data_dir, 
-    bands = "class",
-    labels = labels,
-    version = "ltae"
-)
-```
-
-```{r unltaemap, tidy = "styler", warning = FALSE, out.width = "100%", fig.align="center", fig.cap= "Land classification in Rondonia using tempCNN (source: authors)."}
+# plot the classified map
 plot(ro_cube_20LMR_ltae_class,  
      legend_text_size = 0.7, legend_position = "outside")
 ```
+```{r}
+#|label: fig-ensprd-class-ltae
+#|echo: false
+#|out.width: "100%"
+#|fig.align: "center"
+#|fig.cap: | 
+#|   Land classification in Rondonia using tempCNN.
+knitr::include_graphics("./images/ensprd-class-ltae.png")
+```
 
-To understand the differences between the results, it is useful to compare the resulting class areas produced by the different algorithms.
+## Differences between model results
 
-```{r, echo=TRUE, eval=TRUE}
+To understand the differences between the results, it is useful to compare the resulting class areas produced by the different algorithms, expressed in $km^2$.
+
+```{r}
+#| eval: false
 # get the summary of the map produced by RF
 sum1 <- summary(ro_cube_20LMR_rfor_class) |> 
     dplyr::select("class", "area_km2")
@@ -348,25 +387,36 @@ colnames(sum2) <- c("class", "tcnn")
 sum3 <- summary(ro_cube_20LMR_ltae_class) |> 
     dplyr::select("class", "area_km2")
 colnames(sum3) <- c("class", "ltae")
-# compare class areas of non-smoothed and smoothed maps
-dplyr::inner_join(sum1, sum2, by = "class") |> 
+# compare class areas of maps produced by the three models
+pred_class_areas <- dplyr::inner_join(sum1, sum2, by = "class") |> 
   dplyr::inner_join(sum3, by = "class")
+pred_class_areas
+```
+
+```{r}
+#| echo: false
+pred_class_areas <- 
+    readRDS("~/sitsbook/etc/pred_class_areas.rds")
+pred_class_areas
 ```
 
 
-The study area presents many challenges for land classification, given the presence of wetlands, riparian forests and seasonally-flooded areas. The results show the algorithms obtain quite different results, since each model has different sensitivities. The RF method is biased towards the most frequent classes, especially for `Clear_Cut_Bare_Soil` and `Forest`. The area estimated by RF for class `Clear_Cut_Burned_Area` is the smallest of the three models. Most pixels assigned by LTAE and TCNN as burned areas are assigned by RF as being areas of bare soil.  The RF algorithm tends to be more conservative. The reason is because RF decision-making uses values from single attributes (values of a single band in a given time instance), while LTAE and TCNN consider the relations between instances of the time series. Since the RF model is sensitive to the response of images at the end of the period, it tends to focus on values that indicate the presence of forests and bare soils during the dry season, which peaks in August. The LTAE model is more balanced to the overall separation of classes in the entire attribute space, and produces larger estimates of riparian and seasonally flooded forest than the other methods. In contrast, both LTAE and TCNN make more mistakes than RF in including flooded areas in the center-left part of the image on the left side of the rives as `Clear_Cut_Vegetation` when the right label would be riparian or flooded forests. 
+The study area presents many challenges for land classification, given the presence of wetlands, riparian forests and seasonally-flooded areas. The results show the algorithms obtain quite different results, since each model has different sensitivities. The RF method is biased towards the most frequent classes, especially for `Clear_Cut_Bare_Soil` and `Forest`. The area estimated by RF for class `Clear_Cut_Burned_Area` is the smallest of the three models. Most pixels assigned by LTAE and TCNN as burned areas are assigned by RF as being areas of bare soil.  The RF algorithm tends to be more conservative. The reason is because RF decision-making uses values from single attributes (values of a single band in a given time instance), while LTAE and TCNN consider the relations between instances of the time series. Since the RF model is sensitive to the response of images at the end of the period, it tends to focus on values that indicate the presence of forests and bare soils during the dry season, which peaks in August. The LTAE and TCNN models are more balanced to the overall separation of classes in the entire attribute space, and produces larger estimates of riparian and seasonally flooded forest than the other methods. In contrast, both LTAE and TCNN make more mistakes than RF in including flooded areas in the center-left part of the image on the left side of the rives as `Clear_Cut_Vegetation` when the right label would be riparian or flooded forests. 
+
+## Combining the different predictions
 
 Given the differences and complementaries between the three predicted outcomes, combining them using `sits_combine_predictions()` is useful. This function takes the following arguments: (a) `cubes`, a list of the cubes to be combined. These cubes should be probability cubes generated by which optionally may have been smoothened; (b) `type`, which indicates how to combine the probability maps. The options are `average`, which performs a weighted mean of the probabilities, and  `uncertainty`, which uses the uncertainty cubes to combine the predictions; (c) `weights`, a vector of weights to be used to combine the predictions when `average` is selected; (d) `uncertainty_cubes`, a list of uncertainty cubes associated to the predictions;  (e) `multicores`, number of cores to be used; (f) `memsize`, RAM used in the classification; (g) `output_dir`, the directory where the classified raster files will be written.
 
-```{r, tidy = "styler", out.width = "100%", fig.align="center", cache = TRUE, fig.cap= "Land classification in Rondonia using the average of the probabilities produced by Random Forest and SVM algorithms (source: authors)."}
-# Combine the two predictions by taking the average of the probabilities for each class
+```{r}
+#| eval: false
+# Combine the three predictions by taking the average of the probabilities for each class
 ro_cube_20LMR_average_probs <- sits_combine_predictions(
   cubes = list(ro_cube_20LMR_tcnn_bayes, 
                ro_cube_20LMR_rfor_bayes, 
                ro_cube_20LMR_ltae_bayes),
   type = "average",
   version = "average-rfor-tcnn-ltae",
-  output_dir = "./tempdir/chp13/",
+  output_dir = tempdir_r,
   weights = c(0.33, 0.34, 0.33),
   memsize = 16,
   multicores = 4
@@ -374,35 +424,53 @@ ro_cube_20LMR_average_probs <- sits_combine_predictions(
 # Label the average probability cube
 ro_cube_20LMR_average_class <- sits_label_classification(
     cube = ro_cube_20LMR_average_probs,
-    output_dir = "./tempdir/chp13/",
+    output_dir = tempdir_r,
     version = "average-rfor-tcnn-ltae",
     memsize = 16,
-    multicores = 4)
+    multicores = 4
+)
+# plot the classified map
+plot(ro_cube_20LMR_average_class,  
+     legend_text_size = 0.7, legend_position = "outside")
+```
+```{r}
+#|label: fig-ensprd-class-ave
+#|echo: false
+#|out.width: "100%"
+#|fig.align: "center"
+#|fig.cap: | 
+#|   Land classification in Rondonia using the average of the probabilities produced by random forests, TempCNN and LTAE models.
+knitr::include_graphics("./images/ensprd-class-ave.png")
 ```
 
-```{r enavemap, tidy = "styler", out.width = "100%", fig.align="center", fig.cap= "Land classification in Rondonia using the average of the probabilities produced by Random Forest and SVM algorithms (source: authors)."}
+We can also consider the class areas produced by the ensemble combination and compare them to the original estimates, expressed in $km^2$.
 
-# Plot the second version of the classified cube
-plot(ro_cube_20LMR_average_class, 
-      legend_text_size = 0.7, legend_position = "outside")
-```
-
-We can also consider the class areas produced by the ensemble combination and compare them to the original estimates.
-
-```{r, echo=TRUE, eval=TRUE}
+```{r}
+#| eval: false
 # get the summary of the map produced by LTAE
 sum4 <- summary(ro_cube_20LMR_average_class) |> 
     dplyr::select("class", "area_km2")
 colnames(sum4) <- c("class", "ave")
 # compare class areas of non-smoothed and smoothed maps
-dplyr::inner_join(sum1, sum2, by = "class") |> 
+pred_ave_rfor_tcnn_ltae <- dplyr::inner_join(sum1, sum2, by = "class") |> 
   dplyr::inner_join(sum3, by = "class") |> 
     dplyr::inner_join(sum4, by = "class")
+pred_ave_rfor_tcnn_ltae
+```
+
+
+```{r}
+#| echo: false
+pred_ave_rfor_tcnn_ltae <- 
+    readRDS("~/sitsbook/etc/pred_ave_rfor_tcnn_ltae.rds")
+pred_ave_rfor_tcnn_ltae
 ```
 
 As expected, the ensemble map combines information from the three models. Taking the RF model prediction as a base, there is a reduction in the areas of classes `Clear_Cut_Bare_Soil` and `Forest`, confirming the tendency of the RF model to overemphasize the most frequent classes. The LTAE and TempCNN models are more sensitive to class variations and capture time-varying classes such as `Riparian_Forest` and `Clear_Cut_Burned_Area` in more detail than the RF model. However, both TempCNN and LTAE tend to confuse the deforestation-related class `Clear_Cut_Vegetation` and the natural class `Riparian_Forest` more than the RF model. This effect is evident in the left bank of the Madeira river in the centre-left region of the image. Also, both the LTAE and TempCNN maps are more grainy and have more spatial variability than the RF map.
 
 The average map provides a compromise between RF's strong empahsis on the most frequent classes and the tendency of deep learning methods to produce outliers based on temporal relationship. The average map is less grainy and more spatially consistent than the LTAE and TempCNN maps, while introducing variability which is not present in the RF map. 
+
+## Summary
 
 This chapter shows the possibilities of ensemble prediction. There are many ways to get better results than those presented here. Increasing the number of spectral bands would improve the final accuracy. Also, Bayesian smoothing for deep learning models should not rely on default parameters; rather it needs to rely on variance analysis, increase the spatial window and provide more informed hyperparameters. In general, ensemble prediction should be consider in all situations where one is not satisfied with the results of individual models. Combining model output increses the reliability of the result and thus shouls be considered in all situations where similar classes are present.
 
