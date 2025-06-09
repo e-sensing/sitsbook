@@ -41,7 +41,7 @@ Path(tempdir_py).mkdir(parents=True, exist_ok=True)
 
 ## The need for regular EO data cubes
 
-Analysis Ready Data (ARD) collections are often irregular in space and time. Bands may have different resolutions, images may not cover entire tiles, and time intervals are inconsistent. Clouds and sensor artifacts introduce “holes” in the data, corrupting the time series. If time steps differ or values are missing, batch training breaks and the model learns spurious correlations. Additionally, most machine learning and deep learning libraries expect tensors of identical shape (n_samples × n_features × time). Regular data cubes guarantee fixed-length feature vectors and GPU-friendly batches. Regularization turns heterogeneous image archives into clean, structured data ready for machine learning models.
+Analysis Ready Data (ARD) collections are often irregular in space and time. Bands may have different resolutions, images may not cover entire tiles, and time intervals are inconsistent. Clouds and sensor artifacts introduce “holes” in the data, corrupting the time series. If time steps differ or values are missing, batch training breaks and the model learns spurious correlations. Additionally, most machine learning and deep learning libraries expect tensors of identical shape (e.g., n_samples × n_features × time). Regular data cubes guarantee fixed-length feature vectors and GPU-friendly batches. Regularization turns heterogeneous image archives into clean, structured data ready for machine learning models.
 
 Data from ARD collections can be converted into regular data cubes with `sits_regularize()`, which uses the `gdalcubes` package [@Appel2019]. This function has two components:
 
@@ -179,23 +179,16 @@ We have already discussed how different acquisition orbits can result in mismatc
 In the case of SAR (Synthetic Aperture Radar) satellites like Sentinel-1, the acquisition mode determines:
 
 - Viewing geometry (how the radar observes the ground),
-
 - Incidence angle (the angle between the radar beam and the vertical to the Earth),
-
 - Spatial resolution and coverage area,
-
 - Whether it collects single or dual polarization (e.g., VV, VH).
-
-But why is this relevant?
 
 SAR images are usually captured at an oblique angle (not straight down), resulting in a slanted geometry known as *slant range*, rather than a map-like view called *ground range*. As a result, raw SAR images do not align well with optical imagery like Sentinel-2, which uses a nadir (straight-down) viewing geometry.
 
 To facilitate the integration of Sentinel-1 and Sentinel-2 data, `sits_regularize()` reprojects SAR images to the MGRS grid. Internally, it uses the `gdalwarp()` function (via the gdalcubes backend or an equivalent tool), which supports several interpolation methods:
 
 1. Nearest: Assigns the value of the nearest input pixel (fastest, preserves discrete classes).
-
 2. Bilinear: Performs linear interpolation from 4 nearest input pixels. Smooths intensity values.
-
 3. Cubic: Uses 16 surrounding pixels. Smoother, more complex but can introduce artifacts.
 
 By default, `sits` applies nearest-neighbor interpolation for categorical or discrete bands (e.g., land cover or polarization labels), and bilinear interpolation for continuous-valued bands (e.g., backscatter intensity). However, the exact interpolation method may vary depending on how the raster cube is created and the backend in use. Advanced users can customize reprojection parameters through sits_config() or environment variables that modify GDAL behavior.
