@@ -316,12 +316,18 @@ div.csl-indent {
  <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Uncertainty and active learning</span></span></a>
   </div>
 </li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./cl_ensembleprediction.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">Ensemble prediction from multiple models</span></span></a>
+  </div>
+</li>
       </ul>
 </li>
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./references.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">References{-}</span></span></a>
+ <span class="menu-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">References{-}</span></span></a>
   </div>
 </li>
     </ul>
@@ -393,11 +399,11 @@ div.csl-indent {
 </div>
 </section><section id="the-need-for-regular-eo-data-cubes" class="level2" data-number="5.1"><h2 data-number="5.1" class="anchored" data-anchor-id="the-need-for-regular-eo-data-cubes">
 <span class="header-section-number">5.1</span> The need for regular EO data cubes</h2>
-<p>ARD collections available in AWS, MPC, USGS, and DEAFRICA are not regular in space and time. Bands may have different resolutions, images may not cover the entire tile, and time intervals are irregular. Clouds and sensor artefacts introduce “holes” in the data, which need to be filled to obtain a consistent time series. Most ML/DL libraries expect tensors of identical shape (n_samples × n_features × time). If time steps differ or values are missing, batch training breaks and the model learns spurious correlations. Regular cubes guarantee fixed-length feature vectors &amp; GPU-friendly batches. Regularisation turns heterogeneous image archives into a clean data structure that machine learning models can ingest directly.</p>
-<p>Data from ARD collections can be converted to regular data cubes by calling <code><a href="https://rdrr.io/pkg/sits/man/sits_regularize.html">sits_regularize()</a></code>, which uses the <code>gdalcubes</code> package <span class="citation" data-cites="Appel2019"><a href="#ref-Appel2019" role="doc-biblioref">[1]</a></span>. The <code><a href="https://rdrr.io/pkg/sits/man/sits_regularize.html">sits_regularize()</a></code> function has two components:</p>
+<p>ARD collections available in AWS, MPC, USGS, and DEAFRICA are not regular in space and time. Bands may have different resolutions, images may not cover the entire tile, and time intervals are irregular. Clouds and sensor artifacts introduce “holes” in the data, which need to be filled to obtain a consistent time series. Most ML/DL libraries expect tensors of identical shape (n_samples × n_features × time). If time steps differ or values are missing, batch training breaks and the model learns spurious correlations. Regular cubes guarantee fixed-length feature vectors &amp; GPU-friendly batches. Regularization turns heterogeneous image archives into a clean data structure that machine learning models can ingest directly.</p>
+<p>Data from ARD collections can be converted into regular data cubes by calling <code><a href="https://rdrr.io/pkg/sits/man/sits_regularize.html">sits_regularize()</a></code>, which uses the <code>gdalcubes</code> package <span class="citation" data-cites="Appel2019"><a href="#ref-Appel2019" role="doc-biblioref">[1]</a></span>. The <code><a href="https://rdrr.io/pkg/sits/man/sits_regularize.html">sits_regularize()</a></code> function has two components:</p>
 <ol type="1">
-<li><p>Spatial harmonisation: re-project and resample everything onto the same tiling system and same spatial resolution. For examples, when Sentinel-1 and Sentinel-2 images are merged in <code>sits</code>, they are projected to tiles of the MGRS grid.</p></li>
-<li><p>Temporal harmonisation: creates equispaced intervals (e.g., 16-day, monthly or seasonal composites) and fills gaps due to cloud cover and sensor errors. In <code>sits</code>, all images inside a chosen interval are combined by stacking. Images are ordered by decreasing percentage of cloud cover. The least-cloud filled image is taken as reference, and the other images are used to try to fill ist gaps. Pixels with persistent cloud-cover are marked as <code>NA</code> and are estimated during computation by temporal interpolation.</p></li>
+<li><p>Spatial harmonization: re-project and resample everything onto the same tiling system and same spatial resolution. For example, when Sentinel-1 and Sentinel-2 images are merged in <code>sits</code>, they are projected to tiles of the MGRS grid.</p></li>
+<li><p>Temporal harmonization: creates equispaced intervals (e.g., 16-day, monthly or seasonal composites) and fills gaps due to cloud cover and sensor errors. In <code>sits</code>, all images inside a chosen interval are combined by stacking. Images are ordered by decreasing percentage of cloud cover. The least-cloud filled image is taken as reference, and the other images are used to try to fill its gaps. Pixels with persistent cloud-cover are marked as <code>NA</code> and are estimated during computation by temporal interpolation.</p></li>
 </ol></section><section id="regularizing-sentinel-2-images" class="level2 unnumbered"><h2 class="unnumbered anchored" data-anchor-id="regularizing-sentinel-2-images">Regularizing Sentinel-2 images</h2>
 <p>In the following example, the user has created a non-regular data cube from the Sentinel-2 collection available in Microsoft’s Planetary Computer (MPC) for tiles <code>20LKP</code> and <code>20LLP</code> in the state of Rondonia, Brazil. We first retrieve a non-regular ARD collection using <code><a href="https://rdrr.io/pkg/sits/man/sits_cube.html">sits_cube()</a></code>.</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
