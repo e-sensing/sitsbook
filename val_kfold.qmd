@@ -1,0 +1,77 @@
+---
+title: "Cross-validation of training data"
+format: html
+---
+
+### Configurations to run this chapter{-}
+
+```{r}
+#| echo: false
+reticulate::use_python("/Users/gilbertocamara/.pyenv/versions/pysits/bin/python")
+```
+
+:::{.panel-tabset}
+## R
+```{r}
+#| echo: true
+#| eval: true
+#| output: false
+# load package "tibble"
+library(tibble)
+# load packages "sits" and "sitsdata"
+library(sits)
+library(sitsdata)
+```
+## Python
+```{python}
+#| echo: true
+#| eval: false
+#| output: false
+from pysits import *
+import pandas as pd
+pd.set_option("display.max_columns", 100)
+pd.set_option("display.max_rows", 4)
+# set bookdir if it does not exist 
+```
+:::
+
+
+
+## Introduction
+
+Cross-validation is a technique to estimate the inherent prediction error of a model [@Hastie2009]. Since cross-validation uses only the training samples, its results are not accuracy measures unless the samples have been carefully collected to represent the diversity of possible occurrences of classes in the study area [@Wadoux2021]. In practice, when working in large areas, it is hard to obtain random stratified samples which cover the different variations in land classes associated with the ecosystems of the study area. Thus, cross-validation should be taken as a measure of model performance on the training data and not an estimate of overall map accuracy. 
+
+Cross-validation uses part of the available samples to fit the classification model and a different part to test it. The k-fold validation method splits the data into $k$ partitions with approximately the same size and proceeds by fitting the model and testing it $k$ times. At each step, we take one distinct partition for the test and the remaining ${k-1}$ for training the model and calculate its prediction error for classifying the test partition. A simple average gives us an estimation of the expected prediction error. The recommended choices of $k$ are $5$ or $10$ [@Hastie2009].
+
+## Using k-fold validation in SITS
+
+`sits_kfold_validate()` supports k-fold validation in `sits`. The result is the confusion matrix and the accuracy statistics (overall and by class). In the examples below, we use multiprocessing to speed up the results. The parameters of `sits_kfold_validate` are:
+
+1. `samples`:  training samples organized as a time series tibble;
+2. `folds`: number of folds, or how many times to split the data (default = 5);
+3. `ml_method`: ML/DL method to be used for the validation (default = random forest);
+4. `multicores`: number of cores to be used for parallel processing (default = 2).
+
+Below we show an example of cross-validation on the `samples_matogrosso_mod13q1` dataset. 
+
+```{r}
+#| eval: false
+rfor_validate_mt <- sits_kfold_validate(
+    samples = samples_matogrosso_mod13q1,
+    folds = 5,
+    ml_method = sits_rfor(),
+    multicores = 5
+)
+rfor_validate_mt
+```
+
+```{r}
+rfor_validate_mt <- readRDS("./etc/rfor_validate_mt.rds")
+rfor_validate_mt
+```
+
+The results show a good validation, reaching 96% accuracy. However, this accuracy does not guarantee a good classification result. It only shows if the training data is internally consistent. In the next chapters, we present additional methods for measuring classification accuracy.
+
+## Summary
+
+Cross-validation measures how well the model fits the training data. Using these results to measure classification accuracy is only valid if the training data is a good sample of the entire dataset. Training data is subject to various sources of bias. In land classification, some classes are much more frequent than others, so the training dataset will be imbalanced.  Regional differences in soil and climate conditions for large areas will lead the same classes to have different spectral responses. Field analysts may be restricted to places they have access (e.g., along roads) when collecting samples. An additional problem is mixed pixels. Expert interpreters select samples that stand out in fieldwork or reference images. Border pixels are unlikely to be chosen as part of the training data. For all these reasons, cross-validation results do not measure classification accuracy. 
