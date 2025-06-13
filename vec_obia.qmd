@@ -1,10 +1,24 @@
-# Object-based time series image analysis {.unnumbered}
+---
+title: "Object-based time series image analysis"
+format: html
+---
 
-```{r, include = FALSE}
-source("common.R")
-if (!file.exists("./tempdir/chp14"))
-  dir.create("./tempdir/chp14")
+### Configurations to run this chapter
+
+```{r}
+#| echo: true
+#| eval: true
+#| output: false
+# load package "tibble"
+library(tibble)
+# load packages "sits" and "sitsdata"
+library(sits)
+library(sitsdata)
+# set tempdir if it does not exist 
+tempdir_r <- "~/sitsbook/tempdir/R/vec_obia"
+dir.create(tempdir_r, showWarnings = FALSE)
 ```
+
 
 <a href="https://www.kaggle.com/code/esensing/object-based-image-time-series-classification" target="_blank"><img src="https://kaggle.com/static/images/open-in-kaggle.svg"/></a>
 
@@ -61,7 +75,8 @@ The outcome of the SLIC algorithm is a set of superpixels which try to capture t
 
 To show an example of SLIC-based segmentation, we first build a data cube, using images available in the `sitsdata` package.
 
-```{r obiaimage, tidy = "styler", out.width="100%", fig.align="center", fig.cap= "Sentinel-2 image in an area of Rondonia, Brazil (source: authors)."}
+```{r}
+#| eval: false
 # directory where files are located
 data_dir <- system.file("extdata/Rondonia-20LMR", package = "sitsdata")
 # Builds a cube based on existing files
@@ -73,15 +88,31 @@ cube_20LMR <- sits_cube(
 )
 plot(cube_20LMR, red = "B11", green = "B8A", blue = "B02", date = "2022-07-16")
 ```
+```{r}
+#| echo: false
+#| label: fig-vec-rgb
+#| out-width: 100%
+#| out-height: 100%
+#| fig-cap: |
+#|   Sentinel-2 image in an area of Rondonia, Brazil.
+#| fig-align: center
+knitr::include_graphics("./images/vec-rgb.png") 
+```
+
 
 The following example produces a segmented image. For the SLIC algorithm, we take the initial separation between cluster centres (`step`) to be 20 pixels, the `compactness` to be 1, and the minimum area for each superpixel (`min_area`) to be 20 pixels.
 
-```{r obiaseg, tidy = "styler", out.width="90%", fig.caption = "Segmentation of image in Amazonia (source: authors).", cache = TRUE, fig.align="center"}
+```{r}
+#| label: fig-obia-seg
+#| out.width: "90%"
+#| fig.align: "center"
+#| fig.caption: "Segmentation of image in Amazonia"
+#| cache: true
 # segment a cube using SLIC
 # Files are available in a local directory 
 segments_20LMR <- sits_segment(
     cube = cube_20LMR,
-    output_dir = "./tempdir/chp14",
+    output_dir = tempdir_r,
     seg_fn = sits_slic(
         step = 20,
         compactness = 1,
@@ -96,31 +127,38 @@ plot(segments_20LMR, red = "B11", green = "B8A", blue = "B02",
 
 It is useful to visualize the segments in a leaflet together with the RGB image using `sits_view()`.
 
-```{r, tidy = "styler", echo = TRUE, eval = FALSE}
+```{r}
+#| eval: false
 sits_view(segments_20LMR, red = "B11", green = "B8A", blue = "B02", 
           dates = "2022-07-16")
 ```
 
-```{r obiaview, echo = FALSE, out.width="90%", fig.caption = "Detail of segementation of image in Amazonia (source: authors).", fig.align="center"}
+```{r}
+#| label: fig-obia-view
+#| echo: false
+#| out.width: "90%"
+#| fig.align: "center"
+#| fig.caption: "Detail of segementation of image in Amazonia"
 knitr::include_graphics("./images/segmentation_2.png")
 ```
 
 After obtaining the segments, the next step is to classify them. This is done by first training a classification model. In this case study, we will use an SVM model.
 
-```{r, tidy="styler"} 
-svm_model <- sits_train(samples_deforestation, sits_svm())
+```{r} 
+#| eval: false
+tcnn_model <- sits_train(samples_deforestation, sits_tempcnn())
 ```
 
 The segment classification procedure applies the model to a number of user-defined samples inside each segment. Each of these samples is then assigned a set of probability values, one for each class. We then obtain the median value of the probabilities for each class and normalize them. The output of the procedure is a vector data cube containing a set of classified segments. The parameters for the `sits_classify()`
 
-```{r, eval = FALSE, tidy = "styler"}
-
+```{r}
+#| eval: false
 segments_20LMR_probs_svm <- sits_classify(
     data = segments_20LMR,
     ml_model = svm_model,
-    output_dir = "./tempdir/chp14",
+    output_dir = tempdir_r,
     n_sam_pol = 40,
-    gpu_memory = 16,
+    gpu_memory = 8,
     memsize = 24,
     multicores = 6,
     version = "svm-segments"
@@ -128,7 +166,7 @@ segments_20LMR_probs_svm <- sits_classify(
 
 segments_20LMR_class_svm <- sits_label_classification(
     segments_20LMR_probs_svm,
-    output_dir = "./tempdir/chp14",
+    output_dir = tempdir_r,
     memsize = 24,
     multicores = 6,
     version = "svm-segments"
@@ -137,7 +175,8 @@ segments_20LMR_class_svm <- sits_label_classification(
 
 To view the classified segments together with the original image, use `plot()` or `sits_view()`, as in the following example.
 
-```{r, tidy = "styler", eval = FALSE}
+```{r}
+#| eval: false
 sits_view(
     segments_20LMR_class_svm, 
     red = "B11", 
@@ -151,4 +190,6 @@ sits_view(
 knitr::include_graphics("./images/segments_20LMR.png")
 ```
 
-We conclude that OBIA analysis applied to image time series is a worthy and efficient technique for land classification, combining the desirable sharp object boundary properties required by land use and cover maps with the analytical power of image time series. 
+## Summary
+
+OBIA analysis applied to image time series is a worthy and efficient technique for land classification, combining the desirable sharp object boundary properties required by land use and cover maps with the analytical power of image time series. 

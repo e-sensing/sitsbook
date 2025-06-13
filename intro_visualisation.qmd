@@ -7,13 +7,7 @@ This Chapter contains a discussion on plotting and visualisation of data cubes i
 
 ### Configurations to run this chapter{-}
 
-```{r}
-#| echo: false
-reticulate::use_python("/Users/gilbertocamara/.pyenv/versions/pysits/bin/python")
-```
 
-:::{.panel-tabset}
-## R
 ```{r}
 #| eval: true
 #| echo: true
@@ -23,22 +17,6 @@ library(sitsdata)
 tempdir_r <- "~/sitsbook/tempdir/R/intro_visulization"
 dir.create(tempdir_r, showWarnings = FALSE)
 ```
-## Python
-```{python}
-#| output: false
-from pysits import *
-import pandas as pd
-pd.set_option("display.max_columns", 100)
-pd.set_option("display.max_rows", 4)
-# directory where data is available
-sitsdata_dir = "/Library/Frameworks/R.framework/Versions/4.4-x86_64/Resources/library/sitsdata/"
-# set tempdir if it does not exist 
-from pathlib import Path
-home = str(Path.home())
-tempdir_py = home + "/sitsbook/tempdir/Python/intro_visualization"
-Path(tempdir_py).mkdir(parents=True, exist_ok=True)
-```
-:::  
 
 ## Plotting
 
@@ -308,11 +286,7 @@ sits_colors_reset()
 To simplify the process of importing your data into QGIS, the color palette used to display classified maps in `sits` can be exported as a QGIS style using `sits_colors_qgis`. The function takes two parameters: (a) `cube`, a classified data cube; and (b) `file`, the file where the QGIS style in XML will be written. In this case study, we first retrieve and plot a classified data cube, and then export the colors to a QGIS XML style.
 
 ```{r}
-#| label: fig-vis-qgis
-#| out-width: 100%
-#| fig-cap: |
-#|   Classified data cube for the year 2022 for state of Rondonia, Brazil.
-#| fig-align: center
+#| eval: false
 # Create a cube based on a classified image 
 data_dir <- system.file("extdata/Rondonia-Class-2022-Mosaic", 
                         package = "sitsdata")
@@ -340,6 +314,17 @@ ro_class <- sits_cube(
 # Plot the classified cube
 plot(ro_class, scale = 1.0)
 ```
+```{r}
+#| echo: false
+#| label: fig-vis-mosaic
+#| out-width: 100%
+#| out-height: 100%
+#| fig-cap: |
+#|   Classified mosaic for land cover in Rondonia, Brazil for 2022.
+#| fig-align: center
+ro_class <- readRDS("./etc/ro_class.rds")
+knitr::include_graphics("./images/valromosaic.png") 
+```
 
 The file to be read by QGIS is a TIFF file whose location is specified by the data cube, as follows.
 
@@ -351,7 +336,7 @@ ro_class[["file_info"]][[1]]$path
 The color schema can be exported to QGIS as follows.
 ```{r}
 # Export the color schema to QGIS
-sits_colors_qgis(ro_class, file = "./tempdir/R/visualisation/qgis_style.xml")
+sits_colors_qgis(ro_class, file = file.path(tempdir_r,"qgis_style.xml"))
 ```
 
 ## References {.unnumbered}
