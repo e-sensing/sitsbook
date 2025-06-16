@@ -370,6 +370,53 @@ div.csl-indent {
 </li>
       </ul>
 </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./annex.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Advanced Topics</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./annex_export.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">24</span>&nbsp; <span class="chapter-title">Exporting data to other packages</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./annex_gee.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">25</span>&nbsp; <span class="chapter-title">SITS and GEE: side-by-side comparison</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./annex_api.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">26</span>&nbsp; <span class="chapter-title">Developing new functions in SITS</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./annex_ml.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">27</span>&nbsp; <span class="chapter-title">Including new methods for machine learning</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./annex_stac.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">28</span>&nbsp; <span class="chapter-title">Supporting STAC-based ARD catalogs</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./annex_parallel.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">29</span>&nbsp; <span class="chapter-title">How parallel processing works in SITS</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
     </ul>
 </div>
 </nav><div id="quarto-sidebar-glass" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass"></div>
@@ -425,7 +472,7 @@ div.csl-indent {
 </section><section id="introduction" class="level2" data-number="16.1"><h2 data-number="16.1" class="anchored" data-anchor-id="introduction">
 <span class="header-section-number">16.1</span> Introduction</h2>
 <p>Machine learning algorithms rely on training samples that are derived from “pure” pixels, hand-picked by users to represent the desired output classes. Given the presence of mixed pixels in images regardless of resolution, and the considerable data variability within each class, these classifiers often produce results with outliers or misclassified pixels. Therefore, post-processing techniques have become crucial to refine the labels of a classified image <span class="citation" data-cites="Huang2014"><a href="#ref-Huang2014" role="doc-biblioref">[1]</a></span>. Post-processing methods reduce salt-and-pepper and border effects, where single pixels or small groups of pixels are classified differently from their larger surrounding areas; these effects lead to visual discontinuity and inconsistency. By mitigating these errors and minimizing noise, post-processing improves the quality of the initial classification results, bringing a significant gain in the overall accuracy and interpretability of the final output <span class="citation" data-cites="Schindler2012"><a href="#ref-Schindler2012" role="doc-biblioref">[2]</a></span>.</p>
-<p>The <code>sits</code> package uses a <em>time-first, space-later</em> approach. Since machine learning classifiers in <code>sits</code> are mostly pixel-based, it is necessary to complement them with spatial smoothing methods. These methods improve the accuracy of land classification by incorporating spatial and contextual information into the classification process. The smoothing method available in <code>sits</code> uses an Empirical Bayes approach, adjusted to the specific properties of land classification. The assumption is that class probabilities at the local level should be similar and provide the baseline for comparison with the pixel values produced by the classifier. Based on these two elements, Bayesian smoothing adjusts the probabilities for the pixels, considering a spatial dependence.</p>
+<p>The <code>sits</code> package uses a <em>time-first, space-later</em> approach. Since machine learning classifiers in <code>sits</code> are mostly pixel-based, it is necessary to complement them with spatial smoothing methods. These methods improve the accuracy of land classification by incorporating spatial and contextual information into the classification process. The smoothing method available in <code>sits</code> uses an Empirical Bayes approach, adjusted to the specific properties of land classification. The assumption is that class probabilities at the local level should be similar and provide the baseline for comparison with the pixel values produced by the classifier. Based on these two elements, Bayesian smoothing adjusts the probabilities for the pixels, considering a spatial dependence <span class="citation" data-cites="Camara2024b"><a href="#ref-Camara2024b" role="doc-biblioref">[3]</a></span>.</p>
 </section><section id="the-need-for-post-processing" class="level2" data-number="16.2"><h2 data-number="16.2" class="anchored" data-anchor-id="the-need-for-post-processing">
 <span class="header-section-number">16.2</span> The need for post-processing</h2>
 <p>The main idea behind our post-processing method is that a pixel-based classification should take into account its neighborhood pixels. Consider the figure blow which shows a class assignment produced by a random forest algorithm on a image time series. The classified map has been produced by taking, for each pixel, the class of higher probability produced by the algorithm. The resulting map has many noisy areas with a high spatial variability of class assignments. This happens more frequently in two cases: (a) small clusters of pixels of one class inside a larger area of a different class; (b) transition zones between classes. In general, images of heterogeneous landscapes with high spatial variability have many mixed pixels, whose spectral response combines different types of land cover in a single ground resolved cell. For example, many pixels in the border between areas of classes <code>Forest</code> and <code>Clear_Cut_Bare_Soil</code> are wrongly assigned to the <code>Clear_Cut_Vegetation</code> class. This wrong assignment occurs because these pixels have a mixed response. Inside the ground cell captured by the sensor as a single pixel value, there are both trees and bare soil areas. Such results are undesirable and need to be corrected by post-processing.</p>
@@ -448,7 +495,7 @@ div.csl-indent {
 </div>
 </section><section id="empirical-bayesian-estimation" class="level2" data-number="16.3"><h2 data-number="16.3" class="anchored" data-anchor-id="empirical-bayesian-estimation">
 <span class="header-section-number">16.3</span> Empirical Bayesian estimation</h2>
-<p>The Bayesian estimate is based on the probabilities produced by the classifiers. Let <span class="math inline">\(p_{i,k} \geq 0\)</span> be the prior probability of the <span class="math inline">\(i\)</span>-th pixel belonging to class <span class="math inline">\(k \in \{1, \ldots, m\}\)</span>. The probabilities <span class="math inline">\(p_{i,k}\)</span> are the classifier’s output, being subject to noise, outliers, and classification errors. Our estimation aims to remove these effects and obtain values that approximate the actual class probability better. We convert the class probability values <span class="math inline">\(p_{i,k}\)</span> to log-odds values using the logit function, to transform probability values ranging from <span class="math inline">\(0\)</span> to <span class="math inline">\(1\)</span> to values from negative infinity to infinity. The conversion from probabilities logit values is helpful to support our assumption of normal distribution for our data.</p>
+<p>The Bayesian estimate is based on the probabilities produced by the classifiers. Let <span class="math inline">\(p_{i,k} \geq 0\)</span> be the prior probability of the <span class="math inline">\(i\)</span>-th pixel belonging to class <span class="math inline">\(k \in \{1, \ldots, m\}\)</span>. The probabilities <span class="math inline">\(p_{i,k}\)</span> are the classifier’s output, being subject to noise, outliers, and classification errors. Our estimation aims to remove these effects and obtain values that approximate the actual class probability better. We convert the class probability values <span class="math inline">\(p_{i,k}\)</span> to log-odds values using the logit function, to transform probability values ranging from <span class="math inline">\(0\)</span> to <span class="math inline">\(1\)</span> to values from negative infinity to infinity. The conversion from probabilities logit values is helpful to support our assumption of normal distribution.</p>
 <p><span class="math display">\[
     x_{i,k} = \ln \left(\frac{p_{i,k}}{1 - p_{i,k}}\right)
 \]</span> We assume that the logit of the prior probability of the pixels <span class="math inline">\(i\)</span> associated to class <span class="math inline">\(k\)</span> is described by a Gaussian distribution function</p>
@@ -458,7 +505,7 @@ x_{i,k} = \log\left( \frac{\pi_{i,k}}{1-\pi_{i,k}} \right) \sim N(m_{i,k}, s^2_{
 <p>where <span class="math inline">\(m_{i,k}\)</span> represents the local mean value and <span class="math inline">\(s^2_{i,k}\)</span> the local class variance. The local mean and variance are computed based on the local neighborhood of the point. We express the likelihood as a conditional Gaussian distribution of the logit <span class="math inline">\(x_{i,k}\)</span> of the observed values <span class="math inline">\(p_{i,k}\)</span> over <span class="math inline">\(\mu_{i,k}\)</span>: <span class="math display">\[\begin{equation}
 (x_{i,k} | \mu_{i,k}) = \log(p_{i,k}/(1-p_{i,k})) \sim N(\mu_{i,k}, \sigma^2).
 \end{equation}\]</span></p>
-<p>In the above equation, <span class="math inline">\(\mu_{i,k}\)</span> is the posterior expected mean of the logit probability associated to the <span class="math inline">\(i-th\)</span> pixel. The variance <span class="math inline">\(\sigma^2_{k}\)</span> will be estimated based on user expertise and taken as a hyperparameter to control the smoothness of the resulting estimate. The standard Bayesian updating <span class="citation" data-cites="Gelman2014"><a href="#ref-Gelman2014" role="doc-biblioref">[3]</a></span> leads to the posterior distribution which can be expressed as a weighted mean</p>
+<p>In the above equation, <span class="math inline">\(\mu_{i,k}\)</span> is the posterior expected mean of the logit probability associated to the <span class="math inline">\(i-th\)</span> pixel. The variance <span class="math inline">\(\sigma^2_{k}\)</span> will be estimated based on user expertise and taken as a hyperparameter to control the smoothness of the resulting estimate. The standard Bayesian updating <span class="citation" data-cites="Gelman2014"><a href="#ref-Gelman2014" role="doc-biblioref">[4]</a></span> leads to the posterior distribution which can be expressed as a weighted mean</p>
 <p><span class="math display">\[
 {E}[\mu_{i,k} | x_{i,k}] =
 \Biggl [ \frac{s^2_{i,k}}{\sigma^2_{k} +s^2_{i,k}} \Biggr ] \times
@@ -607,19 +654,19 @@ x_{i,k} +
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html">summary</a></span><span class="op">(</span><span class="va">rondonia_20LLQ_var</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>     Water Clear_Cut_Burned_Area Clear_Cut_Bare_Soil Clear_Cut_Vegetation
-75%   4.22                0.2500               0.380                0.540
-80%   4.74                0.3100               0.460                0.672
-85%   5.05                0.3800               0.600                0.850
-90%   5.35                0.5000               0.850                1.150
-95%   5.89                0.7405               1.581                1.960
-100% 23.73                9.9000              11.450               13.250
-      Forest Wetland
-75%   1.1725    0.28
-80%   1.8700    0.34
-85%   3.0200    0.44
-90%   4.4200    0.61
-95%   5.1300    1.26
-100% 17.4000   10.45</code></pre>
+75%   4.25                  0.25              0.3900               0.5500
+80%   4.79                  0.30              0.4900               0.6800
+85%   5.07                  0.37              0.6100               0.8800
+90%   5.38                  0.49              0.8700               1.1900
+95%   5.93                  0.74              1.7605               1.8205
+100% 19.58                  8.30             12.4200              14.0800
+     Forest Wetland
+75%    1.13  0.2800
+80%    1.77  0.3400
+85%    2.89  0.4200
+90%    4.22  0.5800
+95%    5.11  1.1905
+100%  15.44 10.9700</code></pre>
 </div>
 </div>
 <p>The summary statistics show that most local variance values are low, which is an expected result. Areas of low variance correspond to pixel neighborhoods of high logit values for one of the classes and low logit values for the others. High values of the local variances are relevant in areas of confusion between classes.</p>
@@ -696,8 +743,12 @@ x_{i,k} +
 <div class="csl-left-margin">[2] </div>
 <div class="csl-right-inline">K. Schindler, <span>“An overview and comparison of smooth labeling methods for land-cover classification,”</span> <em>IEEE transactions on geoscience and remote sensing</em>, vol. 50, no. 11, pp. 4534–4545, 2012.</div>
 </div>
-<div id="ref-Gelman2014" class="csl-entry" role="listitem">
+<div id="ref-Camara2024b" class="csl-entry" role="listitem">
 <div class="csl-left-margin">[3] </div>
+<div class="csl-right-inline">G. Camara <em>et al.</em>, <span>“Bayesian <span>Inference</span> for <span>Post-Processing</span> of <span>Remote-Sensing Image Classification</span>,”</span> <em>Remote Sensing</em>, vol. 16, no. 23, p. 4572, 2024, doi: <a href="https://doi.org/10.3390/rs16234572">10.3390/rs16234572</a>.</div>
+</div>
+<div id="ref-Gelman2014" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[4] </div>
 <div class="csl-right-inline">A. Gelman, J. B. Carlin, H. S. Stern, D. B. Dunson, A. Vehtari, and D. B. Rubin, <em>Bayesian <span>Data Analysis</span>, <span>Third Edition</span></em>. CRC Press, 2014.</div>
 </div>
 </div>

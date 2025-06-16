@@ -351,6 +351,53 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </li>
       </ul>
 </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./annex.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Advanced Topics</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./annex_export.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">24</span>&nbsp; <span class="chapter-title">Exporting data to other packages</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./annex_gee.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">25</span>&nbsp; <span class="chapter-title">SITS and GEE: side-by-side comparison</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./annex_api.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">26</span>&nbsp; <span class="chapter-title">Developing new functions in SITS</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./annex_ml.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">27</span>&nbsp; <span class="chapter-title">Including new methods for machine learning</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./annex_stac.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">28</span>&nbsp; <span class="chapter-title">Supporting STAC-based ARD catalogs</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./annex_parallel.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">29</span>&nbsp; <span class="chapter-title">How parallel processing works in SITS</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
     </ul>
 </div>
 </nav><div id="quarto-sidebar-glass" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass"></div>
@@ -475,6 +522,31 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Taking the PRODES map as our reference, we can include new labels in the classified map produced by <code>sits</code> using <code><a href="https://rdrr.io/pkg/sits/man/sits_reclassify.html">sits_reclassify()</a></code>. The new class “Deforestation_Mask” will be applied to all pixels that PRODES considers that have been deforested before July 2020. We also include a Non_Forest class to include all pixels that PRODES takes as not covered by native vegetation, such as wetlands and rocky areas. The PRODES classes will be used as a mask over the <code>sits</code> deforestation map.</p>
 <p>The <code><a href="https://rdrr.io/pkg/sits/man/sits_reclassify.html">sits_reclassify()</a></code> operation requires the parameters: (a) <code>cube</code>, the classified data cube whose pixels will be reclassified; (b) <code>mask</code>, the reference data cube used as a mask; (c) <code>rules</code>, a named list. The names of the <code>rules</code> list will be the new label. Each new label is associated with a <code>mask</code> vector that includes the labels of the reference map that will be joined. <code><a href="https://rdrr.io/pkg/sits/man/sits_reclassify.html">sits_reclassify()</a></code> then compares the original and reference map pixel by pixel. For each pixel of the reference map whose labels are in one of the <code>rules</code>, the algorithm relabels the original map. The result will be a reclassified map with the original labels plus the new labels that have been masked using the reference map.</p>
 <div class="cell" data-layout-align="center">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Reclassify cube</span></span>
+<span><span class="va">rondonia_def_2021</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_reclassify.html">sits_reclassify</a></span><span class="op">(</span></span>
+<span>    cube <span class="op">=</span> <span class="va">rondonia_class</span>,</span>
+<span>    mask <span class="op">=</span> <span class="va">prodes_2021</span>,</span>
+<span>    rules <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span></span>
+<span>        <span class="st">"Non_Forest"</span> <span class="op">=</span> <span class="va">mask</span> <span class="op"><a href="https://rdrr.io/r/base/match.html">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"NonForest"</span>, <span class="st">"NonForest2"</span><span class="op">)</span>,</span>
+<span>        <span class="st">"Deforestation_Mask"</span> <span class="op">=</span> <span class="va">mask</span> <span class="op"><a href="https://rdrr.io/r/base/match.html">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span></span>
+<span>            <span class="st">"d2007"</span>, <span class="st">"d2008"</span>, <span class="st">"d2009"</span>,</span>
+<span>            <span class="st">"d2010"</span>, <span class="st">"d2011"</span>, <span class="st">"d2012"</span>,</span>
+<span>            <span class="st">"d2013"</span>, <span class="st">"d2014"</span>, <span class="st">"d2015"</span>,</span>
+<span>            <span class="st">"d2016"</span>, <span class="st">"d2017"</span>, <span class="st">"d2018"</span>,</span>
+<span>            <span class="st">"d2019"</span>, <span class="st">"d2020"</span>,</span>
+<span>            <span class="st">"r2010"</span>, <span class="st">"r2011"</span>, <span class="st">"r2012"</span>,</span>
+<span>            <span class="st">"r2013"</span>, <span class="st">"r2014"</span>, <span class="st">"r2015"</span>,</span>
+<span>            <span class="st">"r2016"</span>, <span class="st">"r2017"</span>, <span class="st">"r2018"</span>,</span>
+<span>            <span class="st">"r2019"</span>, <span class="st">"r2020"</span>, <span class="st">"r2021"</span><span class="op">)</span>,</span>
+<span>        <span class="st">"Water"</span> <span class="op">=</span> <span class="va">mask</span> <span class="op">==</span> <span class="st">"Water"</span><span class="op">)</span>,</span>
+<span>    memsize <span class="op">=</span> <span class="fl">8</span>,</span>
+<span>    multicores <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>    output_dir <span class="op">=</span> <span class="va">tempdir_r</span>,</span>
+<span>    version <span class="op">=</span> <span class="st">"reclass"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Plot the reclassified map</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">rondonia_def_2021</span>,</span>
+<span>     legend_text_size <span class="op">=</span> <span class="fl">0.7</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div id="fig-ml-reclass-prodesreclass" class="quarto-figure quarto-figure-center anchored">
 <figure class="figure"><p><img src="cl_reclassification_files/figure-html/fig-ml-reclass-prodesreclass-1.png" class="img-fluid figure-img" style="width:90.0%"></p>

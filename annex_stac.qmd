@@ -3,9 +3,162 @@ title: "Supporting STAC-based ARD catalogs"
 format: html
 ---
 
-If you want to include a STAC-based catalogue not yet supported by `sits`, we encourage you to look at existing implementations of catalogues such as Microsoft Planetary Computer (MPC), Digital Earth Africa (DEA) and AWS. STAC-based catalogues in `sits` are associated to YAML description files, which are available in the directory `.inst/exdata/sources`. For example, the YAML file `config_source_mpc.yml` describes the contents of the MPC collections supported by `sits`. Please first provide an YAML file which lists the detailed contents of the new catalogue you wish to include. Follow the examples provided.
+## Introduction
+
+A useful facility in `sits` is its capability to access different ARD collections in many cloud services. Moreover, `sits` is able to make the  data ready for use without user intervention. Each ARD collection has different conventions from image attributes such band names, maximum and minimum value, encoding, scale factor and cloud masking.  In `sits`, when the data is loaded, all necessary transformations are applied  automatically. 
+
+To make data transformation transparent to users, `sits` relies on YAML configuration files and a flexible interface to the `rstac` package. In what follows, we show how configuration files are defined and how teh `sits` code uses them.
+
+## ARD collections configuration files
+
+All STAC-based catalogues supported by `sits` are associated to YAML description files, which are available in the directory `exdata/sources` in the `sits` package. The example below shows how to accessthe YAML file `config_source_mpc.yml` describes the contents of the MPC collections supported by `sits`.
+
+```{r}
+#| eval: false
+library(yaml)
+# location of YAML configuration file for MPC
+mpc_yaml_file <- system.file("extdata/sources/config_source_mpc.yml", package = "sits")
+# convert to R list object
+mpc_yaml <- yaml::read_yaml(mpc_yaml_file)
+```
+
+Access to other configuration files is done in a similar way, replacing `mpc` in the above code by one of  `aws`, `bdc`, `cdse`, `deafrica`, `deaustralia`, `hls30`, `mpc`, `planet`, or `terrascope`. 
+
+
+## Explaining the contents of an YAML file 
+
+To describe in detail the contents of an YAML configuration file for ARD catalogues, we take the example of the `SENTINEL-2-L2A` catalogue in AWS, shown below. 
+
+```yaml
+sources:
+    AWS                     :
+        s3_class            : ["aws_cube", "stac_cube", "eo_cube",
+                               "raster_cube"]
+        service             : "STAC"
+        url                 : "https://earth-search.aws.element84.com/v1/"
+        collections         :
+            SENTINEL-2-L2A  :
+                bands       :
+                    B01     : &aws_msi_60m
+                        missing_value: -9999
+                        minimum_value: 0
+                        maximum_value: 10000
+                        scale_factor : 0.0001
+                        offset_value : 0
+                        resolution  :  60
+                        band_name    : "coastal"
+                        data_type     : "INT2S"
+                    B02     : &aws_msi_10m
+                        missing_value: -9999
+                        minimum_value: 0
+                        maximum_value: 10000
+                        scale_factor : 0.0001
+                        offset_value : 0
+                        resolution  :  10
+                        band_name    : "blue"
+                        data_type     : "INT2S"
+                    B03     :
+                        <<: *aws_msi_10m
+                        band_name    : "green"
+                    B04     :
+                        <<: *aws_msi_10m
+                        band_name    : "red"
+                    B05     : &aws_msi_20m
+                        missing_value: -9999
+                        minimum_value: 0
+                        maximum_value: 10000
+                        scale_factor : 0.0001
+                        offset_value : 0
+                        resolution  :  20
+                        band_name    : "rededge1"
+                        data_type     : "INT2S"
+                    B06     :
+                        <<: *aws_msi_20m
+                        band_name    : "rededge2"
+                    B07     :
+                        <<: *aws_msi_20m
+                        band_name    : "rededge3"
+                    B08     :
+                        <<: *aws_msi_10m
+                        band_name    : "nir"
+                    B8A     :
+                        <<: *aws_msi_20m
+                        band_name    : "nir08"
+                    B09     :
+                        <<: *aws_msi_60m
+                        band_name    : "nir09"
+                    B11     :
+                        <<: *aws_msi_20m
+                        band_name    : "swir16"
+                    B12     :
+                        <<: *aws_msi_20m
+                        band_name    : "swir22"
+                    CLOUD   :
+                        bit_mask     : false
+                        band_name    : "scl"
+                        values       :
+                            0        : "missing_data"
+                            1        : "defective pixel"
+                            2        : "shadows"
+                            3        : "cloud shadows"
+                            4        : "vegetation"
+                            5        : "non-vegetated"
+                            6        : "water"
+                            7        : "unclassified"
+                            8        : "cloud medium"
+                            9        : "cloud high"
+                            10       : "thin cirrus"
+                            11       : "snow or ice"
+                        interp_values: [0, 1, 2, 3, 8, 9, 10]
+                        resolution  : 20
+                        data_type     : "INT1U"
+                satellite   : "SENTINEL-2"
+                sensor      : "MSI"
+                platforms   :
+                    SENTINEL-2A: "sentinel-2a"
+                    SENTINEL-2B: "sentinel-2b"
+                collection_name: "sentinel-2-l2a"
+                access_vars :
+                   AWS_DEFAULT_REGION   : "us-west-2"
+                   AWS_S3_ENDPOINT      : "s3.amazonaws.com"
+                   AWS_NO_SIGN_REQUEST  : true
+                open_data       : true
+                open_data_token : false
+                metadata_search : "tile"
+                ext_tolerance   : 0
+                grid_system     : "MGRS"
+                dates           : "2015 to now"
+```
+
+The main keyword is `sources`, which tells `sits` that comes below is an ARD config file. The next level contains the source name (`AWS`) by which the cloud provided is referred to in `sits`. At the next level we find the following keywords:
+
+- `s3_class`: this is the internal S3 class used by `sits` to deal with data from this provider. In this case, the value `aws_cube` is specific to the provider and is used by `sits` to support modularity in STAC access. For MPC, for example, `sits` uses `mpc_cube`. The value `stac_cube` indicates that this catalogue is accessible via STAC. The values `eo_cube` and `raster_cube` indicate that this collection consists of raster data. 
+
+- `service`: for STAC-based collections, use "STAC". 
+
+- `url`: STAC endpoint for the collection.
+
+- `collections`: keyword for collections associated to the service and described at the next level.
+
+In the next level, we find the list of collections supported by the cloud service. In this level, we shown one collection (`SENTINEL-2-L2A`). Below this level, the keywords are:
+
+- `bands`: describes the bands associated with the satellite. The value for each band is the one used by `sits`(e.g. "B01") while `band_name` is the name of the band user by AWS. This correspondence ensures that the same band in different providers has a single name in `sits`. For each band, we need to provide         `missing_value`, `minimum_value`, `maximum_value`, `scale_factor`, `offset_value`, `resolution`, `band_name` and `data_type`. 
+
+- `satellite`: name of the satellite
+- `sensor`: sensor designation
+- `platform`: in case of multiple platforms associated to the satellite constellation, provide their names.
+- `collection_name`: name used by AWS to designate the collection. 
+- `access_vars`: environmental variable used to access the collection.
+- `open_data`: is the collection available as open data?
+- `open_data_token`: is a token required to access the collection?
+- `metadata_search`: does the collection allow searching by tiles or only by ROI?
+- `grid_system`: tiling system used (e.g, "MGRS" or "WRS2")
+
+Custom YAML files can be placed in the user's configuration file, which is a YAML file located at the place indicated by the `SITS_CONFIG_USER_FILE` environment variable. 
+
+## Acessing STAC collections
 
 After writing the YAML file, you need to consider how to access and query the new catalogue. The entry point for access to all catalogues is the `sits_cube.stac_cube()` function, which in turn calls a sequence of functions which are described in the generic interface `api_source.R`. Most calls of this API are handled by the functions of `api_source_stac.R` which provides an interface to the `rstac` package and handles STAC queries.
 
-Each STAC catalogue is different. The STAC specification allows providers to implement their data descriptions with specific information. For this reason, the generic API described in `api_source.R` needs to be specialized for each provider. Whenever a provider needs specific implementations of parts of the STAC protocol, we include them in separate files. For example, `api_source_mpc.R` implements specific quirks of the MPC platform. Similarly, specific support for CDSE (Copernicus Data Space Environment) is available in `api_source_cdse.R`.
+The STAC specification is flexible aand allows providers to implement their data descriptions with specific information. Thus, STAC specifications may differ among the cloud providers. For example, many providers do not allow queries by tiles. For this reason, the generic API described in `api_source.R` needs to be specialized for each provider. Whenever a provider needs specific implementations of parts of the STAC protocol, we include them in separate files. For example, `api_source_mpc.R` implements specific quirks of the MPC platform. Similarly, specific support for CDSE (Copernicus Data Space Environment) is available in `api_source_cdse.R`. We suggest developers interested in including a new cloud service to follow one current implementation for a cloud provider step-by-step. With a little bit of effort, it will become clear to developers how to achieve their needs. 
 
