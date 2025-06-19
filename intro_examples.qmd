@@ -2,4 +2,438 @@
 
 The following scripts show examples of how to use `sits` with increasing levels of complexity.
 
-## Cerrado classification 
+### Configuration to run the examples in this chapter{-}
+
+```{r}
+#| echo: false
+reticulate::use_python("/Users/gilbertocamara/.pyenv/versions/pysits/bin/python")
+```
+
+:::{.panel-tabset}
+## R
+```{r}
+#| echo: true
+#| eval: true
+#| output: false
+# load package "tibble"
+library(tibble)
+# load packages "sits" and "sitsdata"
+library(sits)
+library(sitsdata)
+# set tempdir if it does not exist
+tempdir_r <- "~/sitsbook/tempdir/R/intro_examples"
+if (!file.exists(tempdir_r))
+  dir.create(tempdir_r, recursive = TRUE)
+tempdir_cube <- paste0(tempdir_r, "/cube")
+if (!file.exists(tempdir_cube))
+  dir.create(tempdir_cube, recursive = TRUE)
+tempdir_res <- paste0(tempdir_r, "/res")
+if (!file.exists(tempdir_res))
+  dir.create(tempdir_res, recursive = TRUE)
+```
+## Python
+```{python}
+#| echo: true
+#| eval: false
+#| output: false
+from pysits import *
+import pandas as pd
+pd.set_option("display.max_columns", 100)
+pd.set_option("display.max_rows", 4)
+# set bookdir if it does not exist 
+from pathlib import Path
+home = str(Path.home())
+tempdir_py = home + "/sitsbook/tempdir/Python/intro_examples"
+Path(tempdir_py).mkdir(parents=True, exist_ok=True)
+```
+:::
+
+## Cerrado classification
+
+### Creating a data cube
+
+```{r}
+#| eval: true
+# Define the roi for the samples_cerrado_lc8 dataset
+roi_cerrado <- c(
+    lon_min = -50.7809,
+    lat_min = -13.3926,
+    lon_max = -50.5402,
+    lat_max = -13.2497)
+
+# Define a data cube in the BDC repository
+mpc_cube <- sits_cube(
+    source = "MPC",
+    collection  = "LANDSAT-C2-L2",
+    bands = c("BLUE", "GREEN", "RED", "NIR08", "SWIR16", "SWIR22", "CLOUD"),
+    roi = roi_cerrado,
+    start_date = "2017-08-29",
+    end_date = "2018-08-29"
+)
+```
+
+### Exploring the features of the irregular cube
+
+```{r}
+#| echo: true
+# Timeline
+sits_timeline(mpc_cube)
+```
+
+```{r}
+#| echo: true
+# Bands
+sits_bands(mpc_cube)
+```
+
+### Downloading cubo to local repository
+
+```{r}
+#| eval: false
+#| echo: true
+# Copy cube images to local directory
+mpc_cube <- sits_cube_copy(
+  cube = mpc_cube,
+  roi = roi_cerrado,
+  multicores = 5,
+  output_dir = tempdir_cube
+)
+```
+
+### Accessing data cube in local directory
+
+```{r}
+#| eval: true
+#| echo: true
+# Access local data cube
+cube_local <- sits_cube(
+    source = "MPC",
+    collection = "LANDSAT-C2-L2",
+    data_dir = tempdir_cube
+)
+```
+
+### Regularizing Landsat data cube
+
+```{r}
+#| eval: false
+#| echo: true
+# Regularize
+cube_reg <- sits_regularize(
+    cube = cube_local,
+    period = "P16D",
+    res = 30,
+    roi = roi_cerrado,
+    multicores = 5,
+    output_dir = tempdir_res,
+    timeline = sits_timeline(samples_cerrado_lc8_examples),
+    progress = TRUE
+    )
+```
+
+```{r}
+#| eval: true
+#| echo: false
+# Access local data cube
+cube_reg <- sits_cube(
+    source = "MPC",
+    collection = "LANDSAT-C2-L2",
+    data_dir = tempdir_res
+)
+```
+
+### Exploring the features of the regular cube
+
+```{r}
+#| echo: true
+# Timeline
+sits_timeline(cube_reg)
+```
+
+```{r}
+#| echo: true
+# Bands
+sits_bands(cube_reg)
+```
+
+### Computing indexes
+
+```{r}
+#| eval: false
+#| echo: true
+# Calculate NDVI index using bands NIR08 and RED
+cube_reg <- sits_apply(
+    data = cube_reg,
+    NDVI = (NIR08 - RED) / (NIR08 + RED),
+    output_dir = tempdir_res,
+    multicores = 5,
+    memsize    = 8,
+    progress   = TRUE
+  )
+
+# Calculate EVI index using bands NIR08 and RED
+cube_reg <- sits_apply(
+    data       = cube_reg,
+    EVI        = 2.5 * ((NIR08 - RED) / (NIR08 + 6 * RED - 7.5 * BLUE + 1)),
+    output_dir = tempdir_res,
+    multicores = 5,
+    memsize    = 8,
+    progress   = TRUE
+    )
+```
+
+```{r}
+#| echo: true
+# Plot NDVI for the second date (2017-09-14)
+plot(cube_reg,
+  band = "NDVI",
+  dates = "2017-09-14",
+  palette = "RdYlGn"
+)
+```
+
+### Getting time series from data cube
+
+```{r}
+#| eval: true
+#| echo: true
+# Extract time series
+samples <- sits_get_data(
+    cube = cube_reg,
+    samples = samples_cerrado_lc8_examples,
+    multicores = 5
+)
+
+# Show the tibble with the first three points
+print(samples[1:3,])
+```
+
+```{r}
+#| echo: true
+# Check the sample distribution by class
+summary(samples)
+```
+
+### Visualizing the spatial distribution of samples
+
+```{r}
+#| echo: true
+# View samples
+sits_view(samples)
+```
+
+### Colocar título
+
+```{r}
+#| echo: true
+# Select a specific band from the cube
+samples_ndvi <- sits_select(samples_cerrado_lc8_examples, bands = "NDVI")
+plot(samples_ndvi)
+```
+
+```{r}
+#| echo: true
+# Calculate temporal patterns
+patterns <- sits_patterns(samples_cerrado_lc8_examples)
+plot(patterns)
+```
+
+### Fine-tuning the TempCNN model
+
+```{r}
+#|eval: false
+#| echo: true
+library(torch)
+tuned_tempcnn <- sits_tuning(
+    samples = samples_cerrado_lc8_examples,
+    ml_method = sits_tempcnn(),
+    params = sits_tuning_hparams(
+        optimizer = torch::optim_adamw,
+        opt_hparams = list(
+            lr = uniform(10^-4, 10^-2),
+            weight_decay = uniform(10^-6, 10^-3)
+        )
+    ),
+    trials = 10,
+    multicores = 8,
+    progress = TRUE
+)
+```
+
+```{r}
+#|eval: true
+#| echo: true
+# Obtain accuracy, kappa, cnn_layers, cnn_kernels, and cnn_dropout_rates the best result:
+tempcnn_parameters <- tuned_tempcnn[1, c("accuracy", "kappa", "cnn_layers", "cnn_kernels", "cnn_dropout_rates"), ]
+
+# Organizing learning rates and weight decay in a list:
+hparams_best <- tuned_tempcnn[1, ]$opt_hparams[[1]]
+
+# Extracting learning rate and weight decay:'
+lr_wd <- tibble::tibble(
+    lr_best = hparams_best$lr,
+    wd_best = hparams_best$weight_decay
+)
+
+# Printing the best parameters:
+dplyr::bind_cols(tempcnn_parameters, lr_wd)
+### Training a deep learning model
+```
+
+### Training a deep learning model
+
+```{r}
+#| eval: false
+#| echo: true
+library(torchopt)
+set.seed(03022024)
+# Train using tempCNN
+tempcnn_model <- sits_train(
+  samples_cerrado_lc8_examples,
+  sits_tempcnn(
+    optimizer            = torch::optim_adamw,
+    cnn_layers           = c(256, 256, 256),
+    cnn_kernels          = c(7, 7, 7),
+    cnn_dropout_rates    = c(0.2, 0.2, 0.2),
+    epochs               = 50,
+    batch_size           = 64,
+    validation_split     = 0.2,
+    opt_hparams = list(lr = 0.006315829	,
+                       weight_decay = 0.0003904277),
+    verbose              = FALSE
+  )
+)
+
+# Show training evolution
+plot(tempcnn_model)
+```
+
+### Apply k-fold validation
+
+```{r}
+#| eval: false
+#| echo: true
+tempcnn_kfold <- sits_kfold_validate(
+    samples = samples_cerrado_lc8_examples,
+    folds = 5,
+    ml_method = sits_tempcnn(                     
+        optimizer = torch::optim_adamw,
+        cnn_layers = c(256, 256, 256),
+        cnn_kernels = c(7, 7, 7),
+        cnn_dropout_rates = c(0.2, 0.2, 0.2),
+        epochs = 50,
+        batch_size = 64,
+        validation_split = 0.2,
+        opt_hparams = list(
+        lr = 0.00578891,
+        weight_decay = 0.00353351
+        ),
+        verbose = FALSE
+    ),
+    multicores = 7
+)
+
+tempcnn_kfold
+```
+
+### Apply F1-score validation
+
+```{r}
+#| eval: false
+#| echo: true
+tempcnn_f1score <- unname(tempcnn_kfold$byClass[, "F1"])
+
+# F1-score result for TempCNN
+tempcnn_f1score_acc <- tibble::tibble(
+    "Classes" = sits_labels(samples_cerrado_lc8_examples),
+    "TempCNN" = tempcnn_f1score
+)
+
+# Show the result
+tempcnn_f1score_acc
+```
+
+### Data cube classification
+
+```{r}
+#| eval: false
+#| echo: true
+# Classify the raster image
+cerrado_probs <- sits_classify(
+  data = cube_local,
+  ml_model = tempcnn_model,
+  multicores = 5,
+  memsize = 8,
+  output_dir = tempdir_res
+)
+```
+
+```{r}
+#| eval: true
+#| echo: true
+# Plot the probability cube for class Forest
+plot(cerrado_probs, labels = "Cerrado", palette = "BuGn")
+```
+
+### Spatial smoothing
+
+```{r}
+#| eval: false
+#| echo: true
+# Perform spatial smoothing
+cerrado_bayes <- sits_smooth(
+  cube = cerrado_probs,
+  multicores = 5,
+  memsize = 8,
+  output_dir = tempdir_res
+)
+```
+
+```{r}
+#| eval: true
+#| echo: true
+plot(cerrado_bayes, labels = "Cerrado", palette = "BuGn")
+```
+
+### Labeling a probability data cube
+
+```{r}
+#| eval: false
+#| echo: true
+# Label the probability file
+cerrado_map <- sits_label_classification(
+  cube = cerrado_bayes,
+  output_dir = tempdir_res
+)
+```
+
+```{r}
+#| eval: true
+#| echo: true
+plot(cerrado_map)
+```
+
+### Accuracy assessment of classified images
+
+ \code{system.file("extdata/cerrado/validation.csv", package = "sitsdata")}
+
+```{r}
+#| eval: false
+#| echo: true
+# Get ground truth points
+valid_csv <- system.file("extdata/csv/cerrado_lc8_validation.csv",
+  package = "sitsdata"
+)
+# Calculate accuracy according to Olofsson's method
+area_acc <- sits_accuracy(cerrado_map,
+  validation = valid_csv,
+  multicores = 4
+)
+
+# Print the area estimated accuracy
+area_acc
+```
+
+
+
+
