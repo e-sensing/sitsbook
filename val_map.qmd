@@ -5,6 +5,8 @@ format: html
 
 ### Configurations to run this chapter {-}
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| echo: true
 #| eval: true
@@ -18,6 +20,19 @@ library(sitsdata)
 tempdir_r <- "~/sitsbook/tempdir/R/val_map"
 dir.create(tempdir_r, showWarnings = FALSE)
 ```
+## Python
+```{python}
+#| echo: true
+#| eval: true
+#| output: false
+# load "pysits" library
+from pysits import *
+from pathlib import Path
+# set tempdir if it does not exist 
+tempdir_py = Path.home() / "sitsbook/tempdir/Python/val_map"
+tempdir_py.mkdir(parents=True, exist_ok=True)
+```
+:::
 
 ## Introduction
 
@@ -35,6 +50,8 @@ The work considered nine LUCC classes: (a) stable natural land cover, including 
 
 In this chapter, we will take the classification map as our starting point for accuracy assessment. This map can be retrieved from the `sitsdata` package as follows.
 
+:::{.panel-tabset}
+## R
 ```{r}
 # define the classes of the probability cube
 labels <- c("1" = "Clear_Cut_Bare_Soil",
@@ -59,12 +76,47 @@ rondonia_2022_class <- sits_cube(
     version = "mosaic"
 )
 ```
+## Python
+```{python}
+# define the classes of the probability cube
+labels = {"1"  : "Clear_Cut_Bare_Soil",
+            "2" : "Clear_Cut_Burned_Area", 
+            "3" : "Mountainside_Forest", 
+            "4" : "Forest", 
+            "5" : "Riparian_Forest", 
+            "6" : "Clear_Cut_Vegetation", 
+            "7" : "Water",
+            "8" : "Seasonally_Flooded",
+            "9" : "Wetland"}
 
+# directory where the data is stored 
+data_dir = r_package_dir("extdata/Rondonia-Class-2022-Mosaic/", package = "sitsdata")
+# create a probability data cube from a file 
+rondonia_2022_class = sits_cube(
+    source = "MPC",
+    collection = "SENTINEL-2-L2A",
+    data_dir = data_dir,
+    bands = "class",
+    labels = labels,
+    version = "mosaic"
+)
+```
+:::
+
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
 # plot the classification map
 plot(rondonia_2022_class)
 ```
+## Python
+```{python}
+#| eval: false
+# plot the classification map
+plot(rondonia_2022_class)
+```
+:::
 
 ```{r}
 #| echo: false
@@ -118,6 +170,8 @@ The allocation methods proposed by [@Olofsson2014] are supported by function `si
 
 In the case of Rondonia, the following sampling design was adopted.
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
 ro_sampling_design <- sits_sampling_design(
@@ -137,15 +191,46 @@ ro_sampling_design <- sits_sampling_design(
     std_err = 0.01,
     rare_class_prop = 0.1
 )
-# show sampling desing
+# show sampling design
 ro_sampling_design
 ```
+## Python
+```{python}
+#| eval: false
+ro_sampling_design = sits_sampling_design(
+    cube = rondonia_2022_class,
+    expected_ua = dict(
+        Clear_Cut_Bare_Soil = 0.75,
+        Clear_Cut_Burned_Area = 0.70, 
+        Mountainside_Forest = 0.70, 
+        Forest = 0.75,  
+        Riparian_Forest = 0.70, 
+        Clear_Cut_Vegetation = 0.70,  
+        Water = 0.70, 
+        Seasonally_Flooded = 0.70, 
+        Wetland = 0.70
+    ),
+    alloc_options = (120, 100),
+    std_err = 0.01,
+    rare_class_prop = 0.1
+)
+# show sampling design
+ro_sampling_design
+```
+
+:::
 
 ```{r}
 #| echo: false
 # show sampling desing
 ro_sampling_design <- readRDS("./etc/ro_sampling_design.rds")
 ro_sampling_design
+```
+
+```{python}
+#| echo: false
+# loading just to have it in memory
+ro_sampling_design = read_rds("./etc/ro_sampling_design.rds")
 ```
 
 ## Stratified random sampling
@@ -162,6 +247,8 @@ The next step is to chose one of the options for sampling design to generate a s
 
 In the example below, we chose the "alloc_120" option from the sampling design to generate a set of stratified samples. The output of the function is an `sf` object with points with location (latitude and longitude) and class assigned in the map. We can also generate a SHP file with the sample information. The script below shows how to use `sits_stratified_sampling()` and also how to convert an `sf` object to a SHP file.
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
 ro_samples_sf <- sits_stratified_sampling(
@@ -171,12 +258,30 @@ ro_samples_sf <- sits_stratified_sampling(
     multicores = 4
 )
 ```
+## Python
+```{python}
+#| eval: false
+ro_samples_sf = sits_stratified_sampling(
+    cube = rondonia_2022_class,
+    sampling_design = ro_sampling_design,
+    alloc = "alloc_120",
+    multicores = 4
+)
+```
+:::
 
 ```{r}
 #| echo: false
 ro_samples_sf <- readRDS("./etc/ro_samples_sf.rds")
 ```
 
+```{python}
+#| echo: false
+ro_samples_sf = read_rds("./etc/ro_samples_sf.rds")
+```
+
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
 # save sf object as SHP file
@@ -185,6 +290,13 @@ sf::st_write(ro_samples_sf,
     append = FALSE
 )
 ```
+## Python
+```{python}
+#| eval: false
+# save sf object as SHP file
+ro_samples_sf.to_file(tempdir_py /  "ro_samples.shp")
+```
+:::
 
 Using the SHP file, users can visualize the points in a standard GIS such as QGIS. For each point, they will indicate what is the correct class. In this way, they will obtain a confusion matrix which will be used for accuracy assessment. The `overhead` parameter is useful for users to discard border or doubtful pixels where the interpreter cannot be confident of her class assignment. By discarding points whose attribution is uncertain, they will improve the quality of the assessment.
 
@@ -218,6 +330,8 @@ In the example below, we use a validation set produced by the researchers which 
 
 The validation team used QGIS to produce a CSV file with validation data, which is then used to assess the area accuracy using the best practices recommended by @Olofsson2014.
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
 # Get ground truth points
@@ -227,6 +341,17 @@ area_acc <- sits_accuracy(rondonia_2022_class,
                           validation = valid_csv,
                           multicores = 4)
 ```
+## Python
+```{python}
+#| eval: false
+# Get ground truth points
+valid_csv = r_package_dir("extdata/Rondonia-Class-2022-Mosaic/rondonia_samples_validation.csv", package = "sitsdata")
+# Calculate accuracy according to Olofsson's method
+area_acc = sits_accuracy(rondonia_2022_class, 
+                          validation = valid_csv,
+                          multicores = 4)
+```
+:::
 
 ```{r}
 #| echo: false
@@ -234,17 +359,37 @@ area_acc <- sits_accuracy(rondonia_2022_class,
 area_acc <- readRDS("./etc/area_acc_val_map.rds")
 ```
 
+```{python}
+#| echo: false
+# Recover the map accuracy 
+area_acc = read_rds("./etc/area_acc_val_map.rds")
+```
 
+:::{.panel-tabset}
+## R
 ```{r}
 # Print the area estimated accuracy 
 area_acc
 ```
+## Python
+```{python}
+# Print the area estimated accuracy 
+area_acc
+```
+:::
 
 The confusion matrix is also available, as follows.
 
+:::{.panel-tabset}
+## R
 ```{r}
 area_acc$error_matrix
 ```
+## Python
+```{python}
+area_acc.error_matrix
+```
+:::
 
 These results show the challenges of conducting validation assessments with image time series. While stable classes like `Forest` and `Clear_Cut_Bare_Soil` exhibit high user's accuracy (UA) and producer's accuracy (PA), the transitional classes (`Clear_Cut_Burned_Area` and `Clear_Cut_Vegetation`) have low PA. This discrepancy is not a true reflection of classification accuracy, but rather a result of inadequate visual interpretation practices. As mentioned earlier, the visual interpretation for quality assessment utilised only a single date, a method traditionally used for single images, but ineffective for image time series.
 

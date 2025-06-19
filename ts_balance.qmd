@@ -5,7 +5,8 @@ format: html
 
 ### Configurations to run this chapter{-}
 
-
+:::{.panel-tabset}
+## R
 ```{r}
 #| echo: true
 #| eval: true
@@ -19,6 +20,19 @@ library(sitsdata)
 tempdir_r <- "~/sitsbook/tempdir/R/ts_balance"
 dir.create(tempdir_r, showWarnings = FALSE)
 ```
+## Python
+```{python}
+#| echo: true
+#| eval: true
+#| output: false
+# load "pysits" library
+from pysits import *
+from pathlib import Path
+# set tempdir if it does not exist 
+tempdir_py = Path.home() / "sitsbook/tempdir/Python/ts_balance"
+tempdir_py.mkdir(parents=True, exist_ok=True)
+```
+:::
 
 ## Introduction
 
@@ -28,6 +42,8 @@ Many training samples for Earth observation data analysis are imbalanced. This s
 
 The examples of this chapter use  `samples_cerrado_mod13q1`, a set of time series from the Cerrado region of Brazil. The data ranges from 2000 to 2017 and includes 50,160 samples divided into 12 classes (`Dense_Woodland`, `Dunes`, `Fallow_Cotton`,  `Millet_Cotton`, `Pasture`, `Rocky_Savanna`, `Savanna`, `Savanna_Parkland`, `Silviculture`, `Soy_Corn`, `Soy_Cotton`, and  `Soy_Fallow`). Each time series covers 12 months (23 data points) from MOD13Q1 product, and has 4 bands (EVI, NDVI, MIR, and NIR). We use bands NDVI and EVI for faster processing.
 
+:::{.panel-tabset}
+## R
 ```{r}
 # Take only the NDVI and EVI bands
 samples_cerrado_mod13q1_2bands <- sits_select(
@@ -37,6 +53,23 @@ samples_cerrado_mod13q1_2bands <- sits_select(
 # Show the summary of the samples
 summary(samples_cerrado_mod13q1_2bands)
 ```
+## Python
+```{python}
+# Load samples
+samples_cerrado_mod13q1 = load_samples_dataset(
+    name = "samples_cerrado_mod13q1",
+    package = "sitsdata"
+)
+
+# Take only the NDVI and EVI bands
+samples_cerrado_mod13q1_2bands = sits_select(
+    data = samples_cerrado_mod13q1, 
+    bands = ("NDVI", "EVI"))
+
+# Show the summary of the samples
+summary(samples_cerrado_mod13q1_2bands)
+```
+:::
 
 The Cerrado dataset is highly imbalanced. The three most frequent labels (`Dense Woodland`, `Savanna`, and `Pasture`) include 53% of all samples, while the three least frequent labels (`Millet-Cotton`, `Silviculture`, and `Dunes`) comprise only 2.5% of the dataset. This is a good dataset to investigate the impact of rebalancing.
 
@@ -48,6 +81,8 @@ To perform undersampling, `sits_reduce_imbalance()` builds a SOM map for each ma
 
 The `sits_reduce_imbalance()` algorithm has two parameters: `n_samples_over` and `n_samples_under`. The first parameter indicates the minimum number of samples per class. All classes with samples less than its value are oversampled. The second parameter controls the maximum number of samples per class; all classes with more samples than its value are undersampled. The following example uses `sits_reduce_imbalance()` with the Cerrado samples used in the previous chapter. We generate a balanced dataset where all classes have a minimum of 1000 and and a maximum of 1500 samples. 
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
 # Reducing imbalances in the Cerrado dataset
@@ -57,6 +92,17 @@ balanced_samples <- sits_reduce_imbalance(
     n_samples_under = 1500,
     multicores = 4)
 ```
+## Python
+```{python}
+#| eval: false
+# Reducing imbalances in the Cerrado dataset
+balanced_samples = sits_reduce_imbalance(
+    samples = samples_cerrado_mod13q1_2bands,
+    n_samples_over = 1000,
+    n_samples_under = 1500,
+    multicores = 4)
+```
+:::
 
 ```{r}
 #| echo: false
@@ -65,15 +111,33 @@ library(sits)
 balanced_samples <- readRDS("./etc/balanced_samples.rds")
 ```
 
+```{python}
+#| echo: false
+# Reducing imbalances in the Cerrado dataset
+balanced_samples = read_rds("./etc/balanced_samples.rds")
+```
+
+:::{.panel-tabset}
+## R
 ```{r}
 # Show summary of balanced samples
 # Some classes have more than 1500 samples due to the SOM map
 # Each label has between 10% and 6% of the full set
 summary(balanced_samples)
 ```
+## Python
+```{python}
+# Show summary of balanced samples
+# Some classes have more than 1500 samples due to the SOM map
+# Each label has between 10% and 6% of the full set
+summary(balanced_samples)
+```
+:::
 
 To assess the impact of reducing imbalance, we use the SOM cluster technique described in the previous chapter. In synthesis, SOM builds clusters out of the training data. Ideally, each cluster would be composed by a samples of a single class. Mixed clusters indicate possible confusion between samples of different classes. We fist build a SOM using `sits_som_map()` and then assess the results with `sits_som_evaluate_clusters()`. 
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
 # Clustering time series using SOM
@@ -86,6 +150,19 @@ som_cluster_bal <- sits_som_map(
     rlen = 20,
     mode = "pbatch")
 ```
+## Python
+```{python}
+#| eval: false
+# Clustering time series using SOM
+som_cluster_bal = sits_som_map(
+    data = balanced_samples,
+    grid_xdim = 15,
+    grid_ydim = 15,
+    alpha = 1.0,
+    distance = "dtw",
+    rlen = 20)
+```
+:::
 
 ```{r}
 #| echo: false
@@ -95,20 +172,47 @@ library(kohonen)
 som_cluster_bal <- readRDS("./etc/som_cluster_bal.rds")
 ```
 
+```{python}
+#| echo: false
+# Clustering time series using SOM
+som_cluster_bal = read_rds("./etc/som_cluster_bal.rds")
+```
+
+:::{.panel-tabset}
+## R
 ```{r}
 # Produce a tibble with a summary of the mixed labels
 som_eval <- sits_som_evaluate_cluster(som_cluster_bal)
 ```
+## Python
+```{python}
+# Produce a tibble with a summary of the mixed labels
+som_eval = sits_som_evaluate_cluster(som_cluster_bal)
+```
+:::
 
-```{r seval, fig.align="center", out.width="90%", fig.cap="Confusion by cluster for the balanced dataset (source: authors)."}
+:::{.panel-tabset}
+## R
+```{r}
 #| label: fig-ts-bal-mt
 #| out.width: "90%"
 #| echo: false
 #| fig.align: "center"
-#| fig.cap: "Confusion by cluster for the balanced dataset"
+#| fig.cap: "Confusion by cluster for the balanced dataset (source: authors)."
 # Show the result
 plot(som_eval) 
 ```
+## Python
+```{python}
+#| label: fig-ts-bal-mt-py
+#| out.width: "90%"
+#| echo: false
+#| fig.align: "center"
+#| fig.cap: "Confusion by cluster for the balanced dataset (source: authors)."
+# Show the result
+plot(som_eval) 
+```
+:::
 
 As shown in @fig-ts-bal-mt, the balanced dataset shows less confusion per label than the unbalanced one. In this case, many classes that were confused with others in the original confusion map are now better represented. Reducing sample imbalance should be tried as an alternative to reducing the number of samples of the classes using SOM. In general, users should balance their training data for better performance. 
 

@@ -7,16 +7,30 @@ This Chapter contains a discussion on plotting and visualisation of data cubes i
 
 ### Configurations to run this chapter{-}
 
-
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: true
 #| echo: true
 #| output: false
 library(sits)
 library(sitsdata)
-tempdir_r <- "~/sitsbook/tempdir/R/intro_visulization"
+tempdir_r <- "~/sitsbook/tempdir/R/intro_visualization"
 dir.create(tempdir_r, showWarnings = FALSE)
 ```
+## Python
+```{python}
+#| echo: true
+#| eval: true
+#| output: false
+# load "pysits" library
+from pysits import *
+from pathlib import Path
+# set tempdir if it does not exist 
+tempdir_py = Path.home() / "sitsbook/tempdir/Python/intro_visualization"
+tempdir_py.mkdir(parents=True, exist_ok=True)
+```
+::: 
 
 ## Plotting
 
@@ -75,7 +89,7 @@ plot(ro_20LMR,
 ```{python}
 #| eval: false
 # set the directory where the data is 
-data_dir = sitsdata_dir + "extdata/Rondonia-20LMR"
+data_dir = r_package_dir("extdata/Rondonia-20LMR", package = "sitsdata")
 # read the data cube
 ro_20LMR = sits_cube(
   source = "MPC", 
@@ -170,6 +184,8 @@ The parameters for `plot()` applied to a classified data cube are:
 
 The optional parameters listed in the previous section are also available. For an example of plotting a classified data cube with default color scheme, please see the section "Reading classified images as local data cube" in the "Earth observation data cubes" chapter. In what follows, we show a similar case using a legend.
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| label: fig-vis-class
 #| out-width: 80%
@@ -199,12 +215,52 @@ plot(rondonia_class_cube,
   legend_position = "outside"
 )
 ```
+## Python
+```{python}
+#| label: fig-vis-class-py
+#| out-width: 80%
+#| fig-cap: |
+#|   Sentinel-2 color composite covering tile 20LMR
+#| fig-align: center
+# Create a cube based on a classified image 
+data_dir = r_package_dir("extdata/Rondonia-20LLP", 
+                package = "sitsdata")
 
+# Read the classified cube
+rondonia_class_cube = sits_cube(
+    source = "AWS",
+    collection = "SENTINEL-S2-L2A-COGS",
+    bands = "class",
+    labels = {
+        "1": "Burned",
+        "2": "Cleared",
+        "3": "Degraded",
+        "4": "Natural_Forest"
+    },
+    data_dir = data_dir
+)
+
+# Plot the classified cube
+plot(
+    rondonia_class_cube,
+    legend = {
+        "Burned" : "#a93226",
+        "Cleared": "#f9e79f",
+        "Degraded": "#d4efdf",
+        "Natural_Forest": "#1e8449"
+    },
+    scale = 1.0,
+    legend_position = "outside"
+)
+```
+:::
 
 ## Visualization of data cubes in interactive maps
 
 Data cubes and samples can also be shown as interactive maps using `sits_view()`. This function creates tiled overlays of different kinds of data cubes, allowing comparison between the original, intermediate, and final results. It also includes background maps. The following example creates an interactive map combining the original data cube with the classified map.
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| echo: true
 #| eval: false
@@ -216,6 +272,20 @@ sits_view(rondonia_class_cube,
              )
 )
 ```
+
+## Python
+```{python}
+#| echo: true
+#| eval: false
+sits_view(rondonia_class_cube,
+            legend = dict(Burned = "#a93226",
+             Cleared = "#f9e79f",
+             Degraded = "#d4efdf",
+             Natural_Forest = "#1e8449"
+             )
+)
+```
+:::
 
 ```{r}
 #| label: fig-vis-view
@@ -231,10 +301,18 @@ knitr::include_graphics("./images/view_rondonia_class_cube.png")
 
 In the examples provided in the book, the color legend is taken from a predefined color palette provided by `sits`. The default color definition file used by `sits` includes 220 class names, which can be shown using `sits_colors()`.
 
+:::{.panel-tabset}
+## R
 ```{r}
 # Point default `sits` colors
 sits_colors()
 ```
+## Python
+```{python}
+# Point default `sits` colors
+sits_colors()
+```
+:::
 
 These colors are grouped by typical legends used by the Earth observation community, which include "IGBP", "UMD", "ESA_CCI_LC", "WORLDCOVER", "PRODES", "PRODES_VISUAL", "TERRA_CLASS", and "TERRA_CLASS_PT". The following commands show the colors associated with the IGBP legend [@Herold2009].
 
@@ -250,6 +328,9 @@ sits_colors_show(legend = "IGBP")
 ```
 
 The default color table can be extended using `sits_colors_set()`. As an example of a user-defined color table, consider a definition that covers level 1 of the Anderson Classification System used in the U.S. National Land Cover Data, obtained by defining a set of colors associated with a new legend. The colors should be defined by HEX values, and the color names should consist of a single string; multiple names need to be connected with an underscore("_").
+
+:::{.panel-tabset}
+## R
 ```{r}
 #| label: fig-vis-nlcd
 #| out-width: 80%
@@ -273,18 +354,57 @@ sits_colors_set(colors = us_nlcd, legend = "US_NLCD")
 # Show the new legend
 sits_colors_show(legend = "US_NLCD")
 ```
+## Python
+```{python}
+#| label: fig-vis-nlcd-py
+#| out-width: 80%
+#| fig-cap: |
+#|   Example of defining colors for the Anderson Land Classification Scheme.
+#| fig-align: center
+# Import pandas
+import pandas as pd
+# Define a color table based on the Anderson Land Classification System
+us_nlcd = pd.DataFrame([
+    {"name": "Urban_Built_Up", "color": "#85929E"},
+    {"name": "Agricultural_Land", "color": "#F0B27A"},
+    {"name": "Rangeland", "color": "#F1C40F"},
+    {"name": "Forest_Land", "color": "#27AE60"},
+    {"name": "Water", "color": "#2980B9"},
+    {"name": "Wetland", "color": "#D4E6F1"},
+    {"name": "Barren_Land", "color": "#FDEBD0"},
+    {"name": "Tundra", "color": "#EBDEF0"},
+    {"name": "Snow_and_Ice", "color": "#F7F9F9"}
+])
+
+# Load the color table into `sits`
+sits_colors_set(colors = us_nlcd, legend = "US_NLCD")
+
+# Show the new legend
+sits_colors_show(legend = "US_NLCD")
+```
+:::
 
 The original default `sits` color table can be restored using `sits_colors_reset()`. 
 
+:::{.panel-tabset}
+## R
 ```{r} 
 # Reset the color table
 sits_colors_reset()
 ```
+## Python
+```{python}
+# Reset the color table
+sits_colors_reset()
+```
+:::
 
 ## Exporting colors to QGIS
 
 To simplify the process of importing your data into QGIS, the color palette used to display classified maps in `sits` can be exported as a QGIS style using `sits_colors_qgis`. The function takes two parameters: (a) `cube`, a classified data cube; and (b) `file`, the file where the QGIS style in XML will be written. In this case study, we first retrieve and plot a classified data cube, and then export the colors to a QGIS XML style.
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
 # Create a cube based on a classified image 
@@ -293,10 +413,10 @@ data_dir <- system.file("extdata/Rondonia-Class-2022-Mosaic",
 
 # labels of the classified image
 labels <- c("1" = "Clear_Cut_Bare_Soil",
-            "2" =  "Clear_Cut_Burned_Area",
-            "3" =   "Clear_Cut_Vegetation",
+            "2" = "Clear_Cut_Burned_Area",
+            "3" = "Clear_Cut_Vegetation",
             "4" = "Forest",
-            "5" =  "Mountainside_Forest",
+            "5" = "Mountainside_Forest",
             "6" = "Riparian_Forest",
             "7" = "Seasonally_Flooded",
             "8" = "Water",
@@ -314,6 +434,41 @@ ro_class <- sits_cube(
 # Plot the classified cube
 plot(ro_class, scale = 1.0)
 ```
+## Python
+```{python}
+#| eval: false
+# Create a cube based on a classified image 
+data_dir = r_package_dir("extdata/Rondonia-Class-2022-Mosaic", 
+                        package = "sitsdata")
+
+# labels of the classified image
+labels = {
+    "1": "Clear_Cut_Bare_Soil",
+    "2": "Clear_Cut_Burned_Area",
+    "3": "Clear_Cut_Vegetation",
+    "4": "Forest",
+    "5": "Mountainside_Forest",
+    "6": "Riparian_Forest",
+    "7": "Seasonally_Flooded",
+    "8": "Water",
+    "9": "Wetland"
+}
+
+# read classified data cube
+ro_class = sits_cube(
+    source = "MPC", 
+    collection = "SENTINEL-2-L2A",
+    data_dir = data_dir, 
+    bands = "class",
+    labels = labels,
+    version = "mosaic"
+)
+
+# Plot the classified cube
+plot(ro_class, scale = 1.0)
+```
+:::
+
 ```{r}
 #| echo: false
 #| label: fig-vis-mosaic
@@ -328,15 +483,32 @@ knitr::include_graphics("./images/valromosaic.png")
 
 The file to be read by QGIS is a TIFF file whose location is specified by the data cube, as follows.
 
+:::{.panel-tabset}
+## R
 ```{r}
 # Show the location of the classified map
 ro_class[["file_info"]][[1]]$path
 ```
+## Python
+```{python}
+# Show the location of the classified map
+ro_class["file_info"][0]["path"]
+```
+:::
 
 The color schema can be exported to QGIS as follows.
+
+:::{.panel-tabset}
+## R
 ```{r}
 # Export the color schema to QGIS
-sits_colors_qgis(ro_class, file = file.path(tempdir_r,"qgis_style.xml"))
+sits_colors_qgis(ro_class, file = file.path(tempdir_r, "qgis_style.xml"))
 ```
+## Python
+```{python}
+# Export the color schema to QGIS
+sits_colors_qgis(ro_class, file = tempdir_py / "qgis_style.xml")
+```
+:::
 
 ## References {.unnumbered}

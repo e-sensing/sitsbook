@@ -3,9 +3,10 @@ title: "Map reclassification"
 format: html
 --- 
 
-
 ### Configurations to run this chapter{-}
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| echo: true
 #| eval: true
@@ -21,6 +22,19 @@ library(sitsdata)
 tempdir_r <- "~/sitsbook/tempdir/R/cl_reclassification"
 dir.create(tempdir_r, showWarnings = FALSE)
 ```
+## Python
+```{python}
+#| echo: true
+#| eval: true
+#| output: false
+# load "pysits" library
+from pysits import *
+from pathlib import Path
+# set tempdir if it does not exist 
+tempdir_py = Path.home() / "sitsbook/tempdir/Python/cl_reclassification"
+tempdir_py.mkdir(parents=True, exist_ok=True)
+```
+:::
 
 ## Introduction
 
@@ -30,6 +44,8 @@ Reclassification of a remote sensing map refers to changing the classes assigned
 
 To illustrate the reclassification in `sits`, we take a classified data cube stored in the `sitsdata` package. As discussed in Chapter [Data cubes from local files](https://e-sensing.github.io/sitsbook/dc_local.html), `sits` can create a data cube from a classified image file. Users need to provide the original data source and collection, the directory where data is stored (`data_dir`), the information on how to retrieve data cube parameters from file names (`parse_info`), and the labels used in the classification. 
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| label: fig-ml-reclass-orig
 #| echo: false
@@ -59,11 +75,47 @@ rondonia_class <- sits_cube(
 plot(rondonia_class, 
      legend_text_size = 0.7)
 ```
+## Python
+```{python}
+#| label: fig-ml-reclass-orig-py
+#| output: true
+#| out.width: "90%"
+#| fig.align: "center"
+#| fig.cap: |
+#|   Original classification map.
+# Open classification map
+data_dir= r_package_dir("extdata/Rondonia-Class", package = "sitsdata")
+rondonia_class = sits_cube(
+    source = "MPC",
+    collection = "SENTINEL-2-L2A",
+    data_dir = data_dir,
+    parse_info = ("satellite", "sensor", 
+                   "tile", "start_date", "end_date",
+                   "band", "version"),
+    bands = "class",
+    labels = {
+        "1": "Water",
+        "2": "Clear_Cut_Burned_Area",
+        "3": "Clear_Cut_Bare_Soil",
+        "4": "Clear_Cut_Vegetation",
+        "5": "Forest",
+        "6": "Bare_Soil",
+        "7": "Wetland"
+    },
+    progress = False
+)
+
+plot(rondonia_class, 
+     legend_text_size = 0.7)
+```
+:::
 
 The above map shows the total extent of deforestation by clear cuts estimated by the `sits` random forest algorithm in an area in Rondonia, Brazil, based on a time series of Sentinel-2 images for the period 2020-06-04 to 2021-08-26. Suppose we want to estimate the deforestation that occurred from June 2020 to August 2021. We need a reference map containing information on forest cuts before 2020. 
 
 In this example, we use as a reference the PRODES deforestation map of Amazonia created by Brazil's National Institute for Space Research (INPE). This map is produced by visual interpretation. PRODES measures deforestation every year, starting from August of one year to July of the following year. It contains classes that represent the natural world (Forest, Water, NonForest, and  NonForest2) and classes that capture the yearly deforestation increments. These classes are named "dYYYY" and "rYYYY"; the first refers to deforestation in a given year (e.g., "d2008" for deforestation for August 2007 to July 2008); the second to places where the satellite data is not sufficient to determine the land class (e.g., "r2010" for 2010). This map is available on package `sitsdata`, as shown below.
 
+:::{.panel-tabset}
+## R
 ```{r}
 # Set the directory for PRODES data 
 data_dir <- system.file("extdata/PRODES", package = "sitsdata")
@@ -90,9 +142,42 @@ prodes_2021 <- sits_cube(
                "33" = "d2021", "34" = "r2021")
     )
 ```
+## Python
+```{python}
+# Set the directory for PRODES data 
+data_dir = r_package_dir("extdata/PRODES", package = "sitsdata")
+# Recover the PRODES classified cube
+prodes_2021 = sits_cube(
+    source = "USGS",
+    collection = "LANDSAT-C2L2-SR",
+    data_dir = data_dir,
+    parse_info = ("product", "sensor", 
+                   "tile", "start_date", "end_date",
+                   "band", "version"),
+    bands = "class",
+    version = "v20220606",
+    labels = {
+        "1": "Forest", "2": "Water","3": "NonForest",
+        "4": "NonForest2", "6": "d2007", "7": "d2008",
+        "8": "d2009", "9": "d2010", "10": "d2011",
+        "11": "d2012", "12": "d2013", "13": "d2014",
+        "14": "d2015", "15": "d2016", "16": "d2017",
+        "17": "d2018", "18": "r2010", "19": "r2011",
+        "20": "r2012", "21": "r2013", "22": "r2014",
+        "23": "r2015", "24": "r2016", "25": "r2017",
+        "26": "r2018", "27": "d2019", "28": "r2019",
+        "29": "d2020", "31": "r2020", "32": "Clouds2021",
+        "33": "d2021", "34": "r2021",
+        },
+    progress = False
+    )
+```
+:::
 
 Since the labels of the deforestation map are specialized and are not part of the default `sits` color table, we define a legend for better visualization of the different deforestation classes. 
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
 # Use the RColorBrewer palette "YlOrBr" for the deforestation years
@@ -116,9 +201,47 @@ def_legend <- c(
     "r2019" = "lightcyan", "r2020" = "lightcyan",
     "r2021" = "lightcyan", "Clouds2021" = "lightblue2")
 ```
+## Python
+```{python}
+#| eval: false
+# Import matplotlib to handle colors
+import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
+# Use the palette "YlOrBr" for the deforestation years
+cmap = plt.get_cmap('YlOrBr', 15)
+colors = [mcolors.to_hex(cmap(i)) for i in range(cmap.N)]
+# Define the legend for the deforestation map
+def_legend = {
+    "Forest" : "forestgreen", "Water" : "dodgerblue3", 
+    "NonForest" : "bisque2", "NonForest2" : "bisque2",
+    "d2007" : colors[0],  "d2008" : colors[1],
+    "d2009" : colors[2],  "d2010" : colors[3], 
+    "d2011" : colors[4],  "d2012" : colors[5],
+    "d2013" : colors[6],  "d2014" : colors[7],
+    "d2015" : colors[8],  "d2016" : colors[9],
+    "d2017" : colors[10], "d2018" : colors[11],
+    "d2019" : colors[12], "d2020" : colors[13], 
+    "d2021" : colors[14], "r2010" : "lightcyan",
+    "r2011" : "lightcyan", "r2012": "lightcyan", 
+    "r2013" : "lightcyan", "r2014" : "lightcyan", 
+    "r2015" : "lightcyan", "r2016" : "lightcyan", 
+    "r2017" : "lightcyan", "r2018" : "lightcyan", 
+    "r2019" : "lightcyan", "r2020" : "lightcyan",
+    "r2021" : "lightcyan", "Clouds2021" : "lightblue2"
+}
+```
+:::
 
 Using this new legend, we can visualize the PRODES deforestation map.
+
+:::{.panel-tabset}
+## R
 ```{r}
+#| eval: false
+sits_view(prodes_2021, legend = def_legend)
+```
+## Python
+```{python}
 #| eval: false
 sits_view(prodes_2021, legend = def_legend)
 ```
@@ -137,6 +260,8 @@ Taking the PRODES map as our reference, we can include new labels in the classif
 
 The `sits_reclassify()` operation requires the parameters: (a) `cube`, the classified data cube whose pixels will be reclassified; (b) `mask`, the reference data cube used as a mask; (c) `rules`, a named list. The names of the `rules` list will be the new label. Each new label is associated with a `mask` vector that includes the labels of the reference map that will be joined. `sits_reclassify()` then compares the original and reference map pixel by pixel. For each pixel of the reference map whose labels are in one of the `rules`, the algorithm relabels the original map. The result will be a reclassified map with the original labels plus the new labels that have been masked using the reference map.
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| label: fig-ml-reclass-prodesreclass
 #| echo: false
@@ -170,6 +295,44 @@ rondonia_def_2021 <- sits_reclassify(
 plot(rondonia_def_2021,
      legend_text_size = 0.7)
 ```
+## Python
+```{python}
+#| label: fig-ml-reclass-prodesreclass-py
+#| echo: false
+#| out.width: "90%"
+#| fig.align: "center"
+#| fig.cap: |
+#|   Deforestation map by sits masked by PRODES map.
+# Reclassify cube
+rondonia_def_2021 = sits_reclassify(
+    cube = rondonia_class,
+    mask = prodes_2021,
+    rules = dict(
+        Non_Forest=MaskValue.in_(["NonForest", "NonForest2"]),
+        Deforestation_Mask=MaskValue.in_([
+            "d2007", "d2008", "d2009",
+            "d2010", "d2011", "d2012",
+            "d2013", "d2014", "d2015",
+            "d2016", "d2017", "d2018",
+            "d2019", "d2020",
+            "r2010", "r2011", "r2012",
+            "r2013", "r2014", "r2015",
+            "r2016", "r2017", "r2018",
+            "r2019", "r2020", "r2021"
+        ]),
+        Water=(MaskValue == "Water")
+    ),
+    memsize = 8,
+    multicores = 2,
+    output_dir = tempdir_py,
+    version = "reclass")
+
+# Plot the reclassified map
+plot(rondonia_def_2021,
+     legend_text_size = 0.7)
+```
+:::
+
 
 The reclassified map has been split into deforestation before mid-2020 (using the PRODES map) and the areas classified by `sits` that are taken as being deforested from mid-2020 to mid-2021. This allows experts to measure how much deforestation occurred in this period according to `sits` and compare the result with the PRODES map. 
 

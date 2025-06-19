@@ -7,6 +7,8 @@ format: html
 
 ### Configurations to run this chapter{-}
 
+::: {.panel-tabset}
+## R 
 ```{r}
 #| echo: true
 #| eval: true
@@ -20,7 +22,19 @@ library(sitsdata)
 tempdir_r <- "~/sitsbook/tempdir/R/intro_quicktour"
 dir.create(tempdir_r, showWarnings = FALSE)
 ```
-
+## Python
+```{python}
+#| echo: true
+#| eval: true
+#| output: false
+# load "pysits" library
+from pysits import *
+from pathlib import Path
+# set tempdir if it does not exist 
+tempdir_py = Path.home() / "sitsbook/tempdir/Python/intro_quicktour"
+tempdir_py.mkdir(parents=True, exist_ok=True)
+```
+:::
 
 ## Overview
 
@@ -43,9 +57,11 @@ df_samples_cerrado_lem
 ## Python 
 ```{python}
 #| eval: false
-# Load the samples for LEM from the "sitsdata" package
-samples_file = sitsdata_dir + "/data/df_samples_cerrado_lem.rds"
-df_samples_cerrado_lem = read_sits_rds(samples_file)
+# Load the samples for Mato Grosso from the "sitsdata" package
+# select the directory for the samples 
+samples_file = r_package_dir("data/df_samples_cerrado_lem.rds", package = "sitsdata")
+# retrieve a data.frame with the samples
+df_samples_cerrado_lem = read_rds(samples_file)
 df_samples_cerrado_lem
 ```
 :::
@@ -99,22 +115,24 @@ bdc_cube <- sits_cube(
 ```{python}
 #| eval: false
 # Define a region of interest based on the LEM data set
-lat_max = max(df_samples_cerrado_lem[["latitude"]])
-lat_min = min(df_samples_cerrado_lem[["latitude"]])
-lon_max = max(df_samples_cerrado_lem[["longitude"]])
-lon_min = min(df_samples_cerrado_lem[["longitude"]])
+lat_max = max(df_samples_cerrado_lem["latitude"])
+lat_min = min(df_samples_cerrado_lem["latitude"])
+lon_max = max(df_samples_cerrado_lem["longitude"])
+lon_min = min(df_samples_cerrado_lem["longitude"])
 
 # Define the roi for the LEM dataset
-roi_lem = { 
-    "lat_max" : lat_max,
-    "lat_min" : lat_min,
-    "lon_max" : lon_max,
-    "lon_min" : lon_min}
+roi_lem = dict(
+    lat_max = lat_max,
+    lat_min = lat_min,
+    lon_max = lon_max,
+    lon_min = lon_min
+)
+
 # Define a data cube in the BDC repository based on the ROI
 bdc_cube = sits_cube(
     source = "BDC", 
     collection  = "CBERS-WFI-16D",
-    bands = ["NDVI", "EVI"],
+    bands = ("NDVI", "EVI"),
     roi = roi_lem,
     start_date = "2019-09-30",
     end_date = "2020-09-29"
@@ -175,6 +193,11 @@ The object returned by `sits_cube()` and by `sits_cube_copy()` contains the meta
 lem_cube <- readRDS("./etc/lem_cube.rds")
 ```
 
+```{python}
+#| echo: false
+lem_cube = read_rds("./etc/lem_cube.rds")
+```
+
 ::: {.panel-tabset}
 ## R
 ```{r}
@@ -201,7 +224,7 @@ lem_cube$file_info[[1]]
 ```{python}
 #| eval: false
 # Show information on the images files which are part of a data cube
-lem_cube_cube["file_info"][0]
+lem_cube["file_info"][0]
 ```
 :::
 
@@ -261,7 +284,10 @@ The time series tibble contains data and metadata. The first six columns contain
 samples_lem_time_series <- readRDS("./etc/samples_lem_time_series.rds")
 ```
 
-
+```{python}
+#| echo: false
+samples_lem_time_series = read_rds("./etc/samples_lem_time_series.rds")
+```
 
 ::: {.panel-tabset}
 ## R
@@ -273,7 +299,7 @@ samples_lem_time_series[1,]$time_series[[1]]
 ```{python}
 #| eval: false
 # Load the time series for the first MODIS sample for Mato Grosso
-samples_lem_time_series["time_series"][1]
+samples_lem_time_series["time_series"][0]
 ```
 :::
 
@@ -289,7 +315,7 @@ summary(samples_lem_time_series)
 ```{python}
 #| eval: false
 # Show the summary of the time series sample data
-summary(samples_lem_cbers)
+summary(samples_lem_time_series)
 ```
 :::
 
@@ -311,7 +337,7 @@ samples_lem <- sits_reduce_imbalance(
 #| eval: false
 # Reduce imbalance between the classes
 samples_lem = sits_reduce_imbalance(
-    samples_lem_cbers,
+    samples_lem_time_series,
     n_samples_over = 150,
     n_samples_under = 300
 )
@@ -325,6 +351,10 @@ The new distribution of samples per class can be obtained using the `summary()` 
 samples_lem <- readRDS("./etc/samples_lem.rds")
 ```
 
+```{python}
+#| echo: false
+samples_lem = read_rds("./etc/samples_lem.rds")
+```
 
 ::: {.panel-tabset}
 ## R
@@ -355,7 +385,7 @@ It is helpful to plot the dispersion of the time series. In what follows, for br
 samples_cropland_2cycles <- dplyr::filter(
     samples_lem, 
     label == "Cropland_2_cycles"
-) 
+)
 # Select the NDVI band values using sits_select
 # because band values are in a nested data.frame
 samples_crops_2cycles_ndvi <- sits_select(
@@ -416,6 +446,7 @@ plot(rf_model)
 #| fig-cap: |
 #|   Most relevant variables of trained random forest model.
 #| fig-align: center
+r_set_seed(3022024)
 # Train a random forest model
 rf_model = sits_train(
     samples = samples_lem, 
@@ -458,7 +489,7 @@ lem_probs = sits_classify(
     output_dir = tempdir_py
 )
 # Plot the probability cube for class Forest
-plot(sinop_probs, labels = "Cropland_2_cycles", palette = "YlOrBr")
+plot(lem_probs, labels = "Cropland_2_cycles", palette = "YlOrBr")
 ```
 :::
 
@@ -534,7 +565,7 @@ plot(lem_map)
 ```{python}
 #| eval: false
 # Label the probability file 
-lem_map <- sits_label_classification(
+lem_map = sits_label_classification(
     cube = lem_smooth, 
     output_dir = tempdir_py
 )

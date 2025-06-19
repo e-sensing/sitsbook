@@ -5,6 +5,8 @@ format: html
 
 ### Configurations to run this chapter{-}
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| echo: true
 #| eval: true
@@ -18,6 +20,19 @@ library(sitsdata)
 tempdir_r <- "~/sitsbook/tempdir/R/vec_obia"
 dir.create(tempdir_r, showWarnings = FALSE)
 ```
+## Python
+```{python}
+#| echo: true
+#| eval: true
+#| output: false
+# load "pysits" library
+from pysits import *
+from pathlib import Path
+# set tempdir if it does not exist 
+tempdir_py = Path.home() / "sitsbook/tempdir/Python/vec_obia"
+tempdir_py.mkdir(parents=True, exist_ok=True)
+```
+:::
 
 
 <a href="https://www.kaggle.com/code/esensing/object-based-image-time-series-classification" target="_blank"><img src="https://kaggle.com/static/images/open-in-kaggle.svg"/></a>
@@ -75,6 +90,8 @@ The outcome of the SLIC algorithm is a set of superpixels which try to capture t
 
 To show an example of SLIC-based segmentation, we first build a data cube, using images available in the `sitsdata` package.
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
 # directory where files are located
@@ -88,6 +105,21 @@ cube_20LMR <- sits_cube(
 )
 plot(cube_20LMR, red = "B11", green = "B8A", blue = "B02", date = "2022-07-16")
 ```
+## Python
+```{python}
+#| eval: false
+# directory where files are located
+data_dir = r_package_dir("extdata/Rondonia-20LMR", package = "sitsdata")
+# Builds a cube based on existing files
+cube_20LMR = sits_cube(
+    source = "AWS",
+    collection = "SENTINEL-2-L2A",
+    data_dir = data_dir,
+    bands = ("B02", "B8A", "B11")
+)
+plot(cube_20LMR, red = "B11", green = "B8A", blue = "B02", date = "2022-07-16")
+```
+:::
 
 ```{r}
 #| label: fig-vec-obia-rgb
@@ -101,6 +133,8 @@ knitr::include_graphics("./images/vec-obia-rgb.png")
 
 The following example produces a segmented image. For the SLIC algorithm, we take the initial separation between cluster centres (`step`) to be 20 pixels, the `compactness` to be 1, and the minimum area for each superpixel (`min_area`) to be 20 pixels.
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
 # segment a cube using SLIC
@@ -119,6 +153,27 @@ segments_20LMR <- sits_segment(
 plot(segments_20LMR, red = "B11", green = "B8A", blue = "B02", 
           date = "2022-07-16")
 ```
+## Python
+```{python}
+#| eval: false
+# segment a cube using SLIC
+# Files are available in a local directory 
+segments_20LMR = sits_segment(
+    cube = cube_20LMR,
+    output_dir = tempdir_py,
+    seg_fn = sits_slic(
+        step = 20,
+        compactness = 1,
+        dist_fun = "euclidean",
+        iter = 20,
+        minarea = 20
+    )
+)
+plot(segments_20LMR, red = "B11", green = "B8A", blue = "B02", 
+          date = "2022-07-16")
+```
+
+:::
 
 ```{r}
 #| label: fig-vec-obia-segments
@@ -132,11 +187,20 @@ knitr::include_graphics("./images/vec-obia-segments.png")
 
 It is useful to visualize the segments in a leaflet together with the RGB image using `sits_view()`.
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
 sits_view(segments_20LMR, red = "B11", green = "B8A", blue = "B02", 
           dates = "2022-07-16")
 ```
+## Python
+```{python}
+#| eval: false
+sits_view(segments_20LMR, red = "B11", green = "B8A", blue = "B02", 
+          dates = "2022-07-16")
+```
+:::
 
 ```{r}
 #| label: fig-obia-view
@@ -149,17 +213,36 @@ knitr::include_graphics("./images/segmentation_2.png")
 
 After obtaining the segments, the next step is to classify them. This is done by first training a classification model. This case study uses the training dataset `samples_deforestation_rondonia`, available in package `sitsdata`. This dataset consists of 6007 samples collected from Sentinel-2 images covering the state of Rondonia. There are nine classes: `Clear_Cut_Bare_Soil`, `Clear_Cut_Burned_Area`, `Mountainside_Forest`, `Forest`, `Riparian_Forest`, `Clear_Cut_Vegetation`, `Water`, `Wetland`, and `Seasonally_Flooded`. Each time series contains values from Sentinel-2/2A bands B02, B03, B04, B05, B06, B07, B8A, B08, B11 and B12, from 2022-01-05 to 2022-12-23 in 16-day intervals. The samples are intended to detect deforestation events and have used in earlier examples of the book. For the training, we select the same bands as those of the data cube.
 
+:::{.panel-tabset}
+## R
 ```{r} 
 #| eval: false
 samples_deforestation <- sits_select(samples_deforestation_rondonia,
                                      bands = c("B02", "B8A", "B11"))
 tcnn_model <- sits_train(samples_deforestation, sits_tempcnn())
 ```
-
+## Python
+```{python} 
+#| eval: false
+# Load data
+samples_deforestation_rondonia = load_samples_dataset(
+    name = "samples_deforestation_rondonia",
+    package = "sitsdata"
+)
+samples_deforestation = sits_select(samples_deforestation_rondonia,
+                                     bands = ("B02", "B8A", "B11"))
+tcnn_model = sits_train(samples_deforestation, sits_tempcnn())
+```
+:::
 
 ```{r} 
 #| echo: false
 tcnn_model <- readRDS("./etc/tcnn_model_obia.rds")
+```
+
+```{python} 
+#| echo: false
+tcnn_model = read_rds("./etc/tcnn_model_obia.rds")
 ```
 
 The segment classification procedure applies the model to a number of user-defined samples inside each segment. Each of these samples is then assigned a set of probability values, one for each class. We then obtain the median value of the probabilities for each class and normalize them. The output of the procedure is a vector data cube containing a set of classified segments. The most relevsnt parameters for the `sits_classify()` function are:
@@ -173,6 +256,8 @@ The segment classification procedure applies the model to a number of user-defin
 - `gpu_memory`: GPU memory available (if there is a GPU)	
 - `version`: version name (to control for multiple versions)
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
 segments_20LMR_probs <- sits_classify(
@@ -186,12 +271,36 @@ segments_20LMR_probs <- sits_classify(
     version = "tcnn"
 )
 ```
+## Python
+```{python}
+#| eval: false
+segments_20LMR_probs = sits_classify(
+    data = segments_20LMR,
+    ml_model = tcnn_model,
+    output_dir = tempdir_py,
+    n_sam_pol = 10,
+    gpu_memory = 2,
+    memsize = 24,
+    multicores = 1,
+    version = "tcnn"
+)
+```
+:::
 
 After computing the probabilities for the segments, we can visualize them.
+
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
 plot(segments_20LMR_probs, labels = "Forest")
 ```
+## Python
+```{python}
+#| eval: false
+plot(segments_20LMR_probs, labels = "Forest")
+```
+:::
 
 ```{r}
 #| label: fig-vec-obia-probs-forest.png
@@ -202,7 +311,10 @@ plot(segments_20LMR_probs, labels = "Forest")
 knitr::include_graphics("./images/vec-obia-probs-forest.png") 
 ```
 
-Finally, we can compute the most likely class for each of the segments. 
+Finally, we can compute the most likely class for each of the segments.
+
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
 segments_20LMR_class <- sits_label_classification(
@@ -213,9 +325,23 @@ segments_20LMR_class <- sits_label_classification(
     version = "tcnn"
 )
 ```
+## Python
+```{python}
+#| eval: false
+segments_20LMR_class = sits_label_classification(
+    segments_20LMR_probs,
+    output_dir = tempdir_py,
+    memsize = 24,
+    multicores = 6,
+    version = "tcnn"
+)
+```
+:::
 
 To view the classified segments together with the original image, use `plot()` or `sits_view()`, as in the following example.
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
 # view the classified segments
@@ -229,6 +355,21 @@ sits_view(
 # put the original segments on top
 sits_view(segments_20LMR, add = TRUE)
 ```
+## Python
+```{python}
+#| eval: false
+# view the classified segments
+sits_view(
+    segments_20LMR_class, 
+    red = "B11", 
+    green = "B8A", 
+    blue = "B02", 
+    dates = "2022-07-16",
+)
+# put the original segments on top
+sits_view(segments_20LMR, add = True)
+```
+:::
 
 ```{r}
 #| label: fig-vec-obia-class

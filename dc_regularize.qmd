@@ -5,6 +5,8 @@ format: html
 
 ### Configurations to run the chapter{-}
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| echo: true
 #| eval: true
@@ -18,6 +20,19 @@ library(sitsdata)
 tempdir_r <- "~/sitsbook/tempdir/R/dc_regularize"
 dir.create(tempdir_r, showWarnings = FALSE)
 ```
+## Python
+```{python}
+#| echo: true
+#| eval: true
+#| output: false
+# load "pysits" library
+from pysits import *
+from pathlib import Path
+# set tempdir if it does not exist 
+tempdir_py = Path.home() / "sitsbook/tempdir/Python/dc_regularize"
+tempdir_py.mkdir(parents=True, exist_ok=True)
+```
+:::
 
 ## The need for regular EO data cubes
 
@@ -53,11 +68,11 @@ sits_timeline(s2_cube_rondonia)
 ```{python}
 #| eval: false
 # Retrieving a non-regular ARD collection from AWS
-s2_cube_rondonia =  sits_cube(
+s2_cube_rondonia = sits_cube(
     source = "AWS",
     collection = "SENTINEL-2-L2A",
-    tiles = ["20LLP", "20LKP"],
-    bands = ["B02", "B8A", "B11", "CLOUD"],
+    tiles = ("20LLP", "20LKP"),
+    bands = ("B02", "B8A", "B11", "CLOUD"),
     start_date = "2018-06-30",
     end_date = "2018-08-31"
 )
@@ -84,7 +99,9 @@ s2_cube_rondonia |>
 ## Python
 ```{python}
 #| eval: false
-plot(s2_cube_rondonia)
+plot(
+    s2_cube_rondonia.query("tile == '20LLP'")
+)
 ```
 :::
 
@@ -126,7 +143,7 @@ dir.create(tempdir_r_s2, showWarnings = FALSE)
 
 # Regularize the cube to 16-day intervals
 reg_cube_rondonia <- sits_regularize(
-          cube       = s2_cube_rondonia,
+          cube       = s2_cube_local,
           output_dir = tempdir_r_s2_reg,
           res        = 40,
           period     = "P16D",
@@ -139,7 +156,30 @@ plot(reg_cube_rondonia, tile = "20LLP")
 ## Python
 ```{python}
 #| eval: false
-# To be completed
+# set output dir for ARD data if it does not exist 
+tempdir_py_s2 = tempdir_py / "s2"
+tempdir_py_s2.mkdir(parents = True, exist_ok = True)
+
+s2_cube_local = sits_cube_copy(
+    cube = s2_cube_rondonia,
+    output_dir = tempdir_py_s2
+)
+
+# set output dir fir regular cube if it does not exist 
+tempdir_py_s2_reg = tempdir_py / "s2_reg"
+tempdir_py_s2_reg.mkdir(parents = True, exist_ok = True)
+
+# Regularize the cube to 16-day intervals
+reg_cube_rondonia = sits_regularize(
+          cube       = s2_cube_local,
+          output_dir = tempdir_py_s2_reg,
+          res        = 40,
+          period     = "P16D",
+          multicores = 6)
+
+# Plot tile 20LLP of the regularized cube with the least cloud cover
+# The pixels of the regular data cube cover the full MGRS tile
+plot(reg_cube_rondonia, tile = "20LLP")
 ```
 :::
 
@@ -175,6 +215,8 @@ By default, `sits` applies nearest-neighbor interpolation for categorical or dis
 
 We illustrate the spatial harmonization feature of `sits_regularize()` in the following example, which uses the `"SENTINEL-1-RTC"` collection from the Microsoft Planetary Computer (MPC).
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
 # create an RTC cube from MPC collection for a region in Mato Grosso, Brazil.
@@ -189,6 +231,22 @@ cube_s1_rtc <-  sits_cube(
 )
 plot(cube_s1_rtc, band = "VH", palette = "Greys", scale = 0.7)
 ```
+## Python
+```{python}
+#| eval: false
+# create an RTC cube from MPC collection for a region in Mato Grosso, Brazil.
+cube_s1_rtc = sits_cube(
+    source = "MPC",
+    collection = "SENTINEL-1-RTC",
+    bands = ("VV", "VH"),
+    orbit = "descending",
+    tiles = ("22LBL"),
+    start_date = "2021-06-01",
+    end_date = "2021-10-01"
+)
+plot(cube_s1_rtc, band = "VH", palette = "Greys", scale = 0.7)
+```
+:::
 
 ```{r}
 #| echo: false
@@ -202,11 +260,13 @@ knitr::include_graphics("./images/cube_s1_rtc_tile_22LBL_vh.png")
 
 After retrieving a non-regular ARD collection from the Microsoft Planetary Computer (MPC), we use `sits_regularize()` to produce a SAR data cube aligned with MGRS tile "22LBL". To visualize the SAR data, we generate a multi-date plot of the "VH" polarization band. In this plot, the first date is displayed in red, the second in green, and the third in blue—producing an RGB composite that visually highlights changes over time.
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
 # define the output directory
-# set outout dir if it does not exist 
 tempdir_r_sar <- "~/sitsbook/tempdir/R/dc_regularize/sar"
+# set output dir if it does not exist 
 dir.create(tempdir_r_sar, showWarnings = FALSE)
 # create a regular RTC cube from MPC collection for a tile 22LBL.
 cube_s1_reg <- sits_regularize(
@@ -221,6 +281,27 @@ cube_s1_reg <- sits_regularize(
 plot(cube_s1_reg, band = "VH", palette = "Greys", scale = 0.7, 
      dates = c("2021-06-06", "2021-07-24", "2021-09-26"))
 ```
+## Python
+```{python}
+#| eval: false
+# define the output directory
+tempdir_py_sar = tempdir_py / "sar"
+# set output dir if it does not exist 
+tempdir_py_sar.mkdir(parents = True, exist_ok = True)
+# create a regular RTC cube from MPC collection for a tile 22LBL.
+cube_s1_reg = sits_regularize(
+    cube = cube_s1_rtc,
+    period = "P16D",
+    res = 40,
+    tiles = ("22LBL"),
+    memsize = 12,
+    multicores = 6,
+    output_dir = tempdir_py_sar
+)
+plot(cube_s1_reg, band = "VH", palette = "Greys", scale = 0.7, 
+     dates = ("2021-06-06", "2021-07-24", "2021-09-26"))
+```
+:::
 
 ```{r}
 #| echo: false

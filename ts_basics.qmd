@@ -5,7 +5,8 @@ format: html
 
 ### Configurations to run this chapter{-}
 
-
+:::{.panel-tabset}
+## R
 ```{r}
 #| echo: true
 #| eval: true
@@ -19,7 +20,19 @@ library(sitsdata)
 tempdir_r <- "~/sitsbook/tempdir/R/ts_basics"
 dir.create(tempdir_r, showWarnings = FALSE)
 ```
-
+## Python
+```{python}
+#| echo: true
+#| eval: true
+#| output: false
+# load "pysits" library
+from pysits import *
+from pathlib import Path
+# set tempdir if it does not exist 
+tempdir_py = Path.home() / "sitsbook/tempdir/Python/ts_basics"
+tempdir_py.mkdir(parents=True, exist_ok=True)
+```
+:::
 
 ## Data structure for image time series
 
@@ -28,11 +41,23 @@ dir.create(tempdir_r, showWarnings = FALSE)
 
 In `sits`, time series are stored in a `tibble` data structure. The following code shows the first three lines of a time series tibble containing 1,882 labeled samples of land classes in Mato Grosso state of Brazil. The samples have time series extracted from the MODIS MOD13Q1 product from 2000 to 2016, provided every 16 days at 250 m resolution in the Sinusoidal projection. Based on ground surveys and high-resolution imagery, it includes samples of seven classes: `Forest`, `Cerrado`, `Pasture`, `Soy_Fallow`, `Soy_Cotton`, `Soy_Corn`, and `Soy_Millet`. 
 
+:::{.panel-tabset}
+## R
 ```{r}
 # Samples
 data("samples_matogrosso_mod13q1")
 samples_matogrosso_mod13q1[1:4,]
 ```
+## Python
+```{python}
+#| eval: false
+samples_matogrosso_mod13q1 = load_samples_dataset(
+    name = "samples_matogrosso_mod13q1", 
+    package = "sitsdata"
+)
+samples_matogrosso_mod13q1[0:4]
+```
+:::
 
 The time series tibble contains data and metadata. The first six columns contain spatial and temporal information, the label assigned to the sample, and the data cube from where the data has been extracted. The first sample has been labeled `Pasture` at location (-58.5631, -13.8844), being valid for the period (2006-09-14, 2007-08-29). Informing the dates where the label is valid is crucial for correct classification. In this case, the researchers labeling the samples used the agricultural calendar in Brazil. The relevant dates for other applications and other countries will likely differ from those used in the example. The `time_series` column contains the time series data for each spatiotemporal location. This data is also organized as a tibble, with a column with the dates and the other columns with the values for each spectral band. 
 
@@ -40,11 +65,21 @@ The time series tibble contains data and metadata. The first six columns contain
 
 The package provides functions for data manipulation and displaying information for time series tibbles. For example, `summary()` shows the labels of the sample set and their frequencies.
 
+:::{.panel-tabset}
+## R
 ```{r}
 summary(samples_matogrosso_mod13q1)
 ```
+## Python
+```{python}
+summary(samples_matogrosso_mod13q1)
+```
+:::
 
 In many cases, it is helpful to relabel the dataset. For example, there may be situations where using a smaller set of labels is desirable because samples in one label on the original set may not be distinguishable from samples with other labels. We then could use `sits_labels()<-` to assign new labels. The example below shows how to do relabeling on a time series set shown above; all samples associated with crops are grouped in a single `Cropland` label.
+
+:::{.panel-tabset}
+## R
 ```{r}
 # Copy the sample set for Mato Grosso 
 samples_new_labels <- samples_matogrosso_mod13q1
@@ -57,9 +92,24 @@ sits_labels(samples_new_labels) <- c("Cerrado",   "Forest",
                                      "Cropland")
 summary(samples_new_labels)
 ```
+## Python
+```{python}
+# Copy the sample set for Mato Grosso 
+samples_new_labels = samples_matogrosso_mod13q1.copy(deep = True)
+# Get the current labels
+current_labels = sits_labels(samples_new_labels)
+# Update the labels
+samples_new_labels.sits.labels = (
+    "Cerrado", "Forest", "Pasture", "Cropland", 
+    "Cropland", "Cropland","Cropland"
+)
+```
+:::
 
 Since metadata and the embedded time series use the tibble data format, the functions from `dplyr`, `tidyr`, and `purrr` packages of the `tidyverse` [@Wickham2017] can be used to process the data. For example, the following code uses `sits_select()` to get a subset of the sample dataset with two bands (NDVI and EVI) and then uses the `dplyr::filter()` to select the samples labeled as `Cerrado`. 
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| message: false
 # Select NDVI band
@@ -69,11 +119,23 @@ samples_ndvi <- sits_select(samples_matogrosso_mod13q1,
 samples_cerrado <- dplyr::filter(samples_ndvi, 
                                  label == "Cerrado")
 ```
+## Python
+```{python}
+#| message: false
+# Select NDVI band
+samples_ndvi = sits_select(samples_matogrosso_mod13q1, 
+                            bands = "NDVI")
+# Select only samples with Cerrado label
+samples_cerrado = samples_ndvi.query("label == 'Cerrado'")
+```
+:::
 
 ## Time series visualisation
 
 The default time series plot in `sits` combines all samples together in a single temporal interval, even if they belong to different years. This plot shows the spread of values for the time series of each band. The strong red line in the plot indicates the median of the values, while the two orange lines are the first and third interquartile ranges. See `?sits::plot` for more details on data visualization in  `sits`.
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| label: fig-ts-cerrado
 #| fig.align: "center"
@@ -82,13 +144,31 @@ The default time series plot in `sits` combines all samples together in a single
 # Plot cerrado samples together
 plot(samples_cerrado)
 ```
+## Python
+```{python}
+#| label: fig-ts-cerrado-py
+#| fig.align: "center"
+#| out.width: "70%"
+#| fig.cap: "Plot of Cerrado samples for NDVI band."
+# Plot cerrado samples together
+plot(samples_cerrado)
+```
+:::
 
 To see the spatial distribution of the samples, use `sits_view()` to create an interactive plot. The spatial visulisation is useful to show where the data has been collected. 
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
 sits_view(samples_matogrosso_mod13q1)
 ```
+## Python
+```{python}
+#| eval: false
+sits_view(samples_matogrosso_mod13q1)
+```
+:::
 
 ```{r}
 #| label: fig-ts-view
@@ -109,6 +189,8 @@ $$
 
 The function `sits_patterns()` uses a GAM to predict an idealized approximation to the time series associated with each class for all bands. The resulting patterns can be viewed using `plot()`.
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| label: fig-ts-pat
 #| out.width: "100%"
@@ -119,6 +201,20 @@ samples_matogrosso_mod13q1 |>
     sits_patterns() |> 
     plot()
 ```
+## Python
+```{python}
+#| label: fig-ts-pat-py
+#| out.width: "100%"
+#| fig.align: "center"
+#| fig.cap: "Patterns for Mato Grosso MOD13Q1 samples."
+# Estimate the patterns for each class and plot them
+plot(
+    sits_patterns(
+        samples_matogrosso_mod13q1
+    )
+)
+```
+:::
 
 The resulting patterns provide some insights over the time series behaviour of each class. The response of the Forest class is quite distinctive.  They also show that it should be possible to separate between the single and double cropping classes. There are similarities between the double-cropping classes (`Soy_Corn` and `Soy_Millet `) and between the `Cerrado` and `Pasture` classes. The subtle differences between class signatures provide hints at possible ways by which machine learning algorithms might distinguish between classes. One example is the difference between the middle-infrared response during the dry season (May to September) to differentiate between `Cerrado` and `Pasture`. 
 
@@ -130,6 +226,8 @@ Meyer and Pebesma propose using a spatial distance distribution plot, which disp
 
 `sits` implements spatial distance distribution plots with the `sits_geo_dist()` function. This function gets a training data in the `samples` parameter, and the study area in the `roi` parameter expressed as an `sf` object. Additional parameters are `n` (maximum number of samples for each distribution) and `crs` (coordinate reference system for the samples). By default, `n` is 1000, and `crs` is "EPSG:4326". The example below shows how to use `sits_geo_dist()`. 
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| label: fig-ts-geodist
 #| out.width: "100%"
@@ -150,9 +248,31 @@ distances <- sits_geo_dist(
 # Plot sample-to-sample and sample-to-prediction distances
 plot(distances)
 ```
+## Python
+```{python}
+#| label: fig-ts-geodist-py
+#| out.width: "100%"
+#| message: false
+#| warning: false
+#| fig.cap: | 
+#|    Distribution of sample-to-sample and sample-to-prediction distances.
+# Import GeoPandas
+import geopandas as gpd
+# Read a shapefile for the state of Mato Grosso, Brazil
+mt_shp = r_package_dir("extdata/shapefiles/mato_grosso/mt.shp",
+                      package = "sits")
+# Convert to an GeoDataFrame object
+mt_sf = gpd.read_file(mt_shp)
+# Calculate sample-to-sample and sample-to-prediction distances
+distances = sits_geo_dist(
+    samples = samples_modis_ndvi,
+    roi = mt_sf)
+# Plot sample-to-sample and sample-to-prediction distances
+plot(distances)
+```
+:::
 
 The plot shows a mismatch between the sample-to-sample and the sample-to-prediction distributions. Most samples are closer to each other than they are close to the location where values need to be predicted. In this case, there are many areas where few or no samples have been collected and where the prediction uncertainty will be higher. In this and similar cases, improving the distribution of training samples is always welcome. If that is not possible, areas with insufficient samples could have lower accuracy. This information must be reported to potential users of classification results. 
-
 
 ## Time series from data cubes
 
@@ -165,6 +285,8 @@ To get a set of time series in `sits`, first create a regular data cube and then
 
 In the example below, given a data cube, the user provides the latitude and longitude of the desired location. Since the bands, start date, and end date of the time series are missing, `sits` obtains them from the data cube. The result is a tibble with one time series that can be visualized using `plot()`.
 
+:::{.panel-tabset}
+## R
 ```{r} 
 #| label: fig-ts-get
 #| fig.align: "center"
@@ -183,11 +305,38 @@ sample_latlong <- tibble::tibble(
     latitude  = -11.50566)
 series <- sits_get_data(cube    = raster_cube,
                         samples = sample_latlong)
-series
+plot(series)
 ```
+## Python
+```{python}
+#| label: fig-ts-get-py
+#| fig.align: "center"
+#| out.width: "90%" 
+#| fig.cap: "NDVI and EVI time series fetched from local raster cube."
+# Import pandas
+import pandas as pd
+# Obtain a raster cube based on local files
+data_dir = r_package_dir("extdata/sinop", package = "sitsdata")
+raster_cube = sits_cube(
+    source     = "BDC",
+    collection = "MOD13Q1-6.1",
+    data_dir   = data_dir,
+    parse_info = ("satellite", "sensor", "tile", "band", "date"))
+# Obtain a time series from the raster cube from a point
+sample_latlong = pd.DataFrame([dict(
+    longitude = -55.57320,
+    latitude  = -11.50566
+)])
+series = sits_get_data(cube    = raster_cube,
+                        samples = sample_latlong)
+plot(series)
+```
+:::
 
 A useful case is when a set of labeled samples can be used as a training dataset. In this case, trusted observations are usually labeled and commonly stored in plain text files in comma-separated values (csv) or using shapefiles (shp). 
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| message: false
 # Retrieve a list of samples described by a csv file
@@ -198,10 +347,25 @@ samples_csv <- read.csv(samples_csv_file)
 # Print the first three samples
 samples_csv[1:3,]
 ```
+## Python
+```{python}
+#| message: false
+# Retrieve a list of samples described by a csv file
+samples_csv_file = r_package_dir("extdata/samples/samples_sinop_crop.csv",
+                                package = "sits")
+# Read the csv file into an R object
+samples_csv = pd.read_csv(samples_csv_file)
+# Print the first three samples
+samples_csv[0:3]
+```
+:::
 
 To retrieve training samples for time series analysis, users must provide the temporal information (`start_date` and `end_date`). In the simplest case, all samples share the same dates. That is not a strict requirement. It is possible to specify different dates as long as they have a compatible duration. For example, the dataset `samples_matogrosso_mod13q1` provided with the `sitsdata` package contains samples from different years covering the same duration. These samples are from the MOD13Q1 product, which contains the same number of images per year. Thus, all time series in the dataset `samples_matogrosso_mod13q1` have the same number of dates. 
 
-Given a suitably built csv sample file, `sits_get_data()` requires two parameters: (a) `cube`, the name of the R object that describes the data cube; (b) `samples`, the name of the CSV file. 
+Given a suitably built csv sample file, `sits_get_data()` requires two parameters: (a) `cube`, the name of the R object that describes the data cube; (b) `samples`, the name of the CSV file.
+
+:::{.panel-tabset}
+## R
 ```{r}
 # Get the points from a data cube in raster brick format
 points <- sits_get_data(cube = raster_cube, 
@@ -209,11 +373,22 @@ points <- sits_get_data(cube = raster_cube,
 # Show the tibble with the first three points
 points[1:3,]
 ```
+## Python
+```{python}
+# Get the points from a data cube in raster brick format
+points = sits_get_data(cube = raster_cube, 
+                        samples = samples_csv_file)
+# Show the tibble with the first three points
+points[1:3]
+```
+:::
 
 Users can also specify samples by providing shapefiles or `sf` objects containing `POINT` or `POLYGON` geometries. The geographical location is inferred from the geometries associated with the shapefile or `sf` object. For files containing points, the geographical location is obtained directly. For polygon geometries, the parameter `n_sam_pol` (defaults to 20) determines the number of samples to be extracted from each polygon. The temporal information can be provided explicitly by the user; if absent, it is inferred from the data cube. If label information is available in the shapefile or `sf` object, the parameter `label_attr` is indicates which column contains the label associated with each time series.
 
 In what follows, we provide a shapefile with location of forested areas in the Cerrado biome in Brazil. The shefile is first used to define the region of interest to retrieve a data cube. Then the point locations are used to retrieve the time series 
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
 # Obtain a set of points inside the state of Mato Grosso, Brazil
@@ -242,6 +417,36 @@ samples_cerrado_forested <- sits_get_data(
 # Display the time series for the locations of Woody Savanna
 samples_cerrado_forested
 ```
+## Python
+```{python}
+#| eval: false
+# Obtain a set of points inside the state of Mato Grosso, Brazil
+shp_file = r_package_dir("extdata/shapefiles/cerrado/cerrado_forested.shp", 
+                        package = "sits")
+# Read the shapefile into an "sf" object
+sf_shape = gpd.read_file(shp_file)
+
+# Create a data cube based on MOD13Q1 collection from BDC
+modis_cube = sits_cube(
+    source      = "BDC",
+    collection  = "MOD13Q1-6.1",
+    bands       = ("NDVI", "EVI"),
+    roi         = sf_shape,
+    start_date  = "2020-06-01", 
+    end_date    = "2021-08-29")
+
+# Read the points from the cube and produce a tibble with time series
+samples_cerrado_forested = sits_get_data(
+    cube         = modis_cube, 
+    samples      = shp_file, 
+    start_date   = "2020-06-01",
+    end_date     = "2021-08-29", 
+    label        = "Woody Savanna",
+    multicores   = 4)
+# Display the time series for the locations of Woody Savanna
+samples_cerrado_forested
+```
+:::
 
 ```{r}
 #| echo: false
@@ -250,6 +455,11 @@ samples_cerrado_forested <- readRDS("./etc/samples_cerrado_forested.rds")
 samples_cerrado_forested
 ```
 
+```{python}
+#| echo: false
+# read it to have it in memory
+samples_cerrado_forested = read_rds("./etc/samples_cerrado_forested.rds")
+```
 
 ## Filtering time series
 
@@ -261,7 +471,8 @@ The literature on satellite image time series has several applications of filter
 
 The Savitzky-Golay filter fits a successive array of $2n+1$ adjacent data points with a $d$-degree polynomial through linear least squares. The main parameters for the filter are the polynomial degree ($d$) and the length of the window data points ($n$). It generally produces smoother results for a larger value of $n$ and/or a smaller value of $d$ [@Chen2004]. The optimal value for these two parameters can vary from case to case. In `sits`, the parameter `order` sets the order of the polynomial (default = 3), the parameter `length` sets the size of the temporal window (default = 5), and the parameter `scaling` sets the temporal expansion (default = 1). The following example shows the effect of Savitsky-Golay filter on a point extracted from the MOD13Q1 product, ranging from 2000-02-18 to 2018-01-01.
 
-
+:::{.panel-tabset}
+## R
 ```{r} 
 #| label: fig-ts-sg
 #| fig.align: "center"
@@ -275,17 +486,34 @@ point_sg <- sits_sgolay(point_ndvi, length = 5)
 # Merge the point and plot the series
 sits_merge(point_sg, point_ndvi) |> plot()
 ```
-
+## Python
+```{python} 
+#| label: fig-ts-sg-py
+#| fig.align: "center"
+#| out.width: "90%"
+#| fig.cap: "Savitzky-Golay filter applied on a multi-year NDVI time series."
+# Take NDVI band of the first sample dataset
+point_ndvi = sits_select(point_mt_6bands, bands = "NDVI")
+# Apply Savitzky Golay filter
+point_sg = sits_sgolay(point_ndvi, length = 5)
+# Merge the point and plot the series
+plot(
+    sits_merge(point_sg, point_ndvi)
+)
+```
+:::
 
 ### Whittaker filter
 
 The Whittaker smoother attempts to fit a curve representing the raw data, but is penalized if subsequent points vary too much [@Atzberger2011]. The Whittaker filter balances the residual to the original data and the smoothness of the fitted curve. The filter has one parameter: $\lambda{}$ that works as a smoothing weight parameter. The following example shows the effect of the Whittaker filter on a point extracted from the MOD13Q1 product, ranging from 2000-02-18 to 2018-01-01. The `lambda` parameter controls the smoothing of the filter. By default, it is set to 0.5, a small value. The example shows the effect of a larger smoothing parameter.
 
-```{r tswhit, fig.align="center", out.width="90%", fig.cap="Whittaker filter applied on a one-year NDVI time series (source: authors)."}
+:::{.panel-tabset}
+## R
+```{r}
 #| label: fig-ts-wt
 #| fig.align: "center"
 #| out.width: "90%"
-#| fig.cap: "Whittaker filter applied on a multi-year NDVI time series."
+#| fig.cap: "Whittaker filter applied on a one-year NDVI time series (source: authors)"
 # Take NDVI band of the first sample dataset
 point_ndvi <- sits_select(point_mt_6bands, bands = "NDVI")
 # Apply Whitakker filter
@@ -293,6 +521,22 @@ point_whit <- sits_whittaker(point_ndvi, lambda = 0.5)
 # Merge the point and plot the series
 sits_merge(point_whit, point_ndvi) |> plot()
 ```
+## Python
+```{python}
+#| label: fig-ts-wt-py
+#| fig.align: "center"
+#| out.width: "90%"
+#| fig.cap: "Whittaker filter applied on a one-year NDVI time series (source: authors)"
+# Take NDVI band of the first sample dataset
+point_ndvi = sits_select(point_mt_6bands, bands = "NDVI")
+# Apply Whitakker filter
+point_whit = sits_whittaker(point_ndvi, lambda_ = 0.5)
+# Merge the point and plot the series
+plot(
+    sits_merge(point_whit, point_ndvi)
+)
+```
+:::
 
 Similar to what is observed in the Savitsky-Golay filter, high values of the smoothing parameter `lambda` produce an over-smoothed time series that reduces the capacity of the time series to represent natural variations in crop growth. For this reason, low smoothing values are recommended when using `sits_whittaker()`.
 

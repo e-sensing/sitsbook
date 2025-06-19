@@ -6,6 +6,8 @@ format: html
 
 ### Configurations to run the chapter{-}
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| echo: true
 #| eval: true
@@ -19,7 +21,19 @@ library(sitsdata)
 tempdir_r <- "~/sitsbook/tempdir/R/dc_ardcollections"
 dir.create(tempdir_r, showWarnings = FALSE)
 ```
-
+## Python
+```{python}
+#| echo: true
+#| eval: true
+#| output: false
+# load "pysits" library
+from pysits import *
+from pathlib import Path
+# set tempdir if it does not exist 
+tempdir_py = Path.home() / "sitsbook/tempdir/Python/dc_ardcollections"
+tempdir_py.mkdir(parents=True, exist_ok=True)
+```
+:::
 
 ## Introduction
 
@@ -119,15 +133,16 @@ s2_23MMU_cube = sits_cube(
     source = "AWS",
     collection = "SENTINEL-2-L2A",
     tiles = "23MMU",
-    bands = ["B02", "B8A", "B11", "CLOUD"],
+    bands = ("B02", "B8A", "B11", "CLOUD"),
     start_date = "2018-07-12",
     end_date = "2019-07-28"
 )
+
 plot(s2_23MMU_cube, 
-     red = "B11", 
-     blue = "B02", 
-     green = "B8A", 
-     date = "2018-10-05"
+    red = "B11", 
+    blue = "B02", 
+    green = "B8A", 
+    date = "2018-10-05"
 )
 ```
 :::
@@ -178,7 +193,7 @@ s2_20LKP_cube_MPC = sits_cube(
       source = "MPC",
       collection = "SENTINEL-2-L2A",
       tiles = "20LKP",
-      bands = ["B02", "B8A", "B11", "CLOUD"],
+      bands = ("B02", "B8A", "B11", "CLOUD"),
       start_date = "2019-07-01",
       end_date = "2019-07-28"
 )
@@ -227,13 +242,13 @@ plot(s2_L8_cube_MPC)
 ```{python}
 #| eval: false
 # Read a ROI that covers part of the Northeastern coast of Brazil
-roi = {"lon_min" : -43.5526, "lat_min" : -2.9644, 
-         "lon_max" : -42.5124, "lat_max" : -2.1671}
+roi = dict(lon_min = -43.5526, lat_min = -2.9644, 
+         lon_max = -42.5124, lat_max = -2.1671)
 # Select the cube
 s2_L8_cube_MPC = sits_cube(
         source = "MPC",
         collection = "LANDSAT-C2-L2",
-        bands = ["BLUE", "RED", "GREEN", "NIR08", "SWIR16", "CLOUD"],
+        bands = ("BLUE", "RED", "GREEN", "NIR08", "SWIR16", "CLOUD"),
         roi = roi,
         start_date = "2019-06-01",
         end_date = "2019-09-01"
@@ -267,7 +282,7 @@ The following example shows how to create a data cube of S1 GRD images over a re
 ## R
 ```{r}
 #| eval: false
-cube_s1_grd <-  sits_cube(
+cube_s1_grd <- sits_cube(
   source = "MPC",
   collection = "SENTINEL-1-GRD",
   bands = c("VV"),
@@ -281,17 +296,16 @@ plot(cube_s1_grd, band = "VV", palette = "Greys")
 ## Python
 ```{python}
 #| eval: false
-cube_s1_grd =  sits_cube(
+cube_s1_grd = sits_cube(
   source = "MPC",
   collection = "SENTINEL-1-GRD",
-  bands = ["VV"],
+  bands = ("VV"),
   orbit = "descending",
-  tiles = ["21LUJ","21LVJ"],
+  tiles = ("21LUJ","21LVJ"),
   start_date = "2021-08-01",
   end_date = "2021-09-30"
 )
 plot(cube_s1_grd, band = "VV", palette = "Greys")
-
 ```
 :::
 
@@ -318,7 +332,7 @@ The terrain correction addresses geometric distortions caused by the side-lookin
 ## R
 ```{r}
 #| eval: false
-cube_s1_rtc <-  sits_cube(
+cube_s1_rtc <- sits_cube(
   source = "MPC",
   collection = "SENTINEL-1-RTC",
   bands = c("VV", "VH"),
@@ -335,7 +349,7 @@ plot(cube_s1_rtc, band = "VV", palette = "Greys")
 cube_s1_rtc =  sits_cube(
   source = "MPC",
   collection = "SENTINEL-1-RTC",
-  bands = ["VV", "VH"],
+  bands = ("VV", "VH"),
   orbit = "descending",
   tiles = "18NZM",
   start_date = "2021-08-01",
@@ -368,7 +382,7 @@ The Copernicus DEM 30-meter is organized in a 1$^\circ$ by 1$^\circ$ grid. In `s
 ## R
 ```{r}
 #| eval: false
-cube_dem_30 <-  sits_cube(
+cube_dem_30 <- sits_cube(
   source = "MPC",
   collection = "COP-DEM-GLO-30",
   tiles = "20LMR",
@@ -377,15 +391,15 @@ cube_dem_30 <-  sits_cube(
 plot(cube_dem_30, band = "ELEVATION", palette = "RdYlGn", rev = TRUE)
 ```
 ## Python
-```{r}
+```{python}
 #| eval: false
-cube_dem_30 <-  sits_cube(
+cube_dem_30 = sits_cube(
   source = "MPC",
   collection = "COP-DEM-GLO-30",
   tiles = "20LMR",
   band = "ELEVATION"
 )
-plot(cube_dem_30, band = "ELEVATION", palette = "RdYlGn", rev = TRUE)
+plot(cube_dem_30, band = "ELEVATION", palette = "RdYlGn", rev = True)
 ```
 :::
 
@@ -418,10 +432,19 @@ knitr::include_graphics("./images/bdc_grid.png")
 
 To access the BDC, users must provide their credentials using environment variables, as shown below. Obtaining a BDC access key is free. Users must register at the [BDC site](https://brazildatacube.dpi.inpe.br/portal/explore) to obtain a key. Please include your BDC access key in your `.Rprofile`. 
 
+::: {.panel-tabset}
+## R
 ```{r}
 #| eval: false
 Sys.setenv(BDC_ACCESS_KEY = "<your_bdc_access_key>")
 ```
+## Python
+```{python}
+import os
+
+os.environ["BDC_ACCESS_KEY"] = "<your_bdc_access_key>"
+```
+:::
 
 In the example below, the data cube is defined as one tile ("005004") of `CBERS-WFI-16D` collection, which contains CBERS AWFI images at 16-day resolution.
 
@@ -452,7 +475,7 @@ cbers_tile = sits_cube(
     source = "BDC",
     collection = "CBERS-WFI-16D",
     tiles = "005004",
-    bands = ["B13", "B14", "B15", "B16", "CLOUD"],
+    bands = ("B13", "B14", "B15", "B16", "CLOUD"),
     start_date = "2021-05-01",
     end_date = "2021-09-01")
 # Plot one time instance
@@ -488,12 +511,26 @@ After registration, you will need to obtain access credentials to the S3 service
 Sys.setenv(
     AWS_ACCESS_KEY_ID = "your access key",
     AWS_SECRET_ACCESS_KEY = "your secret access key",
-	  AWS_S3_ENDPOINT = "eodata.dataspace.copernicus.eu",
-	  AWS_VIRTUAL_HOSTING = "FALSE"
+	AWS_S3_ENDPOINT = "eodata.dataspace.copernicus.eu",
+	AWS_VIRTUAL_HOSTING = "FALSE"
 )
 ```
 
-After including these lines in your `.Rprofile`, restart `R` for the changes to take effect. By following these steps, users will gain access to the Copernicus Data Space Ecosystem. 
+In Python, you can set environment variables either by using the `.Rprofile` file or by executing the following command:
+
+```{python}
+#| eval: false
+import os
+
+os.environ.update(dict(
+    AWS_ACCESS_KEY_ID = "your access key",
+    AWS_SECRET_ACCESS_KEY = "your secret access key",
+	AWS_S3_ENDPOINT = "eodata.dataspace.copernicus.eu",
+    AWS_VIRTUAL_HOSTING = "FALSE"
+))
+```
+
+After completing the configuration, restart your environment (`R` or `Python`) for the changes to take effect. By following these steps, you will gain access to the Copernicus Data Space Ecosystem.
 
 ### SENTINEL-2/2A images in CDSE
 
@@ -522,7 +559,7 @@ plot(lena_cube, date = "2023-07-06", red = "B12", green = "B8A", blue = "B04")
 lena_cube = sits_cube(
     source = "CDSE",
     collection = "SENTINEL-2-L2A",
-    bands = ["B02", "B04", "B8A", "B11", "B12"],
+    bands = ("B02", "B04", "B8A", "B11", "B12"),
     start_date = "2023-05-01",
     end_date = "2023-09-01",
     tiles = "52XDF"
@@ -574,16 +611,15 @@ plot(s1_cube, band = "VV", date = c("2023-03-03"), palette = "Greys")
 s1_cube = sits_cube(
     source = "CDSE",
     collection = "SENTINEL-1-RTC",
-    bands = ["VV", "VH"],
+    bands = ("VV", "VH"),
     orbit = "descending",
     start_date = "2023-01-01",
     end_date = "2023-12-31",
     tiles = "37NCH"
 )
-plot(s1_cube, band = "VV", date = c("2023-03-03"), palette = "Greys")
+plot(s1_cube, band = "VV", date = ("2023-03-03"), palette = "Greys")
 ```
 :::
-
 
 ```{r}
 #| echo: false
@@ -622,9 +658,9 @@ dea_s2_cube <- sits_cube(
     source = "DEAFRICA",
     collection = "SENTINEL-2-L2A",
     roi = c(
-    lon_min = 46.1, lat_min = -15.6,
-    lon_max = 46.6, lat_max = -16.1
-  ),
+        lon_min = 46.1, lat_min = -15.6,
+        lon_max = 46.6, lat_max = -16.1
+    ),
     bands = c("B02", "B04", "B08"),
     start_date = "2019-04-01",
     end_date = "2019-05-30"
@@ -637,11 +673,11 @@ plot(dea_s2_cube, red = "B04", blue = "B02", green = "B08")
 dea_s2_cube = sits_cube(
     source = "DEAFRICA",
     collection = "SENTINEL-2-L2A",
-    roi = {
-    "lon_min" : 46.1, "lat_min" : -15.6,
-    "lon_max" : 46.6, "lat_max" : -16.1
-  },
-    bands = ["B02", "B04", "B08"],
+    roi = dict(
+        lon_min = 46.1, lat_min = -15.6,
+        lon_max = 46.6, lat_max = -16.1
+    ),
+    bands = ("B02", "B04", "B08"),
     start_date = "2019-04-01",
     end_date = "2019-05-30"
 )
@@ -685,11 +721,11 @@ plot(dea_l9_cube, date = "2023-06-26",
 dea_l9_cube = sits_cube(
     source = "DEAFRICA",
     collection = "LS9-SR",
-    roi = {
-        "lon_min" : 33.0, "lat_min" : -3.60, 
-        "lon_max" : 33.6, "lat_max" : -3.00
-    },
-    bands = ["B04", "B05", "B06"],
+    roi = dict(
+        lon_min = 33.0, lat_min = -3.60, 
+        lon_max = 33.6, lat_max = -3.00
+    ),
+    bands = ("B04", "B05", "B06"),
     start_date = "2023-05-01",
     end_date = "2023-08-30"
 )
@@ -733,11 +769,11 @@ plot(dea_alos_cube, band = "HH")
 dea_alos_cube = sits_cube(
     source = "DEAFRICA",
     collection = "ALOS-PALSAR-MOSAIC",
-    roi = {
-       "lon_min" : 28.69, "lat_min" : -2.35, 
-       "lon_max" : 29.35, "lat_max" : -1.56
-    },
-    bands = ["HH", "HV"],
+    roi = dict(
+        lon_min = 28.69, lat_min = -2.35, 
+        lon_max = 29.35, lat_max = -1.56
+    ),
+    bands = ("HH", "HV"),
     start_date = "2020-01-01",
     end_date = "2020-12-31"
 )
@@ -780,7 +816,7 @@ The following code retrieves an image from Sentinel-2A.
 #| eval: false
 # get roi for an MGRS tile
 bbox_55KGR <- sits_mgrs_to_roi("55KGR")
-# retrieve the world cover map for the chosen roi
+# retrieve images for the chosen roi
 s2_56KKV <- sits_cube(
   source = "DEAUSTRALIA",
   collection = "GA_S2AM_ARD_3",
@@ -795,12 +831,12 @@ plot(s2_56KKV, green = "NIR-2", blue = "BLUE", red = "SWIR-2", date = "2023-10-1
 ## Python
 ```{python}
 #| eval: false
-# retrieve the world cover map for the chosen tile
+# retrieve images for the chosen roi
 s2_56KKV = sits_cube(
   source = "DEAUSTRALIA",
   collection = "GA_S2AM_ARD_3",
   tiles = "56KKV",
-  bands = ["BLUE", "GREEN", "RED", "NIR-2", "SWIR-2", "CLOUD"],
+  bands = ("BLUE", "GREEN", "RED", "NIR-2", "SWIR-2", "CLOUD"),
   start_date = "2023-09-01",
   end_date = "2023-11-30"
 )
@@ -843,15 +879,28 @@ password <password>
 
 We recommend using the earthdatalogin package to create a `.netrc` file with `earthdatalogin::edl_netrc()`. This function creates a properly configured `.netrc` file in the user's home directory and sets the environment variable GDAL_HTTP_NETRC_FILE, as shown in the example. As an alternative, we recommend using the HLS collections available in Microsoft Planetary Computer. They are copies of the NASA collections and are faster to access. 
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
 library(earthdatalogin)
 
 earthdatalogin::edl_netrc( 
-username = "<your user name>", 
-password = "<your password>" 
+    username = "<your user name>", 
+    password = "<your password>" 
 ) 
 ```
+## Python
+```{python}
+#| eval: false
+from pysits.extras import earthdatalogin_edl_netrc
+
+earthdatalogin_edl_netrc( 
+    username = "<your user name>", 
+    password = "<your password>" 
+)
+```
+:::
 
 Images in NASA HLS can be accessed by region of interest or by tiles. The following example shows an HLS Sentinel-2 image over the Brazilian coast. 
 
@@ -880,18 +929,18 @@ plot(hls_cube_s2, red = "RED", green = "GREEN", blue = "BLUE", date = "2020-06-2
 ```{python}
 #| eval: false
 # define a region of interest
-roi = { "lon_min" : -45.6422, "lat_min" : -24.0335,
-        "lon_max" : -45.0840, "lat_max" : -23.6178 }
+roi = dict(lon_min = -45.6422, lat_min = -24.0335,
+         lon_max = -45.0840, lat_max = -23.6178)
 
 # create a cube from the HLSS30 collection
 hls_cube_s2 = sits_cube(
   source = "HLS",
   collection = "HLSS30",
   roi = roi,
-  bands = ["BLUE", "GREEN", "RED", "CLOUD"],
-  start_date = as.Date("2020-06-01"),
-  end_date = as.Date("2020-09-01"),
-  progress = FALSE
+  bands = ("BLUE", "GREEN", "RED", "CLOUD"),
+  start_date = "2020-06-01",
+  end_date = "2020-09-01",
+  progress = False
 )
 # plot the cube
 plot(hls_cube_s2, red = "RED", green = "GREEN", blue = "BLUE", date = "2020-06-20")
