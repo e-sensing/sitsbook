@@ -5,6 +5,8 @@ format: html
 
 ### Configurations to run this chapter {-}
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| echo: true
 #| eval: true
@@ -18,6 +20,19 @@ library(sitsdata)
 tempdir_r <- "~/sitsbook/tempdir/R/dc_cubeoperations"
 dir.create(tempdir_r, showWarnings = FALSE)
 ```
+## Python
+```{python}
+#| echo: true
+#| eval: true
+#| output: false
+# load "pysits" library
+from pysits import *
+from pathlib import Path
+# set tempdir if it does not exist 
+tempdir_py = Path.home() / "sitsbook/tempdir/Python/dc_cubeoperations"
+tempdir_py.mkdir(parents=True, exist_ok=True)
+```
+:::
 
 
 ## Introduction
@@ -40,6 +55,8 @@ To run the mixture model in `sits`, it is necessary to inform the values of pixe
 
 In `sits`, spectral mixture analysis is done by `sits_mixture_model()`, which has two mandatory parameters: `cube` (a data cube) and `endmembers`, a named table (or equivalent) that defines the pure pixels. The `endmembers` table must have the following named columns: (a) `type`, which defines the class associated with an endmember; (b) names, the names of the bands. Each line of the table must contain the value of each endmember for all bands (see example). To improve readability, we suggest that the `endmembers` parameters be defined as a `tribble`. A `tribble` is a `tibble` with an easier to read row-by-row layout. In the example below, we define three endmembers for classes `Forest`, `Soil`, and `Water`.  Note that the values for each band are expressed as integers ranging from 0 to 10,000. We use the same data cube which was used in the previous chapter.
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
 # Create an non-regular data cube from AWS
@@ -54,7 +71,25 @@ s2_cube <- sits_cube(
     start_date = as.Date("2018-07-01"),
     end_date = as.Date("2018-08-31"))
 ```
+## Python
+```{python}
+#| eval: false
+# Create an non-regular data cube from AWS
+s2_cube = sits_cube(
+    source = "AWS",
+    collection = "SENTINEL-S2-L2A-COGS",
+    tiles = "20LKP",
+    bands = ("B02", "B03", "B04", 
+              "B05", "B06", "B07", 
+              "B08", "B8A", "B11", 
+              "B12","CLOUD"),
+    start_date = "2018-07-01",
+    end_date = "2018-08-31")
+```
+:::
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
 # Regularize the cube to 15 day intervals
@@ -65,7 +100,21 @@ reg_cube <- sits_regularize(
           period     = "P15D",
           multicores = 4)
 ```
+## Python
+```{python}
+#| eval: false
+# Regularize the cube to 15 day intervals
+reg_cube = sits_regularize(
+          cube       = s2_cube,
+          output_dir = tempdir_py,
+          res        = 60,
+          period     = "P15D",
+          multicores = 4)
+```
+:::
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: true
 #| echo: false
@@ -80,9 +129,25 @@ reg_cube <- sits_cube(
     data_dir = tempdir_r
 )
 ```
+## Python
+```{python}
+#| eval: true
+#| echo: false
+# Regularize the cube to 15 day intervals
+reg_cube = sits_cube(
+    source = "AWS",
+    collection = "SENTINEL-S2-L2A-COGS",
+    bands = ("B02", "B03", "B04", 
+              "B05", "B06", "B07", 
+              "B08", "B8A", "B11", 
+              "B12"),
+    data_dir = tempdir_py
+)
+```
+:::
 
-
-
+:::{.panel-tabset}
+## R
 ```{r}
 # Define the endmembers for three classes and six bands
 em <- tibble::tribble(
@@ -98,7 +163,33 @@ reg_cube <- sits_mixture_model(
     memsize = 12,
     output_dir = tempdir_r)
 ```
+## Python
+```{python}
+# Import pandas
+import pandas as pd
+# Define the endmembers for three classes and six bands
+em = pd.DataFrame({
+    "class": ["forest", "soil", "water"],
+    "B02": [200, 400, 700],
+    "B03": [352, 650, 1100],
+    "B04": [189, 700, 1400],
+    "B8A": [2800, 3600, 850],
+    "B11": [1340, 3500, 40],
+    "B12": [546, 1800, 26]
+})
+# Generate the mixture model
+reg_cube = sits_mixture_model(
+    data = reg_cube,
+    endmembers = em,
+    multicores = 4,
+    memsize = 12,
+    output_dir = tempdir_py
+)
+```
+:::
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| label: fig-dcops-mixfor
 #| out.width: "100%"
@@ -108,7 +199,20 @@ reg_cube <- sits_mixture_model(
 # Plot the FOREST for the first date using the Greens palette
 plot(reg_cube, band = "FOREST", palette = "Greens")
 ```
+## Python
+```{python}
+#| label: fig-dcops-mixfor-py
+#| out.width: "100%"
+#| fig.align: "center"
+#| fig.cap: | 
+#|    Percentage of forest per pixel estimated by mixture model.
+# Plot the FOREST for the first date using the Greens palette
+plot(reg_cube, band = "FOREST", palette = "Greens")
+```
+:::
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| label: fig-dcoops-mixwater
 #| out.width: "100%"
@@ -118,7 +222,20 @@ plot(reg_cube, band = "FOREST", palette = "Greens")
 # Plot the water endmember for the first date using the Blues palette
 plot(reg_cube, band = "WATER", palette = "Blues")
 ```
+## Python
+```{python}
+#| label: fig-dcoops-mixwater-py
+#| out.width: "100%"
+#| fig.align: "center" 
+#| fig.cap: | 
+#|   Percentage of water per pixel estimated by mixture model.
+# Plot the water endmember for the first date using the Blues palette
+plot(reg_cube, band = "WATER", palette = "Blues")
+```
+:::
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| label: fig-dcops-mixsoil
 #| out.width: "100%"
@@ -128,7 +245,17 @@ plot(reg_cube, band = "WATER", palette = "Blues")
 # Plot the SOIL endmember for the first date using the orange red (OrRd) palette 
 plot(reg_cube, band = "SOIL", palette = "OrRd")
 ```
-
+## Python
+```{python}
+#| label: fig-dcops-mixsoil-py
+#| out.width: "100%"
+#| fig.align: "center"
+#| fig.cap: | 
+#|   Percentage of soil per pixel estimated by mixture model.
+# Plot the SOIL endmember for the first date using the orange red (OrRd) palette 
+plot(reg_cube, band = "SOIL", palette = "OrRd")
+```
+:::
 
 ## Summary
 
