@@ -3,6 +3,8 @@ title: "Texture operations in data cubes"
 format: html
 ---
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| echo: true
 #| eval: true
@@ -16,7 +18,19 @@ library(sitsdata)
 tempdir_r <- "~/sitsbook/tempdir/R/dc_texture"
 dir.create(tempdir_r, showWarnings = FALSE)
 ```
-
+## Python
+```{python}
+#| echo: true
+#| eval: true
+#| output: false
+# load "pysits" library
+from pysits import *
+from pathlib import Path
+# set tempdir if it does not exist 
+tempdir_py = Path.home() / "sitsbook/tempdir/Python/dc_texture"
+tempdir_py.mkdir(parents=True, exist_ok=True)
+```
+:::
 
 ## Introduction
 
@@ -61,6 +75,8 @@ As an example of using GLCM texture measure, we will take an example of a SAR Se
 
 We first select a single date cube for a Sentinel-1 image (band "VH") for a region in Rondonia, Brasil. We then regularize this cube to match a small region of interest inside tile "20LMR". Using a small ROI allows a better understanding of the effect of texture measures. 
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
 # create an RTC cube from MPC collection for a region in Rondonia, Brazil.
@@ -87,6 +103,34 @@ cube_s1_rtc_20LMR <-  sits_regularize(
 )
 plot(cube_s1_rtc_20LMR, band = "VH")
 ```
+## Python
+```{python}
+#| eval: false
+# create an RTC cube from MPC collection for a region in Rondonia, Brazil.
+cube_s1_rtc = sits_cube(
+    source = "MPC",
+    collection = "SENTINEL-1-RTC",
+    bands = "VH",
+    orbit = "descending",
+    tiles = "20LMR",
+    start_date = "2024-08-01",
+    end_date = "2024-08-12"
+)
+# define a ROI which is part of the cube to reduce processing
+roi = dict(lon_min = -63.45, lon_max = -63.3,  lat_min = -8.7, lat_max = -8.55)
+
+# create an RTC cube regular
+cube_s1_rtc_20LMR = sits_regularize(
+    cube = cube_s1_rtc,
+    period = "P12D",
+    res = 20,
+    output_dir = tempdir_py,
+    roi = roi,
+    multicores = 4
+)
+plot(cube_s1_rtc_20LMR, band = "VH")
+```
+:::
 
 
 ```{r}
@@ -109,6 +153,8 @@ $$
 
 This measure detects brightness trends in local regions of the image. It tends to be high for brighter areas, and low for darker areas. The GLCM Mean can distinguish regions based on overall tone, e.g., water vs. dry soil, shadow vs. sunlit areas. It is useful for separating classes that have different average intensity values.
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
 # measure GLMC texture and plot the result
@@ -122,6 +168,21 @@ cube_s1_rtc_20LMR <-  sits_texture(
 )
 plot(cube_s1_rtc_20LMR, band = "VHMEAN")
 ```
+## Python
+```{python}
+#| eval: false
+# measure GLMC texture and plot the result
+cube_s1_rtc_20LMR = sits_texture(
+    cube = cube_s1_rtc_20LMR,
+    VHMEAN = "glcm_mean(VH)",
+    window_size = 5,
+    output_dir = tempdir_py,
+    multicores = 4,
+    memsize = 16
+)
+plot(cube_s1_rtc_20LMR, band = "VHMEAN")
+```
+:::
 
 ```{r}
 #| echo: false
@@ -141,7 +202,8 @@ $$
 \text{Contrast} = \sum_{i=0}^{N-1} \sum_{j=0}^{N-1} (i - j)^2 \cdot P(i, j)
 $$
 
-
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
 # measure GLMC texture and plot the result
@@ -155,6 +217,21 @@ cube_s1_rtc_20LMR <-  sits_texture(
 )
 plot(cube_s1_rtc_20LMR, band = "VHCON")
 ```
+## Python
+```{python}
+#| eval: false
+# measure GLMC texture and plot the result
+cube_s1_rtc_20LMR = sits_texture(
+    cube = cube_s1_rtc_20LMR,
+    VHCON = "glcm_contrast(VH)",
+    window_size = 5,
+    output_dir = tempdir_py,
+    multicores = 4,
+    memsize = 16
+)
+plot(cube_s1_rtc_20LMR, band = "VHCON")
+```
+:::
 
 ```{r}
 #| echo: false

@@ -5,6 +5,8 @@ format: html
 
 ### Configurations to run this chapter{-}
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| echo: true
 #| eval: true
@@ -20,7 +22,19 @@ library(sitsdata)
 tempdir_r <- "~/sitsbook/tempdir/R/cl_rasterclassification"
 dir.create(tempdir_r, showWarnings = FALSE)
 ```
-
+## Python
+```{python}
+#| echo: true
+#| eval: true
+#| output: false
+# load "pysits" library
+from pysits import *
+from pathlib import Path
+# set tempdir if it does not exist 
+tempdir_py = Path.home() / "sitsbook/tempdir/Python/cl_rasterclassification"
+tempdir_py.mkdir(parents=True, exist_ok=True)
+```
+:::
 
 <a href="https://www.kaggle.com/code/esensing/classification-of-raster-data-cubes" target="_blank"><img src="https://kaggle.com/static/images/open-in-kaggle.svg"/></a>
 
@@ -30,6 +44,8 @@ This Chapter discusses how to classify data cubes by providing a step-by-step ex
 
 The examples of this chapter use a pre-built data cube of Sentinel-2 images, available in the package `sitsdata`. These images are from the `SENTINEL-2-L2A` collection in Microsoft Planetary Computer (`MPC`). The data consists of bands BO2, B8A, and B11, and indexes NDVI, EVI and NBR in a small area of $1200 \times 1200$ pixels in the state of Rondonia. As explained in Chapter [Earth observation data cubes](https://e-sensing.github.io/sitsbook/dc_localcubes.html), we need to inform `sits` how to parse these file names to obtain tile, date, and band information. Image files are named according to the convention "satellite_sensor_tile_band_date" (e.g., `SENTINEL-2_MSI_20LKP_BO2_2020_06_04.tif`) which is the default format in `sits`. 
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
 # Files are available in a local directory 
@@ -41,10 +57,25 @@ rondonia_20LMR <- sits_cube(
     collection = "SENTINEL-2-L2A",
     data_dir = data_dir
 )
-
 # Plot the cube
 plot(rondonia_20LMR, date = "2022-07-16", band = "NDVI")
 ```
+## Python
+```{python}
+#| eval: false
+# Files are available in a local directory 
+data_dir = r_package_dir("extdata/Rondonia-20LMR/", 
+                        package = "sitsdata")
+# Read data cube
+rondonia_20LMR = sits_cube(
+    source = "MPC",
+    collection = "SENTINEL-2-L2A",
+    data_dir = data_dir
+)
+# Plot the cube
+plot(rondonia_20LMR, date = "2022-07-16", band = "NDVI")
+```
+:::
 
 ```{r}
 #| label: fig-ml-20LMR-rgb
@@ -56,11 +87,12 @@ plot(rondonia_20LMR, date = "2022-07-16", band = "NDVI")
 knitr::include_graphics("./images/ml_20LMR_rgb.png")
 ```
 
-
 ## Training data for the case study
 
 This case study uses the training dataset `samples_deforestation_rondonia`, available in package `sitsdata`. This dataset consists of 6007 samples collected from Sentinel-2 images covering the state of Rondonia. There are nine classes: `Clear_Cut_Bare_Soil`, `Clear_Cut_Burned_Area`, `Mountainside_Forest`, `Forest`, `Riparian_Forest`, `Clear_Cut_Vegetation`, `Water`, `Wetland`, and `Seasonally_Flooded`. Each time series contains values from Sentinel-2/2A bands B02, B03, B04, B05, B06, B07, B8A, B08, B11 and B12, from 2022-01-05 to 2022-12-23 in 16-day intervals. The samples are intended to detect deforestation events and have been collected by remote sensing experts using visual interpretation.
 
+:::{.panel-tabset}
+## R
 ```{r}
 library(sitsdata)
 # Obtain the samples 
@@ -68,10 +100,22 @@ data("samples_deforestation_rondonia")
 # Show the contents of the samples
 summary(samples_deforestation_rondonia)
 ```
-
+## Python
+```{python}
+# Obtain the samples 
+samples_deforestation_rondonia = load_samples_dataset(
+    name = "samples_deforestation_rondonia", 
+    package = "sitsdata"
+)
+# Show the contents of the samples
+summary(samples_deforestation_rondonia)
+```
+:::
 
 It is helpful to plot the basic patterns associated with the samples to understand the training set better. The function `sits_patterns()` uses a generalized additive model (GAM) to predict a smooth, idealized approximation to the time series associated with each class for all bands. Since the data cube used in the classification has 10 bands, we obtain the indexes NDVI, EVI, and NBR before showing the patterns. 
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
 # Generate indexes 
@@ -86,6 +130,29 @@ samples_deforestation_indices |>
     sits_patterns() |> 
     plot()
 ```
+## Python
+```{python}
+#| eval: false
+# Generate indexes 
+samples_deforestation_indices = sits_apply(
+    data = samples_deforestation_rondonia,
+    NDVI = "(B08 - B04)/(B08 + B04)",
+    NBR = "(B08 - B12) / (B08 + B12)",
+    EVI = "2.5 * (B08 - B04) / ((B08 + 6.0 * B04 - 7.5 * B02) + 1.0)"
+)
+
+# Generate patterns
+patterns = sits_patterns(
+    sits_select(
+        data = samples_deforestation_indices, 
+        bands = ("NDVI", "EVI", "NBR")
+    )
+)
+
+# Plot patterns
+plot(patterns)
+```
+:::
 
 ```{r}
 #| label: fig-ml-rond-patt
@@ -101,11 +168,12 @@ knitr::include_graphics("./images/ml_rond_patt.png")
 
 The patterns show different temporal responses for the selected classes. They match the typical behavior of deforestation in the Amazon. In most cases, the forest is cut at the start of the dry season (May/June). At the end of the dry season, some clear-cut areas are burned to clean the remains; this action is reflected in the steep fall of the response of B11 values of burned area samples after August. The areas where native trees have been cut but some vegatation remain ("Clear_Cut_Vegetation") have values in the B8A band that increase during the period. 
 
-
 ## Training machine learning models{-}
 
 The next step is to train a machine learning model to illustrate CPU-based classification. We build a random forest model using `sits_train()` and then create a plot to find out what are the most important variables for the model.
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
 # set the seed to get the same result
@@ -119,9 +187,31 @@ rfor_model <- sits_train(
 # plot the model results
 plot(rfor_model)
 ```
+## Python
+```{python}
+#| eval: false
+# set the seed to get the same result
+r_set_seed(03022024)
 
-```{r, echo = FALSE}
+# Train model using random forest model
+rfor_model = sits_train(
+  samples_deforestation_rondonia,
+  ml_method = sits_rfor()
+)
+
+# plot the model results
+plot(rfor_model)
+```
+:::
+
+```{r}
+#| echo: false
 rfor_model <- readRDS("./etc/rfor_model_cl_rasterclassification.rds")
+```
+
+```{python}
+#| echo: false
+rfor_model = read_rds("./etc/rfor_model_cl_rasterclassification.rds")
 ```
 
 ```{r}
@@ -141,6 +231,8 @@ By default, all classification algorithms in `sits` use CPU-based parallel proce
 
 To classify both data cubes and sets of time series, use `sits_classify()`, which uses parallel processing to speed up the performance, as described at the end of this Chapter. Its most relevant parameters are: (a) `data`, either a data cube or a set of time series; (b) `ml_model`, a trained model using one of the machine learning methods provided; (c) `multicores`, number of CPU cores that will be used for processing; (d) `memsize`, memory available for classification; (e) `output_dir`, directory where results will be stored; (f) `version`, for version control. To follow the processing steps, turn on the parameters `verbose` to print information and `progress` to get a progress bar. The classification result is a data cube with a set of probability layers, one for each output class. Each probability layer contains the model's assessment of how likely each pixel belongs to the related class. The probability cube can be visualized with `plot()`. In this example, we show only the probabilities associated to label "Forest". 
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
 # Classify data cube to obtain a probability cube
@@ -154,6 +246,22 @@ rondonia_20LMR_probs <- sits_classify(
 
 plot(rondonia_20LMR_probs, labels = "Forest", palette = "YlGn")
 ```
+## Python
+```{python}
+#| eval: false
+# Classify data cube to obtain a probability cube
+rondonia_20LMR_probs = sits_classify(
+    data     = rondonia_20LMR,
+    ml_model = rfor_model,
+    output_dir = tempdir_py,
+    version = "rf-raster",
+    multicores = 4,
+    memsize = 16)
+
+plot(rondonia_20LMR_probs, labels = "Forest", palette = "YlGn")
+```
+:::
+
 ```{r}
 #| label: fig-ml-rond-probs
 #| echo: false
@@ -166,6 +274,8 @@ knitr::include_graphics("./images/ml_rond_probs.png")
 
 The probability cube provides information on the output values of the algorithm for each class. Most probability maps contain outliers or misclassified pixels. The labeled map generated from the pixel-based time series classification method exhibits several misclassified pixels, which are small patches surrounded by a different class. This occurrence of outliers is a common issue that arises due to the inherent nature of this classification approach. Regardless of their resolution, mixed pixels are prevalent in images, and each class exhibits considerable data variability. As a result, these factors can lead to outliers that are more likely to be misclassified. To overcome this limitation, `sits` employs post-processing smoothing techniques that leverage the spatial context of the probability cubes to refine the results. These techniques will be discussed in the Chapter [Bayesian smoothing for post-processing](https://e-sensing.github.io/sitsbook/cl_smoothing.html). In what follows, we will generate the smoothed cube to illustrate the procedure. 
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
 # Smoothen a  probability cube
@@ -177,6 +287,19 @@ rondonia_20LMR_bayes <- sits_smooth(
     memsize = 16)
 plot(rondonia_20LMR_bayes, labels = c("Forest"),  palette = "YlGn")
 ```
+## Python
+```{python}
+#| eval: false
+# Smooth a probability cube
+rondonia_20LMR_bayes = sits_smooth(
+    cube    = rondonia_20LMR_probs,
+    output_dir = tempdir_py,
+    version = "rf-raster",
+    multicores = 4,
+    memsize = 16)
+plot(rondonia_20LMR_bayes, labels = ("Forest"),  palette = "YlGn")
+```
+:::
 
 
 ```{r}
@@ -188,8 +311,11 @@ plot(rondonia_20LMR_bayes, labels = c("Forest"),  palette = "YlGn")
 #|   Smoothed probability map for class Forest.
 knitr::include_graphics("./images/ml_rond_smooth.png")
 ```
+
 In general, users should perform a post-processing smoothing after obtaining the probability maps in raster format. After the post-processing operation, we apply `sits_label_classification()` to obtain a map with the most likely class for each pixel. For each pixel, the `sits_label_classification()` function takes the label with highest probability and assigns it to the resulting map. The output is a labelled map with classes.
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
 # Generate a thematic map
@@ -203,6 +329,21 @@ rondonia_20LMR_class <- sits_label_classification(
 # Plot the thematic map
 plot(rondonia_20LMR_class, legend_text_size = 0.7)
 ```
+## Python
+```{python}
+#| eval: false
+# Generate a thematic map
+rondonia_20LMR_class = sits_label_classification(
+    cube = rondonia_20LMR_bayes,
+    multicores = 4,
+    memsize = 12,
+    output_dir = tempdir_py,
+    version = "rf-raster")
+
+# Plot the thematic map
+plot(rondonia_20LMR_class, legend_text_size = 0.7)
+```
+:::
 
 ```{r}
 #| label: fig-ml-rond-class
@@ -220,6 +361,8 @@ The next examples show how to run deep learning models in `sits`. The case study
 
 We take the same data cube and training data used in the previous examples and use a Temporal CNN method. The first step is to obtain a deep learning model using the `sits_tempcnn()` algorithm. We use the tuned parameters obtained in the example of the previous chapter. 
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
 tcnn_model <- sits_train(
@@ -235,9 +378,28 @@ tcnn_model <- sits_train(
   )
 )
 ```
+## Python
+```{python}
+#| eval: false
+tcnn_model = sits_train(
+  samples_deforestation_rondonia,
+  sits_tempcnn(
+    cnn_layers = (256, 256, 256),
+    cnn_kernels = (5, 5, 5),
+    cnn_dropout_rates = (0.2, 0.2, 0.2),
+    opt_hparams = dict(
+      lr = 0.0004,
+      weight_decay = 0.00015
+    )
+  )
+)
+```
+:::
 
 After training the model, we classify the data cube. If a GPU is available, users need to provide the additional parameter `gpu_memory` to `sits_classify()`. This information will be used by `sits` to optimize access to the GPU and speed up processing. 
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
 rondonia_20LMR_probs_tcnn <- sits_classify(
@@ -251,6 +413,22 @@ rondonia_20LMR_probs_tcnn <- sits_classify(
 )
 plot(rondonia_20LMR_probs_tcnn, labels = c("Forest"),  palette = "YlGn")
 ```
+## Python
+```{python}
+#| eval: false
+rondonia_20LMR_probs_tcnn = sits_classify(
+    rondonia_20LMR,
+    ml_model = tcnn_model,
+    output_dir = tempdir_py,
+    version = "tcnn-raster",
+    gpu_memory = 1,
+    multicores = 4,
+    memsize = 4
+)
+plot(rondonia_20LMR_probs_tcnn, labels = c("Forest"),  palette = "YlGn")
+```
+:::
+
 ```{r}
 #| label: fig-ml-rond-probs-tcnn
 #| echo: false
@@ -263,18 +441,34 @@ knitr::include_graphics("./images/ml_rond_probs_tcnn.png")
 
 After classification, we can smooth the probability cube. It is useful to compare the smoothed map for class Forest resulting from the TempCNN model with that produced by random forests. The TempCNN model tends to show more confidence in its predictions than the random forests one. This is a feature of the model more than an intrinsic property of the training data or the data cube.
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
 # Smoothen the probability map 
 rondonia_20LMR_bayes_tcnn <- sits_smooth(
     rondonia_20LMR_probs_tcnn,
-    output_dir = "./tempdir/chp9",
+    output_dir = tempdir_r,
     version = "tcnn-raster",
     multicores = 6,
     memsize = 24
 )
 plot(rondonia_20LMR_bayes_tcnn, labels = c("Forest"),  palette = "YlGn")
 ```
+## Python
+```{python}
+#| eval: false
+# Smoothen the probability map 
+rondonia_20LMR_bayes_tcnn = sits_smooth(
+    rondonia_20LMR_probs_tcnn,
+    output_dir = tempdir_py,
+    version = "tcnn-raster",
+    multicores = 6,
+    memsize = 24
+)
+plot(rondonia_20LMR_bayes_tcnn, labels = ("Forest"),  palette = "YlGn")
+```
+:::
 
 ```{r}
 #| label: fig-ml-rond-bayes-tcnn
@@ -288,18 +482,34 @@ knitr::include_graphics("./images/ml_rond_bayes_tcnn.png")
 
 We then label the resulting smoothed probabilities to obtain a classified map. 
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
 # Obtain the final labelled map
 rondonia_20LMR_class_tcnn <- sits_label_classification(
     rondonia_20LMR_bayes_tcnn,
-    output_dir = "./tempdir/chp9",
+    output_dir = tempdir_r,
     version = "tcnn-raster",
     multicores = 6,
     memsize = 24
 )
 plot(rondonia_20LMR_class_tcnn)
 ```
+## Python
+```{python}
+#| eval: false
+# Obtain the final labelled map
+rondonia_20LMR_class_tcnn = sits_label_classification(
+    rondonia_20LMR_bayes_tcnn,
+    output_dir = tempdir_py,
+    version = "tcnn-raster",
+    multicores = 6,
+    memsize = 24
+)
+plot(rondonia_20LMR_class_tcnn)
+```
+:::
 
 ```{r}
 #| label: fig-ml-rond-class-tcnn

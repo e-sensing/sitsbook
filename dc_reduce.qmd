@@ -5,6 +5,8 @@ format: html
 
 ### Configurations to run this chapter {-}
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| echo: true
 #| eval: true
@@ -18,6 +20,19 @@ library(sitsdata)
 tempdir_r <- "~/sitsbook/tempdir/R/dc_reduce"
 dir.create(tempdir_r, showWarnings = FALSE)
 ```
+## Python
+```{python}
+#| echo: true
+#| eval: true
+#| output: false
+# load "pysits" library
+from pysits import *
+from pathlib import Path
+# set tempdir if it does not exist 
+tempdir_py = Path.home() / "sitsbook/tempdir/Python/dc_reduce"
+tempdir_py.mkdir(parents=True, exist_ok=True)
+```
+:::
 
 ## Introduction
 
@@ -48,6 +63,8 @@ The functions `t_sum()`, `t_std()`, `t_skewness()`, `t_kurtosis()`, and `t_mse()
 
 The following example shows how to execute a temporal reduction operation.
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
 # define a region of interest to be enclosed in the data cube
@@ -68,9 +85,38 @@ ndvi_cube_local <- sits_cube_copy(
     multicores = 4
 )
 ```
+## Python
+```{python}
+#| eval: false
+# define a region of interest to be enclosed in the data cube
+roi = dict(
+    lon_min = -55.80259, 
+    lon_max = -55.199, 
+    lat_min = -11.80208, 
+    lat_max = -11.49583
+)
+# Define a data cube in the MPC repository using NDVI MODIS data
+ndvi_cube = sits_cube(
+    source = "MPC",
+    collection = "MOD13Q1-6.1",
+    bands = "NDVI",
+    roi = roi,
+    start_date =  "2018-05-01",
+    end_date = "2018-09-30"
+)
+# Copy the cube to a local file system
+ndvi_cube_local = sits_cube_copy(
+    cube = ndvi_cube,
+    output_dir = tempdir_py,
+    multicores = 4
+)
+```
+:::
 
 After creating a local data cube based on the contents of the MPC MODIS cube with the NDVI band, we can now compute the maximum NDVI values for each pixel for the images during the period from 2018-05-01 to 2018-09-30. 
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
 # create a local directory to store the result of the operation
@@ -85,6 +131,22 @@ max_ndvi_cube <- sits_reduce(ndvi_cube_local,
 )
 plot(max_ndvi_cube, band = "NDVIMAX")
 ```
+## Python
+```{python}
+#| eval: false
+# create a local directory to store the result of the operation
+tempdir_py_ndvi_max = tempdir_py / "ndvi_max"
+tempdir_py_ndvi_max.mkdir(parents=True, exist_ok=True)
+# Calculate the NBR index
+max_ndvi_cube = sits_reduce(ndvi_cube_local,
+    NDVIMAX = "t_max(NDVI)",
+    output_dir = tempdir_py_ndvi_max,
+    multicores = 4,
+    progress = True
+)
+plot(max_ndvi_cube, band = "NDVIMAX")
+```
+:::
 
 ```{r}
 #| label: fig-dc-reduce-ndvimax

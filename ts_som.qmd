@@ -5,7 +5,8 @@ format: html
 
 ### Configurations to run this chapter{-}
 
-
+:::{.panel-tabset}
+## R
 ```{r}
 #| echo: true
 #| eval: true
@@ -19,7 +20,19 @@ library(sitsdata)
 tempdir_r <- "~/sitsbook/tempdir/R/ts_som"
 dir.create(tempdir_r, showWarnings = FALSE)
 ```
-
+## Python
+```{python}
+#| echo: true
+#| eval: true
+#| output: false
+# load "pysits" library
+from pysits import *
+from pathlib import Path
+# set tempdir if it does not exist 
+tempdir_py = Path.home() / "sitsbook/tempdir/Python/ts_som"
+tempdir_py.mkdir(parents=True, exist_ok=True)
+```
+:::
 
 <a href="https://www.kaggle.com/esensing/using-som-for-sample-quality-control-in-sits" target="_blank"><img src="https://kaggle.com/static/images/open-in-kaggle.svg"></a>
 
@@ -52,6 +65,8 @@ knitr::include_graphics("./images/methodology_bayes_som.png")
 
 The examples of this chapter use  `samples_cerrado_mod13q1`, a set of time series from the Cerrado region of Brazil. The data ranges from 2000 to 2017 and includes 50,160 samples divided into 12 classes (`Dense_Woodland`, `Dunes`, `Fallow_Cotton`,  `Millet_Cotton`, `Pasture`, `Rocky_Savanna`, `Savanna`, `Savanna_Parkland`, `Silviculture`, `Soy_Corn`, `Soy_Cotton`, and  `Soy_Fallow`). Each time series covers 12 months (23 data points) from MOD13Q1 product, and has 4 bands (EVI, NDVI, MIR, and NIR). We use bands NDVI and EVI for faster processing.
 
+:::{.panel-tabset}
+## R
 ```{r}
 # Take only the NDVI and EVI bands
 samples_cerrado_mod13q1_2bands <- sits_select(
@@ -61,6 +76,21 @@ samples_cerrado_mod13q1_2bands <- sits_select(
 # Show the summary of the samples
 summary(samples_cerrado_mod13q1_2bands)
 ```
+## Python
+```{python}
+# Load samples
+samples_cerrado_mod13q1 = load_samples_dataset(
+    name = "samples_cerrado_mod13q1", 
+    package = "sitsdata"
+)
+# Take only the NDVI and EVI bands
+samples_cerrado_mod13q1_2bands = sits_select(
+    data = samples_cerrado_mod13q1, 
+    bands = ("NDVI", "EVI"))
+# Show the summary of the samples
+summary(samples_cerrado_mod13q1_2bands)
+```
+:::
 
 
 ## Creating the SOM map
@@ -69,6 +99,8 @@ To perform the SOM-based quality assessment, the first step is to run `sits_som_
 
 We suggest using the Dynamic Time Warping ("dtw") metric as the distance measure. It is a technique used to measure the similarity between two temporal sequences that may vary in speed or timing [@Berndt1994]. The core idea of DTW is to find the optimal alignment between two sequences by allowing non-linear mapping of one sequence onto another. In time series analysis, DTW matches two series slightly out of sync. This property is useful in land use studies for matching time series of agricultural areas [@Maus2015].
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
 # Clustering time series using SOM
@@ -79,6 +111,19 @@ som_cluster <- sits_som_map(samples_cerrado_mod13q1_2bands,
     distance = "dtw",
     rlen = 20)
 ```
+## Python
+```{python}
+#| eval: false
+# Clustering time series using SOM
+som_cluster = sits_som_map(samples_cerrado_mod13q1_2bands,
+    grid_xdim = 15,
+    grid_ydim = 15,
+    alpha = 1.0,
+    distance = "dtw",
+    rlen = 20
+)
+```
+:::
 
 ```{r}
 #| echo: false
@@ -87,6 +132,14 @@ library(kohonen)
 som_cluster <- readRDS(file = "./etc/som_cluster.rds")
 ```
 
+```{python}
+#| echo: false
+# Recover SOM cluster from RDS file
+som_cluster = read_rds(file = "./etc/som_cluster.rds")
+```
+
+:::{.panel-tabset}
+## R
 ```{r}
 #| label: fig-ts-sommap
 #| out.width: "100%"
@@ -95,6 +148,16 @@ som_cluster <- readRDS(file = "./etc/som_cluster.rds")
 # Plot the SOM map
 plot(som_cluster)
 ```
+## Python
+```{python}
+#| label: fig-ts-sommap-py
+#| out.width: "100%"
+#| fig.cap: "SOM map for the Cerrado samples."
+#| fig.align: "center"
+# Plot the SOM map
+plot(som_cluster)
+```
+:::
 
 The output of the `sits_som_map()` is a list with three elements: (a) `data`, the original set of time series with two additional columns for each time series: `id_sample` (the original id of each sample) and `id_neuron` (the id of the neuron to which it belongs); (b) `labelled_neurons`, a tibble with information on the neurons. For each neuron, it gives the prior and posterior probabilities of all labels which occur in the samples assigned to it; and (c) the SOM grid. To plot the SOM grid, use `plot()`. The neurons are labelled using majority voting.
 
@@ -104,15 +167,27 @@ The SOM grid shows that most classes are associated with neurons close to each o
 
 The second step in SOM-based quality assessment is understanding the confusion between labels. The function `sits_som_evaluate_cluster()` groups neurons by their majority label and produces a tibble. Neurons are grouped into clusters, and there will be as many clusters as there are labels. The results shows the percentage of samples of each label in each cluster. Ideally, all samples of each cluster would have the same label. In practice, cluster contain samples with different label. This information helps on measuring the confusion between samples. 
 
+:::{.panel-tabset}
+## R
 ```{r}
 # Produce a tibble with a summary of the mixed labels
 som_eval <- sits_som_evaluate_cluster(som_cluster)
 # Show the result
 som_eval 
 ```
+## Python
+```{python}
+# Produce a tibble with a summary of the mixed labels
+som_eval = sits_som_evaluate_cluster(som_cluster)
+# Show the result
+som_eval 
+```
+:::
 
 Many labels are associated with clusters where there are some samples with a different label. Such confusion between labels arises because sample labeling is subjective and can be biased. In many cases, interpreters use high-resolution data to identify samples. However, the actual images to be classified are captured by satellites with lower resolution. In our case study, a MOD13Q1 image has pixels with 250 m resolution. As such, the correspondence between labeled locations in high-resolution images and mid to low-resolution images is not direct. The confusion by sample label can be visualized in a bar plot using `plot()`, as shown below. The bar plot shows some confusion between the labels associated with the natural vegetation typical of the Brazilian Cerrado (`Savanna`, `Savanna_Parkland`, `Rocky_Savanna`). This mixture is due to the large variability of the natural vegetation of the Cerrado biome, which makes it difficult to draw sharp boundaries between classes. Some confusion is also visible between the agricultural classes. The `Fallow_Cotton` class is a particularly difficult one since many of the samples assigned to this class are confused with `Soy_Cotton` and `Millet_Cotton`. 
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| label: fig-ts-someval
 #| out.width: "90%"
@@ -123,6 +198,18 @@ Many labels are associated with clusters where there are some samples with a dif
 # Plot the confusion between clusters
 plot(som_eval)
 ```
+## Python
+```{python}
+#| label: fig-ts-someval-py
+#| out.width: "90%"
+#| message: false
+#| warning: false
+#| fig.align: "center"
+#| fig.cap: "Confusion between classes as measured by SOM."
+# Plot the confusion between clusters
+plot(som_eval)
+```
+:::
 
 ## Detecting noisy samples using SOM
 
@@ -140,6 +227,8 @@ To identify noisy samples, we take the result of the `sits_som_map()` function a
 
 The default value for both `prior_threshold` and `posterior_threshold` is 60%. The `sits_som_clean_samples()` has an additional parameter (`keep`), which indicates which samples should be kept in the set based on their prior and posterior probabilities. The default for `keep` is `c("clean", "analyze")`. As a result of the cleaning, about 900 samples have been considered to be noisy and thus to be possibly removed. We first show the complete distribution of the samples and later remove the noisy ones.
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| label: fig-ts-somremove
 #| out-width: 100%
@@ -155,9 +244,28 @@ all_samples <- sits_som_clean_samples(
 # Print the sample distribution based on evaluation
 plot(all_samples)
 ```
+## Python
+```{python}
+#| label: fig-ts-somremove-py
+#| out-width: 100%
+#| fig-align: "center"
+#| fig-cap: "Distribution of samples using som evaluation."
+#| message: false
+#| warning: false
+all_samples = sits_som_clean_samples(
+    som_map = som_cluster, 
+    prior_threshold = 0.6,
+    posterior_threshold = 0.6,
+    keep = ("clean", "analyze", "remove"))
+# Print the sample distribution based on evaluation
+plot(all_samples)
+```
+:::
 
 We now remove the noisy samples to improve the quality of the training set.
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| message: false
 #| warning: false
@@ -169,10 +277,24 @@ new_samples <- sits_som_clean_samples(
 # Print the new sample distribution
 summary(new_samples)
 ```
+## Python
+```{python}
+#| message: false
+#| warning: false
+new_samples = sits_som_clean_samples(
+    som_map = som_cluster, 
+    prior_threshold = 0.6,
+    posterior_threshold = 0.6,
+    keep = ("clean", "analyze"))
+# Print the new sample distribution
+summary(new_samples)
+```
+:::
 
 All samples of the classes which had the highest confusion with others(`Fallow_Cotton`, `Silviculture`, and `Millet_Cotton`) are marken as noisy been removed. Classes `Fallow_Cotton` and `Millet_Cotton` are not distinguishable from other crops. Samples of class `Silviculture` (planted forests) have  removed since they have been confused with natural forests and woodlands in the SOM map. Further analysis includes calculating the SOM map and confusion matrix for the new set, as shown in the following example. 
 
-
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
 # Produce a new SOM map with the cleaned samples
@@ -184,7 +306,19 @@ new_cluster <- sits_som_map(
    rlen = 20,
    distance = "dtw")
 ```
-
+## Python
+```{python}
+#| eval: false
+# Produce a new SOM map with the cleaned samples
+new_cluster = sits_som_map(
+   data = new_samples,
+   grid_xdim = 15,
+   grid_ydim = 15,
+   alpha = 1.0,
+   rlen = 20,
+   distance = "dtw")
+```
+:::
 
 ```{r}
 #| message: false
@@ -196,7 +330,15 @@ library(kohonen)
 new_cluster <- readRDS("./etc/new_cluster.rds")
 ```
 
+```{python}
+#| message: false
+#| warning: false
+#| echo: false
+new_cluster = read_rds("./etc/new_cluster.rds")
+```
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| label: fig-ts-newcluster
 #| out-width: 90%
@@ -209,6 +351,19 @@ new_cluster_mixture <- sits_som_evaluate_cluster(new_cluster)
 # Plot the mixture information.
 plot(new_cluster_mixture)
 ```
+```{python}
+#| label: fig-ts-newcluster-py
+#| out-width: 90%
+#| fig-align: "center"
+#| fig-cap: "Cluster confusion plot for samples cleaned by SOM."
+#| message: false
+#| warning: false
+# Evaluate the mixture in the new SOM clusters
+new_cluster_mixture = sits_som_evaluate_cluster(new_cluster)
+# Plot the mixture information.
+plot(new_cluster_mixture)
+```
+:::
 
 As expected, the new confusion map shows a significant improvement over the previous one. This result should be interpreted carefully since it may be due to different effects. The most direct interpretation is that `Millet_Cotton` and `Silviculture` cannot be easily separated from the other classes, given the current attributes (a time series of NDVI and EVI indices from MODIS images). In such situations, users should consider improving the number of samples from the less represented classes, including more MODIS bands, or working with higher resolution satellites. The results of the SOM method should be interpreted based on the users' understanding of the ecosystems and agricultural practices of the study region. 
 

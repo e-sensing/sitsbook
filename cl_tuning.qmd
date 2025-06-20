@@ -5,6 +5,8 @@ format: html
 
 ### Configurations to run this chapter{-}
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| echo: true
 #| eval: true
@@ -20,6 +22,19 @@ library(sitsdata)
 tempdir_r <- "~/sitsbook/tempdir/R/cl_tuning"
 dir.create(tempdir_r, showWarnings = FALSE)
 ```
+## Python
+```{python}
+#| echo: true
+#| eval: true
+#| output: false
+# load "pysits" library
+from pysits import *
+from pathlib import Path
+# set tempdir if it does not exist 
+tempdir_py = Path.home() / "sitsbook/tempdir/Python/cl_tuning"
+tempdir_py.mkdir(parents=True, exist_ok=True)
+```
+:::
 
 ## Introduction
 
@@ -65,8 +80,11 @@ We suggest to use the log-uniform distribution to search over a wide range of va
 
 Our fist example is tuning a Lightweight Temporal Attention Enconder model [@Garnot2020] on the MOD13Q1 dataset for the state of MatoGrosso. To recall, this data set contains time series samples from the Brazilian Mato Grosso state obtained from the MODIS MOD13Q1 product. It has 1,892 samples and nine classes (`Cerrado`, `Forest`, `Pasture`, `Soy_Corn`, `Soy_Cotton`, `Soy_Fallow`, `Soy_Millet`) [@Picoli2018] and is available in the R package `sitsdata`.
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
+# Tuning ``sits_lighttae`` model
 tuned_mt <- sits_tuning(
      samples = samples_matogrosso_mod13q1,
      ml_method = sits_lighttae(),
@@ -79,16 +97,49 @@ tuned_mt <- sits_tuning(
          ),
      trials = 40,
      multicores = 6,
-     progress = FALSE)
+     progress = FALSE
+)
 ```
+## Python
+```{python}
+#| eval: false
+# Load samples
+samples_matogrosso_mod13q1 = load_samples_dataset(
+    name = "samples_matogrosso_mod13q1", 
+    package = "sitsdata"
+)
+# Tuning ``sits_lighttae`` model
+tuned_mt = sits_tuning(
+     samples = samples_matogrosso_mod13q1,
+     ml_method = sits_lighttae,
+     params = sits_tuning_hparams(
+         optimizer = "torch::optim_adamw",
+         opt_hparams = dict(
+             lr = hparam("loguniform", 10**-2, 10**-4),
+             weight_decay = hparam("loguniform", 10**-2, 10**-8)
+             )
+         ),
+     trials = 40,
+     multicores = 6,
+     progress = FALSE
+)
+```
+:::
 
 ```{r}
 #| echo: false
 tuned_mt <- readRDS("./etc/tuned_mt.rds")
 ```
 
+```{python}
+#| echo: false
+tuned_mt = read_rds("./etc/tuned_mt.rds")
+```
+
 The result is a tibble with different values of accuracy, kappa, decision matrix, and hyperparameters. The best results obtain accuracy values between 0.978 and 0.970, as shown below. The best result is obtained by a learning rate of 0.0013 and a weight decay of 3.73e-07. The worst result has an accuracy of 0.891, which shows the importance of the tuning procedure.
 
+:::{.panel-tabset}
+## R
 ```{r} 
 # Obtain accuracy, kappa, lr, and weight decay for the 5 best results
 # Hyperparameters are organized as a list
@@ -106,6 +157,27 @@ best_5 <- tibble::tibble(
 # Print the best five combination of hyperparameters
 best_5
 ```
+## Python
+```{python} 
+# Import pandas
+import pandas as pd
+# Obtain accuracy, kappa, lr, and weight decay for the 5 best results
+# Hyperparameters are organized as a list
+hparams_5 = tuned_mt.opt_hparams[0:5]
+# Extract learning rate and weight decay from the list
+lr_5 = [x for x_ in hparams_5 for x in x_["lr"]]
+wd_5 = [x for x_ in hparams_5 for x in x_["weight_decay"]]
+# Create a tibble to display the results
+best_5 = pd.DataFrame(dict(
+    accuracy = tuned_mt.accuracy[0:5],
+    kappa = tuned_mt.kappa[0:5],
+    lr = lr_5,
+    weight_decay = wd_5
+))
+# Print the best five combination of hyperparameters
+best_5
+```
+:::
 
 
 ## Tuning a TempCNN model
@@ -114,6 +186,8 @@ In the example, we use `sits_tuning()` to find good hyperparameters to train the
 
 The hyperparameters for the `sits_tempcnn()` method include the size of the layers, convolution kernels, dropout rates, learning rate, and weight decay. Please refer to the description of the Temporal CNN algorithm in Chapter [Machine learning for data cubes](https://e-sensing.github.io/sitsbook/machine-learning-for-data-cubes.html).
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
 tuned_tempcnn <- sits_tuning(
@@ -134,15 +208,56 @@ tuned_tempcnn <- sits_tuning(
   multicores = 4
 )
 ```
+## Python
+```{python}
+#| eval: false
+# Load samples
+samples_deforestation_rondonia = load_samples_dataset(
+    name = "samples_deforestation_rondonia", 
+    package = "sitsdata"
+)
+# Tuning ``sits_tempcnn`` model
+tuned_tempcnn = sits_tuning(
+  samples = samples_deforestation_rondonia,
+  ml_method = sits_tempcnn,
+  params = sits_tuning_hparams(
+    cnn_layers = hparam(
+        "choice", (256, 256, 256), (128, 128, 128), (64, 64, 64)
+    ),
+    cnn_kernels = hparam(
+        "choice", (3, 3, 3), (5, 5, 5), (7, 7, 7)
+    ),
+    cnn_dropout_rates = hparam(
+        "choice", (0.15, 0.15, 0.15), (0.2, 0.2, 0.2), 
+                  (0.3, 0.3, 0.3), (0.4, 0.4, 0.4)
+    ),
+    optimizer = "torch::optim_adamw",
+    opt_hparams = dict(
+      lr = hparam("loguniform", 10**-2, 10**-4),
+      weight_decay = hparam("loguniform", 10**-2, 10**-8)
+    )
+  ),
+  trials = 50,
+  multicores = 4
+)
+```
+:::
 
 ```{r}
 #| echo: false
 tuned_tempcnn <- readRDS("./etc/tuned_tempcnn_2.rds")
 ```
 
+```{python}
+#| echo: false
+tuned_tempcnn = read_rds("./etc/tuned_tempcnn_2.rds")
+```
+
 The result of `sits_tuning()` is  tibble with different values of accuracy, kappa, decision matrix, and hyperparameters. The five best results obtain accuracy values between 0.939 and 0.908, as shown below. The best result is obtained by a learning rate of 3.76e-04 and a weight decay of 1.5e-04, and three CNN layers of size 256, kernel size of 5, and dropout rates of 0.2.
 
-```{r tunedtempcnn} 
+:::{.panel-tabset}
+## R
+```{r} 
 # Obtain accuracy, kappa, cnn_layers, cnn_kernels, and cnn_dropout_rates the best result
 cnn_params <- tuned_tempcnn[1,c("accuracy", "kappa", "cnn_layers", "cnn_kernels", "cnn_dropout_rates"), ]
 # Learning rates and weight decay are organized as a list
@@ -153,6 +268,24 @@ lr_wd <- tibble::tibble(lr_best = hparams_best$lr,
 # Print the best parameters 
 dplyr::bind_cols(cnn_params, lr_wd)
 ```
+## Python
+```{python} 
+# Import pandas
+import pandas as pd
+# Learning rates and weight decay are organized as a list
+hparams_best = tuned_tempcnn.opt_hparams[0]
+# Obtain accuracy, kappa, cnn_layers, cnn_kernels, and cnn_dropout_rates the best result
+pd.DataFrame(dict(
+    accuracy = tuned_tempcnn.accuracy[0:1],
+    kappa = tuned_tempcnn.kappa[0:1],
+    cnn_layers = tuned_tempcnn.cnn_layers[0:1],
+    cnn_kernels = tuned_tempcnn.cnn_kernels[0:1],
+    cnn_dropout_rates = tuned_tempcnn.cnn_dropout_rates[0:1],
+    lr_best = hparams_best['lr'],
+    wd_best = hparams_best['weight_decay'],
+))
+```
+:::
 
 ## Summary
 
