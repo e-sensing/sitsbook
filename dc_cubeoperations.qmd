@@ -71,6 +71,14 @@ s2_cube <- sits_cube(
               "B12","CLOUD"),
     start_date = as.Date("2018-07-01"),
     end_date = as.Date("2018-08-31"))
+
+# Regularize the cube to 15 day intervals
+reg_cube <- sits_regularize(
+          cube       = s2_cube,
+          output_dir = tempdir_r,
+          res        = 60,
+          period     = "P15D",
+          multicores = 4)
 ```
 ## Python
 ```{python}
@@ -86,24 +94,7 @@ s2_cube = sits_cube(
               "B12","CLOUD"),
     start_date = "2018-07-01",
     end_date = "2018-08-31")
-```
-:::
-
-:::{.panel-tabset}
-## R
-```{r}
-#| eval: false
-# Regularize the cube to 15 day intervals
-reg_cube <- sits_regularize(
-          cube       = s2_cube,
-          output_dir = tempdir_r,
-          res        = 60,
-          period     = "P15D",
-          multicores = 4)
-```
-## Python
-```{python}
-#| eval: false
+    
 # Regularize the cube to 15 day intervals
 reg_cube = sits_regularize(
           cube       = s2_cube,
@@ -129,6 +120,7 @@ reg_cube <- sits_cube(
 )
 ```
 
+
 ```{python}
 #| eval: true
 #| echo: false
@@ -152,30 +144,18 @@ We first calculate the NDVI in the usual way, using bands B08 and B04.
 :::{.panel-tabset}
 ## R
 ```{r}
-# Calculate NDVI index using bands B08 and B04
-reg_cube <- sits_apply(reg_cube,
-    NDVI = (B08 - B04)/(B08 + B04),
-    output_dir = tempdir_r
-)
-```
-## Python
-```{python}
-# Calculate NDVI index using bands B08 and B04
-reg_cube = sits_apply(reg_cube,
-    NDVI = "(B08 - B04)/(B08 + B04)",
-    output_dir = tempdir_py
-)
-```
-:::
-
-:::{.panel-tabset}
-## R
-```{r}
 #| label: fig-dcops-ndvi
 #| out-width: 100%
 #| fig-cap: | 
 #|   NDVI using bands B08 and B04 of Sentinel-2. 
 #| fig-align: center
+# Calculate NDVI index using bands B08 and B04
+reg_cube <- sits_apply(reg_cube,
+    NDVI = (B08 - B04)/(B08 + B04),
+    output_dir = tempdir_r
+)
+
+# Plot
 plot(reg_cube, band = "NDVI", palette = "RdYlGn")
 ```
 ## Python
@@ -185,6 +165,13 @@ plot(reg_cube, band = "NDVI", palette = "RdYlGn")
 #| fig-cap: | 
 #|   NDVI using bands B08 and B04 of Sentinel-2. 
 #| fig-align: center
+# Calculate NDVI index using bands B08 and B04
+reg_cube = sits_apply(reg_cube,
+    NDVI = "(B08 - B04)/(B08 + B04)",
+    output_dir = tempdir_py
+)
+
+# Plot
 plot(reg_cube, band = "NDVI", palette = "RdYlGn")
 ```
 :::
@@ -194,30 +181,17 @@ We now compare the traditional NDVI with other vegetation index computed using r
 :::{.panel-tabset}
 ## R
 ```{r}
-# Calculate NDRE1 index using bands B06 and B05
-reg_cube <- sits_apply(reg_cube,
-    NDRE1 = (B06 - B05)/(B06 + B05),
-    output_dir = tempdir_r
-)
-```
-## Python
-```{python}
-# Calculate NDRE1 index using bands B06 and B05
-reg_cube = sits_apply(reg_cube,
-    NDRE1 = "(B06 - B05)/(B06 + B05)",
-    output_dir = tempdir_py
-)
-```
-:::
-
-:::{.panel-tabset}
-## R
-```{r}
 #| label: fid-dcops-ndre1
 #| out.width: "100%"
 #| fig.align: "center"
 #| fig.cap: | 
 #|     NDRE1 using bands B06 and B05 of Sentinel-2.
+# Calculate NDRE1 index using bands B06 and B05
+reg_cube <- sits_apply(reg_cube,
+    NDRE1 = (B06 - B05)/(B06 + B05),
+    output_dir = tempdir_r
+)
+
 # Plot NDRE1 index
 plot(reg_cube, band = "NDRE1",  palette = "RdYlGn")
 ```
@@ -228,6 +202,12 @@ plot(reg_cube, band = "NDRE1",  palette = "RdYlGn")
 #| fig.align: "center"
 #| fig.cap: | 
 #|     NDRE1 using bands B06 and B05 of Sentinel-2.
+# Calculate NDRE1 index using bands B06 and B05
+reg_cube = sits_apply(reg_cube,
+    NDRE1 = "(B06 - B05)/(B06 + B05)",
+    output_dir = tempdir_py
+)
+
 # Plot NDRE1 index
 plot(reg_cube, band = "NDRE1",  palette = "RdYlGn")
 ```
@@ -240,30 +220,17 @@ Band combinations can also generate spectral indices for detecting degradation b
 :::{.panel-tabset}
 ## R
 ```{r}
-# Calculate the NBR index
-reg_cube <- sits_apply(reg_cube,
-    NBR = (B12 - B8A)/(B12 + B8A),
-    output_dir = tempdir_r
-)
-```
-## Python
-```{python}
-# Calculate the NBR index
-reg_cube = sits_apply(reg_cube,
-    NBR = "(B12 - B8A)/(B12 + B8A)",
-    output_dir = tempdir_py
-)
-```
-:::
-
-:::{.panel-tabset}
-## R
-```{r}
 #| label: fig-docops-nbr
 #| out.width: "100%"
 #| fig.align: "center"
 #| fig.cap: | 
 #|   NBR ratio using Sentinel-2 B11 and B8A.
+# Calculate the NBR index
+reg_cube <- sits_apply(reg_cube,
+    NBR = (B12 - B8A)/(B12 + B8A),
+    output_dir = tempdir_r
+)
+
 # Plot the NBR for the first date
 plot(reg_cube, band = "NBR", palette = "Reds")
 ```
@@ -274,6 +241,12 @@ plot(reg_cube, band = "NBR", palette = "Reds")
 #| fig.align: "center"
 #| fig.cap: | 
 #|   NBR ratio using Sentinel-2 B11 and B8A.
+# Calculate the NBR index
+reg_cube = sits_apply(reg_cube,
+    NBR = "(B12 - B8A)/(B12 + B8A)",
+    output_dir = tempdir_py
+)
+
 # Plot the NBR for the first date
 plot(reg_cube, band = "NBR", palette = "Reds")
 ```
@@ -281,13 +254,13 @@ plot(reg_cube, band = "NBR", palette = "Reds")
 
 ## Support for non-normalized indexes{-}
 
-All data cube operations discussed so far produce normalized indexes. By default, the indexes generated by the sits_apply() function are normalized between -1 and 1, scaled by a factor of 0.0001. Normalized indexes are saved as INT2S (Integer with sign). If the normalized parameter is FALSE, no scaling factor will be applied and the index will be saved as FLT4S (Float with sign). The code below shows an exemple of  the non-normalized index, CVI - chlorophyll vegetation index. CVI is a spectral index used to estimate the chlorophyll content and overall health of vegetation. It combines bands in visible and near-infrared (NIR) regions to assess vegetation characteristics. Since CVI is not normalized, we have to set the parameter `normalized` to `FALSE` to inform `sits_apply()` to generate an FLT4S image.
+All data cube operations discussed so far produce normalized indexes. By default, the indexes generated by the sits_apply() function are normalized between -1 and 1, scaled by a factor of 0.0001. Normalized indexes are saved as INT2S (Integer with sign). If the normalized parameter is FALSE, no scaling factor will be applied and the index will be saved as FLT4S (Float with sign). The code below shows an example of  the non-normalized index, CVI - chlorophyll vegetation index. CVI is a spectral index used to estimate the chlorophyll content and overall health of vegetation. It combines bands in visible and near-infrared (NIR) regions to assess vegetation characteristics. Since CVI is not normalized, we have to set the parameter `normalized` to `FALSE` to inform `sits_apply()` to generate an FLT4S image.
 
 :::{.panel-tabset}
 ## R
 ```{r}
 #| label: fig-dcoops-cvi
-#| out.width: "100%"
+#| out.width: 100%
 #| fig.align: "center"
 #| fig.cap: | 
 #|   CVI index using bands B03, B05, and B8A.
@@ -297,12 +270,13 @@ reg_cube <- sits_apply(reg_cube,
     normalized = FALSE, 
     output_dir = tempdir_r
 )
+
+# Plot
 plot(reg_cube, band = "CVI", palette = "Greens")
 ```
 ## Python
 ```{python}
 #| label: fig-dcoops-cvi-py
-#| out.width: "100%"
 #| fig.align: "center"
 #| fig.cap: | 
 #|   CVI index using bands B03, B05, and B8A.
@@ -312,6 +286,8 @@ reg_cube = sits_apply(reg_cube,
     normalized = False, 
     output_dir = tempdir_py
 )
+
+# Plot
 plot(reg_cube, band = "CVI", palette = "Greens")
 ```
 :::

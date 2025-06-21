@@ -96,20 +96,30 @@ To show an example of SLIC-based segmentation, we first build a data cube, using
 #| eval: false
 # directory where files are located
 data_dir <- system.file("extdata/Rondonia-20LMR", package = "sitsdata")
-# Builds a cube based on existing files
+
+# builds a cube based on existing files
 cube_20LMR <- sits_cube(
     source = "AWS",
     collection = "SENTINEL-2-L2A",
     data_dir = data_dir,
     bands = c("B02", "B8A", "B11")
 )
-plot(cube_20LMR, red = "B11", green = "B8A", blue = "B02", date = "2022-07-16")
+
+# Plot
+plot(
+    cube_20LMR, 
+    red = "B11",
+    green = "B8A", 
+    blue = "B02", 
+    date = "2022-07-16"
+)
 ```
 ## Python
 ```{python}
 #| eval: false
 # directory where files are located
 data_dir = r_package_dir("extdata/Rondonia-20LMR", package = "sitsdata")
+
 # Builds a cube based on existing files
 cube_20LMR = sits_cube(
     source = "AWS",
@@ -117,14 +127,22 @@ cube_20LMR = sits_cube(
     data_dir = data_dir,
     bands = ("B02", "B8A", "B11")
 )
-plot(cube_20LMR, red = "B11", green = "B8A", blue = "B02", date = "2022-07-16")
+
+# Plot
+plot(
+    cube_20LMR, 
+    red = "B11",
+    green = "B8A", 
+    blue = "B02", 
+    date = "2022-07-16"
+)
 ```
 :::
 
 ```{r}
 #| label: fig-vec-obia-rgb
 #| echo: false
-#| out.width: "80%"
+#| out.width: "70%"
 #| fig.align: "center"
 #| fig.cap: | 
 #|   RGB composite image for part of tile 20LMR in Rondonia, Brasil.
@@ -150,6 +168,8 @@ segments_20LMR <- sits_segment(
         minarea = 20
     )
 )
+
+# Plot segments
 plot(segments_20LMR, red = "B11", green = "B8A", blue = "B02", 
           date = "2022-07-16")
 ```
@@ -169,6 +189,8 @@ segments_20LMR = sits_segment(
         minarea = 20
     )
 )
+
+# Plot segments
 plot(segments_20LMR, red = "B11", green = "B8A", blue = "B02", 
           date = "2022-07-16")
 ```
@@ -178,7 +200,7 @@ plot(segments_20LMR, red = "B11", green = "B8A", blue = "B02",
 ```{r}
 #| label: fig-vec-obia-segments
 #| echo: false
-#| out.width: "80%"
+#| out.width: "75%"
 #| fig.align: "center"
 #| fig.cap: "Image with segments for part of tile 20LMR in Rondonia, Brasil."
 knitr::include_graphics("./images/vec-obia-segments.png") 
@@ -205,7 +227,7 @@ sits_view(segments_20LMR, red = "B11", green = "B8A", blue = "B02",
 ```{r}
 #| label: fig-obia-view
 #| echo: false
-#| out.width: "80%"
+#| out.width: "75%"
 #| fig.align: "center"
 #| fig.cap: "Detail of segementation of image in Amazonia"
 knitr::include_graphics("./images/segmentation_2.png")
@@ -217,8 +239,11 @@ After obtaining the segments, the next step is to classify them. This is done by
 ## R
 ```{r} 
 #| eval: false
+# Select bands
 samples_deforestation <- sits_select(samples_deforestation_rondonia,
                                      bands = c("B02", "B8A", "B11"))
+
+# Train TempCNN
 tcnn_model <- sits_train(samples_deforestation, sits_tempcnn())
 ```
 ## Python
@@ -229,8 +254,12 @@ samples_deforestation_rondonia = load_samples_dataset(
     name = "samples_deforestation_rondonia",
     package = "sitsdata"
 )
+
+# Select bands
 samples_deforestation = sits_select(samples_deforestation_rondonia,
                                      bands = ("B02", "B8A", "B11"))
+
+# Train TempCNN
 tcnn_model = sits_train(samples_deforestation, sits_tempcnn())
 ```
 :::
@@ -305,7 +334,7 @@ plot(segments_20LMR_probs, labels = "Forest")
 ```{r}
 #| label: fig-vec-obia-probs-forest.png
 #| echo: false
-#| out.width: "80%"
+#| out.width: "75%"
 #| fig.align: "center"
 #| fig.cap: "Probability maps for the Forest class inside segments."
 knitr::include_graphics("./images/vec-obia-probs-forest.png") 
@@ -352,6 +381,7 @@ sits_view(
     blue = "B02", 
     dates = "2022-07-16",
 )
+
 # put the original segments on top
 sits_view(segments_20LMR, add = TRUE)
 ```
@@ -366,6 +396,7 @@ sits_view(
     blue = "B02", 
     dates = "2022-07-16",
 )
+
 # put the original segments on top
 sits_view(segments_20LMR, add = True)
 ```
@@ -374,7 +405,7 @@ sits_view(segments_20LMR, add = True)
 ```{r}
 #| label: fig-vec-obia-class
 #| echo: false
-#| out.width: "80%"
+#| out.width: "75%"
 #| fig.cap: |
 #|   Detail of labeled segments for image in Rondonia, Brazil.
 #| fig.align: "center"

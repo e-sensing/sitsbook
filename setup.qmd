@@ -1,151 +1,286 @@
 # Setup {.unnumbered}
 
-## How to use this on-line book {.unnumbered}
+This book contains reproducible code that can be run in both **R** and **Python** environments. The `sits` package is primarily developed in R, with Python support provided through a wrapper that uses the R environment.
 
-This book contains reproducible code that can be run in an R environment. There are three options to set up your working environment:
-Install R and RStudio, and the packages required by sits, with specific procedures for each type of operating system.
+## Configuring R environment {.unnumbered}
 
-1. Install R and RStudio, and the packages required by `sits`, with specific procedures for each type of operating system.
-2. Use a Docker image provided by the Brazil Data Cube.
-3. Install `sits` and all its dependencies using `conda`.
+::: {.callout-note}
+## Foundation required
+The **R** environment is the foundation for `sits` and must be installed regardless of whether you plan to use R or Python interfaces.
+:::
+
+To use this book, it is required to have a proper R environment configured with the right tools, including:
+
+1. R Programming Language 
+2. RStudio IDE
+3. System Dependencies
+4. The `sits` R package
+5. The `sitsdata` data package (for examples)
+
+The sections below, outline how you can install these tools in your Operational System.
+
+### Install R {.unnumbered}
+
+Download and install the latest version of **R** for your operating system:
+
+::: {.panel-tabset}
+
+#### Windows {.panel-tab}
+
+Download the installer from [CRAN Windows](https://cran.r-project.org/bin/windows/)
+
+#### macOS {.panel-tab}
+
+Download from [CRAN macOS](https://cran.r-project.org/bin/macosx/)
+
+#### Linux {.panel-tab}
+
+Use your distribution's package manager or download from [CRAN Linux](https://cran.r-project.org/bin/linux/)
+
+:::
 
 
-## How to install sits using R and RStudio {.unnumbered}
+### Install RStudio {.unnumbered}
 
-We suggest a staged installation, as follows:
+RStudio provides an integrated development environment (IDE) for R, available for Linux, macOS and Windows, offering a code editor, plot preview, debugging tools, package management, and more. You can download [RStudio](https://docs.posit.co/ide/user/ide/get-started/) from the [Posit website](https://posit.co/download/rstudio-desktop/).
 
-1. Get and install base R from [CRAN](https://cran.r-project.org/).
-2. Install RStudio from the [Posit website](https://posit.co/).
+Installing RStudio is optional, as you can use R in any other IDE or code editor. However, it is **recommended** as it offers a very easy-to-use environment and amazing integration with the R Package ecossystem.
 
+### Installing SITS in R {.unnumbered}
 
-### Installing `sits` from CRAN {.unnumbered}
+The `sits` package is available through the Comprehensive R Archive Network (CRAN), which is the official distribution channel for R packages.
 
-The Comprehensive R Archive Network (CRAN) is a network of servers (also known as mirrors) from around the world that store up-to-date versions of basic code and packages for R. In what follows, we describe how to use CRAN to install `sits` on Windows, Linux and macOS. 
+::: {.panel-tabset}
 
-### Installing in Microsoft Windows and macOS environments{.unnumbered}
+#### macOS and Windows {.panel-tab}
 
-Windows and macOS users are strongly encouraged to install binary packages from CRAN. The `sits` package relies on the `sf` and `terra` packages, which require the GDAL and PROJ libraries. Run RStudio and install the binary packages `sf` and `terra`, in this order:
-
-```{r}
-#| eval: false
-install.packages("sf")
-install.packages("terra")
-```
-
-After installing the binaries for `sf` and `terra`, install `sits` as follows;
+macOS and Windows users should install binary packages from CRAN. The installation process requires specific dependencies to be installed in the correct order.
 
 ```{r}
 #| eval: false
 install.packages("sits", dependencies = TRUE)
 ```
 
-To run the examples in the book, please also install `sitsdata` package, which is available from GitHub. It is necessary to use package `devtools` to install `sitsdata`.
+::: {.callout-note}
+#### Package compilation
+Some dependencies from the `sits` package may cause errors during installation, as they require compilation. If you encounter this issue, there are additional tools that can help. For source compilation on Windows, install [Rtools](https://cran.r-project.org/bin/windows/Rtools/). For macOS, follow the instructions at [mac.r-project.org/tools/](https://mac.r-project.org/tools/).
+:::
+
+#### Ubuntu {.panel-tab}
+
+Linux installations require system-level dependencies to be installed first.
+
+**Step 1: Install system dependencies**
+```{bash}
+#| eval: false
+sudo add-apt-repository ppa:ubuntugis/ubuntugis-unstable
+sudo apt-get update
+sudo apt-get install libudunits2-dev \
+                        libgdal-dev \
+                        libgeos-dev \
+                        libproj-dev \
+                        gdal-bin \
+                        proj-bin
+```
+
+If you encounter PPA repository errors, install the required package first:
+```{bash}
+#| eval: false
+sudo apt-get install software-properties-common
+```
+
+**Step 2: Install sits**
+```{r}
+#| eval: false
+install.packages("sits", dependencies = TRUE)
+```
+
+#### Fedora {.panel-tab}
+
+**Step 1: Install system dependencies**
+```{bash}
+#| eval: false
+sudo dnf install gdal \
+                    gdal-devel \
+                    proj-devel \
+                    geos-devel \
+                    sqlite-devel \
+                    udunits2-devel
+```
+
+**Step 2: Install sits**
+```{r}
+#| eval: false
+install.packages("sits", dependencies = TRUE)
+```
+
+#### Other Linux {.panel-tab}
+
+For other Linux distributions, we recommend using [Docker](https://www.docker.com/) containers or following the distribution-specific [GDAL installation guides](https://gdal.org/en/stable/development/building_from_source.html).
+
+:::
+
+
+### Installing sitsdata in R {.unnumbered}
+
+Some examples in this book, uses open data available in the [sitsdata](https://github.com/e-sensing/sitsdata) package. This package is freely available on GitHub, and can be installed in Linux, macOS and Windows, using the following commands:
+
+**1. Increase the network timeout time**
 
 ```{r}
 #| eval: false
-install.packages("devtools")
+options(timeout = 300) # Set network timeout to 5 minutes
+```
+
+**2. Install sitsdata**
+
+```{r}
+#| eval: false
 devtools::install_github("e-sensing/sitsdata")
 ```
 
- To install `sits` from source, please install [Rtools](https://cran.r-project.org/bin/windows/Rtools/) for Windows to have access to the compiling environment. For Mac, please follow the instructions available [here](https://mac.r-project.org/tools/).
+---
 
-### Installing in Ubuntu environments{.unnumbered}
+## Configuring Python environment {.unnumbered}
 
-For Ubuntu, the first step should be to install the latest version of the GDAL, GEOS, and PROJ4 libraries and binaries. To do so, use the repository `ubuntugis-unstable`, which should be done as follows:
+::: {.callout-note}
+## Optional interface
+The Python interface uses the R implementation, so [R must be installed](#configuring-r-environment) before setting up the Python environment.
+:::
 
-``` sh
-sudo add-apt-repository ppa:ubuntugis/ubuntugis-unstable
-sudo apt-get update
-sudo apt-get install libudunits2-dev libgdal-dev libgeos-dev libproj-dev 
-sudo apt-get install gdal-bin
-sudo apt-get install proj-bin
+The Python interface for `sits` is as a wrapper around the R implementation, that gives Python users access to the all features of the `sits` package, integrated with the Python ecosystem. This section outlines the available options for installing the Python interface.
+
+### Prerequisites {.unnumbered}
+
+To use `sits` in Python, you must fill the following prerequisites:
+
+1. [R environment](#configuring-r-environment), including dependencies.
+2. [Arrow package in R](https://arrow.apache.org/docs/r/)
+3. [Python 3.10 or higher](https://www.python.org/downloads/)
+
+### Install Python {.unnumbered}
+
+Download and install the latest version of **Python** for your operating system:
+
+::: {.panel-tabset}
+
+#### Windows {.panel-tab}
+
+Download the installer from the [Python website](https://www.python.org/downloads/)
+
+#### macOS {.panel-tab}
+
+Download the installer from the [Python website](https://www.python.org/downloads/)
+
+#### Linux {.panel-tab}
+
+Use your distribution's package manager or download from the [Python website](https://www.python.org/downloads/)
+
+:::
+
+### Installing arrow in R {.unnumbered}
+
+To transfer objects between R and Python, the [Apache Arrow](https://arrow.apache.org/docs/index.html) is used. Therefore, to take advantage of its features, it must be installed in your R environment. You can install it using the following command:
+
+```r
+install.packages('arrow')
 ```
-Getting an error while adding this PPA repository could be due to the absence of the package `software-properties-common`. After installing GDAL, GEOS, and PROJ4, please install packages `sf` and `terra`:
 
-```{r}
-#| eval: false
-install.packages("sf")
-install.packages("terra")
-```
+### Installing SITS in Python {.unnumbered}
 
-Then please proceed to install `sits`, which can be installed as a regular **R** package.
+The `sits` package is available in the [PyPi](https://pypi.org/project/pysits/#description), and can be installing using the following tools:
 
-```{r}
-#| eval: false
-install.packages("sits", dependencies = TRUE)
-```
+::: {.panel-tabset}
 
-### Installing in Debian environments{.unnumbered}
+#### pip {.panel-tab}
 
-For Debian,  use the [rocker geospatial](https://github.com/rocker-org/geospatial) dockerfiles. 
-
-### Installing in Fedora environments {.unnumbered}
-
-In the case of Fedora, the following command installs all required dependencies:
-
-```{sh}
-#| eval: false
-sudo dnf install gdal-devel proj-devel geos-devel sqlite-devel udunits2-devel
-```
-
-## Using Docker images {.unnumbered}
-
-If you are familiar with Docker, there are images for `sits` available with RStudio or Jupyter Notebook. Such images are provided by the Brazil Data Cube team:
-
-- [Version for R and RStudio](https://hub.docker.com/r/brazildatacube/sits-rstudio).
-- [Version for Jupyter Notebooks](https://hub.docker.com/r/brazildatacube/sits-jupyter).
-
-On a Windows or macOS platform, install [Docker](https://docs.docker.com/desktop/install/windows-install/) and then obtain one of the two images listed above from the Brazil Data Cube. Both images contain the full `sits` running environment. When GDAL is running in `docker` containers, please add the security flag `--security-opt seccomp=unconfined` on start. 
-
-## Install `sits` from CONDA {.unnumbered}
-
-Conda is an open-source, cross-platform package manager. It is a convenient way to install Python and R packages. To use `conda`, first download the software from the [CONDA website](https://conda.io/projects/conda/en/latest/index.html). After installation, use `conda` to install sits from the terminal as follows:
+In your terminal, run:
 
 ```{bash}
 #| eval: false
-# add conda-forge to the download channels 
-conda config --add channels conda-forge
-conda config --set channel_priority strict
-# install sits using conda
-conda install conda-forge::r-sits
+pip install pysits
 ```
 
-The conda installer will download all packages and libraries required to run `sits`. This is the easiest way to install `sits` on Windows. 
+#### pip (with venv) {.panel-tab}
 
+In your terminal, run:
 
-## Accessing the development version {.unnumbered}
+**1. Create virtual environment**
+```{bash}
+#| eval: false
+python -m venv venv
+```
 
-The source code repository of `sits` is on [GitHub](https://github.com/e-sensing/sits). There are two versions available on GitHub: `master` and `dev`. The `master` contains the current stable version, which is either the same code available on CRAN or a minor update with bug fixes. To install the `master` version, install `devtools` (if not already available) and do as follows: 
+**2. Activate environment**
+```{bash}
+#| eval: false
+source venv/bin/activate # or .venv\Scripts\activate on Windows
+```
+
+**3. Install pysits**
+```{bash}
+#| eval: false
+pip install pysits
+```
+
+::: {.callout-note}
+#### Virtual environments
+If you'd like to learn more about Python virtual environments, please refer to the official Python documentation on the topic.
+:::
+
+:::
+
+### Development versions {.panel-tab}
+
+Apart from the official versions of `sits` available on CRAN and PyPI, as described above, users who want to preview features planned for future releases have the option to install the development version.
+
+::: {.callout-note}
+## Advanced users
+Using the development version is recommended for advanced users or those comfortable with troubleshooting within the `sits` ecosystem.
+:::
+
+You can install development versions in R and Python, using the following commands:
+
+::: {.panel-tabset}
+
+#### R {.panel-tab}
+
+In your terminal, run:
 
 ```{r}
 #| eval: false
-install.packages("devtools")
-devtools::install_github("e-sensing/sits", dependencies = TRUE)
-```
-
-To install the `dev` (development) version, which contains the latest updates but might be unstable, install `devtools` (if not already available), and then install `sits` as follows:
-
-```{r}
-#| eval: false
-install.packages("devtools")
 devtools::install_github("e-sensing/sits@dev", dependencies = TRUE)
 ```
 
-## Additional requirements {.unnumbered}
+#### Python {.panel-tab}
 
-To run the examples in the book, please also install the `sitsdata` package. We recommend installing it using `wget`. See instructions in the [GNU Wget site](https://www.gnu.org/software/wget/). 
+In your terminal, run:
 
-```{r}
+```{bash}
 #| eval: false
-options(download.file.method = "wget")
-devtools::install_github("e-sensing/sitsdata")
+pip install git+https://github.com/e-sensing/pysits.git@dev
 ```
+:::
 
-## Using GPUs with `sits` {.unnumbered}
+#### GPU Support for Deep Learning {.unnumbered}
 
-The `torch` package automatically recognizes if a GPU is available on the machine and uses it for training and classification. There is a significant performance gain when GPUs are used instead of CPUs for deep learning models. There is no need for specific adjustments to `torch` scripts.  To use GPUs, `torch` requires version 11.6 of the CUDA library, which is available for Ubuntu 18.04 and 20.04. Please follow the detailed instructions for setting up `torch` available [here](https://torch.mlverse.org/docs/articles/installation.html).
+For users working with deep learning models, `sits` supports GPU acceleration through the [torch](https://torch.mlverse.org/docs/) package, which is already included as a dependency when you install `sits`. This provides significant performance improvements for deep learning operations.
 
-```{r}
-#| eval: false
-install.packages("torch")
-```
+**Automatic GPU detection:**
+
+The `torch` package automatically detects available GPUs and utilizes them when possible, requiring no additional configuration in most cases.
+
+**System requirements:**
+
+- NVIDIA CUDA toolkit
+- Compatible NVIDIA GPU
+- Appropriate GPU drivers
+
+**GPU configuration:**
+
+To use GPU in `sits` with `torch` you must have an environment with proper configuration of the NVIDIA toolkit, including:
+
+1. **CUDA installation:** Ensure CUDA toolkit is properly installed and accessible
+2. **Driver compatibility:** Verify NVIDIA drivers are compatible with your CUDA version
+
+For more details on GPU setup instructions and troubleshooting, refer to the [torch documentation](https://torch.mlverse.org/docs/articles/installation.html#gpu).

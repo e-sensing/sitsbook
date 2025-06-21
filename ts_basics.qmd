@@ -6,6 +6,7 @@ format: html
 ### Configurations to run this chapter{-}
 
 :::{.panel-tabset}
+
 ## R
 ```{r}
 #| echo: true
@@ -32,6 +33,13 @@ from pathlib import Path
 tempdir_py = Path.home() / "sitsbook/tempdir/Python/ts_basics"
 tempdir_py.mkdir(parents=True, exist_ok=True)
 ```
+```{python}
+#| echo: false
+import pandas as pd
+pd.set_option('display.max_columns', 7)
+pd.set_option('display.width', 600)
+pd.set_option('display.max_rows', 10)
+```
 :::
 
 ## Data structure for image time series
@@ -50,11 +58,12 @@ samples_matogrosso_mod13q1[1:4,]
 ```
 ## Python
 ```{python}
-#| eval: false
+# Samples
 samples_matogrosso_mod13q1 = load_samples_dataset(
     name = "samples_matogrosso_mod13q1", 
     package = "sitsdata"
 )
+
 samples_matogrosso_mod13q1[0:4]
 ```
 :::
@@ -64,6 +73,14 @@ The time series tibble contains data and metadata. The first six columns contain
 ## Utilities for handling time series
 
 The package provides functions for data manipulation and displaying information for time series tibbles. For example, `summary()` shows the labels of the sample set and their frequencies.
+
+```{python}
+#| echo: false
+samples_matogrosso_mod13q1 = load_samples_dataset(
+    name = "samples_matogrosso_mod13q1", 
+    package = "sitsdata"
+)
+```
 
 :::{.panel-tabset}
 ## R
@@ -83,26 +100,33 @@ In many cases, it is helpful to relabel the dataset. For example, there may be s
 ```{r}
 # Copy the sample set for Mato Grosso 
 samples_new_labels <- samples_matogrosso_mod13q1
+
 # Show the current labels
 sits_labels(samples_new_labels)
+
 # Update the labels
 sits_labels(samples_new_labels) <- c("Cerrado",   "Forest",    
                                      "Pasture",   "Cropland", 
                                      "Cropland", "Cropland",
                                      "Cropland")
+
 summary(samples_new_labels)
 ```
 ## Python
 ```{python}
 # Copy the sample set for Mato Grosso 
 samples_new_labels = samples_matogrosso_mod13q1.copy(deep = True)
+
 # Get the current labels
-current_labels = sits_labels(samples_new_labels)
+sits_labels(samples_new_labels)
+
 # Update the labels
 samples_new_labels.sits.labels = (
     "Cerrado", "Forest", "Pasture", "Cropland", 
     "Cropland", "Cropland","Cropland"
 )
+
+summary(samples_new_labels)
 ```
 :::
 
@@ -115,6 +139,7 @@ Since metadata and the embedded time series use the tibble data format, the func
 # Select NDVI band
 samples_ndvi <- sits_select(samples_matogrosso_mod13q1, 
                             bands = "NDVI")
+
 # Select only samples with Cerrado label
 samples_cerrado <- dplyr::filter(samples_ndvi, 
                                  label == "Cerrado")
@@ -125,6 +150,7 @@ samples_cerrado <- dplyr::filter(samples_ndvi,
 # Select NDVI band
 samples_ndvi = sits_select(samples_matogrosso_mod13q1, 
                             bands = "NDVI")
+
 # Select only samples with Cerrado label
 samples_cerrado = samples_ndvi.query("label == 'Cerrado'")
 ```
@@ -229,6 +255,10 @@ Meyer and Pebesma propose using a spatial distance distribution plot, which disp
 :::{.panel-tabset}
 ## R
 ```{r}
+#| echo: false
+set.seed(777)
+```
+```{r}
 #| label: fig-ts-geodist
 #| out.width: "100%"
 #| message: false
@@ -238,6 +268,7 @@ Meyer and Pebesma propose using a spatial distance distribution plot, which disp
 # Read a shapefile for the state of Mato Grosso, Brazil
 mt_shp <- system.file("extdata/shapefiles/mato_grosso/mt.shp",
                       package = "sits")
+
 # Convert to an sf object
 mt_sf <- sf::read_sf(mt_shp)
 
@@ -245,10 +276,15 @@ mt_sf <- sf::read_sf(mt_shp)
 distances <- sits_geo_dist(
     samples = samples_modis_ndvi,
     roi = mt_sf)
+
 # Plot sample-to-sample and sample-to-prediction distances
 plot(distances)
 ```
 ## Python
+```{python}
+#| echo: false
+r_set_seed(777)
+```
 ```{python}
 #| label: fig-ts-geodist-py
 #| out.width: "100%"
@@ -258,15 +294,19 @@ plot(distances)
 #|    Distribution of sample-to-sample and sample-to-prediction distances.
 # Import GeoPandas
 import geopandas as gpd
+
 # Read a shapefile for the state of Mato Grosso, Brazil
 mt_shp = r_package_dir("extdata/shapefiles/mato_grosso/mt.shp",
                       package = "sits")
+
 # Convert to an GeoDataFrame object
 mt_sf = gpd.read_file(mt_shp)
+
 # Calculate sample-to-sample and sample-to-prediction distances
 distances = sits_geo_dist(
     samples = samples_modis_ndvi,
     roi = mt_sf)
+
 # Plot sample-to-sample and sample-to-prediction distances
 plot(distances)
 ```
@@ -299,12 +339,15 @@ raster_cube <- sits_cube(
     collection = "MOD13Q1-6.1",
     data_dir   = data_dir,
     parse_info = c("satellite", "sensor", "tile", "band", "date"))
+
 # Obtain a time series from the raster cube from a point
 sample_latlong <- tibble::tibble(
     longitude = -55.57320, 
     latitude  = -11.50566)
+
 series <- sits_get_data(cube    = raster_cube,
                         samples = sample_latlong)
+
 plot(series)
 ```
 ## Python
@@ -315,6 +358,7 @@ plot(series)
 #| fig.cap: "NDVI and EVI time series fetched from local raster cube."
 # Import pandas
 import pandas as pd
+
 # Obtain a raster cube based on local files
 data_dir = r_package_dir("extdata/sinop", package = "sitsdata")
 raster_cube = sits_cube(
@@ -322,13 +366,16 @@ raster_cube = sits_cube(
     collection = "MOD13Q1-6.1",
     data_dir   = data_dir,
     parse_info = ("satellite", "sensor", "tile", "band", "date"))
+
 # Obtain a time series from the raster cube from a point
 sample_latlong = pd.DataFrame([dict(
     longitude = -55.57320,
     latitude  = -11.50566
 )])
+
 series = sits_get_data(cube = raster_cube,
                         samples = sample_latlong)
+
 plot(series)
 ```
 :::
@@ -342,8 +389,10 @@ A useful case is when a set of labeled samples can be used as a training dataset
 # Retrieve a list of samples described by a csv file
 samples_csv_file <- system.file("extdata/samples/samples_sinop_crop.csv",
                                 package = "sits")
+
 # Read the csv file into an R object
 samples_csv <- read.csv(samples_csv_file)
+
 # Print the first three samples
 samples_csv[1:3,]
 ```
@@ -353,8 +402,10 @@ samples_csv[1:3,]
 # Retrieve a list of samples described by a csv file
 samples_csv_file = r_package_dir("extdata/samples/samples_sinop_crop.csv",
                                 package = "sits")
+
 # Read the csv file into an R object
 samples_csv = pd.read_csv(samples_csv_file)
+
 # Print the first three samples
 samples_csv[0:3]
 ```
@@ -370,6 +421,7 @@ Given a suitably built csv sample file, `sits_get_data()` requires two parameter
 # Get the points from a data cube in raster brick format
 points <- sits_get_data(cube = raster_cube, 
                         samples = samples_csv_file)
+
 # Show the tibble with the first three points
 points[1:3,]
 ```
@@ -378,6 +430,7 @@ points[1:3,]
 # Get the points from a data cube in raster brick format
 points = sits_get_data(cube = raster_cube, 
                         samples = samples_csv_file)
+
 # Show the tibble with the first three points
 points[1:3]
 ```
@@ -414,6 +467,7 @@ samples_cerrado_forested <- sits_get_data(
     end_date     = "2021-08-29", 
     label        = "Woody Savanna",
     multicores   = 4)
+
 # Display the time series for the locations of Woody Savanna
 samples_cerrado_forested
 ```
@@ -443,6 +497,7 @@ samples_cerrado_forested = sits_get_data(
     end_date     = "2021-08-29", 
     label        = "Woody Savanna",
     multicores   = 4)
+
 # Display the time series for the locations of Woody Savanna
 samples_cerrado_forested
 ```
@@ -451,6 +506,7 @@ samples_cerrado_forested
 ```{r}
 #| echo: false
 samples_cerrado_forested <- readRDS("./etc/samples_cerrado_forested.rds")
+
 # Display the time series for the locations of Woody Savanna
 samples_cerrado_forested
 ```
@@ -481,8 +537,10 @@ The Savitzky-Golay filter fits a successive array of $2n+1$ adjacent data points
 
 # Take NDVI band of the first sample dataset
 point_ndvi <- sits_select(point_mt_6bands, bands = "NDVI")
+
 # Apply Savitzky Golay filter
 point_sg <- sits_sgolay(point_ndvi, length = 5)
+
 # Merge the point and plot the series
 sits_merge(point_sg, point_ndvi) |> plot()
 ```
@@ -494,8 +552,10 @@ sits_merge(point_sg, point_ndvi) |> plot()
 #| fig.cap: "Savitzky-Golay filter applied on a multi-year NDVI time series."
 # Take NDVI band of the first sample dataset
 point_ndvi = sits_select(point_mt_6bands, bands = "NDVI")
+
 # Apply Savitzky Golay filter
 point_sg = sits_sgolay(point_ndvi, length = 5)
+
 # Merge the point and plot the series
 plot(
     sits_merge(point_sg, point_ndvi)
@@ -516,8 +576,10 @@ The Whittaker smoother attempts to fit a curve representing the raw data, but is
 #| fig.cap: "Whittaker filter applied on a one-year NDVI time series (source: authors)"
 # Take NDVI band of the first sample dataset
 point_ndvi <- sits_select(point_mt_6bands, bands = "NDVI")
+
 # Apply Whitakker filter
 point_whit <- sits_whittaker(point_ndvi, lambda = 0.5)
+
 # Merge the point and plot the series
 sits_merge(point_whit, point_ndvi) |> plot()
 ```
@@ -529,8 +591,10 @@ sits_merge(point_whit, point_ndvi) |> plot()
 #| fig.cap: "Whittaker filter applied on a one-year NDVI time series (source: authors)"
 # Take NDVI band of the first sample dataset
 point_ndvi = sits_select(point_mt_6bands, bands = "NDVI")
+
 # Apply Whitakker filter
 point_whit = sits_whittaker(point_ndvi, lambda_ = 0.5)
+
 # Merge the point and plot the series
 plot(
     sits_merge(point_whit, point_ndvi)

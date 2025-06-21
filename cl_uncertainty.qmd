@@ -114,6 +114,8 @@ The study area is close to the Samuel Hydroelectric Dam, located on the Madeira 
 
 The first step is to produce a regular data cube for the chosen area from 2020-06-01 to 2021-09-01. To reduce processing time and storage, we use only three bands (B02, B8A, and B11) plus the cloud band, and take a small area inside the tile. After obtaining a regular cube, we plot the study area in two dates during the temporal interval of the data cube. The first image is taken at the beginning of the dry season in 2020-07-04, when the inundation area of the dam was covered by shallow water. 
 
+**Load and regularize Sentinel-2 Data Cube**
+
 :::{.panel-tabset}
 ## R
 ```{r}
@@ -132,6 +134,7 @@ s2_cube_ro <- sits_cube(
 # Select a small area inside the tile
 roi = c(lon_max = -63.25790, lon_min = -63.6078, 
         lat_max = -8.72290, lat_min = -8.95630)
+
 # Regularize the small area cube
 s2_reg_cube_ro <- sits_regularize(
   cube = s2_cube_ro,
@@ -193,6 +196,8 @@ s2_reg_cube_ro = sits_cube(
 )
 ```
 
+**Plot Data Cube**
+
 :::{.panel-tabset}
 ## R
 ```{r}
@@ -210,7 +215,7 @@ plot(s2_reg_cube_ro,
 ## Python
 ```{python}
 #| label: fig-uncert-cube-july-py
-#| out.width: "90%"
+#| out.width: "100%"
 #| fig.align: "center"
 #| fig.cap: |
 #|   Area in Rondonia near Samuel dam in July 2020.
@@ -241,7 +246,7 @@ plot(s2_reg_cube_ro,
 ## Python
 ```{python}
 #| label: fig-uncert-cube-nov-py
-#| out.width: "90%"
+#| out.width: "100%"
 #| fig.align: "center"
 #| fig.cap: |
 #|   Area in Rondonia near Samuel dam in November 2020.
@@ -274,7 +279,7 @@ plot(
 ## Python
 ```{python}
 #| label: fig-uncert-cube-aug-py
-#| out.width: "90%"
+#| out.width: "100%"
 #| fig.align: "center"
 #| fig.cap: |
 #|   Area in Rondonia near Samuel dam in August 2021.
@@ -288,7 +293,7 @@ plot(
 ```
 :::
 
-The next step is to classify this study area using a training set with 480 times series collected over the state of Rondonia (Brazil) for detecting deforestation. The training set uses 4 classes (`Burned_Area`, `Forest`,` `Highly_Degraded`, and `Cleared_Area`). The cube is classified using a Random Forest model, post-processed by Bayesian smoothing, and then labeled.
+The next step is to classify this study area using a training set with 480 times series collected over the state of Rondonia (Brazil) for detecting deforestation. The training set uses 4 classes (`Burned_Area`, `Forest`,`Highly_Degraded`, and `Cleared_Area`). The cube is classified using a Random Forest model, post-processed by Bayesian smoothing, and then labeled.
 
 :::{.panel-tabset}
 ## R
@@ -300,8 +305,10 @@ The next step is to classify this study area using a training set with 480 times
 #|   First classified map for area in Rondonia near Samuel dam.
 set.seed(290356)
 library(sitsdata)
+
 # Load the training set
 data("samples_prodes_4classes")
+
 # Select the same three bands used in the data cube
 samples_4classes_3bands <- sits_select(
     data = samples_prodes_4classes, 
@@ -341,6 +348,7 @@ plot(s2_cube_label)
 #| label: fig-uncert-cube-class1-py
 #| out.width: "90%"
 #| fig.align: "center"
+#| message: false
 #| fig.cap: |
 #|   First classified map for area in Rondonia near Samuel dam.
 r_set_seed(290356)
@@ -419,7 +427,7 @@ s2_cube_uncert = sits_uncertainty(
     cube = s2_cube_bayes,
     type_ = "margin",
     output_dir = tempdir_py,
-    memsize = 6,
+    memsize = 16,
     multicores = 4)
 
 plot(s2_cube_uncert)
@@ -448,6 +456,8 @@ new_samples = sits_uncertainty_sampling(
     sampling_window = 10)
 ```
 :::
+
+**View samples**
 
 :::{.panel-tabset}
 ## R
@@ -485,6 +495,7 @@ The visualization shows that the samples are located in the areas covered by the
 #|    Classified map for area in Rondonia near Samuel dam with added samples.
 # Label the new samples
 new_samples$label <- "Wetland"
+
 # Obtain the time series from the regularized cube 
 new_samples_ts <- sits_get_data(
     cube = s2_reg_cube_ro,
@@ -530,9 +541,8 @@ plot(s2_cube_label_v2)
 ```
 ## Python
 ```{python}
-#| eval: false
 #| label: fig-uncert-cube-class2-py
-#| out.width: "90%"
+#| out.width: "100%"
 #| fig.align: "center"
 #| fig.cap: |
 #|    Classified map for area in Rondonia near Samuel dam with added samples.
@@ -622,7 +632,7 @@ s2_cube_uncert_v2 = sits_uncertainty(
     type_ = "margin",
     output_dir = tempdir_py,
     version = "v2",
-    memsize = 6,
+    memsize = 16,
     multicores = 4)
 
 plot(s2_cube_uncert_v2)

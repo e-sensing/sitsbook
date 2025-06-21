@@ -20,7 +20,7 @@ library(sits)
 library(sitsdata)
 # set tempdir if it does not exist 
 tempdir_r <- "~/sitsbook/tempdir/R/intro_quicktour"
-dir.create(tempdir_r, showWarnings = FALSE)
+dir.create(tempdir_r, showWarnings = FALSE, recursive = TRUE)
 ```
 ## Python
 ```{python}
@@ -33,6 +33,13 @@ from pathlib import Path
 # set tempdir if it does not exist 
 tempdir_py = Path.home() / "sitsbook/tempdir/Python/intro_quicktour"
 tempdir_py.mkdir(parents=True, exist_ok=True)
+```
+```{python}
+#| echo: false
+import pandas as pd
+pd.set_option('display.max_columns', 9)
+pd.set_option('display.width', 600)
+pd.set_option('display.max_rows', 10)
 ```
 :::
 
@@ -50,6 +57,7 @@ In this example, we take the data set for agriculture in the municipality of Lui
 # Load the samples for LEM from the "sitsdata" package
 # select the directory for the samples 
 samples_dir <- system.file("data", package = "sitsdata")
+
 # retrieve a data.frame with the samples
 df_samples_cerrado_lem <- readRDS(file.path(samples_dir, "df_samples_cerrado_lem.rds"))
 df_samples_cerrado_lem
@@ -59,6 +67,7 @@ df_samples_cerrado_lem
 # Load the samples for Mato Grosso from the "sitsdata" package
 # select the directory for the samples 
 samples_file = r_package_dir("data/df_samples_cerrado_lem.rds", package = "sitsdata")
+
 # retrieve a data.frame with the samples
 df_samples_cerrado_lem = read_rds(samples_file)
 df_samples_cerrado_lem
@@ -74,6 +83,7 @@ The data set contains 2,302 samples divided into four classes: (a) "Cerrado," wh
 #| fig-align: "center"
 #| fig-cap: | 
 #|   High resolution image of the LEM area with samples. Cerrado samples are shown in green, Pasture ones in yellow, Cropland_1_cycle in light brown and Cropland_2_cycles in dark brown.
+
 knitr::include_graphics("./images/lem_samples_highres.png")
 ```
 
@@ -95,12 +105,14 @@ lat_max <- max(df_samples_cerrado_lem[["latitude"]])
 lat_min <- min(df_samples_cerrado_lem[["latitude"]])
 lon_max <- max(df_samples_cerrado_lem[["longitude"]])
 lon_min <- min(df_samples_cerrado_lem[["longitude"]])
+
 # Define the roi for the LEM dataset
 roi_lem <- c(
     "lat_max" = lat_max,
     "lat_min" = lat_min,
     "lon_max" = lon_max,
     "lon_min" = lon_min)
+
 # Define a data cube in the BDC repository based on the LEM ROI
 bdc_cube <- sits_cube(
     source = "BDC",
@@ -115,11 +127,12 @@ bdc_cube <- sits_cube(
 ```{python}
 #| output: false
 #| eval: false
-# Define a region of interest based on the LEM data set
+# Find the the bounding box of the data
 lat_max = max(df_samples_cerrado_lem["latitude"])
 lat_min = min(df_samples_cerrado_lem["latitude"])
 lon_max = max(df_samples_cerrado_lem["longitude"])
 lon_min = min(df_samples_cerrado_lem["longitude"])
+
 # Define the roi for the LEM dataset
 roi_lem = dict(
     lat_max = lat_max,
@@ -127,7 +140,8 @@ roi_lem = dict(
     lon_max = lon_max,
     lon_min = lon_min
 )
-# Define a data cube in the BDC repository based on the ROI
+
+# Define a data cube in the BDC repository based on the LEM ROI
 bdc_cube = sits_cube(
     source = "BDC", 
     collection  = "CBERS-WFI-16D",
@@ -151,6 +165,7 @@ lem_cube <- sits_cube_copy(
     roi = roi_lem,
     output_dir = tempdir_r
 )
+
 # Plot the cube 
 plot(lem_cube, palette = "RdYlGn")
 ```
@@ -163,7 +178,8 @@ lem_cube = sits_cube_copy(
     roi = roi_lem,
     output_dir = tempdir_py
 )
-# Plot the NDVI for the first date (2013-09-14)
+
+# Plot the cube
 plot(lem_cube, palette = "RdYlGn")
 ```
 :::
@@ -176,8 +192,9 @@ lem_cube <- sits_cube(
     collection  = "CBERS-WFI-16D",
     data_dir = tempdir_r
 )
+
 # Plot the cube 
-plot(lem_cube, palette = "RdYlGn")
+# plot(lem_cube, palette = "RdYlGn")
 ```
 
 ```{r}
@@ -227,7 +244,7 @@ lem_cube$file_info[[1]]
 ## Python
 ```{python}
 # Show information on the images files which are part of a data cube
-lem_cube["file_info"][0]
+lem_cube["file_info"][0].head(5)
 ```
 :::
 
@@ -385,27 +402,32 @@ samples_cropland_2cycles <- dplyr::filter(
     samples_lem, 
     label == "Cropland_2_cycles"
 )
+
 # Select the NDVI band values using sits_select
 # because band values are in a nested data.frame
 samples_crops_2cycles_ndvi <- sits_select(
     samples_cropland_2cycles,
     bands = "NDVI"
 ) 
+
+# plot the samples for label Cropland_2_cycles and band NDVI
 plot(samples_crops_2cycles_ndvi)
 ```
 ## Python
 ```{python}
 #| label: fig-ts-forest-py
-#| out-width: 80%
+#| out-width: 100%
 #| fig-cap: |
 #|   Joint plot of all samples in band NDVI for label Forest.
 #| fig-align: center
 # Select all samples with label "Cropland_2_cycles" using `query` 
 # since the label attribute is a column of the samples data.frame
 samples_crops_2cycles = samples_lem.query('label == "Cropland_2_cycles"')
+
 # Select the NDVI band values using sits_select
 # because band values are in a nested data.frame
 samples_crops_2cycles_ndvi = sits_select(samples_crops_2cycles, bands = "NDVI")
+
 # plot the samples for label Cropland_2_cycles and band NDVI
 plot(samples_crops_2cycles_ndvi)
 ```
@@ -428,27 +450,31 @@ To build the classification model, we use a random forest model called by `sits_
 #|   Most relevant variables of trained random forest model.
 #| fig-align: center
 set.seed(03022024)
+
 # Train a random forest model
 rf_model <- sits_train(
     samples = samples_lem, 
     ml_method = sits_rfor()
 )
+
 # Plot the most important variables of the model
 plot(rf_model)
 ```
 ## Python 
 ```{python}
 #| label: fig-rf-intro-py
-#| out-width: 80%
+#| out-width: 100%
 #| fig-cap: |
 #|   Most relevant variables of trained random forest model.
 #| fig-align: center
 r_set_seed(3022024)
+
 # Train a random forest model
 rf_model = sits_train(
     samples = samples_lem, 
     ml_method = sits_rfor()
 )
+
 # Plot the most important variables of the model
 plot(rf_model)
 ```
@@ -471,13 +497,14 @@ lem_probs <- sits_classify(
     memsize = 8,
     output_dir = tempdir_r
 )
+
 # Plot the probability cube for class Forest
 plot(lem_probs, labels = "Cropland_2_cycles", palette = "YlOrBr")
 ```
 ## Python
 ```{python}
 #| eval: false
-# Classify the data cube
+# Classify the data cube to produce a map of probabilities
 lem_probs = sits_classify(
     data = lem_cube, 
     ml_model = rf_model,
@@ -485,6 +512,7 @@ lem_probs = sits_classify(
     memsize = 8,
     output_dir = tempdir_py
 )
+
 # Plot the probability cube for class Forest
 plot(lem_probs, labels = "Cropland_2_cycles", palette = "YlOrBr")
 ```
@@ -517,6 +545,7 @@ lem_smooth <- sits_smooth(
     memsize = 8,
     output_dir = tempdir_r
 )
+
 plot(lem_smooth, labels = "Cropland_2_cycles", palette = "YlOrBr")
 ```
 ## Python
@@ -529,6 +558,7 @@ lem_smooth = sits_smooth(
     memsize = 8,
     output_dir = tempdir_py
 )
+
 plot(lem_smooth, labels = "Cropland_2_cycles", palette = "YlOrBr")
 ```
 :::
@@ -556,6 +586,7 @@ lem_map <- sits_label_classification(
     cube = lem_smooth, 
     output_dir = tempdir_r
 )
+
 plot(lem_map)
 ```
 ## Python
@@ -566,6 +597,7 @@ lem_map = sits_label_classification(
     cube = lem_smooth, 
     output_dir = tempdir_py
 )
+
 plot(lem_map)
 ```
 :::

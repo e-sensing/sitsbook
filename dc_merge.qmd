@@ -32,6 +32,13 @@ from pathlib import Path
 tempdir_py = Path.home() / "sitsbook/tempdir/Python/dc_merge"
 tempdir_py.mkdir(parents=True, exist_ok=True)
 ```
+```{python}
+#| echo: false
+import pandas as pd
+pd.set_option('display.max_columns', 7)
+pd.set_option('display.width', 600)
+pd.set_option('display.max_rows', 10)
+```
 :::
 
 ## Introduction
@@ -57,6 +64,7 @@ Images from the HLS Landsat and Sentinel-2 collections are accessed separately a
 # define a region of interest
 roi <- c(lon_min = -45.6422, lat_min = -24.0335,
          lon_max = -45.0840, lat_max = -23.6178)
+
 # Retrieve an HLS Sentinel-2 collection
 hls_cube_s2 <- sits_cube(
   source = "HLS",
@@ -67,6 +75,7 @@ hls_cube_s2 <- sits_cube(
   end_date = as.Date("2020-09-01"),
   progress = FALSE
 )
+
 # create a cube from the HLS Landsat collection
 hls_cube_l8 <- sits_cube(
   source = "HLS",
@@ -77,6 +86,7 @@ hls_cube_l8 <- sits_cube(
   end_date = as.Date("2020-09-01"),
   progress = FALSE
 )
+
 # merge the Sentinel-2 and Landsat-8 cubes
 hls_cube_merged <- sits_merge(hls_cube_s2, hls_cube_l8)
 ```
@@ -86,6 +96,7 @@ hls_cube_merged <- sits_merge(hls_cube_s2, hls_cube_l8)
 # define a region of interest
 roi = dict(lon_min = -45.6422, lat_min = -24.0335,
             lon_max = -45.0840, lat_max = -23.6178)
+
 # Retrieve an HLS Sentinel-2 collection
 hls_cube_s2 = sits_cube(
   source = "HLS",
@@ -96,6 +107,7 @@ hls_cube_s2 = sits_cube(
   end_date = "2020-09-01",
   progress = False
 )
+
 # create a cube from the HLS Landsat collection
 hls_cube_l8 = sits_cube(
   source = "HLS",
@@ -106,6 +118,7 @@ hls_cube_l8 = sits_cube(
   end_date = "2020-09-01",
   progress = False
 )
+
 # merge the Sentinel-2 and Landsat-8 cubes
 hls_cube_merged = sits_merge(hls_cube_s2, hls_cube_l8)
 ```
@@ -130,6 +143,8 @@ hls_cube_merged = read_rds(file = "./etc/hls_cube_merged.rds")
 
 Comparing the timelines of the original cubes and the merged one, one can see the benefits of the merged collection for time series data analysis. 
 
+**HLS Sentinel-2 timeline**
+
 :::{.panel-tabset}
 ## R
 ```{r}
@@ -143,6 +158,8 @@ sits_timeline(hls_cube_s2)
 ```
 :::
 
+**HLS Landsat-8 timeline**
+
 :::{.panel-tabset}
 ## R
 ```{r}
@@ -155,6 +172,8 @@ sits_timeline(hls_cube_l8)
 sits_timeline(hls_cube_l8)
 ```
 :::
+
+**Merged timeline**
 
 :::{.panel-tabset}
 ## R
@@ -178,8 +197,10 @@ The merged cube contains a denser timeline. However, for further use in `sits`, 
 #| eval: false
 # define the output directory
 tempdir_r_hls <- "~/sitsbook/tempdir/R/dc_merge/hls"
+
 # set output dir if it does not exist 
 dir.create(tempdir_r_hls, showWarnings = FALSE)
+
 # copy the hls cube for a local directory for faster regularization
 cube_hls_local <- sits_cube_copy(
     cube = hls_cube_merged,
@@ -191,8 +212,10 @@ cube_hls_local <- sits_cube_copy(
 #| eval: false
 # define the output directory
 tempdir_py_hls = tempdir_py / "hls"
+
 # set output dir if it does not exist 
 tempdir_py_hls.mkdir(parents=True, exist_ok=True)
+
 # copy the hls cube for a local directory for faster regularization
 cube_hls_local = sits_cube_copy(
     cube = hls_cube_merged,
@@ -209,8 +232,10 @@ Copying the merged HLS data to a local directory is an optional procedure, which
 #| eval: false
 # define the output directory for the regularized images
 tempdir_r_hls_reg <- "~/sitsbook/tempdir/R/dc_merge/hls_reg"
+
 # set output dir if it does not exist 
 dir.create(tempdir_r_hls_reg, showWarnings = FALSE)
+
 # regularizing a harmonized Landsat-Sentinel data cube 
 cube_hls_reg <- sits_regularize(
     cube = cube_hls_local,
@@ -218,6 +243,7 @@ cube_hls_reg <- sits_regularize(
     res = 30,
     output_dir = tempdir_r_hls_reg
 )
+
 plot(cube_hls_local, date = "2020-07-11")
 ```
 ## Python
@@ -225,8 +251,10 @@ plot(cube_hls_local, date = "2020-07-11")
 #| eval: false
 # define the output directory for the regularized images
 tempdir_py_hls_reg = tempdir_py / "hls_reg"
+
 # set output dir if it does not exist 
 tempdir_py_hls_reg.mkdir(parents=True, exist_ok=True)
+
 # regularizing a harmonized Landsat-Sentinel data cube 
 cube_hls_reg = sits_regularize(
     cube = cube_hls_local,
@@ -234,6 +262,7 @@ cube_hls_reg = sits_regularize(
     res = 30,
     output_dir = tempdir_py_hls_reg
 )
+
 # plot the cube
 plot(cube_hls_local, date = "2020-07-11")
 ```
@@ -266,6 +295,7 @@ cube_s2 <- sits_cube(
     start_date = "2021-06-01",
     end_date = "2021-09-30"
 )
+
 plot(cube_s2, red = "B11", green = "B8A", blue = "B02", date = "2021-07-07")
 ```
 ## Python
@@ -280,6 +310,7 @@ cube_s2 = sits_cube(
     start_date = "2021-06-01",
     end_date = "2021-09-30"
 )
+
 plot(cube_s2, red = "B11", green = "B8A", blue = "B02", date = "2021-07-07")
 ```
 :::
@@ -302,7 +333,9 @@ The next step is to create a regular data cube for tile "20LBL" and Sentinel-2 d
 #| eval: false
 if (!file.exists("./tempdir/R/dc_merge/s2_opt"))
     dir.create("./tempdir/R/dc_merge/s2_opt")
+
 tempdir_r_s2_opt <- "./tempdir/R/dc_merge/s2_opt"
+
 # define the output directory
 cube_s2_reg <-  sits_regularize(
     cube = cube_s2,
@@ -319,6 +352,7 @@ cube_s2_reg <-  sits_regularize(
 #| eval: false
 tempdir_py_s2_opt = tempdir_py / "s2_opt"
 tempdir_py_s2_opt.mkdir(parents=True, exist_ok=True)
+
 # define the output directory
 cube_s2_reg = sits_regularize(
     cube = cube_s2,
@@ -348,6 +382,7 @@ cube_s1_rtc <-  sits_cube(
     start_date = "2021-06-01",
     end_date = "2021-10-01"
 )
+
 plot(cube_s1_rtc, band = "VH", palette = "Greys", scale = 0.7)
 ```
 ## Python
@@ -363,6 +398,7 @@ cube_s1_rtc = sits_cube(
     start_date = "2021-06-01",
     end_date = "2021-10-01"
 )
+
 plot(cube_s1_rtc, band = "VH", palette = "Greys", scale = 0.7)
 ```
 :::
@@ -385,8 +421,10 @@ The next step is to create a regular Sentinel-1 data cube.
 #| eval: false
 # define the output directory
 tempdir_r_sar <- "~/sitsbook/tempdir/R/dc_merge/sar"
+
 # set output dir if it does not exist 
 dir.create(tempdir_r_sar, showWarnings = FALSE)
+
 # create a regular RTC cube from MPC collection for a tile 22LBL.
 cube_s1_reg <- sits_regularize(
     cube = cube_s1_rtc,
@@ -397,6 +435,7 @@ cube_s1_reg <- sits_regularize(
     multicores = 6,
     output_dir = tempdir_r_sar
 )
+
 plot(cube_s1_reg, band = "VH", palette = "Greys", scale = 0.7, 
      dates = c("2021-06-06", "2021-07-24", "2021-09-26"))
 ```
@@ -405,8 +444,10 @@ plot(cube_s1_reg, band = "VH", palette = "Greys", scale = 0.7,
 #| eval: false
 # define the output directory
 tempdir_py_sar = tempdir_py / "sar"
+
 # set output dir if it does not exist
 tempdir_py_sar.mkdir(parents=True, exist_ok=True)
+
 # create a regular RTC cube from MPC collection for a tile 22LBL.
 cube_s1_reg = sits_regularize(
     cube = cube_s1_rtc,
@@ -417,6 +458,7 @@ cube_s1_reg = sits_regularize(
     multicores = 6,
     output_dir = tempdir_py_sar
 )
+
 plot(cube_s1_reg, band = "VH", palette = "Greys", scale = 0.7, 
      dates = ("2021-06-06", "2021-07-24", "2021-09-26"))
 ```
@@ -430,6 +472,7 @@ After creating the two regular cubes, we can merge them. Considering that the ti
 #| eval: false
 # merge Sentinel-1 and Sentinel-2 cubes
 cube_s1_s2 <- sits_merge(cube_s2_reg, cube_s1_reg)
+
 # plot a an image with both SAR and optical bands
 plot(cube_s1_s2, red = "B11", green = "B8A", blue = "VH")
 ```
@@ -438,6 +481,7 @@ plot(cube_s1_s2, red = "B11", green = "B8A", blue = "VH")
 #| eval: false
 # merge Sentinel-1 and Sentinel-2 cubes
 cube_s1_s2 = sits_merge(cube_s2_reg, cube_s1_reg)
+
 # plot a an image with both SAR and optical bands
 plot(cube_s1_s2, red = "B11", green = "B8A", blue = "VH")
 ```
@@ -471,6 +515,7 @@ s2_cube_19HBA <- sits_cube(
   start_date = "2021-01-01",
   end_date = "2021-03-31"
 )
+
 plot(s2_cube_19HBA, red = "B12", green = "B8A", blue = "B04")
 ```
 ## Python
@@ -484,6 +529,7 @@ s2_cube_19HBA = sits_cube(
   start_date = "2021-01-01",
   end_date = "2021-03-31"
 )
+
 plot(s2_cube_19HBA, red = "B12", green = "B8A", blue = "B04")
 ```
 :::
@@ -506,6 +552,7 @@ Then, we produce a regular data cube to use for classification. In this example,
 # set output dir if it does not exist 
 tempdir_r_s2_19HBA <- "~/sitsbook/tempdir/R/dc_merge/s2_19HBA"
 dir.create(tempdir_r_s2_19HBA, showWarnings = FALSE)
+
 # Create a regular data cube
 s2_cube_19HBA_reg <- sits_regularize(
   cube = s2_cube_19HBA,
@@ -520,6 +567,7 @@ s2_cube_19HBA_reg <- sits_regularize(
 # set output dir if it does not exist
 tempdir_py_s2_19HBA = tempdir_py / "s2_19HBA"
 tempdir_py_s2_19HBA.mkdir(parents=True, exist_ok=True)
+
 # Create a regular data cube
 s2_cube_19HBA_reg = sits_regularize(
   cube = s2_cube_19HBA,
@@ -584,6 +632,7 @@ After obtaining the 1$^\circ$ by 1$^\circ$ data cube covering the selected tile,
 # set output dir if it does not exist 
 tempdir_r_dem_19HBA <- "~/sitsbook/tempdir/R/dc_merge/dem_19HBA"
 dir.create(tempdir_r_dem_19HBA, showWarnings = FALSE)
+
 # regularize DEM cube
 dem_cube_19HBA_reg <- sits_regularize(
   cube = dem_cube_19HBA,
@@ -592,6 +641,7 @@ dem_cube_19HBA_reg <- sits_regularize(
   tiles = "19HBA",
   output_dir = tempdir_r_dem_19HBA
 )
+
 # plot the DEM reversing the palette 
 plot(dem_cube_19HBA_reg, band = "ELEVATION", palette = "Spectral", rev = TRUE)
 ```
@@ -601,6 +651,7 @@ plot(dem_cube_19HBA_reg, band = "ELEVATION", palette = "Spectral", rev = TRUE)
 # set output dir if it does not exist 
 tempdir_py_dem_19HBA = tempdir_py / "dem_19HBA"
 tempdir_py_dem_19HBA.mkdir(parents=True, exist_ok=True)
+
 # regularize DEM cube
 dem_cube_19HBA_reg = sits_regularize(
   cube = dem_cube_19HBA,
@@ -609,6 +660,7 @@ dem_cube_19HBA_reg = sits_regularize(
   tiles = "19HBA",
   output_dir = tempdir_py_dem_19HBA
 )
+
 # plot the DEM reversing the palette 
 plot(dem_cube_19HBA_reg, band = "ELEVATION", palette = "Spectral", rev = True)
 ```

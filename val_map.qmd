@@ -50,6 +50,8 @@ The work considered nine LUCC classes: (a) stable natural land cover, including 
 
 In this chapter, we will take the classification map as our starting point for accuracy assessment. This map can be retrieved from the `sitsdata` package as follows.
 
+**Load probabilities cube**
+
 :::{.panel-tabset}
 ## R
 ```{r}
@@ -66,6 +68,7 @@ labels <- c("1" = "Clear_Cut_Bare_Soil",
 
 # directory where the data is stored 
 data_dir <- system.file("extdata/Rondonia-Class-2022-Mosaic/", package = "sitsdata")
+
 # create a probability data cube from a file 
 rondonia_2022_class <- sits_cube(
     source = "MPC",
@@ -91,6 +94,7 @@ labels = {"1"  : "Clear_Cut_Bare_Soil",
 
 # directory where the data is stored 
 data_dir = r_package_dir("extdata/Rondonia-Class-2022-Mosaic/", package = "sitsdata")
+
 # create a probability data cube from a file 
 rondonia_2022_class = sits_cube(
     source = "MPC",
@@ -102,6 +106,8 @@ rondonia_2022_class = sits_cube(
 )
 ```
 :::
+
+**Plot cube**
 
 :::{.panel-tabset}
 ## R
@@ -191,7 +197,14 @@ ro_sampling_design <- sits_sampling_design(
     std_err = 0.01,
     rare_class_prop = 0.1
 )
+
 # show sampling design
+ro_sampling_design
+```
+```{r}
+#| echo: false
+# show sampling desing
+ro_sampling_design <- readRDS("./etc/ro_sampling_design.rds")
 ro_sampling_design
 ```
 ## Python
@@ -214,24 +227,20 @@ ro_sampling_design = sits_sampling_design(
     std_err = 0.01,
     rare_class_prop = 0.1
 )
+
 # show sampling design
 ro_sampling_design
 ```
-
-:::
-
-```{r}
-#| echo: false
-# show sampling desing
-ro_sampling_design <- readRDS("./etc/ro_sampling_design.rds")
-ro_sampling_design
-```
-
 ```{python}
 #| echo: false
 # loading just to have it in memory
 ro_sampling_design = read_rds("./etc/ro_sampling_design.rds")
 ```
+```{r}
+#| echo: false
+ro_sampling_design
+```
+:::
 
 ## Stratified random sampling
 
@@ -246,6 +255,8 @@ The next step is to chose one of the options for sampling design to generate a s
 -   `progress`: show progress bar?
 
 In the example below, we chose the "alloc_120" option from the sampling design to generate a set of stratified samples. The output of the function is an `sf` object with points with location (latitude and longitude) and class assigned in the map. We can also generate a SHP file with the sample information. The script below shows how to use `sits_stratified_sampling()` and also how to convert an `sf` object to a SHP file.
+
+**Generate stratified samples**
 
 :::{.panel-tabset}
 ## R
@@ -279,6 +290,8 @@ ro_samples_sf <- readRDS("./etc/ro_samples_sf.rds")
 #| echo: false
 ro_samples_sf = read_rds("./etc/ro_samples_sf.rds")
 ```
+
+**Save samples in a shapefile**
 
 :::{.panel-tabset}
 ## R
@@ -335,45 +348,47 @@ The validation team used QGIS to produce a CSV file with validation data, which 
 ```{r}
 #| eval: false
 # Get ground truth points
-valid_csv <- system.file("extdata/Rondonia-Class-2022-Mosaic/rondonia_samples_validation.csv", package = "sitsdata")
+valid_csv <- system.file(
+    "extdata/Rondonia-Class-2022-Mosaic/rondonia_samples_validation.csv", package = "sitsdata"
+)
+
 # Calculate accuracy according to Olofsson's method
 area_acc <- sits_accuracy(rondonia_2022_class, 
                           validation = valid_csv,
                           multicores = 4)
+
+# Print the area estimated accuracy 
+area_acc
+```
+```{r}
+#| echo: false
+# Recover the map accuracy 
+area_acc <- readRDS("./etc/area_acc_val_map.rds")
+area_acc
 ```
 ## Python
 ```{python}
 #| eval: false
 # Get ground truth points
-valid_csv = r_package_dir("extdata/Rondonia-Class-2022-Mosaic/rondonia_samples_validation.csv", package = "sitsdata")
+valid_csv = r_package_dir(
+    "extdata/Rondonia-Class-2022-Mosaic/rondonia_samples_validation.csv", package = "sitsdata"
+)
+
 # Calculate accuracy according to Olofsson's method
 area_acc = sits_accuracy(rondonia_2022_class, 
                           validation = valid_csv,
                           multicores = 4)
+                          
+# Print the area estimated accuracy 
+area_acc
 ```
-:::
-
-```{r}
-#| echo: false
-# Recover the map accuracy 
-area_acc <- readRDS("./etc/area_acc_val_map.rds")
-```
-
 ```{python}
 #| echo: false
 # Recover the map accuracy 
 area_acc = read_rds("./etc/area_acc_val_map.rds")
 ```
-
-:::{.panel-tabset}
-## R
 ```{r}
-# Print the area estimated accuracy 
-area_acc
-```
-## Python
-```{python}
-# Print the area estimated accuracy 
+#| echo: false
 area_acc
 ```
 :::
@@ -387,7 +402,13 @@ area_acc$error_matrix
 ```
 ## Python
 ```{python}
+#| eval: false
 area_acc.error_matrix
+```
+```{r}
+#| echo: false
+# added as reticulate is messing up with the matrix representation in Python
+area_acc$error_matrix
 ```
 :::
 

@@ -25,6 +25,13 @@ library(sitsdata)
 # load "pysits" library
 from pysits import *
 ```
+```{python}
+#| echo: false
+import pandas as pd
+pd.set_option('display.max_columns', 7)
+pd.set_option('display.width', 600)
+pd.set_option('display.max_rows', 10)
+```
 :::
 
 ## Introduction
@@ -74,18 +81,28 @@ clusters <- sits_cluster_dendro(
 ```
 ## Python
 ```{python}
-#| label: fig-ts-cludendro-py
-#| cache: true
-#| fig.align: "center"
-#| out.width: "90%"
 #| message: false
-#| fig.cap: | 
-#|    Example of hierarchical clustering for a two class set.
 # Take a set of patterns for 2 classes
 # Create a dendrogram, plot, and get the optimal cluster based on ARI index
 clusters = sits_cluster_dendro(
     samples = cerrado_2classes, 
     bands = ("NDVI", "EVI"),
+    dist_method = "dtw_basic",
+    linkage =  "ward.D2")
+```
+```{r}
+#| echo: false
+#| label: fig-ts-cludendro-py
+#| cache: false
+#| fig.align: "center"
+#| out.width: "90%"
+#| message: false
+#| fig.cap: | 
+#|    Example of hierarchical clustering for a two class set.
+# generating again as python is plotting in interactive mode only
+clusters_tmp = sits_cluster_dendro(
+    samples = cerrado_2classes, 
+    bands = c("NDVI", "EVI"),
     dist_method = "dtw_basic",
     linkage =  "ward.D2")
 ```
@@ -115,8 +132,10 @@ The cluster frequency table shows that each cluster has a predominance of either
 ```{r}
 # Remove cluster 3 from the samples
 clusters_new <- dplyr::filter(clusters, cluster != 3)
+
 # Clear clusters, leaving only the majority label
 clean <- sits_cluster_clean(clusters_new)
+
 # Show clusters samples frequency
 sits_cluster_frequency(clean)
 ```
@@ -124,8 +143,10 @@ sits_cluster_frequency(clean)
 ```{python}
 # Remove cluster 3 from the samples
 clusters_new = clusters.query("cluster != 3")
+
 # Clear clusters, leaving only the majority label
 clean = sits_cluster_clean(clusters_new)
+
 # Show clusters samples frequency
 sits_cluster_frequency(clean)
 ```
