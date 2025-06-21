@@ -59,21 +59,51 @@ In this example, we replicated the results presented in the article "Satellite I
 Accurate classification requires a high-quality sample set. To obtain reliable training data, we conducted a systematic sampling using a 5 × 5 km grid across the entire Cerrado biome, resulting in the collection of 85,026 samples.
 The class labels for the training data were derived from three authoritative sources: the 2018 pastureland map provided by Pastagem.org [@Parente2019], MapBiomas Collection 5 for the year 2018 [@Souza2020], and land use maps from Brazil’s national mapping agency, IBGE, covering the period from 2016 to 2018 [@IBGE2020]. From the initial set of 85,026 samples, we retained only those for which all three sources agreed on the assigned label. This filtering process resulted in a final dataset of 48,850 sample points. Time series data for these points were extracted from the Landsat-8 data cube. The distribution of samples by class is as follows: `Annual Crop` (6,887), `Cerradão` (4,211), `Cerrado` (16,251), `Natural Non-Vegetated` (38), `Open Cerrado` (5,658), `Pasture` (12,894), `Perennial Crop` (68), `Silviculture` (805), `Sugarcane` (1,775), and `Water` (263).
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: true
 # Read the Cerrado samples
 data("samples_cerrado_lc8_examples")
 ```
 
+## Python
+```{python}
+#| eval: false
+# Read the Cerrado samples
+samples_cerrado_lc8_examples = load_samples_dataset(
+    name    = "samples_cerrado_lc8_examples", 
+    package = "sitsdata"
+)
+```
+:::
+
 SITS package offers a range of functions to support a deeper understanding of the temporal behavior of sample data. One such function is `sits_patterns()`. In the example below, we showed the temporal patterns of each class.
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
 #| echo: true
 # Generate the temporal patterns
 samples_patterns <- sits_patterns(samples_cerrado_lc8_examples)
+
+# Plot samples patterns
 plot(samples_patterns)
 ```
+
+## Python
+```{python}
+#| eval: false
+#| echo: true
+# Generate the temporal patterns
+samples_patterns = sits_patterns(samples_cerrado_lc8_examples)
+
+# Plot samples patterns
+plot(samples_patterns)
+```
+:::
+
 
 ```{r}
 #| label: fig-pattern-intro-cerrado
@@ -92,6 +122,8 @@ The plot presents the temporal patterns of the sample classes. The pattern obser
 
 Let us start by accessing the Landsat collection through the Microsoft Planetary Computer provider. First, we need to define the region of interest (ROI) where the example will take place. This ROI is then used to select the tiles that intersect with it, as shown below:
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
 # Define a roi for the example
@@ -113,11 +145,36 @@ mpc_cube <- sits_cube(
 )
 ```
 
+## Python
+```{python}
+#| eval: false
+# Define a roi for the example
+roi = dict(
+    lon_min = -50.780,
+    lat_min = -13.392,
+    lon_max = -50.540,
+    lat_max = -13.249
+)
+
+# Access the Landsat through the MPC
+mpc_cube = sits_cube(
+    source = "MPC",
+    collection  = "LANDSAT-C2-L2",
+    bands = ("BLUE", "GREEN", "RED", "NIR08", "SWIR16", "SWIR22", "CLOUD"),
+    roi = roi,
+    start_date = "2017-08-29",
+    end_date = "2018-08-29"
+)
+```
+:::
 
 The created data cube is not regular (for more details, see [Regular Earth observation data cubes](datacubes.qmd#regular-earth-observation-data-cubes)), which means that it needs to be regularized before proceeding with the analysis. We recommend copying the images locally before applying the regularization process. Although not mandatory, this is considered a good practice. In cases where the machine does not have sufficient storage space, regularization can be performed directly on the remote data.
 
 In this experiment, we use the `sits_cube_copy()` function to copy the remote images locally. This function supports the `roi` parameter, allowing the images to be cropped during the download process. It also supports the `multicores` parameter, which can significantly improve download speed.
 
+
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
 #| echo: true
@@ -130,8 +187,24 @@ mpc_cube <- sits_cube_copy(
 )
 ```
 
+## Python
+```{python}
+#| eval: false
+#| echo: true
+# Copy images locally
+mpc_cube = sits_cube_copy(
+  cube = mpc_cube,
+  roi = roi,
+  multicores = 5,
+  output_dir = tempdir_cerrado_cube
+)
+```
+:::
+
 As discussed in the [Earth observation data cubes](datacubes.qmd) chapter, the SITS package can access both local and remote images. As shown in the code below, we read the images locally after copying them. The only difference between accessing remote and local images is the `data_dir` parameter, which specifies the directory where the images are stored.
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
 #| echo: true
@@ -143,8 +216,23 @@ mpc_cube <- sits_cube(
 )
 ```
 
+## Python
+```{python}
+#| eval: false
+#| echo: true
+# Access local data cube
+mpc_cube = sits_cube(
+    source = "MPC",
+    collection = "LANDSAT-C2-L2",
+    data_dir = tempdir_cerrado_cube
+)
+```
+:::
+
 After creating the local data cube, we can proceed with the regularization step using the `sits_regularize()` function. In this case, we provide the timeline parameter to define a custom timeline, specifically the timeline of the reference samples. This ensures consistency between the data cube and the samples. For more details on the regularization process, please refer to the corresponding chapter in [Building regular data cubes](dc_regularize.qmd).
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
 #| echo: true
@@ -163,21 +251,33 @@ cube_reg <- sits_regularize(
 )
 ```
 
-```{r}
+## Python
+```{python}
 #| eval: false
-#| echo: false
-# Access local data cube
-cube_reg <- sits_cube(
-    source = "MPC",
-    collection = "LANDSAT-C2-L2",
-    data_dir = tempdir_cerrado
+#| echo: true
+# Samples timeline
+timeline = sits_timeline(samples_cerrado_lc8_examples)
+
+# Regularize the local cube
+cube_reg = sits_regularize(
+    cube = mpc_cube,
+    period = "P16D",
+    res = 30,
+    roi = roi,
+    multicores = 5,
+    output_dir = tempdir_cerrado,
+    timeline = timeline
 )
 ```
+:::
 
 ### Computing vegetation indices
 
 SITS provides a range of functions to perform various operations on a data cube, as highlighted in the [Computing NDVI and other spectral indices](dc_cubeoperations.qmd) chapter. One of these functions is `sits_apply()`, which allows users to generate indices using R expressions. In the example below, we compute NDVI and EVI indices to illustrate how this function can be used for generating vegetation indices.
 
+
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
 #| echo: true
@@ -207,6 +307,36 @@ plot(cube_reg,
 )
 ```
 
+## Python
+```{python}
+#| eval: false
+#| echo: true
+# Calculate NDVI index using bands NIR08 and RED
+cube_reg = sits_apply(
+    data = cube_reg,
+    NDVI = "(NIR08 - RED) / (NIR08 + RED)",
+    output_dir = tempdir_cerrado,
+    multicores = 5,
+    memsize    = 8
+)
+
+# Calculate EVI index using bands NIR08 and RED
+cube_reg = sits_apply(
+    data       = cube_reg,
+    EVI        = "2.5 * ((NIR08 - RED) / (NIR08 + 6 * RED - 7.5 * BLUE + 1))",
+    output_dir = tempdir_cerrado,
+    multicores = 5,
+    memsize    = 8
+)
+
+# Plot NDVI for the second date (2017-09-14)
+plot(cube_reg,
+  band = "NDVI",
+  dates = "2017-09-14",
+  palette = "RdYlGn"
+)
+```
+:::
 
 ```{r}
 #| label: fig-nvdvi-intro-cerrado
@@ -219,7 +349,7 @@ plot(cube_reg,
 knitr::include_graphics("./images/ndvi_intro_cerrado.png") 
 ```
 
-### Getting samples time series
+### Getting time series
 
 After creating the data cube, the next step is to extract the time series for the sample locations. Since we already have the samples time series for the entire Cerrado, the code below serves only as an example to demonstrate how to extract sample time series from the data cube.
 
@@ -229,6 +359,14 @@ After creating the data cube, the next step is to extract the time series for th
 samples <- readRDS("./etc/samples_cerrado_intro.rds")
 ```
 
+```{python}
+#| eval: false
+#| echo: false
+samples = read_rds("./etc/samples_cerrado_intro.rds")
+```
+
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
 #| echo: true
@@ -238,9 +376,42 @@ samples <- sits_get_data(
     samples = samples_cerrado_lc8_examples,
     multicores = 5
 )
+
 # Show the tibble with the first three points
 print(samples[1:3,])
 ```
+
+## Python
+```{python}
+#| eval: false
+#| echo: true
+# Extract the time series
+samples = sits_get_data(
+    cube = cube_reg,
+    samples = samples_cerrado_lc8_examples,
+    multicores = 5
+)
+
+# Show the tibble with the first three points
+samples[0:2]
+```
+:::
+
+:::{.panel-tabset}
+## R
+```{r}
+#| eval: true
+#| echo: false
+samples[1:3,]
+```
+
+## Python
+```{python}
+#| eval: false
+#| echo: false
+samples[0:2]
+```
+:::
 
 ### Training a Deep Learning model
 
@@ -254,6 +425,14 @@ In the code below, we tune the TempCNN model by adjusting the number of convolut
 tuned_tempcnn <- readRDS("./etc/tuning_tcnn_cerrado_intro.rds")
 ```
 
+```{python}
+#| eval: false
+#| echo: false
+tuned_tempcnn = read_rds("./etc/tuning_tcnn_cerrado_intro.rds")
+```
+
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
 #| echo: true
@@ -280,20 +459,67 @@ tuned_tempcnn <- sits_tuning(
     multicores = 8,
     progress = TRUE
 )
+
 # Printing the best parameters:
 tuned_tempcnn
 ```
 
+## Python
+```{python}
+#| eval: false
+#| echo: true
+tuned_mt = sits_tuning(
+     samples = samples_matogrosso_mod13q1,
+     ml_method = sits_lighttae,
+     params = sits_tuning_hparams(
+         optimizer = "torch::optim_adamw",
+         cnn_layers = hparam(
+            "choice", (32, 32, 32), (64, 64, 64), (128, 128, 128)
+         ),
+         cnn_kernels = hparam(
+            "choice", (5, 5, 5), (7, 7, 7), (9, 9, 9)
+         ),
+         cnn_dropout_rates = hparam(
+        "choice", (0.15, 0.15, 0.15), (0.2, 0.2, 0.2), 
+                  (0.3, 0.3, 0.3), (0.4, 0.4, 0.4)
+         ),
+         opt_hparams = dict(
+             lr = hparam("uniform", 10**-4, 10**-2),
+             weight_decay = hparam("uniform", 10**-6, 10**-3)
+         )
+     ),
+     trials = 40,
+     multicores = 6,
+     progress = FALSE
+)
+
+# Printing the best parameters:
+tuned_tempcnn
+```
+:::
+
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: true
 #| echo: false
 tuned_tempcnn
 ```
 
+## Python
+```{python}
+#| eval: false
+#| echo: false
+tuned_tempcnn
+```
+:::
+
 We can now take the best-fitting parameters and use them to train our deep learning model. The selected hyperparameters were 64 convolutional filters, a kernel size of 7, and a dropout rate of 0.3. 
 
 ### Training a deep learning model
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
 #| echo: true
@@ -302,14 +528,14 @@ set.seed(03022024)
 tempcnn_model <- sits_train(
   samples_cerrado_lc8_examples,
   sits_tempcnn(
-    optimizer            = torch::optim_adamw,
-    cnn_layers           = c(64, 64, 64),
-    cnn_kernels          = c(7, 7, 7),
-    cnn_dropout_rates    = c(0.3, 0.3, 0.3),
-    epochs               = 50,
-    batch_size           = 256,
-    validation_split     = 0.2,
-    opt_hparams = list(lr = 0.002024501	,
+    optimizer         = torch::optim_adamw,
+    cnn_layers        = c(64, 64, 64),
+    cnn_kernels       = c(7, 7, 7),
+    cnn_dropout_rates = c(0.3, 0.3, 0.3),
+    epochs            = 50,
+    batch_size        = 256,
+    validation_split  = 0.2,
+    opt_hparams = list(lr = 0.002024501,
                        weight_decay = 0.0006641582),
     verbose = TRUE
   )
@@ -318,6 +544,33 @@ tempcnn_model <- sits_train(
 # Show training evolution
 plot(tempcnn_model)
 ```
+
+## Python
+```{python}
+#| eval: false
+#| echo: true
+r_set_seed(03022024)
+# Train using tempCNN
+tempcnn_model = sits_train(
+  samples_cerrado_lc8_examples,
+  sits_tempcnn(
+    optimizer         = "torch::optim_adamw",
+    cnn_layers        = (64, 64, 64),
+    cnn_kernels       = (7, 7, 7),
+    cnn_dropout_rates = (0.3, 0.3, 0.3),
+    epochs            = 50,
+    batch_size        = 256,
+    validation_split  = 0.2,
+    opt_hparams = dict(lr = 0.002024501,
+                       weight_decay = 0.0006641582),
+    verbose = TRUE
+  )
+)
+
+# Show training evolution
+plot(tempcnn_model)
+```
+:::
 
 ```{r}
 #| label: fig-model-intro-cerrado
@@ -334,6 +587,8 @@ knitr::include_graphics("./images/model_intro_cerrado.png")
 
 The final step is to produce the probability map, which involves applying the trained model to classify the time series within the data cube.
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
 #| echo: true
@@ -350,6 +605,24 @@ cerrado_probs <- sits_classify(
 plot(cerrado_probs, labels = "Cerrado", palette = "BuGn")
 ```
 
+## Python
+```{python}
+#| eval: false
+#| echo: true
+# Classify the raster image
+cerrado_probs = sits_classify(
+  data = cube_reg,
+  ml_model = tempcnn_model,
+  multicores = 5,
+  memsize = 8,
+  output_dir = tempdir_cerrado
+)
+
+# Plot the probability cube for class Forest
+plot(cerrado_probs, labels = "Cerrado", palette = "BuGn")
+```
+:::
+
 ```{r}
 #| label: fig-probs-intro-cerrado
 #| echo: false
@@ -363,6 +636,8 @@ knitr::include_graphics("./images/probs_intro_cerrado.png")
 
 After generating the probability map, we highly recommend applying a smoothing operation based on the spatial neighborhood. This step is essential for incorporating spatial context into the classification results. We used the default values for `smoothness` and `window_size`, which serve as a solid starting point. However, we encourage users to adjust these parameters according to the specific needs of their application. For more about the `sits_smooth()` function, please refer to [Bayesian smoothing for classification post-processing](cl_smoothing.qmd) chapter.
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
 #| echo: true
@@ -378,6 +653,23 @@ cerrado_bayes <- sits_smooth(
 plot(cerrado_bayes, labels = "Cerrado", palette = "BuGn")
 ```
 
+## Python
+```{python}
+#| eval: false
+#| echo: true
+# Perform spatial smoothing
+cerrado_bayes = sits_smooth(
+  cube = cerrado_probs,
+  multicores = 5,
+  memsize = 8,
+  output_dir = tempdir_cerrado
+)
+
+# Plot the smooth cube for class Forest
+plot(cerrado_bayes, labels = "Cerrado", palette = "BuGn")
+```
+:::
+
 ```{r}
 #| label: fig-smooth-intro-cerrado
 #| echo: false
@@ -391,6 +683,8 @@ knitr::include_graphics("./images/smooth_intro_cerrado.png")
 
 The final step is labeling the probability map. This involves selecting the highest probability values and assigning class labels to them based on the sample classes.
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
 #| echo: true
@@ -403,6 +697,21 @@ cerrado_map <- sits_label_classification(
 # Plot the land use and land cover map
 plot(cerrado_map)
 ```
+
+## Python
+```{python}
+#| eval: false
+#| echo: true
+# Label the probability file
+cerrado_map = sits_label_classification(
+  cube = cerrado_bayes,
+  output_dir = tempdir_cerrado
+)
+
+# Plot the land use and land cover map
+plot(cerrado_map)
+```
+:::
 
 ```{r}
 #| label: fig-label-intro-cerrado
@@ -422,11 +731,13 @@ For the validation step, we extended the classification to the entire Cerrado bi
 
 we used 5402 validation points, which are independent of the training set used in the classification. They were interpreted by five specialists using high resolution images from the same period of the classification. For the assessment, we merged the labels `Cerradao`, `Cerrado`, and `Open Cerrado` into one label called `Cerrado`. We also did additional sampling to reach a minimal number of samples for the classes `Natural Non Vegetated`, `Perennial Crop`, and `Water`.
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: true
 #| echo: true
 # Cerrado classification file
-cerrado_path <- system.file(
+cerrado_path = system.file(
     "/extdata/Cerrado-Class-2017-2018-Mosaic", package = "sitsdata"
 )
 
@@ -445,8 +756,36 @@ cerrado_map <- sits_cube(
 plot(cerrado_map)
 ```
 
+## Python
+```{python}
+#| eval: false
+#| echo: true
+# Cerrado classification file
+cerrado_path = r_package_dir(
+    content_dir = "/extdata/Cerrado-Class-2017-2018-Mosaic", 
+    package = "sitsdata"
+)
+
+# Read the probability file
+cerrado_map = sits_cube(
+    source = "MPC",
+    collection = "LANDSAT-C2-L2",
+    bands = "class",
+    labels = ({"1": "Annual_Crop", "3": "Cerrado", "4": "Nat_NonVeg",
+               "6": "Pasture", "7":"Perennial_Crop", "8": "Silviculture",
+               "9": "Sugarcane", "10": "Water"}),
+    data_dir = cerrado_path
+)
+
+# Plot Cerrado map
+plot(cerrado_map)
+```
+:::
+
 We used the sits implementation of the area-weighted technique [@Olofsson2013] to provide an unbiased estimator for the overall accuracy and the total area of each class based on the reference samples (see [Map accuracy assessment](val_map.qmd)). The classification accuracies are shown below. The overall accuracy of the classification was 0.83.
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: true
 #| echo: true
@@ -456,7 +795,8 @@ valid_csv <- system.file("extdata/csv/cerrado_lc8_validation.csv",
 )
 
 # Calculate accuracy according to Olofsson's method
-area_acc <- sits_accuracy(cerrado_map,
+area_acc <- sits_accuracy(
+  data = cerrado_map,
   validation = valid_csv,
   multicores = 4
 )
@@ -464,3 +804,25 @@ area_acc <- sits_accuracy(cerrado_map,
 # Print the area estimated accuracy
 area_acc
 ```
+
+## Python
+```{python}
+#| eval: false
+#| echo: true
+# Get ground truth points
+valid_csv = r_package_dir(
+    content_dir = "extdata/csv/cerrado_lc8_validation.csv",
+    package = "sitsdata"
+)
+
+# Calculate accuracy according to Olofsson's method
+area_acc = sits_accuracy(
+  data = cerrado_map,
+  validation = valid_csv,
+  multicores = 4
+)
+
+# Print the area estimated accuracy
+area_acc
+```
+:::
