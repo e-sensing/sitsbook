@@ -34,17 +34,24 @@ dir.create(tempdir_rondonia, recursive = TRUE)
 ## Python
 ```{python}
 #| echo: true
-#| eval: false
+#| eval: true
 #| output: false
+# load "pysits" library
 from pysits import *
-import pandas as pd
-pd.set_option("display.max_columns", 100)
-pd.set_option("display.max_rows", 4)
-# set bookdir if it does not exist 
 from pathlib import Path
-home = str(Path.home())
-tempdir_py = home + "/sitsbook/tempdir/Python/intro_examples"
-Path(tempdir_py).mkdir(parents=True, exist_ok=True)
+# set tempdir if it does not exist 
+tempdir_py = Path.home() / "sitsbook/tempdir/Python/intro_examples"
+tempdir_cerrado = tempdir_py / "cerrado"
+tempdir_cerrado_cube = tempdir_cerrado / "cube"
+
+tempdir_cerrado_cube.mkdir(parents=True, exist_ok=True)
+```
+```{python}
+#| echo: false
+import pandas as pd
+pd.set_option('display.max_columns', 7)
+pd.set_option('display.width', 600)
+pd.set_option('display.max_rows', 10)
 ```
 :::
 
@@ -360,7 +367,7 @@ samples <- readRDS("./etc/samples_cerrado_intro.rds")
 ```
 
 ```{python}
-#| eval: false
+#| eval: true
 #| echo: false
 samples = read_rds("./etc/samples_cerrado_intro.rds")
 ```
@@ -380,7 +387,11 @@ samples <- sits_get_data(
 # Show the tibble with the first three points
 print(samples[1:3,])
 ```
-
+```{r}
+#| eval: true
+#| echo: false
+samples[1:3,]
+```
 ## Python
 ```{python}
 #| eval: false
@@ -395,19 +406,8 @@ samples = sits_get_data(
 # Show the tibble with the first three points
 samples[0:2]
 ```
-:::
-
-:::{.panel-tabset}
-## R
-```{r}
-#| eval: true
-#| echo: false
-samples[1:3,]
-```
-
-## Python
 ```{python}
-#| eval: false
+#| eval: true
 #| echo: false
 samples[0:2]
 ```
@@ -426,7 +426,7 @@ tuned_tempcnn <- readRDS("./etc/tuning_tcnn_cerrado_intro.rds")
 ```
 
 ```{python}
-#| eval: false
+#| eval: true
 #| echo: false
 tuned_tempcnn = read_rds("./etc/tuning_tcnn_cerrado_intro.rds")
 ```
@@ -463,7 +463,11 @@ tuned_tempcnn <- sits_tuning(
 # Printing the best parameters:
 tuned_tempcnn
 ```
-
+```{r}
+#| eval: true
+#| echo: false
+tuned_tempcnn
+```
 ## Python
 ```{python}
 #| eval: false
@@ -480,8 +484,8 @@ tuned_mt = sits_tuning(
             "choice", (5, 5, 5), (7, 7, 7), (9, 9, 9)
          ),
          cnn_dropout_rates = hparam(
-        "choice", (0.15, 0.15, 0.15), (0.2, 0.2, 0.2), 
-                  (0.3, 0.3, 0.3), (0.4, 0.4, 0.4)
+            "choice", (0.15, 0.15, 0.15), (0.2, 0.2, 0.2), 
+                        (0.3, 0.3, 0.3), (0.4, 0.4, 0.4)
          ),
          opt_hparams = dict(
              lr = hparam("uniform", 10**-4, 10**-2),
@@ -490,25 +494,14 @@ tuned_mt = sits_tuning(
      ),
      trials = 40,
      multicores = 6,
-     progress = FALSE
+     progress = False
 )
 
 # Printing the best parameters:
 tuned_tempcnn
 ```
-:::
-
-:::{.panel-tabset}
-## R
 ```{r}
 #| eval: true
-#| echo: false
-tuned_tempcnn
-```
-
-## Python
-```{python}
-#| eval: false
 #| echo: false
 tuned_tempcnn
 ```
@@ -550,6 +543,7 @@ plot(tempcnn_model)
 #| eval: false
 #| echo: true
 r_set_seed(03022024)
+
 # Train using tempCNN
 tempcnn_model = sits_train(
   samples_cerrado_lc8_examples,
@@ -563,7 +557,7 @@ tempcnn_model = sits_train(
     validation_split  = 0.2,
     opt_hparams = dict(lr = 0.002024501,
                        weight_decay = 0.0006641582),
-    verbose = TRUE
+    verbose = True
   )
 )
 
@@ -758,7 +752,7 @@ plot(cerrado_map)
 
 ## Python
 ```{python}
-#| eval: false
+#| eval: true
 #| echo: true
 # Cerrado classification file
 cerrado_path = r_package_dir(
@@ -771,9 +765,9 @@ cerrado_map = sits_cube(
     source = "MPC",
     collection = "LANDSAT-C2-L2",
     bands = "class",
-    labels = ({"1": "Annual_Crop", "3": "Cerrado", "4": "Nat_NonVeg",
+    labels = {"1": "Annual_Crop", "3": "Cerrado", "4": "Nat_NonVeg",
                "6": "Pasture", "7":"Perennial_Crop", "8": "Silviculture",
-               "9": "Sugarcane", "10": "Water"}),
+               "9": "Sugarcane", "10": "Water"},
     data_dir = cerrado_path
 )
 
@@ -823,6 +817,10 @@ area_acc = sits_accuracy(
 )
 
 # Print the area estimated accuracy
+area_acc
+```
+```{r}
+#| echo: false
 area_acc
 ```
 :::
