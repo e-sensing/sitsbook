@@ -50,15 +50,14 @@ Path(tempdir_py).mkdir(parents=True, exist_ok=True)
 
 ## Land Use and Land cover Map for Brazilian Cerrado
 
-The Cerrado is the second largest biome in Brazil, covering approximately 1.9 million square kilometers. This tropical savanna ecoregion is characterized by a rich and diverse ecosystem that ranges from grasslands to woodlands. It is home to over 7,000 plant species, many of which are endemic [@Klink2005]. The biome comprises three major types of natural vegetation: Open Cerrado, predominantly composed of grasses and small shrubs with occasional small trees; Cerrado Sensu Stricto, a typical savanna formation characterized by low, thin-trunked trees with irregular branching; and Cerradão, a dry forest composed of medium-sized trees reaching up to 10–12 meters in height [@Goodland1971; @Del-Claro2019]. Despite its ecological importance, large portions of the Cerrado are being rapidly converted to agricultural land, making it one of the world’s most dynamic agricultural frontiers [@Walter2006]. The primary agricultural activities include cattle ranching, crop farming, and the establishment of planted forests.
+The Cerrado is the second largest biome in Brazil, covering approximately 1.9 million $km^2$. This tropical savanna ecoregion is characterized by a rich and diverse ecosystem that ranges from grasslands to woodlands. It is home to over 7,000 plant species, many of which are endemic [@Klink2005]. The biome comprises three major types of natural vegetation: Open Cerrado, predominantly composed of grasses and small shrubs with occasional small trees; Cerrado Sensu Stricto, a typical savanna formation characterized by low, thin-trunked trees with irregular branching; and Cerradão, a dry forest composed of medium-sized trees reaching up to 10–12 meters in height [@Goodland1971; @Del-Claro2019]. Despite its ecological importance, large portions of the Cerrado are being rapidly converted to agricultural land, making it one of the world's most dynamic agricultural frontiers [@Walter2006]. The primary agricultural activities include cattle ranching, crop farming, and the establishment of planted forests.
 
-In this example, we replicated the results presented in the article "Satellite Image Time Series Analysis for Big Earth Observation Data" [@Simoes2021], using Landsat imagery accessed through the Microsoft Planetary Computer (MPC) platform. We have selected a small region to illustrate all the steps involved in generating a land use and land cover map. The classification period ranges from September 2017 to August 2018, following the agricultural calendar.  A temporal resolution of 16 days was used throughout the analysis.
+In this example, we replicated the results presented in the article "Satellite Image Time Series Analysis for Big Earth Observation Data" [@Simoes2021], using Landsat imagery accessed through the Microsoft Planetary Computer (MPC) platform. We have selected a small region to illustrate all the steps involved in generating a land use and land cover map. The classification period ranges from September 2017 to August 2018, following the agricultural calendar. A temporal resolution of 16 days was used throughout the analysis.
 
 ### Cerrado samples
 
 Accurate classification requires a high-quality sample set. To obtain reliable training data, we conducted a systematic sampling using a 5 × 5 km grid across the entire Cerrado biome, resulting in the collection of 85,026 samples.
 The class labels for the training data were derived from three authoritative sources: the 2018 pastureland map provided by Pastagem.org [@Parente2019], MapBiomas Collection 5 for the year 2018 [@Souza2020], and land use maps from Brazil’s national mapping agency, IBGE, covering the period from 2016 to 2018 [@IBGE2020]. From the initial set of 85,026 samples, we retained only those for which all three sources agreed on the assigned label. This filtering process resulted in a final dataset of 48,850 sample points. Time series data for these points were extracted from the Landsat-8 data cube. The distribution of samples by class is as follows: `Annual Crop` (6,887), `Cerradão` (4,211), `Cerrado` (16,251), `Natural Non-Vegetated` (38), `Open Cerrado` (5,658), `Pasture` (12,894), `Perennial Crop` (68), `Silviculture` (805), `Sugarcane` (1,775), and `Water` (263).
-
 
 ```{r}
 #| eval: true
@@ -67,7 +66,6 @@ data("samples_cerrado_lc8_examples")
 ```
 
 SITS package offers a range of functions to support a deeper understanding of the temporal behavior of sample data. One such function is `sits_patterns()`. In the example below, we showed the temporal patterns of each class.
-
 
 ```{r}
 #| eval: false
@@ -103,6 +101,7 @@ roi <- c(
     lon_max = -50.540,
     lat_max = -13.249
 )
+
 # Access the Landsat through the MPC
 mpc_cube <- sits_cube(
     source = "MPC",
@@ -151,6 +150,7 @@ After creating the local data cube, we can proceed with the regularization step 
 #| echo: true
 # Samples timeline
 timeline <- sits_timeline(samples_cerrado_lc8_examples)
+
 # Regularize the local cube
 cube_reg <- sits_regularize(
     cube = mpc_cube,
@@ -189,6 +189,7 @@ cube_reg <- sits_apply(
     multicores = 5,
     memsize    = 8
 )
+
 # Calculate EVI index using bands NIR08 and RED
 cube_reg <- sits_apply(
     data       = cube_reg,
@@ -197,11 +198,7 @@ cube_reg <- sits_apply(
     multicores = 5,
     memsize    = 8
 )
-```
 
-```{r}
-#| echo: true
-#| eval: false
 # Plot NDVI for the second date (2017-09-14)
 plot(cube_reg,
   band = "NDVI",
@@ -209,6 +206,7 @@ plot(cube_reg,
   palette = "RdYlGn"
 )
 ```
+
 
 ```{r}
 #| label: fig-nvdvi-intro-cerrado
@@ -243,12 +241,12 @@ samples <- sits_get_data(
 # Show the tibble with the first three points
 print(samples[1:3,])
 ```
+
 ### Training a Deep Learning model
 
-The next step in producing a classified map is training a model. This step consists of two phases: tuning the hyperparameters and training the model. Although hyperparameter tuning is not mandatory, it is highly recommended, as it helps identify the most suitable configuration that best fits the sample data. In this case, we used the Temporal Convolutional Neural Network (TempCNN) model [@Pelletier2019], which was also used by the original authors of the study. The TempCNN architecture contains three layers of 1D convolutions, using kernels to capture local temporal patterns from satellite image time series (SITS).
+The next step in producing a classified map is training a model. This step consists of two phases: tuning the hyperparameters and training the model. Although hyperparameter tuning is not mandatory, it is highly recommended, as it helps identify the most suitable configuration that best fits the sample data. In this case, we used the Temporal Convolutional Neural Network (TempCNN) model [@Pelletier2019], which was also used by the original authors of the study. The TempCNN architecture contains three layers of 1D convolutions, using kernels to capture local temporal patterns from time series.
 
 In the code below, we tune the TempCNN model by adjusting the number of convolutional layers, kernel sizes, learning rate, and weight decay. This function may take several minutes to execute, depending on the hardware. The execution time can be significantly reduced by leveraging GPU acceleration. For further details, please refer to the [training and running deep learning models](cl_rasterclassification.qmd#training-and-running-deep-learning-models) section.
-
 
 ```{r}
 #| eval: true
@@ -286,7 +284,6 @@ tuned_tempcnn <- sits_tuning(
 tuned_tempcnn
 ```
 
-
 ```{r}
 #| eval: true
 #| echo: false
@@ -317,10 +314,10 @@ tempcnn_model <- sits_train(
     verbose = TRUE
   )
 )
+
 # Show training evolution
 plot(tempcnn_model)
 ```
-
 
 ```{r}
 #| label: fig-model-intro-cerrado
@@ -330,7 +327,7 @@ plot(tempcnn_model)
 #| fig-cap: |
 #|   Training loss and validation accuracy over epochs during the TempCNN model training.
 #| fig-align: center
-knitr::include_graphics("./images/model_intro_cerrado.png") 
+knitr::include_graphics("./images/model_intro_cerrado.png")
 ```
 
 ### Data cube classification
@@ -348,11 +345,7 @@ cerrado_probs <- sits_classify(
   memsize = 8,
   output_dir = tempdir_cerrado
 )
-```
 
-```{r}
-#| eval: false
-#| echo: true
 # Plot the probability cube for class Forest
 plot(cerrado_probs, labels = "Cerrado", palette = "BuGn")
 ```
@@ -380,11 +373,8 @@ cerrado_bayes <- sits_smooth(
   memsize = 8,
   output_dir = tempdir_cerrado
 )
-```
 
-```{r}
-#| eval: false
-#| echo: true
+# Plot the smooth cube for class Forest
 plot(cerrado_bayes, labels = "Cerrado", palette = "BuGn")
 ```
 
@@ -399,9 +389,7 @@ plot(cerrado_bayes, labels = "Cerrado", palette = "BuGn")
 knitr::include_graphics("./images/smooth_intro_cerrado.png") 
 ```
 
-
 The final step is labeling the probability map. This involves selecting the highest probability values and assigning class labels to them based on the sample classes.
-
 
 ```{r}
 #| eval: false
@@ -411,11 +399,8 @@ cerrado_map <- sits_label_classification(
   cube = cerrado_bayes,
   output_dir = tempdir_cerrado
 )
-```
 
-```{r}
-#| eval: false
-#| echo: true
+# Plot the land use and land cover map
 plot(cerrado_map)
 ```
 
@@ -433,7 +418,7 @@ knitr::include_graphics("./images/label_intro_cerrado.png")
 ### Accuracy assessment of classified images
 
 So far, we have generated the classification for a small region to demonstrate how the SITS package can be applied in a real-world scenario.
-For the validation step, we extended the classification to the entire Cerrado biome using the reference samples provided by Simões et al. (2021) [@Simoes2021], in order to evaluate the results with real and independently collected data.
+For the validation step, we extended the classification to the entire Cerrado biome using the reference samples provided by Simoes et al. (2021) [@Simoes2021], in order to evaluate the results with real and independently collected data.
 
 we used 5402 validation points, which are independent of the training set used in the classification. They were interpreted by five specialists using high resolution images from the same period of the classification. For the assessment, we merged the labels `Cerradao`, `Cerrado`, and `Open Cerrado` into one label called `Cerrado`. We also did additional sampling to reach a minimal number of samples for the classes `Natural Non Vegetated`, `Perennial Crop`, and `Water`.
 
@@ -444,6 +429,7 @@ we used 5402 validation points, which are independent of the training set used i
 cerrado_path <- system.file(
     "/extdata/Cerrado-Class-2017-2018-Mosaic", package = "sitsdata"
 )
+
 # Read the probability file
 cerrado_map <- sits_cube(
     source = "MPC",
@@ -454,6 +440,7 @@ cerrado_map <- sits_cube(
                "9" = "Sugarcane", "10" = "Water"),
     data_dir = cerrado_path
 )
+
 # Plot Cerrado map
 plot(cerrado_map)
 ```
@@ -467,12 +454,13 @@ We used the sits implementation of the area-weighted technique [@Olofsson2013] t
 valid_csv <- system.file("extdata/csv/cerrado_lc8_validation.csv",
   package = "sitsdata"
 )
+
 # Calculate accuracy according to Olofsson's method
 area_acc <- sits_accuracy(cerrado_map,
   validation = valid_csv,
   multicores = 4
 )
+
 # Print the area estimated accuracy
 area_acc
 ```
-
