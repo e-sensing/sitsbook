@@ -1,0 +1,1695 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.361">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<meta name="author" content="Gilberto Camara, Rolf Simoes, Felipe Souza, Felipe Carlos, Pedro Andrade, Karine Ferreira, Lorena Santos and Charlotte Pelletier">
+<title>Satellite Image Time Series Analysis on Earth Observation Data Cubes - 4&nbsp; Analysis-ready image collections</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./dc_regularize.html" rel="next">
+<link href="./datacubes.html" rel="prev">
+<link href="././images/cover_sits_book_quarto.jpg" rel="icon" type="image/jpeg">
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light"><script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script><script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script><script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+</head>
+<body class="nav-sidebar floating">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top"><nav class="quarto-secondary-nav"><div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+      <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./datacubes.html">Earth observation data cubes</a></li><li class="breadcrumb-item"><a href="./dc_ardcollections.html"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Analysis-ready image collections</span></a></li></ol></nav>
+      <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+      </a>
+      <button type="button" class="btn quarto-search-button" aria-label="" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav></header><!-- content --><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal sidebar-navigation floating overflow-auto"><div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">Satellite Image Time Series Analysis on Earth Observation Data Cubes</a> 
+        <div class="sidebar-tools-main">
+    <a href="https://github.com/e-sensing/sitsbook" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
+  <a href="" class="quarto-reader-toggle quarto-navigation-tool px-1" onclick="window.quartoToggleReader(); return false;" title="Toggle reader mode">
+  <div class="quarto-reader-toggle-btn">
+  <i class="bi"></i>
+  </div>
+</a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Greetings</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./setup.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Setup</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./acknowledgements.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Acknowledgements</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./introduction.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">The Basics of SITS</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./intro_quicktour.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">A quick tour of SITS</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./intro_examples.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">How to use SITS: example scripts</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./intro_visualisation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Data visualisation in SITS</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./datacubes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Earth observation data cubes</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./dc_ardcollections.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Analysis-ready image collections</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./dc_regularize.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Building regular data cubes</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./dc_merge.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Multi-source EO data cubes</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./dc_localcubes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Data cubes from local files</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./dc_cubeoperations.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Computing NDVI and other spectral indices</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./dc_mixture.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Spectral mixture analysis</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./dc_reduce.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Temporal reduction operations</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./dc_texture.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Texture operations in data cubes</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./timeseries.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Satellite image time series</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ts_basics.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Basic operations on image time series</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ts_cluster.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Hierarchical clustering of time series</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ts_som.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Self-organized maps for sample quality control</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ts_balance.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Reducing sample imbalance</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./classification.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Machine learning for image time series</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./cl_machinelearning.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Machine learning algorithms</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./cl_tuning.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Deep learning model tuning</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./cl_rasterclassification.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Classification of raster data cubes</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./cl_smoothing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">Bayesian smoothing for classification post-processing</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./cl_reclassification.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">Map reclassification</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./cl_uncertainty.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">Uncertainty and active learning</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./cl_ensembleprediction.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">Ensemble prediction with multiple models</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./validation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Validation and accuracy measurement</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./val_kfold.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">23</span>&nbsp; <span class="chapter-title">Cross-validation of training data</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./val_map.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">24</span>&nbsp; <span class="chapter-title">Map accuracy assessment</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./vector_datacubes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Vector data cubes</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./vec_obia.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">25</span>&nbsp; <span class="chapter-title">Object-based time series image analysis</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./vec_creating.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">26</span>&nbsp; <span class="chapter-title">Creating vector data cube from local files</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./annex.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Advanced Topics</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./annex_export.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">27</span>&nbsp; <span class="chapter-title">Exporting data to other packages</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./annex_gee.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">28</span>&nbsp; <span class="chapter-title">SITS and GEE: side-by-side comparison</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./annex_api.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">29</span>&nbsp; <span class="chapter-title">Developing new functions in SITS</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./annex_ml.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">30</span>&nbsp; <span class="chapter-title">Including new methods for machine learning</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./annex_stac.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">31</span>&nbsp; <span class="chapter-title">Supporting STAC-based ARD catalogs</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./annex_parallel.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">32</span>&nbsp; <span class="chapter-title">How parallel processing works in SITS</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+    </ul>
+</div>
+</nav><div id="quarto-sidebar-glass" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active"><h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+<li><a href="#configurations-to-run-the-chapter" id="toc-configurations-to-run-the-chapter" class="nav-link active" data-scroll-target="#configurations-to-run-the-chapter">Configurations to run the chapter</a></li>
+  <li><a href="#introduction" id="toc-introduction" class="nav-link" data-scroll-target="#introduction"><span class="header-section-number">4.1</span> Introduction</a></li>
+  <li><a href="#image-collections-handled-by-sits" id="toc-image-collections-handled-by-sits" class="nav-link" data-scroll-target="#image-collections-handled-by-sits"><span class="header-section-number">4.2</span> Image collections handled by <code>sits</code></a></li>
+  <li><a href="#accessing-ard-image-collections-in-cloud-providers" id="toc-accessing-ard-image-collections-in-cloud-providers" class="nav-link" data-scroll-target="#accessing-ard-image-collections-in-cloud-providers"><span class="header-section-number">4.3</span> Accessing ARD image collections in cloud providers</a></li>
+  <li><a href="#amazon-web-services" id="toc-amazon-web-services" class="nav-link" data-scroll-target="#amazon-web-services"><span class="header-section-number">4.4</span> Amazon Web Services</a></li>
+  <li>
+<a href="#microsoft-planetary-computer" id="toc-microsoft-planetary-computer" class="nav-link" data-scroll-target="#microsoft-planetary-computer"><span class="header-section-number">4.5</span> Microsoft Planetary Computer</a>
+  <ul class="collapse">
+<li><a href="#sentinel-22a-images-in-mpc" id="toc-sentinel-22a-images-in-mpc" class="nav-link" data-scroll-target="#sentinel-22a-images-in-mpc"><span class="header-section-number">4.5.1</span> SENTINEL-2/2A images in MPC</a></li>
+  <li><a href="#landsat-c2-l2-images-in-mpc" id="toc-landsat-c2-l2-images-in-mpc" class="nav-link" data-scroll-target="#landsat-c2-l2-images-in-mpc"><span class="header-section-number">4.5.2</span> LANDSAT-C2-L2 images in MPC</a></li>
+  <li><a href="#sentinel-1-grd-images-in-mpc" id="toc-sentinel-1-grd-images-in-mpc" class="nav-link" data-scroll-target="#sentinel-1-grd-images-in-mpc"><span class="header-section-number">4.5.3</span> SENTINEL-1-GRD images in MPC</a></li>
+  <li><a href="#sentinel-1-rtc-images-in-mpc" id="toc-sentinel-1-rtc-images-in-mpc" class="nav-link" data-scroll-target="#sentinel-1-rtc-images-in-mpc"><span class="header-section-number">4.5.4</span> SENTINEL-1-RTC images in MPC</a></li>
+  <li><a href="#copernicus-dem-30-meter-images-in-mpc" id="toc-copernicus-dem-30-meter-images-in-mpc" class="nav-link" data-scroll-target="#copernicus-dem-30-meter-images-in-mpc"><span class="header-section-number">4.5.5</span> Copernicus DEM 30 meter images in MPC</a></li>
+  </ul>
+</li>
+  <li><a href="#brazil-data-cube" id="toc-brazil-data-cube" class="nav-link" data-scroll-target="#brazil-data-cube"><span class="header-section-number">4.6</span> Brazil Data Cube</a></li>
+  <li>
+<a href="#copernicus-data-space-ecosystem-cdse" id="toc-copernicus-data-space-ecosystem-cdse" class="nav-link" data-scroll-target="#copernicus-data-space-ecosystem-cdse"><span class="header-section-number">4.7</span> Copernicus Data Space Ecosystem (CDSE)</a>
+  <ul class="collapse">
+<li><a href="#sentinel-22a-images-in-cdse" id="toc-sentinel-22a-images-in-cdse" class="nav-link" data-scroll-target="#sentinel-22a-images-in-cdse"><span class="header-section-number">4.7.1</span> SENTINEL-2/2A images in CDSE</a></li>
+  <li><a href="#sentinel-1-rtc-images-in-cdse" id="toc-sentinel-1-rtc-images-in-cdse" class="nav-link" data-scroll-target="#sentinel-1-rtc-images-in-cdse"><span class="header-section-number">4.7.2</span> SENTINEL-1-RTC images in CDSE</a></li>
+  </ul>
+</li>
+  <li><a href="#digital-earth-africa" id="toc-digital-earth-africa" class="nav-link" data-scroll-target="#digital-earth-africa"><span class="header-section-number">4.8</span> Digital Earth Africa</a></li>
+  <li><a href="#digital-earth-australia" id="toc-digital-earth-australia" class="nav-link" data-scroll-target="#digital-earth-australia"><span class="header-section-number">4.9</span> Digital Earth Australia</a></li>
+  <li><a href="#harmonized-landsat-sentinel" id="toc-harmonized-landsat-sentinel" class="nav-link" data-scroll-target="#harmonized-landsat-sentinel"><span class="header-section-number">4.10</span> Harmonized Landsat-Sentinel</a></li>
+  <li><a href="#eo-products-from-terrascope" id="toc-eo-products-from-terrascope" class="nav-link" data-scroll-target="#eo-products-from-terrascope"><span class="header-section-number">4.11</span> EO products from TERRASCOPE</a></li>
+  <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references">References</a></li>
+  </ul><div class="toc-actions"><div><i class="bi bi-github"></i></div><div class="action-links"><p><a href="https://github.com/e-sensing/sitsbook/edit/quarto/dc_ardcollections.qmd" class="toc-action">Edit this page</a></p><p><a href="https://github.com/e-sensing/sitsbook/issues/new" class="toc-action">Report an issue</a></p></div></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block default"><div class="quarto-title">
+<h1 class="title">
+<span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Analysis-ready image collections</span>
+</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+</header><section id="configurations-to-run-the-chapter" class="level3 unnumbered"><h3 class="unnumbered anchored" data-anchor-id="configurations-to-run-the-chapter">Configurations to run the chapter</h3>
+<div class="cell">
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># load package "tibble"</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://tibble.tidyverse.org/">tibble</a></span><span class="op">)</span></span>
+<span><span class="co"># load packages "sits" and "sitsdata"</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/e-sensing/sits/">sits</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/e-sensing/sitsdata/">sitsdata</a></span><span class="op">)</span></span>
+<span><span class="co"># set tempdir if it does not exist </span></span>
+<span><span class="va">tempdir_r</span> <span class="op">&lt;-</span> <span class="st">"~/sitsbook/tempdir/R/dc_ardcollections"</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/files2.html">dir.create</a></span><span class="op">(</span><span class="va">tempdir_r</span>, showWarnings <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section><section id="introduction" class="level2" data-number="4.1"><h2 data-number="4.1" class="anchored" data-anchor-id="introduction">
+<span class="header-section-number">4.1</span> Introduction</h2>
+<p>ARD (analysis-ready) image collections are organized into spatial partitions. Sentinel-2/2A images follow the Military Grid Reference System (MGRS) tiling system, which divides the world into 60 UTM zones of 8 degrees of longitude. Each zone contains blocks of 6 degrees of latitude. Blocks are split into tiles of 110 <span class="math inline">\(\times\)</span> 110 km<span class="math inline">\(^2\)</span> with a 10 km overlap. <a href="#fig-mgrs-datacubes">Figure&nbsp;<span>4.1</span></a> shows the MGRS tiling system for a part of the northeastern coast of Brazil, contained in UTM zone 24, block M.</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-mgrs-datacubes" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure"><p><img src="./images/s2_mgrs_grid.png" class="img-fluid figure-img" style="width:80.0%"></p>
+<figcaption class="figure-caption">Figure&nbsp;4.1: MGRS tiling system used by Sentinel-2 images (source: US Army).</figcaption></figure>
+</div>
+</div>
+</div>
+<p>The Landsat-4/5/7/8/9 satellites use the Worldwide Reference System (WRS-2), which divides the coverage of Landsat satellites into images identified by path and row (<a href="#fig-wrs-datacubes">Figure&nbsp;<span>4.2</span></a>). The path is the descending orbit of the satellite; the WRS-2 system has 233 paths per orbit, and each path has 119 rows, where each row refers to a latitudinal center line of a frame of imagery. Images in WRS-2 are geometrically corrected to the UTM projection.</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-wrs-datacubes" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure"><p><img src="./images/landsat_wrs_grid.png" class="img-fluid figure-img" style="width:80.0%"></p>
+<figcaption class="figure-caption">Figure&nbsp;4.2: MGRS tiling system used by Sentinel-2 images (source: US Army).</figcaption></figure>
+</div>
+</div>
+</div>
+</section><section id="image-collections-handled-by-sits" class="level2" data-number="4.2"><h2 data-number="4.2" class="anchored" data-anchor-id="image-collections-handled-by-sits">
+<span class="header-section-number">4.2</span> Image collections handled by <code>sits</code>
+</h2>
+<p>In version 1.5.3,<code>sits</code> supports access to the following ARD image cloud providers:</p>
+<ul>
+<li>Amazon Web Services (AWS): Open data Sentinel-2/2A Level-2A collections for the Earth’s land surface.</li>
+<li>Brazil Data Cube (BDC): Open data collections of Sentinel-2/2A, Landsat-8, CBERS-4/4A, and MOD13Q1 products for Brazil. These collections are organized as regular data cubes.</li>
+<li>Copernicus Data Space Ecosystem (CDSE): Open data collections of Sentinel-1 RTC and Sentinel-2/2A images.</li>
+<li>Digital Earth Africa (DEAFRICA): Open data collections of Sentinel-1 RTC, Sentinel-2/2A, Landsat-5/7/8/9 for Africa. Additional products include ALOS_PALSAR mosaics, DEM_COP_30, NDVI_ANOMALY based on Landsat data, and monthly and daily rainfall data from CHIRPS.</li>
+<li>Digital Earth Australia (DEAUSTRALIA): Open data ARD collections of Sentinel-2A/2B and Landsat-5/7/8/9 images, yearly geomedians of Landsat 5/7/8 images; yearly fractional land cover from 1986 to 2024.</li>
+<li>Harmonized Landsat-Sentinel (HLS): HLS, provided by NASA, is an open data collection that processes Landsat 8 and Sentinel-2 imagery to a common standard.</li>
+<li>Microsoft Planetary Computer (MPC): Open data collections of Sentinel-1 GRD, Sentinel-1 RTC, Sentinel-2/2A, Landsat-4/5/7/8/9 images for the Earth’s land areas. Also supported are the Copernicus DEM-30 and MOD13Q1, MOD10A1, MOD09A1 products, and the Harmonized Landsat-Sentinel collections (HLSL30 and HLSS30).</li>
+<li>Swiss Data Cube (SDC): Collection of Sentinel-2/2A and Landsat-8 images for Switzerland.</li>
+<li>Terrascope: Cloud service with EO products, which includes the ESA World Cover map.</li>
+<li>USGS: Landsat-4/5/7/8/9 collections available in AWS, which require access payment.</li>
+</ul>
+<p>In addition, <code>sits</code> supports the use of Planet monthly mosaics stored as local files. For a detailed description of the providers and collections supported by <code>sits</code>, please run <code><a href="https://rdrr.io/pkg/sits/man/sits_list_collections.html">sits_list_collections()</a></code>.</p>
+</section><section id="accessing-ard-image-collections-in-cloud-providers" class="level2" data-number="4.3"><h2 data-number="4.3" class="anchored" data-anchor-id="accessing-ard-image-collections-in-cloud-providers">
+<span class="header-section-number">4.3</span> Accessing ARD image collections in cloud providers</h2>
+<p><a href="https://www.kaggle.com/esensing/creating-data-cubes-in-sits" target="_blank"><img src="https://kaggle.com/static/images/open-in-kaggle.svg"></a></p>
+<p>To obtain information on ARD image collections from cloud providers, <code>sits</code> uses the <a href="https://stacspec.org/en">SpatioTemporal Asset Catalogue</a> (STAC) protocol, a specification of geospatial information that many large image collection providers have adopted. A ‘spatiotemporal asset’ is any file that represents information about the Earth captured at a specific space and time. To access STAC endpoints, <code>sits</code> uses the <a href="http://github.com/brazil-data-cube/rstac">rstac</a> R package.</p>
+<p>The function <code><a href="https://rdrr.io/pkg/sits/man/sits_cube.html">sits_cube()</a></code> supports access to image collections from cloud services; it has the following parameters:</p>
+<ul>
+<li>
+<code>source</code>: Name of the provider.</li>
+<li>
+<code>collection</code>: A collection available in the provider and supported by <code>sits</code>. To find out which collections are supported by <code>sits</code>, see <code><a href="https://rdrr.io/pkg/sits/man/sits_list_collections.html">sits_list_collections()</a></code>.</li>
+<li>
+<code>platform</code>: Optional parameter specifying the platform in collections with multiple satellites.</li>
+<li>
+<code>tiles</code>: Set of tiles of image collection reference system. Either <code>tiles</code> or <code>roi</code> should be specified.</li>
+<li>
+<code>roi</code>: A region of interest. Either: (a) a named vector (<code>lon_min</code>, <code>lon_max</code>, <code>lat_min</code>, <code>lat_max</code>) in WGS 84 coordinates; (b) an <code>sf</code> object; (c) a path to a shapefile polygon; or (d) A named vector (<code>xmin</code>, <code>xmax</code>, <code>ymin</code>, <code>ymax</code>) with XY coordinates. All images intersecting the convex hull of the <code>roi</code> are selected.</li>
+<li>
+<code>bands</code>: Optional parameter with the bands to be used. If missing, all bands from the collection are used.</li>
+<li>
+<code>orbit</code>: Optional parameter required only for Sentinel-1 images (default = “descending”).</li>
+<li>
+<code>start_date</code>: The initial date for the temporal interval containing the time series of images.</li>
+<li>
+<code>end_date</code>: The final date for the temporal interval containing the time series of images.</li>
+</ul>
+<p>The result of <code><a href="https://rdrr.io/pkg/sits/man/sits_cube.html">sits_cube()</a></code> is a tibble with a description of the selected images required for further processing. It does not contain the actual data, but only pointers to the images. The attributes of individual image files can be accessed by listing the <code>file_info</code> column of the tibble.</p>
+</section><section id="amazon-web-services" class="level2" data-number="4.4"><h2 data-number="4.4" class="anchored" data-anchor-id="amazon-web-services">
+<span class="header-section-number">4.4</span> Amazon Web Services</h2>
+<p>Amazon Web Services (AWS) holds two kinds of collections: <em>open-data</em> and <em>requester-pays</em>. Open-data collections can be accessed without cost. Requester-pays collections require payment from an AWS account. Currently, <code>sits</code> supports the <code>SENTINEL-2-L2A</code> collection, which is open data. The bands at 10 m resolution are B02, B03, B04, and B08. The 20 m bands are B05, B06, B07, B8A, B11, and B12. Bands B01 and B09 are available at 60 m resolution. A CLOUD band is also available. The example below shows how to access one tile of the open-data <code>SENTINEL-2-L2A</code> collection. The <code>tiles</code> parameter allows selecting the desired area according to the MGRS reference system.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist">
+<li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true" aria-current="page">R</a></li>
+<li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false">Python</a></li>
+</ul>
+<div class="tab-content">
+<div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
+<div class="cell">
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Create a data cube covering an area in Brazil</span></span>
+<span><span class="va">s2_23MMU_cube</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_cube.html">sits_cube</a></span><span class="op">(</span></span>
+<span>    source <span class="op">=</span> <span class="st">"AWS"</span>,</span>
+<span>    collection <span class="op">=</span> <span class="st">"SENTINEL-2-L2A"</span>,</span>
+<span>    tiles <span class="op">=</span> <span class="st">"23MMU"</span>,</span>
+<span>    bands <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"B02"</span>, <span class="st">"B8A"</span>, <span class="st">"B11"</span>, <span class="st">"CLOUD"</span><span class="op">)</span>,</span>
+<span>    start_date <span class="op">=</span> <span class="st">"2018-07-12"</span>,</span>
+<span>    end_date <span class="op">=</span> <span class="st">"2019-07-28"</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">s2_23MMU_cube</span>, </span>
+<span>     red <span class="op">=</span> <span class="st">"B11"</span>, </span>
+<span>     blue <span class="op">=</span> <span class="st">"B02"</span>, </span>
+<span>     green <span class="op">=</span> <span class="st">"B8A"</span>, </span>
+<span>     date <span class="op">=</span> <span class="st">"2018-10-05"</span></span>
+<span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+<div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a data cube covering an area in Brazil</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>s2_23MMU_cube <span class="op">=</span> sits_cube(</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    source <span class="op">=</span> <span class="st">"AWS"</span>,</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    collection <span class="op">=</span> <span class="st">"SENTINEL-2-L2A"</span>,</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    tiles <span class="op">=</span> <span class="st">"23MMU"</span>,</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    bands <span class="op">=</span> [<span class="st">"B02"</span>, <span class="st">"B8A"</span>, <span class="st">"B11"</span>, <span class="st">"CLOUD"</span>],</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    start_date <span class="op">=</span> <span class="st">"2018-07-12"</span>,</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    end_date <span class="op">=</span> <span class="st">"2019-07-28"</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>plot(s2_23MMU_cube, </span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>     red <span class="op">=</span> <span class="st">"B11"</span>, </span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>     blue <span class="op">=</span> <span class="st">"B02"</span>, </span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>     green <span class="op">=</span> <span class="st">"B8A"</span>, </span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>     date <span class="op">=</span> <span class="st">"2018-10-05"</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-aws-datacubes" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure"><p><img src="./images/aws_s2.png" class="img-fluid figure-img" style="width:100.0%"></p>
+<figcaption class="figure-caption">Figure&nbsp;4.3: Sentinel-2 image in an area of the Northeastern coast of Brazil.</figcaption></figure>
+</div>
+</div>
+</div>
+</section><section id="microsoft-planetary-computer" class="level2" data-number="4.5"><h2 data-number="4.5" class="anchored" data-anchor-id="microsoft-planetary-computer">
+<span class="header-section-number">4.5</span> Microsoft Planetary Computer</h2>
+<p>The <code>sits</code> package supports access to open-data collection from Microsoft’s Planetary Computer (MPC), including <code>SENTINEL-1-GRD</code>, <code>SENTINEL-1-RTC</code>, <code>SENTINEL-2-L2A</code>, <code>LANDSAT-C2-L2</code>, <code>COP-DEM-GLO-30</code> (Copernicus Global DEM at 30-meter resolution) and <code>MOD13Q1-6.1</code> (version 6.1 of the MODIS MOD13Q1 product). Access to the non-open data collections is available for users that have registered with MPC.</p>
+<section id="sentinel-22a-images-in-mpc" class="level3" data-number="4.5.1"><h3 data-number="4.5.1" class="anchored" data-anchor-id="sentinel-22a-images-in-mpc">
+<span class="header-section-number">4.5.1</span> SENTINEL-2/2A images in MPC</h3>
+<p>The SENTINEL-2/2A ARD images available in MPC have the same bands and resolutions as those available in AWS (see above). The example below shows how to access the <code>SENTINEL-2-L2A</code> collection.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist">
+<li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true">R</a></li>
+<li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false">Python</a></li>
+</ul>
+<div class="tab-content">
+<div id="tabset-2-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-2-1-tab">
+<div class="cell">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Create a data cube covering an area in the Brazilian Amazon</span></span>
+<span><span class="va">s2_20LKP_cube_MPC</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_cube.html">sits_cube</a></span><span class="op">(</span></span>
+<span>      source <span class="op">=</span> <span class="st">"MPC"</span>,</span>
+<span>      collection <span class="op">=</span> <span class="st">"SENTINEL-2-L2A"</span>,</span>
+<span>      tiles <span class="op">=</span> <span class="st">"20LKP"</span>,</span>
+<span>      bands <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"B02"</span>, <span class="st">"B8A"</span>, <span class="st">"B11"</span>, <span class="st">"CLOUD"</span><span class="op">)</span>,</span>
+<span>      start_date <span class="op">=</span> <span class="st">"2019-07-01"</span>,</span>
+<span>      end_date <span class="op">=</span> <span class="st">"2019-07-28"</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co"># Plot a color composite of one date of the cube</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">s2_20LKP_cube_MPC</span>, red <span class="op">=</span> <span class="st">"B11"</span>, blue <span class="op">=</span> <span class="st">"B02"</span>, green <span class="op">=</span> <span class="st">"B8A"</span>, </span>
+<span>     date <span class="op">=</span> <span class="st">"2019-07-18"</span></span>
+<span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+<div id="tabset-2-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-2-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a data cube covering an area in the Brazilian Amazon</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>s2_20LKP_cube_MPC <span class="op">=</span> sits_cube(</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>      source <span class="op">=</span> <span class="st">"MPC"</span>,</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>      collection <span class="op">=</span> <span class="st">"SENTINEL-2-L2A"</span>,</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>      tiles <span class="op">=</span> <span class="st">"20LKP"</span>,</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>      bands <span class="op">=</span> [<span class="st">"B02"</span>, <span class="st">"B8A"</span>, <span class="st">"B11"</span>, <span class="st">"CLOUD"</span>],</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>      start_date <span class="op">=</span> <span class="st">"2019-07-01"</span>,</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>      end_date <span class="op">=</span> <span class="st">"2019-07-28"</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot a color composite of one date of the cube</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>plot(s2_20LKP_cube_MPC, red <span class="op">=</span> <span class="st">"B11"</span>, blue <span class="op">=</span> <span class="st">"B02"</span>, green <span class="op">=</span> <span class="st">"B8A"</span>, </span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>     date <span class="op">=</span> <span class="st">"2019-07-18"</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-s2mpc-datacubes" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure"><p><img src="./images/mpc_s2.png" class="img-fluid figure-img" style="width:100.0%"></p>
+<figcaption class="figure-caption">Figure&nbsp;4.4: Sentinel-2 image in an area of the state of Rondonia, Brazil.</figcaption></figure>
+</div>
+</div>
+</div>
+</section><section id="landsat-c2-l2-images-in-mpc" class="level3" data-number="4.5.2"><h3 data-number="4.5.2" class="anchored" data-anchor-id="landsat-c2-l2-images-in-mpc">
+<span class="header-section-number">4.5.2</span> LANDSAT-C2-L2 images in MPC</h3>
+<p>The <code>LANDSAT-C2-L2</code> collection provides access to data from the Landsat-4/5/7/8/9 satellites. Images from these satellites have been intercalibrated to ensure data consistency. For compatibility between the different Landsat sensors, the band names are BLUE, GREEN, RED, NIR08, SWIR16, and SWIR22. All images have 30 m resolution. For this collection, tile search is not supported; the <code>roi</code> parameter should be used. The example below shows how to retrieve data from a region of interest covering the city of Brasília in Brazil.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist">
+<li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-3-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-1" role="tab" aria-controls="tabset-3-1" aria-selected="true">R</a></li>
+<li class="nav-item" role="presentation"><a class="nav-link" id="tabset-3-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-2" role="tab" aria-controls="tabset-3-2" aria-selected="false">Python</a></li>
+</ul>
+<div class="tab-content">
+<div id="tabset-3-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-3-1-tab">
+<div class="cell">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Read a ROI that covers part of the Northeastern coast of Brazil</span></span>
+<span><span class="va">roi</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span>lon_min <span class="op">=</span> <span class="op">-</span><span class="fl">43.5526</span>, lat_min <span class="op">=</span> <span class="op">-</span><span class="fl">2.9644</span>, </span>
+<span>         lon_max <span class="op">=</span> <span class="op">-</span><span class="fl">42.5124</span>, lat_max <span class="op">=</span> <span class="op">-</span><span class="fl">2.1671</span><span class="op">)</span></span>
+<span><span class="co"># Select the cube</span></span>
+<span><span class="va">s2_L8_cube_MPC</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_cube.html">sits_cube</a></span><span class="op">(</span></span>
+<span>        source <span class="op">=</span> <span class="st">"MPC"</span>,</span>
+<span>        collection <span class="op">=</span> <span class="st">"LANDSAT-C2-L2"</span>,</span>
+<span>        bands <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"BLUE"</span>, <span class="st">"RED"</span>, <span class="st">"GREEN"</span>, <span class="st">"NIR08"</span>, <span class="st">"SWIR16"</span>, <span class="st">"CLOUD"</span><span class="op">)</span>,</span>
+<span>        roi <span class="op">=</span> <span class="va">roi</span>,</span>
+<span>        start_date <span class="op">=</span> <span class="st">"2019-06-01"</span>,</span>
+<span>        end_date <span class="op">=</span> <span class="st">"2019-09-01"</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co"># Plot the tile that covers the Lencois Maranhenses</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">s2_L8_cube_MPC</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+<div id="tabset-3-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-3-2-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Read a ROI that covers part of the Northeastern coast of Brazil</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>roi <span class="op">=</span> {<span class="st">"lon_min"</span> : <span class="op">-</span><span class="fl">43.5526</span>, <span class="st">"lat_min"</span> : <span class="op">-</span><span class="fl">2.9644</span>, </span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>         <span class="st">"lon_max"</span> : <span class="op">-</span><span class="fl">42.5124</span>, <span class="st">"lat_max"</span> : <span class="op">-</span><span class="fl">2.1671</span>}</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Select the cube</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>s2_L8_cube_MPC <span class="op">=</span> sits_cube(</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>        source <span class="op">=</span> <span class="st">"MPC"</span>,</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>        collection <span class="op">=</span> <span class="st">"LANDSAT-C2-L2"</span>,</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>        bands <span class="op">=</span> [<span class="st">"BLUE"</span>, <span class="st">"RED"</span>, <span class="st">"GREEN"</span>, <span class="st">"NIR08"</span>, <span class="st">"SWIR16"</span>, <span class="st">"CLOUD"</span>],</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>        roi <span class="op">=</span> roi,</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>        start_date <span class="op">=</span> <span class="st">"2019-06-01"</span>,</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>        end_date <span class="op">=</span> <span class="st">"2019-09-01"</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot the tile that covers the Lencois Maranhenses</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>plot(s2_L8_cube_MPC)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-l8mpc-datacubes" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure"><p><img src="./images/mpc_l8.png" class="img-fluid figure-img" style="width:100.0%"></p>
+<figcaption class="figure-caption">Figure&nbsp;4.5: Landsat-8 image in an area in Northeast Brazil.</figcaption></figure>
+</div>
+</div>
+</div>
+</section><section id="sentinel-1-grd-images-in-mpc" class="level3" data-number="4.5.3"><h3 data-number="4.5.3" class="anchored" data-anchor-id="sentinel-1-grd-images-in-mpc">
+<span class="header-section-number">4.5.3</span> SENTINEL-1-GRD images in MPC</h3>
+<p>Sentinel-1 GRD products consist of focused SAR data that has been detected, multi-looked, and projected to ground range using the WGS84 Earth ellipsoid model. GRD images are subject to variations in the radar signal’s intensity due to topographic effects, antenna pattern, range spreading loss, and other radiometric distortions. The most common types of distortions include foreshortening, layover, and shadowing.</p>
+<p>Foreshortening occurs when the radar signal strikes a steep terrain slope facing the radar, causing the slope to appear compressed in the image. Features like mountains can appear much steeper than they are, and their true heights can be difficult to interpret. Layover happens when the radar signal reaches the top of a tall feature (like a mountain or building) before it reaches the base. As a result, the top of the feature is displaced towards the radar and appears in front of its base. This results in a reversal of the order of features along the radar line of sight, making the image interpretation challenging. Shadowing occurs when a radar signal is obstructed by a tall object, casting a shadow on the area behind it that the radar cannot illuminate. The shadowed areas appear dark in SAR images, and no information is available from these regions, similar to optical shadows.</p>
+<p>Access to Sentinel-1 GRD images can be done either by MGRS tiles (<code>tiles</code>) or by region of interest (<code>roi</code>). We recommend using the MGRS tiling system for specifying the area of interest, since when these images are regularized, they will be reprojected into MGRS tiles. By default, only images in descending orbit are selected.</p>
+<p>The following example shows how to create a data cube of S1 GRD images over a region in Mato Grosso, Brazil, which is a deforested area of the Amazon forest. The resulting cube will not follow any specific projection and its coordinates will be stated as EPSG 4326 (latitude/longitude). Its geometry is derived from the SAR slant-range perspective; thus, it will appear skewed in relation to the Earth’s longitude.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist">
+<li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-4-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-1" role="tab" aria-controls="tabset-4-1" aria-selected="true">R</a></li>
+<li class="nav-item" role="presentation"><a class="nav-link" id="tabset-4-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-2" role="tab" aria-controls="tabset-4-2" aria-selected="false">Python</a></li>
+</ul>
+<div class="tab-content">
+<div id="tabset-4-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-4-1-tab">
+<div class="cell">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">cube_s1_grd</span> <span class="op">&lt;-</span>  <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_cube.html">sits_cube</a></span><span class="op">(</span></span>
+<span>  source <span class="op">=</span> <span class="st">"MPC"</span>,</span>
+<span>  collection <span class="op">=</span> <span class="st">"SENTINEL-1-GRD"</span>,</span>
+<span>  bands <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"VV"</span><span class="op">)</span>,</span>
+<span>  orbit <span class="op">=</span> <span class="st">"descending"</span>,</span>
+<span>  tiles <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"21LUJ"</span>,<span class="st">"21LVJ"</span><span class="op">)</span>,</span>
+<span>  start_date <span class="op">=</span> <span class="st">"2021-08-01"</span>,</span>
+<span>  end_date <span class="op">=</span> <span class="st">"2021-09-30"</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">cube_s1_grd</span>, band <span class="op">=</span> <span class="st">"VV"</span>, palette <span class="op">=</span> <span class="st">"Greys"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+<div id="tabset-4-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-4-2-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>cube_s1_grd <span class="op">=</span>  sits_cube(</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  source <span class="op">=</span> <span class="st">"MPC"</span>,</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  collection <span class="op">=</span> <span class="st">"SENTINEL-1-GRD"</span>,</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  bands <span class="op">=</span> [<span class="st">"VV"</span>],</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  orbit <span class="op">=</span> <span class="st">"descending"</span>,</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  tiles <span class="op">=</span> [<span class="st">"21LUJ"</span>,<span class="st">"21LVJ"</span>],</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  start_date <span class="op">=</span> <span class="st">"2021-08-01"</span>,</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  end_date <span class="op">=</span> <span class="st">"2021-09-30"</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>plot(cube_s1_grd, band <span class="op">=</span> <span class="st">"VV"</span>, palette <span class="op">=</span> <span class="st">"Greys"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-s1grdmpc-datacubes" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure"><p><img src="./images/mpc3.png" class="img-fluid figure-img" style="width:100.0%"></p>
+<figcaption class="figure-caption">Figure&nbsp;4.6: Sentinel-1 image in an area in Mato Grosso, Brazil.</figcaption></figure>
+</div>
+</div>
+</div>
+<p>As explained earlier in this chapter, in areas with large elevation differences, Sentinel-1 GRD images will have geometric distortions. For this reason, whenever possible, we recommend the use of RTC (radiometrically terrain-corrected) images as described in the next section.</p>
+</section><section id="sentinel-1-rtc-images-in-mpc" class="level3" data-number="4.5.4"><h3 data-number="4.5.4" class="anchored" data-anchor-id="sentinel-1-rtc-images-in-mpc">
+<span class="header-section-number">4.5.4</span> SENTINEL-1-RTC images in MPC</h3>
+<p>An RTC SAR image has undergone corrections for both geometric and radiometric distortions caused by the terrain. The purpose of RTC processing is to enhance the interpretability and usability of SAR images for various applications by providing a more accurate representation of the Earth’s surface. The radar backscatter values are normalized to account for these variations, ensuring that the image accurately represents the reflectivity of surface features.</p>
+<p>The terrain correction addresses geometric distortions caused by the side-looking geometry of SAR imaging, such as foreshortening, layover, and shadowing. It uses a Digital Elevation Model (DEM) to model the terrain and reproject the SAR image from the slant range (radar line of sight) to the ground range (true geographic coordinates). This process aligns the SAR image with the actual topography, providing a more accurate spatial representation.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist">
+<li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-5-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-1" role="tab" aria-controls="tabset-5-1" aria-selected="true">R</a></li>
+<li class="nav-item" role="presentation"><a class="nav-link" id="tabset-5-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-2" role="tab" aria-controls="tabset-5-2" aria-selected="false">Python</a></li>
+</ul>
+<div class="tab-content">
+<div id="tabset-5-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-5-1-tab">
+<div class="cell">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">cube_s1_rtc</span> <span class="op">&lt;-</span>  <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_cube.html">sits_cube</a></span><span class="op">(</span></span>
+<span>  source <span class="op">=</span> <span class="st">"MPC"</span>,</span>
+<span>  collection <span class="op">=</span> <span class="st">"SENTINEL-1-RTC"</span>,</span>
+<span>  bands <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"VV"</span>, <span class="st">"VH"</span><span class="op">)</span>,</span>
+<span>  orbit <span class="op">=</span> <span class="st">"descending"</span>,</span>
+<span>  tiles <span class="op">=</span> <span class="st">"18NZM"</span>,</span>
+<span>  start_date <span class="op">=</span> <span class="st">"2021-08-01"</span>,</span>
+<span>  end_date <span class="op">=</span> <span class="st">"2021-09-30"</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">cube_s1_rtc</span>, band <span class="op">=</span> <span class="st">"VV"</span>, palette <span class="op">=</span> <span class="st">"Greys"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+<div id="tabset-5-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-5-2-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>cube_s1_rtc <span class="op">=</span>  sits_cube(</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  source <span class="op">=</span> <span class="st">"MPC"</span>,</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  collection <span class="op">=</span> <span class="st">"SENTINEL-1-RTC"</span>,</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  bands <span class="op">=</span> [<span class="st">"VV"</span>, <span class="st">"VH"</span>],</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>  orbit <span class="op">=</span> <span class="st">"descending"</span>,</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>  tiles <span class="op">=</span> <span class="st">"18NZM"</span>,</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>  start_date <span class="op">=</span> <span class="st">"2021-08-01"</span>,</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>  end_date <span class="op">=</span> <span class="st">"2021-09-30"</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>plot(cube_s1_rtc, band <span class="op">=</span> <span class="st">"VV"</span>, palette <span class="op">=</span> <span class="st">"Greys"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-s1rtcmpc-datacubes" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure"><p><img src="./images/mpcrtcol.png" class="img-fluid figure-img" style="width:100.0%"></p>
+<figcaption class="figure-caption">Figure&nbsp;4.7: Sentinel-1-RTC image of an area in Colombia.</figcaption></figure>
+</div>
+</div>
+</div>
+<p>The above image is from the central region of Colombia, a country with large variations in altitude due to the Andes Mountains. Users are invited to compare this image with the one from the <code>SENTINEL-1-GRD</code> collection and observe the significant geometrical distortions of the GRD image compared with the RTC one.</p>
+</section><section id="copernicus-dem-30-meter-images-in-mpc" class="level3" data-number="4.5.5"><h3 data-number="4.5.5" class="anchored" data-anchor-id="copernicus-dem-30-meter-images-in-mpc">
+<span class="header-section-number">4.5.5</span> Copernicus DEM 30 meter images in MPC</h3>
+<p>The Copernicus Digital Elevation Model 30-meter global dataset (COP-DEM-GLO-30) is a high-resolution topographic data product provided by the European Space Agency (ESA) under the Copernicus Program. The vertical accuracy of the Copernicus DEM 30-meter dataset is typically within a few meters, but this can vary depending on the region and the original data sources. The primary data source for the Copernicus DEM is data from the TanDEM-X mission, developed by the German Aerospace Center (DLR). TanDEM-X provides high-resolution radar data through interferometric synthetic aperture radar (InSAR) techniques.</p>
+<p>The Copernicus DEM 30-meter is organized in a 1<span class="math inline">\(^\circ\)</span> by 1<span class="math inline">\(^\circ\)</span> grid. In <code>sits</code>, access to COP-DEM-GLO-30 images can be done either by MGRS tiles (<code>tiles</code>) or by region of interest (<code>roi</code>). In both cases, the cube is retrieved based on the parts of the grid that intersect the region of interest or the chosen tiles.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist">
+<li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-6-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-6-1" role="tab" aria-controls="tabset-6-1" aria-selected="true">R</a></li>
+<li class="nav-item" role="presentation"><a class="nav-link" id="tabset-6-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-6-2" role="tab" aria-controls="tabset-6-2" aria-selected="false">Python</a></li>
+</ul>
+<div class="tab-content">
+<div id="tabset-6-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-6-1-tab">
+<div class="cell">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">cube_dem_30</span> <span class="op">&lt;-</span>  <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_cube.html">sits_cube</a></span><span class="op">(</span></span>
+<span>  source <span class="op">=</span> <span class="st">"MPC"</span>,</span>
+<span>  collection <span class="op">=</span> <span class="st">"COP-DEM-GLO-30"</span>,</span>
+<span>  tiles <span class="op">=</span> <span class="st">"20LMR"</span>,</span>
+<span>  band <span class="op">=</span> <span class="st">"ELEVATION"</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">cube_dem_30</span>, band <span class="op">=</span> <span class="st">"ELEVATION"</span>, palette <span class="op">=</span> <span class="st">"RdYlGn"</span>, rev <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+<div id="tabset-6-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-6-2-tab">
+<div class="cell">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">cube_dem_30</span> <span class="op">=</span>  <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_cube.html">sits_cube</a></span><span class="op">(</span></span>
+<span>  source <span class="op">=</span> <span class="st">"MPC"</span>,</span>
+<span>  collection <span class="op">=</span> <span class="st">"COP-DEM-GLO-30"</span>,</span>
+<span>  tiles <span class="op">=</span> <span class="st">"20LMR"</span>,</span>
+<span>  band <span class="op">=</span> <span class="st">"ELEVATION"</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">cube_dem_30</span>, band <span class="op">=</span> <span class="st">"ELEVATION"</span>, palette <span class="op">=</span> <span class="st">"RdYlGn"</span>, rev <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-demmpc-datacubes" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure"><p><img src="./images/mpc4.png" class="img-fluid figure-img" style="width:100.0%"></p>
+<figcaption class="figure-caption">Figure&nbsp;4.8: Copernicus 30-meter DEM of an area in Brazil.</figcaption></figure>
+</div>
+</div>
+</div>
+</section></section><section id="brazil-data-cube" class="level2" data-number="4.6"><h2 data-number="4.6" class="anchored" data-anchor-id="brazil-data-cube">
+<span class="header-section-number">4.6</span> Brazil Data Cube</h2>
+<p>The <a href="http://brazildatacube.org/en">Brazil Data Cube</a> (BDC) is built by Brazil’s National Institute for Space Research (INPE) to provide regular EO data cubes from CBERS, LANDSAT, SENTINEL-2, and TERRA/MODIS satellites for environmental applications. The collections available in the BDC are: <code>LANDSAT-OLI-16D</code> (Landsat-8 OLI, 30 m resolution, 16-day intervals), <code>SENTINEL-2-16D</code> (Sentinel-2A and 2B MSI images at 10 m resolution, 16-day intervals), <code>CBERS-WFI-16D</code> (CBERS-4 WFI, 64 m resolution, 16-day intervals), <code>CBERS-WFI-8D</code> (CBERS-4 and 4A WFI images, 64 m resolution, 8-day intervals), and <code>MOD13Q1-6.1</code> (MODIS MOD13SQ1 product, collection 6, 250 m resolution, 16-day intervals). For more details, use <code>sits_list_collections(source = "BDC")</code>.</p>
+<p>The BDC uses three hierarchical grids based on the Albers Equal Area projection and SIRGAS 2000 datum. The large grid has tiles of 4224.4 <span class="math inline">\(\times4\)</span> 224.4 km<sup>2</sup> and is used for CBERS-4 AWFI collections at 64 m resolution; each CBERS-4 AWFI tile contains images of 6600 <span class="math inline">\(\times\)</span> 6600 pixels. The medium grid is used for Landsat-8 OLI collections at 30 m resolution; tiles have an extent of 211.2 <span class="math inline">\(\times\)</span> 211.2 km<sup>2</sup>, and each image has 7040 <span class="math inline">\(\times\)</span> 7040 pixels. The small grid covers 105.6 <span class="math inline">\(\times\)</span> 105.6 km<sup>2</sup> and is used for Sentinel-2 MSI collections at 10 m resolutions; each image has 10560 <span class="math inline">\(\times\)</span> 10560 pixels. The data cubes in the BDC are regularly spaced in time and cloud-corrected <span class="citation" data-cites="Ferreira2020a"><a href="#ref-Ferreira2020a" role="doc-biblioref">[1]</a></span>.</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-bdc-datacubes" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure"><p><img src="./images/bdc_grid.png" class="img-fluid figure-img" style="width:80.0%"></p>
+<figcaption class="figure-caption">Figure&nbsp;4.9: Hierarchical BDC tiling system showing (a) large BDC grid overlayed on Brazilian biomes, (b) one learge tile from the grid used for CBERS-4 AWFI data, (c) four medium tiles from the grid used for LANDSAT data; and (d) sixteen small tiles from the grid used for SENTINEL-2 data. Tiles in (b), (c), and (d) are nested.</figcaption></figure>
+</div>
+</div>
+</div>
+<p>To access the BDC, users must provide their credentials using environment variables, as shown below. Obtaining a BDC access key is free. Users must register at the <a href="https://brazildatacube.dpi.inpe.br/portal/explore">BDC site</a> to obtain a key. Please include your BDC access key in your <code>.Rprofile</code>.</p>
+<div class="cell">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Sys.setenv.html">Sys.setenv</a></span><span class="op">(</span>BDC_ACCESS_KEY <span class="op">=</span> <span class="st">"&lt;your_bdc_access_key&gt;"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>In the example below, the data cube is defined as one tile (“005004”) of <code>CBERS-WFI-16D</code> collection, which contains CBERS AWFI images at 16-day resolution.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist">
+<li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-7-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-7-1" role="tab" aria-controls="tabset-7-1" aria-selected="true">R</a></li>
+<li class="nav-item" role="presentation"><a class="nav-link" id="tabset-7-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-7-2" role="tab" aria-controls="tabset-7-2" aria-selected="false">Python</a></li>
+</ul>
+<div class="tab-content">
+<div id="tabset-7-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-7-1-tab">
+<div class="cell">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Define a tile from the CBERS-4/4A AWFI collection</span></span>
+<span><span class="va">cbers_tile</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_cube.html">sits_cube</a></span><span class="op">(</span></span>
+<span>    source <span class="op">=</span> <span class="st">"BDC"</span>,</span>
+<span>    collection <span class="op">=</span> <span class="st">"CBERS-WFI-16D"</span>,</span>
+<span>    tiles <span class="op">=</span> <span class="st">"005004"</span>,</span>
+<span>    bands <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"B13"</span>, <span class="st">"B14"</span>, <span class="st">"B15"</span>, <span class="st">"B16"</span>, <span class="st">"CLOUD"</span><span class="op">)</span>,</span>
+<span>    start_date <span class="op">=</span> <span class="st">"2021-05-01"</span>,</span>
+<span>    end_date <span class="op">=</span> <span class="st">"2021-09-01"</span><span class="op">)</span></span>
+<span><span class="co"># Plot one time instance</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">cbers_tile</span>, </span>
+<span>     red <span class="op">=</span> <span class="st">"B15"</span>, </span>
+<span>     green <span class="op">=</span> <span class="st">"B16"</span>, </span>
+<span>     blue <span class="op">=</span> <span class="st">"B13"</span>, </span>
+<span>     date <span class="op">=</span> <span class="st">"2021-05-09"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+<div id="tabset-7-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-7-2-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Define a tile from the CBERS-4/4A AWFI collection</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>cbers_tile <span class="op">=</span> sits_cube(</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    source <span class="op">=</span> <span class="st">"BDC"</span>,</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>    collection <span class="op">=</span> <span class="st">"CBERS-WFI-16D"</span>,</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>    tiles <span class="op">=</span> <span class="st">"005004"</span>,</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>    bands <span class="op">=</span> [<span class="st">"B13"</span>, <span class="st">"B14"</span>, <span class="st">"B15"</span>, <span class="st">"B16"</span>, <span class="st">"CLOUD"</span>],</span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>    start_date <span class="op">=</span> <span class="st">"2021-05-01"</span>,</span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>    end_date <span class="op">=</span> <span class="st">"2021-09-01"</span>)</span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot one time instance</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>plot(cbers_tile, </span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>     red <span class="op">=</span> <span class="st">"B15"</span>, </span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>     green <span class="op">=</span> <span class="st">"B16"</span>, </span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>     blue <span class="op">=</span> <span class="st">"B13"</span>, </span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>     date <span class="op">=</span> <span class="st">"2021-05-09"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-awfibdc-datacubes" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure"><p><img src="./images/bdc_cbers4.png" class="img-fluid figure-img" style="width:100.0%"></p>
+<figcaption class="figure-caption">Figure&nbsp;4.10: CBERS-4 WFI image in a Cerrado area in Brazil.</figcaption></figure>
+</div>
+</div>
+</div>
+</section><section id="copernicus-data-space-ecosystem-cdse" class="level2" data-number="4.7"><h2 data-number="4.7" class="anchored" data-anchor-id="copernicus-data-space-ecosystem-cdse">
+<span class="header-section-number">4.7</span> Copernicus Data Space Ecosystem (CDSE)</h2>
+<p>The Copernicus Data Space Ecosystem (CDSE) is a cloud service designed to support access to Earth observation data from the Copernicus Sentinel missions and other sources. It is designed and maintained by the European Space Agency (ESA) with support from the European Commission.</p>
+<p>Configuring user access to CDSE involves several steps to ensure proper registration, access to data, and utilization of the platform’s tools and services. Visit the Copernicus Data Space Ecosystem <a href="https://dataspace.copernicus.eu">registration page</a>. Complete the registration form with your details, including name, email address, organization, and sector. Confirm your email address through the verification link sent to your inbox.</p>
+<p>After registration, you will need to obtain access credentials to the S3 service implemented by CDSE, which can be obtained using the <a href="https://eodata-s3keysmanager.dataspace.copernicus.eu/panel/s3-credentials">CDSE S3 credentials site</a>. The site will request that you add a new credential. You will receive two keys: an S3 access key and a secret access key. Take note of both and include the following lines in your <code>.Rprofile</code>.</p>
+<div class="cell">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Sys.setenv.html">Sys.setenv</a></span><span class="op">(</span></span>
+<span>    AWS_ACCESS_KEY_ID <span class="op">=</span> <span class="st">"your access key"</span>,</span>
+<span>    AWS_SECRET_ACCESS_KEY <span class="op">=</span> <span class="st">"your secret access key"</span>,</span>
+<span>      AWS_S3_ENDPOINT <span class="op">=</span> <span class="st">"eodata.dataspace.copernicus.eu"</span>,</span>
+<span>      AWS_VIRTUAL_HOSTING <span class="op">=</span> <span class="st">"FALSE"</span></span>
+<span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>After including these lines in your <code>.Rprofile</code>, restart <code>R</code> for the changes to take effect. By following these steps, users will gain access to the Copernicus Data Space Ecosystem.</p>
+<section id="sentinel-22a-images-in-cdse" class="level3" data-number="4.7.1"><h3 data-number="4.7.1" class="anchored" data-anchor-id="sentinel-22a-images-in-cdse">
+<span class="header-section-number">4.7.1</span> SENTINEL-2/2A images in CDSE</h3>
+<p>CDSE hosts a global collection of Sentinel-2 Level-2A images, which are processed according to the <a href="https://ceos.org/ard/">CEOS Analysis-Ready Data</a> specifications. One example is provided below, where we present a Sentinel-2 image of the Lena River Delta in Siberia during summertime.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist">
+<li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-8-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-8-1" role="tab" aria-controls="tabset-8-1" aria-selected="true">R</a></li>
+<li class="nav-item" role="presentation"><a class="nav-link" id="tabset-8-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-8-2" role="tab" aria-controls="tabset-8-2" aria-selected="false">Python</a></li>
+</ul>
+<div class="tab-content">
+<div id="tabset-8-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-8-1-tab">
+<div class="cell">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># obtain a collection of images of a tile covering part of Lena delta</span></span>
+<span><span class="va">lena_cube</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_cube.html">sits_cube</a></span><span class="op">(</span></span>
+<span>    source <span class="op">=</span> <span class="st">"CDSE"</span>,</span>
+<span>    collection <span class="op">=</span> <span class="st">"SENTINEL-2-L2A"</span>,</span>
+<span>    bands <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"B02"</span>, <span class="st">"B04"</span>, <span class="st">"B8A"</span>, <span class="st">"B11"</span>, <span class="st">"B12"</span><span class="op">)</span>,</span>
+<span>    start_date <span class="op">=</span> <span class="st">"2023-05-01"</span>,</span>
+<span>    end_date <span class="op">=</span> <span class="st">"2023-09-01"</span>,</span>
+<span>    tiles <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"52XDF"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co"># plot an image from summertime</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">lena_cube</span>, date <span class="op">=</span> <span class="st">"2023-07-06"</span>, red <span class="op">=</span> <span class="st">"B12"</span>, green <span class="op">=</span> <span class="st">"B8A"</span>, blue <span class="op">=</span> <span class="st">"B04"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+<div id="tabset-8-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-8-2-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># obtain a collection of images of a tile covering part of Lena delta</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>lena_cube <span class="op">=</span> sits_cube(</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>    source <span class="op">=</span> <span class="st">"CDSE"</span>,</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>    collection <span class="op">=</span> <span class="st">"SENTINEL-2-L2A"</span>,</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>    bands <span class="op">=</span> [<span class="st">"B02"</span>, <span class="st">"B04"</span>, <span class="st">"B8A"</span>, <span class="st">"B11"</span>, <span class="st">"B12"</span>],</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>    start_date <span class="op">=</span> <span class="st">"2023-05-01"</span>,</span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>    end_date <span class="op">=</span> <span class="st">"2023-09-01"</span>,</span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>    tiles <span class="op">=</span> <span class="st">"52XDF"</span></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a><span class="co"># plot an image from summertime</span></span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>plot(lena_cube, date <span class="op">=</span> <span class="st">"2023-07-06"</span>, red <span class="op">=</span> <span class="st">"B12"</span>, green <span class="op">=</span> <span class="st">"B8A"</span>, blue <span class="op">=</span> <span class="st">"B04"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-lena-datacubes" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure"><p><img src="./images/s2_lena_delta.png" class="img-fluid figure-img" style="width:100.0%"></p>
+<figcaption class="figure-caption">Figure&nbsp;4.11: Sentinel-2 image of the Lena river delta in summertime.</figcaption></figure>
+</div>
+</div>
+</div>
+</section><section id="sentinel-1-rtc-images-in-cdse" class="level3" data-number="4.7.2"><h3 data-number="4.7.2" class="anchored" data-anchor-id="sentinel-1-rtc-images-in-cdse">
+<span class="header-section-number">4.7.2</span> SENTINEL-1-RTC images in CDSE</h3>
+<p>An important product under development at CDSE is the radiometric terrain corrected (RTC) Sentinel-1 images. In CDSE, this product is referred to as normalized terrain backscatter (NRB). The S1-NRB product contains radiometrically terrain corrected (RTC) gamma nought backscatter (γ⁰) processed from Single Look Complex (SLC) Level-1A data. Each acquired polarization is stored in an individual binary image file.</p>
+<p>All images are projected and gridded into the United States Military Grid Reference System (US-MGRS). The use of the US-MGRS tile grid ensures a very high level of interoperability with Sentinel-2 Level-2A ARD products making it easy to also set up complex analysis systems that exploit both SAR and optical data. While speckle is inherent in SAR acquisitions, speckle filtering is not applied to the S1-NRB product in order to preserve spatial resolution. Some applications (or processing methods) may require spatial or temporal filtering for stationary backscatter estimates.</p>
+<p>For more details, please refer to the <a href="https://sentinels.copernicus.eu/web/sentinel/sentinel-1-ard-normalised-radar-backscatter-nrb-product">S1-NRB product website</a>. Global coverage is expected to grow as ESA expands the S1-RTC archive. The following example shows an S1-RTC image for the Rift Valley in Ethiopia.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist">
+<li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-9-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-9-1" role="tab" aria-controls="tabset-9-1" aria-selected="true">R</a></li>
+<li class="nav-item" role="presentation"><a class="nav-link" id="tabset-9-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-9-2" role="tab" aria-controls="tabset-9-2" aria-selected="false">Python</a></li>
+</ul>
+<div class="tab-content">
+<div id="tabset-9-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-9-1-tab">
+<div class="cell">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># retrieve a S1-RTC cube and plot</span></span>
+<span><span class="va">s1_cube</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_cube.html">sits_cube</a></span><span class="op">(</span></span>
+<span>    source <span class="op">=</span> <span class="st">"CDSE"</span>,</span>
+<span>    collection <span class="op">=</span> <span class="st">"SENTINEL-1-RTC"</span>,</span>
+<span>    bands <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"VV"</span>, <span class="st">"VH"</span><span class="op">)</span>,</span>
+<span>    orbit <span class="op">=</span> <span class="st">"descending"</span>,</span>
+<span>    start_date <span class="op">=</span> <span class="st">"2023-01-01"</span>,</span>
+<span>    end_date <span class="op">=</span> <span class="st">"2023-12-31"</span>,</span>
+<span>    tiles <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"37NCH"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">s1_cube</span>, band <span class="op">=</span> <span class="st">"VV"</span>, date <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"2023-03-03"</span><span class="op">)</span>, palette <span class="op">=</span> <span class="st">"Greys"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+<div id="tabset-9-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-9-2-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># retrieve a S1-RTC cube and plot</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>s1_cube <span class="op">=</span> sits_cube(</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    source <span class="op">=</span> <span class="st">"CDSE"</span>,</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>    collection <span class="op">=</span> <span class="st">"SENTINEL-1-RTC"</span>,</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>    bands <span class="op">=</span> [<span class="st">"VV"</span>, <span class="st">"VH"</span>],</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>    orbit <span class="op">=</span> <span class="st">"descending"</span>,</span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>    start_date <span class="op">=</span> <span class="st">"2023-01-01"</span>,</span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>    end_date <span class="op">=</span> <span class="st">"2023-12-31"</span>,</span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>    tiles <span class="op">=</span> <span class="st">"37NCH"</span></span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>plot(s1_cube, band <span class="op">=</span> <span class="st">"VV"</span>, date <span class="op">=</span> c(<span class="st">"2023-03-03"</span>), palette <span class="op">=</span> <span class="st">"Greys"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-rtccdse-datacubes" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure"><p><img src="./images/s1_rtc_cdse.png" class="img-fluid figure-img" style="width:100.0%"></p>
+<figcaption class="figure-caption">Figure&nbsp;4.12: Sentinel-1-RTC image of the Rift Valley in Ethiopia.</figcaption></figure>
+</div>
+</div>
+</div>
+</section></section><section id="digital-earth-africa" class="level2" data-number="4.8"><h2 data-number="4.8" class="anchored" data-anchor-id="digital-earth-africa">
+<span class="header-section-number">4.8</span> Digital Earth Africa</h2>
+<p>Digital Earth Africa (DEAFRICA) is a cloud service that provides open-access Earth observation data for the African continent. The ARD image collections in <code>sits</code> are:</p>
+<ul>
+<li>Sentinel-2 level-2A (<code>SENTINEL-2-L2A</code>), organized as MGRS tiles.</li>
+<li>Sentinel-1 radiometrically terrain corrected (<code>SENTINEL-1-RTC</code>)</li>
+<li>Landsat-5 (<code>LS5-SR</code>), Landsat-7 (<code>LS7-SR</code>), Landsat-8 (<code>LS8-SR</code>) and Landsat-9 (<code>LS9-SR</code>). All Landsat collections are ARD data and are organized as WRS-2 tiles.</li>
+<li>SAR L-band images produced by PALSAR sensor onboard the Japanese ALOS satellite(<code>ALOS-PALSAR-MOSAIC</code>). Data is organized in a 5<span class="math inline">\(^\circ\)</span> by 5<span class="math inline">\(^\circ\)</span> grid with a spatial resolution of 25 meters. Images are available annually from 2007 to 2010 (ALOS/PALSAR) and from 2015 to 2022 (ALOS-2/PALSAR-2).</li>
+<li>Estimates of vegetation condition using NDVI anomalies (<code>NDVI-ANOMALY</code>) compared with the long-term baseline condition. The available measurements are “NDVI_MEAN” (mean NDVI for a month) and “NDVI-STD-ANOMALY” (standardized NDVI anomaly for a month).</li>
+<li>Rainfall information provided by Climate Hazards Group InfraRed Precipitation with Station data (CHIRPS) from University of California, Santa Barbara. There are monthly (<code>RAINFALL-CHIRPS-MONTHLY</code>) and daily (<code>RAINFALL-CHIRPS-DAILY</code>) products over Africa.</li>
+<li>Digital elevation model provided by the EC Copernicus program (<code>COP-DEM-30</code>) in 30-meter resolution organized in a 1<span class="math inline">\(^\circ\)</span> by 1<span class="math inline">\(^\circ\)</span> grid.</li>
+<li>Annual geomedian images for Landsat 8 and Landsat 9 (<code>GM-LS8-LS9-ANNUAL</code> (LANDSAT/OLI)`) in the WRS-2 grid system.</li>
+<li>Annual geomedian images for Sentinel-2 (<code>GM-S2-ANNUAL</code>) in MGRS grid.</li>
+<li>Rolling three-month geomedian images for Sentinel-2 (<code>GM-S2-ROLLING</code>) in MGRS grid.</li>
+<li>Semestral geomedian images for Sentinel-2 (<code>GM-S2-SEMIANNUAL</code>) in MGRS grid.</li>
+</ul>
+<p>Access to DEAFRICA Sentinel-2 images can be done using the <code>tiles</code> or <code>roi</code> parameter. In this example, the requested <code>roi</code> produces a cube that contains one MGRS tile (“35LPH”) covering an area of Madagascar that includes the Betsiboka Estuary.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist">
+<li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-10-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-10-1" role="tab" aria-controls="tabset-10-1" aria-selected="true">R</a></li>
+<li class="nav-item" role="presentation"><a class="nav-link" id="tabset-10-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-10-2" role="tab" aria-controls="tabset-10-2" aria-selected="false">Python</a></li>
+</ul>
+<div class="tab-content">
+<div id="tabset-10-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-10-1-tab">
+<div class="cell">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">dea_s2_cube</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_cube.html">sits_cube</a></span><span class="op">(</span></span>
+<span>    source <span class="op">=</span> <span class="st">"DEAFRICA"</span>,</span>
+<span>    collection <span class="op">=</span> <span class="st">"SENTINEL-2-L2A"</span>,</span>
+<span>    roi <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span></span>
+<span>    lon_min <span class="op">=</span> <span class="fl">46.1</span>, lat_min <span class="op">=</span> <span class="op">-</span><span class="fl">15.6</span>,</span>
+<span>    lon_max <span class="op">=</span> <span class="fl">46.6</span>, lat_max <span class="op">=</span> <span class="op">-</span><span class="fl">16.1</span></span>
+<span>  <span class="op">)</span>,</span>
+<span>    bands <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"B02"</span>, <span class="st">"B04"</span>, <span class="st">"B08"</span><span class="op">)</span>,</span>
+<span>    start_date <span class="op">=</span> <span class="st">"2019-04-01"</span>,</span>
+<span>    end_date <span class="op">=</span> <span class="st">"2019-05-30"</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">dea_s2_cube</span>, red <span class="op">=</span> <span class="st">"B04"</span>, blue <span class="op">=</span> <span class="st">"B02"</span>, green <span class="op">=</span> <span class="st">"B08"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+<div id="tabset-10-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-10-2-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>dea_s2_cube <span class="op">=</span> sits_cube(</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>    source <span class="op">=</span> <span class="st">"DEAFRICA"</span>,</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>    collection <span class="op">=</span> <span class="st">"SENTINEL-2-L2A"</span>,</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>    roi <span class="op">=</span> {</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"lon_min"</span> : <span class="fl">46.1</span>, <span class="st">"lat_min"</span> : <span class="op">-</span><span class="fl">15.6</span>,</span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">"lon_max"</span> : <span class="fl">46.6</span>, <span class="st">"lat_max"</span> : <span class="op">-</span><span class="fl">16.1</span></span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>  },</span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>    bands <span class="op">=</span> [<span class="st">"B02"</span>, <span class="st">"B04"</span>, <span class="st">"B08"</span>],</span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>    start_date <span class="op">=</span> <span class="st">"2019-04-01"</span>,</span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>    end_date <span class="op">=</span> <span class="st">"2019-05-30"</span></span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a>plot(dea_s2_cube, red <span class="op">=</span> <span class="st">"B04"</span>, blue <span class="op">=</span> <span class="st">"B02"</span>, green <span class="op">=</span> <span class="st">"B08"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-s2deaf-datacubes" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure"><p><img src="./images/deafrica_s2.png" class="img-fluid figure-img" style="width:100.0%"></p>
+<figcaption class="figure-caption">Figure&nbsp;4.13: Sentinel-2 image in an area over Madagascar.</figcaption></figure>
+</div>
+</div>
+</div>
+<p>The next example retrieves a set of ARD Landsat-9 data covering the Serengeti Plain in Tanzania.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist">
+<li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-11-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-11-1" role="tab" aria-controls="tabset-11-1" aria-selected="true">R</a></li>
+<li class="nav-item" role="presentation"><a class="nav-link" id="tabset-11-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-11-2" role="tab" aria-controls="tabset-11-2" aria-selected="false">Python</a></li>
+</ul>
+<div class="tab-content">
+<div id="tabset-11-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-11-1-tab">
+<div class="cell">
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">dea_l9_cube</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_cube.html">sits_cube</a></span><span class="op">(</span></span>
+<span>    source <span class="op">=</span> <span class="st">"DEAFRICA"</span>,</span>
+<span>    collection <span class="op">=</span> <span class="st">"LS9-SR"</span>,</span>
+<span>    roi <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span></span>
+<span>        lon_min <span class="op">=</span> <span class="fl">33.0</span>, lat_min <span class="op">=</span> <span class="op">-</span><span class="fl">3.60</span>, </span>
+<span>        lon_max <span class="op">=</span> <span class="fl">33.6</span>, lat_max <span class="op">=</span> <span class="op">-</span><span class="fl">3.00</span></span>
+<span>    <span class="op">)</span>,</span>
+<span>    bands <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"B04"</span>, <span class="st">"B05"</span>, <span class="st">"B06"</span><span class="op">)</span>,</span>
+<span>    start_date <span class="op">=</span> <span class="st">"2023-05-01"</span>,</span>
+<span>    end_date <span class="op">=</span> <span class="st">"2023-08-30"</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">dea_l9_cube</span>, date <span class="op">=</span> <span class="st">"2023-06-26"</span>, </span>
+<span>     red <span class="op">=</span> <span class="st">"B06"</span>, green <span class="op">=</span> <span class="st">"B05"</span>, blue <span class="op">=</span> <span class="st">"B04"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+<div id="tabset-11-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-11-2-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>dea_l9_cube <span class="op">=</span> sits_cube(</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>    source <span class="op">=</span> <span class="st">"DEAFRICA"</span>,</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>    collection <span class="op">=</span> <span class="st">"LS9-SR"</span>,</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>    roi <span class="op">=</span> {</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>        <span class="st">"lon_min"</span> : <span class="fl">33.0</span>, <span class="st">"lat_min"</span> : <span class="op">-</span><span class="fl">3.60</span>, </span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>        <span class="st">"lon_max"</span> : <span class="fl">33.6</span>, <span class="st">"lat_max"</span> : <span class="op">-</span><span class="fl">3.00</span></span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>    },</span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>    bands <span class="op">=</span> [<span class="st">"B04"</span>, <span class="st">"B05"</span>, <span class="st">"B06"</span>],</span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>    start_date <span class="op">=</span> <span class="st">"2023-05-01"</span>,</span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a>    end_date <span class="op">=</span> <span class="st">"2023-08-30"</span></span>
+<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a>plot(dea_l9_cube, date <span class="op">=</span> <span class="st">"2023-06-26"</span>, </span>
+<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a>     red <span class="op">=</span> <span class="st">"B06"</span>, green <span class="op">=</span> <span class="st">"B05"</span>, blue <span class="op">=</span> <span class="st">"B04"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-l9deaf-datacubes" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure"><p><img src="./images/landsat9_serengeti.png" class="img-fluid figure-img" style="width:100.0%"></p>
+<figcaption class="figure-caption">Figure&nbsp;4.14: Landsat-9 image in an area over the Serengeti in Tanzania.</figcaption></figure>
+</div>
+</div>
+</div>
+<p>The following example shows how to retrieve a subset of the ALOS-PALSAR mosaic for the year 2020. The area is near the Congo-Rwanda border.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist">
+<li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-12-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-12-1" role="tab" aria-controls="tabset-12-1" aria-selected="true">R</a></li>
+<li class="nav-item" role="presentation"><a class="nav-link" id="tabset-12-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-12-2" role="tab" aria-controls="tabset-12-2" aria-selected="false">Python</a></li>
+</ul>
+<div class="tab-content">
+<div id="tabset-12-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-12-1-tab">
+<div class="cell">
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">dea_alos_cube</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_cube.html">sits_cube</a></span><span class="op">(</span></span>
+<span>    source <span class="op">=</span> <span class="st">"DEAFRICA"</span>,</span>
+<span>    collection <span class="op">=</span> <span class="st">"ALOS-PALSAR-MOSAIC"</span>,</span>
+<span>    roi <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span></span>
+<span>        lon_min <span class="op">=</span> <span class="fl">28.69</span>, lat_min <span class="op">=</span> <span class="op">-</span><span class="fl">2.35</span>, </span>
+<span>        lon_max <span class="op">=</span> <span class="fl">29.35</span>, lat_max <span class="op">=</span> <span class="op">-</span><span class="fl">1.56</span></span>
+<span>    <span class="op">)</span>,</span>
+<span>    bands <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"HH"</span>, <span class="st">"HV"</span><span class="op">)</span>,</span>
+<span>    start_date <span class="op">=</span> <span class="st">"2020-01-01"</span>,</span>
+<span>    end_date <span class="op">=</span> <span class="st">"2020-12-31"</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">dea_alos_cube</span>, band <span class="op">=</span> <span class="st">"HH"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+<div id="tabset-12-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-12-2-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>dea_alos_cube <span class="op">=</span> sits_cube(</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>    source <span class="op">=</span> <span class="st">"DEAFRICA"</span>,</span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>    collection <span class="op">=</span> <span class="st">"ALOS-PALSAR-MOSAIC"</span>,</span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>    roi <span class="op">=</span> {</span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>       <span class="st">"lon_min"</span> : <span class="fl">28.69</span>, <span class="st">"lat_min"</span> : <span class="op">-</span><span class="fl">2.35</span>, </span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>       <span class="st">"lon_max"</span> : <span class="fl">29.35</span>, <span class="st">"lat_max"</span> : <span class="op">-</span><span class="fl">1.56</span></span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>    },</span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>    bands <span class="op">=</span> [<span class="st">"HH"</span>, <span class="st">"HV"</span>],</span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>    start_date <span class="op">=</span> <span class="st">"2020-01-01"</span>,</span>
+<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a>    end_date <span class="op">=</span> <span class="st">"2020-12-31"</span></span>
+<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a>plot(dea_alos_cube, band <span class="op">=</span> <span class="st">"HH"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-sarhhdeaf-datacubes" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure"><p><img src="./images/alos_palsar_hh_lake_kivu.png" class="img-fluid figure-img" style="width:100.0%"></p>
+<figcaption class="figure-caption">Figure&nbsp;4.15: ALOS-PALSAR mosaic in the Congo forest area.</figcaption></figure>
+</div>
+</div>
+</div>
+</section><section id="digital-earth-australia" class="level2" data-number="4.9"><h2 data-number="4.9" class="anchored" data-anchor-id="digital-earth-australia">
+<span class="header-section-number">4.9</span> Digital Earth Australia</h2>
+<p>Digital Earth Australia (DEAUSTRALIA) is an initiative by Geoscience Australia that uses satellite data to monitor and analyze environmental changes and resources across the Australian continent. It provides many datasets offering detailed information on droughts, agriculture, water availability, floods, coastal erosion, and urban development. The DEAUSTRALIA image collections in <code>sits</code> are:</p>
+<ul>
+<li>GA_LS5T_ARD_3: ARD images from the Landsat-5 satellite, with bands “BLUE”, “GREEN”, “RED”, “NIR”, “SWIR-1”, “SWIR-2”, and “CLOUD”.</li>
+<li>GA_LS7E_ARD_3: ARD images from the Landsat-7 satellite, with the same bands as Landsat-5.</li>
+<li>GA_LS8C_ARD_3: ARD images from the Landsat-8 satellite, with bands “COASTAL-AEROSOL”, “BLUE”, “GREEN”, “RED”, “NIR”, “SWIR-1”, “SWIR-2”, “PANCHROMATIC”, and “CLOUD”.</li>
+<li>GA_LS9C_ARD_3: ARD images from the Landsat-9 satellite, with the same bands as Landsat-8.</li>
+<li>GA_S2AM_ARD_3: ARD images from the Sentinel-2A satellite, with bands “COASTAL-AEROSOL”, “BLUE”, “GREEN”, “RED”, “RED-EDGE-1”, “RED-EDGE-2”, “RED-EDGE-3”, “NIR-1”, “NIR-2”, “SWIR-2”, “SWIR-3”, and “CLOUD”.</li>
+<li>GA_S2BM_ARD_3: ARD images from the Sentinel-2B satellite, with the same bands as Sentinel-2A.</li>
+<li>GA_LS5T_GM_CYEAR_3: Landsat-5 geomedian images, with bands “BLUE”, “GREEN”, “RED”, “NIR”, “SWIR1”, “SWIR2”, “EDEV”, “SDEV”, “BCDEV”.</li>
+<li>GA_LS7E_GM_CYEAR_3: Landsat-7 geomedian images, with the same bands as Landsat-5 geomedian.</li>
+<li>GA_LS8CLS9C_GM_CYEAR_3: Landsat-8/9 geomedian images, with the same bands as Landsat-5 geomedian.</li>
+<li>GA_LS_FC_3: Landsat fractional land cover, with bands “BS”, “PV”, “NPV”.</li>
+<li>GA_S2LS_INTERTIDAL_CYEAR_3: Landsat/Sentinel intertidal data, with bands “ELEVATION”, “ELEVATION-UNCERTAINTY”, “EXPOSURE”, “TA-HAT”, “TA-HOT”, “TA-LOT”, “TA-LAT”, “TA-OFFSET-HIGH”, “TA-OFFSET-LOW”, “TA-SPREAD”, “QA-NDWI-CORR”, and “QA-NDWI-FREQ”.</li>
+</ul>
+<p>The following code retrieves an image from Sentinel-2A.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist">
+<li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-13-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-13-1" role="tab" aria-controls="tabset-13-1" aria-selected="true">R</a></li>
+<li class="nav-item" role="presentation"><a class="nav-link" id="tabset-13-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-13-2" role="tab" aria-controls="tabset-13-2" aria-selected="false">Python</a></li>
+</ul>
+<div class="tab-content">
+<div id="tabset-13-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-13-1-tab">
+<div class="cell">
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># get roi for an MGRS tile</span></span>
+<span><span class="va">bbox_55KGR</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_mgrs_to_roi.html">sits_mgrs_to_roi</a></span><span class="op">(</span><span class="st">"55KGR"</span><span class="op">)</span></span>
+<span><span class="co"># retrieve the world cover map for the chosen roi</span></span>
+<span><span class="va">s2_56KKV</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_cube.html">sits_cube</a></span><span class="op">(</span></span>
+<span>  source <span class="op">=</span> <span class="st">"DEAUSTRALIA"</span>,</span>
+<span>  collection <span class="op">=</span> <span class="st">"GA_S2AM_ARD_3"</span>,</span>
+<span>  tiles <span class="op">=</span> <span class="st">"56KKV"</span>,</span>
+<span>  bands <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"BLUE"</span>, <span class="st">"GREEN"</span>, <span class="st">"RED"</span>, <span class="st">"NIR-2"</span>, <span class="st">"SWIR-2"</span>, <span class="st">"CLOUD"</span><span class="op">)</span>,</span>
+<span>  start_date <span class="op">=</span> <span class="st">"2023-09-01"</span>,</span>
+<span>  end_date <span class="op">=</span> <span class="st">"2023-11-30"</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co"># plot the resulting map</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">s2_56KKV</span>, green <span class="op">=</span> <span class="st">"NIR-2"</span>, blue <span class="op">=</span> <span class="st">"BLUE"</span>, red <span class="op">=</span> <span class="st">"SWIR-2"</span>, date <span class="op">=</span> <span class="st">"2023-10-14"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+<div id="tabset-13-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-13-2-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="co"># retrieve the world cover map for the chosen tile</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>s2_56KKV <span class="op">=</span> sits_cube(</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>  source <span class="op">=</span> <span class="st">"DEAUSTRALIA"</span>,</span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>  collection <span class="op">=</span> <span class="st">"GA_S2AM_ARD_3"</span>,</span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>  tiles <span class="op">=</span> <span class="st">"56KKV"</span>,</span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>  bands <span class="op">=</span> [<span class="st">"BLUE"</span>, <span class="st">"GREEN"</span>, <span class="st">"RED"</span>, <span class="st">"NIR-2"</span>, <span class="st">"SWIR-2"</span>, <span class="st">"CLOUD"</span>],</span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>  start_date <span class="op">=</span> <span class="st">"2023-09-01"</span>,</span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>  end_date <span class="op">=</span> <span class="st">"2023-11-30"</span></span>
+<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a><span class="co"># plot the resulting map</span></span>
+<span id="cb29-11"><a href="#cb29-11" aria-hidden="true" tabindex="-1"></a>plot(s2_56KKV, green <span class="op">=</span> <span class="st">"NIR-2"</span>, blue <span class="op">=</span> <span class="st">"BLUE"</span>, red <span class="op">=</span> <span class="st">"SWIR-2"</span>, date <span class="op">=</span> <span class="st">"2023-10-14"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-s2deau-datacubes" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure"><p><img src="./images/s2_56KKV.png" class="img-fluid figure-img" style="width:100.0%"></p>
+<figcaption class="figure-caption">Figure&nbsp;4.16: Sentinel-2A image from the DEAUSTRALIA collection showing MGRS tile 56KKV.</figcaption></figure>
+</div>
+</div>
+</div>
+</section><section id="harmonized-landsat-sentinel" class="level2" data-number="4.10"><h2 data-number="4.10" class="anchored" data-anchor-id="harmonized-landsat-sentinel">
+<span class="header-section-number">4.10</span> Harmonized Landsat-Sentinel</h2>
+<p>Harmonized Landsat Sentinel (HLS) is a NASA initiative that processes and harmonizes Landsat 8 and Sentinel-2 imagery to a common standard, including atmospheric correction, alignment, resampling, and corrections for BRDF (bidirectional reflectance distribution function). The purpose of the HLS project is to create a unified and consistent dataset that integrates the advantages of both systems, making it easier to work with the data.</p>
+<p>The NASA Harmonized Landsat and Sentinel (HLS) service provides two image collections:</p>
+<ul>
+<li><p>Landsat 8 OLI Surface Reflectance HLS (HLSL30) – The HLSL30 product includes atmospherically corrected surface reflectance from the Landsat 8 OLI sensors at 30 m resolution. The dataset includes 11 spectral bands.</p></li>
+<li><p>Sentinel-2 MultiSpectral Instrument Surface Reflectance HLS (HLSS30) – The HLSS30 product includes atmospherically corrected surface reflectance from the Sentinel-2 MSI sensors at 30 m resolution. The dataset includes 12 spectral bands.</p></li>
+</ul>
+<p>The HLS and Sentinel-2 tiling systems are identical (MGRS). Each tile is 109.8 km wide, with 4,900 m of overlap on each side.</p>
+<p>To access NASA HLS, users need to register at <a href="https://urs.earthdata.nasa.gov/">NASA EarthData</a>, and save their login and password in a ~/.netrc plain text file on Unix (or %HOME%_netrc in Windows). The file must contain the following fields:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode sh code-with-copy"><code class="sourceCode bash"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="ex">machine</span> urs.earthdata.nasa.gov</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="fu">login</span> <span class="op">&lt;</span>username<span class="op">&gt;</span></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="ex">password</span> <span class="op">&lt;</span>password<span class="op">&gt;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We recommend using the earthdatalogin package to create a <code>.netrc</code> file with <code><a href="https://boettiger-lab.github.io/earthdatalogin/reference/edl_netrc.html">earthdatalogin::edl_netrc()</a></code>. This function creates a properly configured <code>.netrc</code> file in the user’s home directory and sets the environment variable GDAL_HTTP_NETRC_FILE, as shown in the example. As an alternative, we recommend using the HLS collections available in Microsoft Planetary Computer. They are copies of the NASA collections and are faster to access.</p>
+<div class="cell">
+<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://boettiger-lab.github.io/earthdatalogin/">earthdatalogin</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">earthdatalogin</span><span class="fu">::</span><span class="fu"><a href="https://boettiger-lab.github.io/earthdatalogin/reference/edl_netrc.html">edl_netrc</a></span><span class="op">(</span> </span>
+<span>username <span class="op">=</span> <span class="st">"&lt;your user name&gt;"</span>, </span>
+<span>password <span class="op">=</span> <span class="st">"&lt;your password&gt;"</span> </span>
+<span><span class="op">)</span> </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Images in NASA HLS can be accessed by region of interest or by tiles. The following example shows an HLS Sentinel-2 image over the Brazilian coast.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist">
+<li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-14-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-14-1" role="tab" aria-controls="tabset-14-1" aria-selected="true">R</a></li>
+<li class="nav-item" role="presentation"><a class="nav-link" id="tabset-14-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-14-2" role="tab" aria-controls="tabset-14-2" aria-selected="false">Python</a></li>
+</ul>
+<div class="tab-content">
+<div id="tabset-14-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-14-1-tab">
+<div class="cell">
+<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># define a region of interest</span></span>
+<span><span class="va">roi</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span>lon_min <span class="op">=</span> <span class="op">-</span><span class="fl">45.6422</span>, lat_min <span class="op">=</span> <span class="op">-</span><span class="fl">24.0335</span>,</span>
+<span>         lon_max <span class="op">=</span> <span class="op">-</span><span class="fl">45.0840</span>, lat_max <span class="op">=</span> <span class="op">-</span><span class="fl">23.6178</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># create a cube from the HLSS30 collection</span></span>
+<span><span class="va">hls_cube_s2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_cube.html">sits_cube</a></span><span class="op">(</span></span>
+<span>  source <span class="op">=</span> <span class="st">"HLS"</span>,</span>
+<span>  collection <span class="op">=</span> <span class="st">"HLSS30"</span>,</span>
+<span>  roi <span class="op">=</span> <span class="va">roi</span>,</span>
+<span>  bands <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"BLUE"</span>, <span class="st">"GREEN"</span>, <span class="st">"RED"</span>, <span class="st">"CLOUD"</span><span class="op">)</span>,</span>
+<span>  start_date <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html">as.Date</a></span><span class="op">(</span><span class="st">"2020-06-01"</span><span class="op">)</span>,</span>
+<span>  end_date <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.Date.html">as.Date</a></span><span class="op">(</span><span class="st">"2020-09-01"</span><span class="op">)</span>,</span>
+<span>  progress <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co"># plot the cube</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">hls_cube_s2</span>, red <span class="op">=</span> <span class="st">"RED"</span>, green <span class="op">=</span> <span class="st">"GREEN"</span>, blue <span class="op">=</span> <span class="st">"BLUE"</span>, date <span class="op">=</span> <span class="st">"2020-06-20"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+<div id="tabset-14-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-14-2-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="co"># define a region of interest</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>roi <span class="op">=</span> { <span class="st">"lon_min"</span> : <span class="op">-</span><span class="fl">45.6422</span>, <span class="st">"lat_min"</span> : <span class="op">-</span><span class="fl">24.0335</span>,</span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>        <span class="st">"lon_max"</span> : <span class="op">-</span><span class="fl">45.0840</span>, <span class="st">"lat_max"</span> : <span class="op">-</span><span class="fl">23.6178</span> }</span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a><span class="co"># create a cube from the HLSS30 collection</span></span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>hls_cube_s2 <span class="op">=</span> sits_cube(</span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a>  source <span class="op">=</span> <span class="st">"HLS"</span>,</span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>  collection <span class="op">=</span> <span class="st">"HLSS30"</span>,</span>
+<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a>  roi <span class="op">=</span> roi,</span>
+<span id="cb33-10"><a href="#cb33-10" aria-hidden="true" tabindex="-1"></a>  bands <span class="op">=</span> [<span class="st">"BLUE"</span>, <span class="st">"GREEN"</span>, <span class="st">"RED"</span>, <span class="st">"CLOUD"</span>],</span>
+<span id="cb33-11"><a href="#cb33-11" aria-hidden="true" tabindex="-1"></a>  start_date <span class="op">=</span> <span class="im">as</span>.Date(<span class="st">"2020-06-01"</span>),</span>
+<span id="cb33-12"><a href="#cb33-12" aria-hidden="true" tabindex="-1"></a>  end_date <span class="op">=</span> <span class="im">as</span>.Date(<span class="st">"2020-09-01"</span>),</span>
+<span id="cb33-13"><a href="#cb33-13" aria-hidden="true" tabindex="-1"></a>  progress <span class="op">=</span> FALSE</span>
+<span id="cb33-14"><a href="#cb33-14" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb33-15"><a href="#cb33-15" aria-hidden="true" tabindex="-1"></a><span class="co"># plot the cube</span></span>
+<span id="cb33-16"><a href="#cb33-16" aria-hidden="true" tabindex="-1"></a>plot(hls_cube_s2, red <span class="op">=</span> <span class="st">"RED"</span>, green <span class="op">=</span> <span class="st">"GREEN"</span>, blue <span class="op">=</span> <span class="st">"BLUE"</span>, date <span class="op">=</span> <span class="st">"2020-06-20"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-s2hls-datacubes" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure"><p><img src="./images/hls_ilhabela_s2.png" class="img-fluid figure-img" style="width:100.0%"></p>
+<figcaption class="figure-caption">Figure&nbsp;4.17: Sentinel-2 image from NASA HLSS30 collection showing the island of Ilhabela in the coast of Brazil.</figcaption></figure>
+</div>
+</div>
+</div>
+</section><section id="eo-products-from-terrascope" class="level2" data-number="4.11"><h2 data-number="4.11" class="anchored" data-anchor-id="eo-products-from-terrascope">
+<span class="header-section-number">4.11</span> EO products from TERRASCOPE</h2>
+<p>Terrascope is an online platform for accessing open-source satellite images. This service, operated by VITO, offers a range of free Earth observation data and processing services. Currently, <code>sits</code> supports the World Cover 2021 maps, produced by VITO with support from the European Commission and ESA. The following code shows how to access the World Cover 2021 covering tile “22LBL”. First, we use <code><a href="https://rdrr.io/pkg/sits/man/sits_mgrs_to_roi.html">sits_mgrs_to_roi()</a></code> to get the region of interest expressed as a bounding box; this box is then entered as the <code>roi</code> parameter in the <code><a href="https://rdrr.io/pkg/sits/man/sits_cube.html">sits_cube()</a></code> function. Since the World Cover data is available as a 3<span class="math inline">\(^\circ\)</span> by 3<span class="math inline">\(^\circ\)</span> grid, it is necessary to use <code><a href="https://rdrr.io/pkg/sits/man/sits_cube_copy.html">sits_cube_copy()</a></code> to extract the exact MGRS tile.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist">
+<li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-15-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-15-1" role="tab" aria-controls="tabset-15-1" aria-selected="true">R</a></li>
+<li class="nav-item" role="presentation"><a class="nav-link" id="tabset-15-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-15-2" role="tab" aria-controls="tabset-15-2" aria-selected="false">Python</a></li>
+</ul>
+<div class="tab-content">
+<div id="tabset-15-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-15-1-tab">
+<div class="cell">
+<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># get roi for an MGRS tile</span></span>
+<span><span class="va">bbox_22LBL</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_mgrs_to_roi.html">sits_mgrs_to_roi</a></span><span class="op">(</span><span class="st">"22LBL"</span><span class="op">)</span></span>
+<span><span class="co"># retrieve the world cover map for the chosen roi</span></span>
+<span><span class="va">world_cover_2021</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_cube.html">sits_cube</a></span><span class="op">(</span></span>
+<span>  source <span class="op">=</span> <span class="st">"TERRASCOPE"</span>,</span>
+<span>  collection <span class="op">=</span> <span class="st">"WORLD-COVER-2021"</span>,</span>
+<span>  roi <span class="op">=</span> <span class="va">bbox_22LBL</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co"># cut the 3 x 3 degree grid to match the MGRS tile 22LBL</span></span>
+<span><span class="va">world_cover_2021_20LBL</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_cube_copy.html">sits_cube_copy</a></span><span class="op">(</span></span>
+<span>  cube <span class="op">=</span> <span class="va">world_cover_2021</span>,</span>
+<span>  roi <span class="op">=</span> <span class="va">bbox_22LBL</span>,</span>
+<span>  multicores <span class="op">=</span> <span class="fl">6</span>,</span>
+<span>  output_dir <span class="op">=</span> <span class="va">tempdir_r</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co"># plot the resulting map</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">world_cover_2021_20LBL</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+<div id="tabset-15-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-15-2-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="co"># get roi for an MGRS tile</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>bbox_22LBL <span class="op">=</span> sits_mgrs_to_roi(<span class="st">"22LBL"</span>)</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a><span class="co"># retrieve the world cover map for the chosen roi</span></span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>world_cover_2021 <span class="op">=</span> sits_cube(</span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>  source <span class="op">=</span> <span class="st">"TERRASCOPE"</span>,</span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>  collection <span class="op">=</span> <span class="st">"WORLD-COVER-2021"</span>,</span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>  roi <span class="op">=</span> bbox_22LBL</span>
+<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a><span class="co"># cut the 3 x 3 degree grid to match the MGRS tile 22LBL</span></span>
+<span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a>world_cover_2021_20LBL <span class="op">=</span> sits_cube_copy(</span>
+<span id="cb35-11"><a href="#cb35-11" aria-hidden="true" tabindex="-1"></a>  cube <span class="op">=</span> world_cover_2021,</span>
+<span id="cb35-12"><a href="#cb35-12" aria-hidden="true" tabindex="-1"></a>  roi <span class="op">=</span> bbox_22LBL,</span>
+<span id="cb35-13"><a href="#cb35-13" aria-hidden="true" tabindex="-1"></a>  multicores <span class="op">=</span> <span class="dv">6</span>,</span>
+<span id="cb35-14"><a href="#cb35-14" aria-hidden="true" tabindex="-1"></a>  output_dir <span class="op">=</span> tempdir_py</span>
+<span id="cb35-15"><a href="#cb35-15" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb35-16"><a href="#cb35-16" aria-hidden="true" tabindex="-1"></a><span class="co"># plot the resulting map</span></span>
+<span id="cb35-17"><a href="#cb35-17" aria-hidden="true" tabindex="-1"></a>plot(world_cover_2021_20LBL)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-wc-datacubes" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure"><p><img src="./images/world_cover_2021.png" class="img-fluid figure-img" style="width:100.0%"></p>
+<figcaption class="figure-caption">Figure&nbsp;4.18: World Cover 2021 map covering MGRS tile 22LBL.</figcaption></figure>
+</div>
+</div>
+</div>
+</section><section id="references" class="level2 unnumbered"><h2 class="unnumbered anchored" data-anchor-id="references">References</h2>
+
+
+<div id="refs" class="references csl-bib-body" role="list">
+<div id="ref-Ferreira2020a" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[1] </div>
+<div class="csl-right-inline">K. R. Ferreira <em>et al.</em>, <span>“Earth <span>Observation Data Cubes</span> for <span>Brazil</span>: <span>Requirements</span>, <span>Methodology</span> and <span>Products</span>,”</span> <em>Remote Sensing</em>, vol. 12, no. 24, p. 4033, 2020, doi: <a href="https://doi.org/10.3390/rs12244033">10.3390/rs12244033</a>.</div>
+</div>
+</div>
+</section></main><!-- /main --><script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script><nav class="page-navigation"><div class="nav-page nav-page-previous">
+      <a href="./datacubes.html" class="pagination-link">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Earth observation data cubes</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./dc_regularize.html" class="pagination-link">
+        <span class="nav-page-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Building regular data cubes</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer"><div class="nav-footer">
+    <div class="nav-footer-left">The SITS book was written by Gilberto Camara, Rolf Simoes, Felipe Souza, Felipe Carlos, Pedro Andrade, Karine Ferreira, Pedro Brito, Alexandre Assunção, and Charlotte Pelletier.</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">This book was built with <a href="https://quarto.org/">Quarto</a>.</div>
+  </div>
+</footer>
+
+
+</body></html>

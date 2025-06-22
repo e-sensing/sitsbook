@@ -1,0 +1,67 @@
+---
+title: "Validation and accuracy measurement"
+format: html
+---
+
+After producing a classified map from remote sensing imagery, the next essential stage is to validate the results and quantify classification accuracy. This process involves two distinct procedures: model cross-validation and map accuracy assessment.
+
+## Basic measures of accuracy
+
+The metrics of producer’s accuracy, user’s accuracy, F1 score, and overall accuracy are derived from the confusion matrix (also known as the error matrix), which compares the classified map data to reference (ground truth) data. Each of these metrics provides a different perspective on the quality of classification.
+
+Producer’s Accuracy (PA) measures the probability that a reference (true) sample is correctly classified. It measures *omission error* — how often real features of a class are missed in the classification. It is measured the proportion of correctly classified instances relative to the total number of reference samples in a given class.
+
+$$
+    \text{PA}_i = \frac{\text{Correctly classified samples of class } i}{\text{Total reference samples of class } i}
+    = \frac{n_{ii}}{\sum_j n_{ji}}
+$$
+
+User’s Accuracy (UA) is the probability that a sample classified as a given class actually belongs to that class in the reference data. It measures *commission error* — how often a class on the map includes misclassified pixels.
+
+$$
+    \text{UA}_i = \frac{\text{Correctly classified samples of class } i}{\text{Total classified samples as class } i}
+    = \frac{n_{ii}}{\sum_j n_{ij}}
+$$
+
+Overall Accuracy (OA) is the proportion of all samples that are correctly classified. It provides a general measure of classification success across all classes.
+
+$$
+    \text{OA} = \frac{\text{Correctly classified samples of class}}{\text{Total classified samples}} = \frac{\sum_i n_{ii}}{N}
+$$
+
+The F1 score is a metric that balances user's and producer's accuracy into a single number. It is especially useful as a trade-off between false positives and false negatives. For a given class $i$, the F1 score is the harmonic mean of UA and PA.
+
+$$
+F1_i = 2 \cdot \frac{UA_i \cdot PA_i}{UA_i + PA_i}
+$$
+
+By convention, we express the confusion matrix by placing the reference data (assumed to be the ground truth) in the columns and the respective map labels in the lines. In this way the UA and PA values are easily computed from the matrix.
+
+|             | Reference class A | Reference class B | User Acc. |
+|-------------|-------------------|-------------------|-----------|
+| Map class A | 40                | 10                | 0.80      |
+| Map class B | 5                 | 45                | 0.90      |
+| Prod Acc    | 0.89              | 0.82              |           |
+| F1 score    | 0.84              | 0.86              |           |
+
+: Confusion matrix example with two classes {#tbl-cm}
+
+In the data shown in @tbl-cm, the producer’s accuracy (PA) for class A is 0.89 (40/45) and for class B is 0.82 (45/55). The user’s accuracy (UA) for class A is 0.80 (40/50) and for class B is 0.90 (45/50). The F1 score for class A is 0.84 and for class B is 0.87. The overall accuracy (OA) is 0.85 ((40 + 45) / 100).
+
+## Cross-validation
+
+Cross-validation is a widely used statistical technique for assessing the generalization performance of machine learning models. Its primary purpose is to provide an unbiased estimate of a model's ability to perform on independent, unseen data, thereby helping to prevent overfitting.
+
+The first step is to partition the available data into two distinct subsets: one for training and another for validation. The training set is used to develop the classification model, while the validation set is reserved exclusively for assessing the model’s performance. This separation is crucial to avoid biased accuracy estimates. Ideally, the partitioning should ensure that each land cover class is proportionally represented—this can be achieved through stratified random sampling.
+
+However, oerformance estimates obtained via cross-validation may not fully reflect the conditions encountered in real dara, especially when there is a significant distributional shift between the training data and real-world scenarios. Since this is a common situation is land data, measures of cross-validation are not a reliable prediction of map accuracy.
+
+## Map accuracy measures
+
+Once the classifier is trained and the image is classified, a reliable set of reference data must be collected or prepared. This reference, or ground truth data, serves as the benchmark for assessing classification quality. It can be derived from field surveys, high-resolution satellite imagery, or expert interpretation, and it must be representative, accurate, and temporally consistent with the classified image.
+
+The map accuracy assessment and area estimation procedures in `sits` follow the best practices outlined by Olofsson et al. [@Olofsson2014], which provide a statistically rigorous framework for evaluating land cover and land change maps. These guidelines emphasize the importance of using probability sampling, transparent documentation, and unbiased estimation techniques to ensure that both classification accuracy and area statistics are reliable and reproducible.
+
+By adhering to these principles, the assessment of classification results not only quantifies accuracy but also supports statistically sound area estimation, enabling robust and policy-relevant applications of remote sensing data.
+
+## References{-}

@@ -1,0 +1,1177 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.361">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<meta name="author" content="Gilberto Camara, Rolf Simoes, Felipe Souza, Felipe Carlos, Pedro Andrade, Karine Ferreira, Lorena Santos and Charlotte Pelletier">
+<title>Satellite Image Time Series Analysis on Earth Observation Data Cubes - 16&nbsp; Machine learning algorithms</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./cl_tuning.html" rel="next">
+<link href="./classification.html" rel="prev">
+<link href="././images/cover_sits_book_quarto.jpg" rel="icon" type="image/jpeg">
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light"><script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script><script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script><script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+</head>
+<body class="nav-sidebar floating">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top"><nav class="quarto-secondary-nav"><div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+      <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./classification.html">Machine learning for image time series</a></li><li class="breadcrumb-item"><a href="./cl_machinelearning.html"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Machine learning algorithms</span></a></li></ol></nav>
+      <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+      </a>
+      <button type="button" class="btn quarto-search-button" aria-label="" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav></header><!-- content --><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal sidebar-navigation floating overflow-auto"><div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">Satellite Image Time Series Analysis on Earth Observation Data Cubes</a> 
+        <div class="sidebar-tools-main">
+    <a href="https://github.com/e-sensing/sitsbook" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
+  <a href="" class="quarto-reader-toggle quarto-navigation-tool px-1" onclick="window.quartoToggleReader(); return false;" title="Toggle reader mode">
+  <div class="quarto-reader-toggle-btn">
+  <i class="bi"></i>
+  </div>
+</a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Greetings</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./setup.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Setup</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./acknowledgements.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Acknowledgements</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./introduction.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">The Basics of SITS</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./intro_quicktour.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">A quick tour of SITS</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./intro_examples.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">How to use SITS: example scripts</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./intro_visualisation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Data visualisation in SITS</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./datacubes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Earth observation data cubes</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./dc_ardcollections.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Analysis-ready image collections</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./dc_regularize.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Building regular data cubes</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./dc_merge.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Multi-source EO data cubes</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./dc_localcubes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Data cubes from local files</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./dc_cubeoperations.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Computing NDVI and other spectral indices</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./dc_mixture.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Spectral mixture analysis</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./dc_reduce.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Temporal reduction operations</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./dc_texture.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Texture operations in data cubes</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./timeseries.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Satellite image time series</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ts_basics.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Basic operations on image time series</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ts_cluster.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Hierarchical clustering of time series</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ts_som.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Self-organized maps for sample quality control</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ts_balance.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Reducing sample imbalance</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./classification.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Machine learning for image time series</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./cl_machinelearning.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Machine learning algorithms</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./cl_tuning.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Deep learning model tuning</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./cl_rasterclassification.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Classification of raster data cubes</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./cl_smoothing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">Bayesian smoothing for classification post-processing</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./cl_reclassification.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">Map reclassification</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./cl_uncertainty.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">Uncertainty and active learning</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./cl_ensembleprediction.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">Ensemble prediction with multiple models</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./validation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Validation and accuracy measurement</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./val_kfold.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">23</span>&nbsp; <span class="chapter-title">Cross-validation of training data</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./val_map.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">24</span>&nbsp; <span class="chapter-title">Map accuracy assessment</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./vector_datacubes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Vector data cubes</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./vec_obia.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">25</span>&nbsp; <span class="chapter-title">Object-based time series image analysis</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./vec_creating.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">26</span>&nbsp; <span class="chapter-title">Creating vector data cube from local files</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./annex.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Advanced Topics</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./annex_export.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">27</span>&nbsp; <span class="chapter-title">Exporting data to other packages</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./annex_gee.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">28</span>&nbsp; <span class="chapter-title">SITS and GEE: side-by-side comparison</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./annex_api.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">29</span>&nbsp; <span class="chapter-title">Developing new functions in SITS</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./annex_ml.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">30</span>&nbsp; <span class="chapter-title">Including new methods for machine learning</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./annex_stac.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">31</span>&nbsp; <span class="chapter-title">Supporting STAC-based ARD catalogs</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./annex_parallel.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">32</span>&nbsp; <span class="chapter-title">How parallel processing works in SITS</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+    </ul>
+</div>
+</nav><div id="quarto-sidebar-glass" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active"><h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+<li><a href="#configurations-to-run-this-chapter" id="toc-configurations-to-run-this-chapter" class="nav-link active" data-scroll-target="#configurations-to-run-this-chapter">Configurations to run this chapter</a></li>
+  <li><a href="#data-used-in-this-chapter" id="toc-data-used-in-this-chapter" class="nav-link" data-scroll-target="#data-used-in-this-chapter"><span class="header-section-number">16.1</span> Data used in this chapter</a></li>
+  <li><a href="#common-interface-to-machine-learning-and-deep-learning-models" id="toc-common-interface-to-machine-learning-and-deep-learning-models" class="nav-link" data-scroll-target="#common-interface-to-machine-learning-and-deep-learning-models"><span class="header-section-number">16.2</span> Common interface to machine learning and deep learning models</a></li>
+  <li><a href="#random-forest" id="toc-random-forest" class="nav-link" data-scroll-target="#random-forest"><span class="header-section-number">16.3</span> Random forest</a></li>
+  <li><a href="#support-vector-machine" id="toc-support-vector-machine" class="nav-link" data-scroll-target="#support-vector-machine"><span class="header-section-number">16.4</span> Support vector machine</a></li>
+  <li><a href="#extreme-gradient-boosting" id="toc-extreme-gradient-boosting" class="nav-link" data-scroll-target="#extreme-gradient-boosting"><span class="header-section-number">16.5</span> Extreme gradient boosting</a></li>
+  <li><a href="#deep-learning-using-multilayer-perceptron" id="toc-deep-learning-using-multilayer-perceptron" class="nav-link" data-scroll-target="#deep-learning-using-multilayer-perceptron"><span class="header-section-number">16.6</span> Deep learning using multilayer perceptron</a></li>
+  <li><a href="#temporal-convolutional-neural-network-tempcnn" id="toc-temporal-convolutional-neural-network-tempcnn" class="nav-link" data-scroll-target="#temporal-convolutional-neural-network-tempcnn"><span class="header-section-number">16.7</span> Temporal Convolutional Neural Network (TempCNN)</a></li>
+  <li><a href="#attention-based-models" id="toc-attention-based-models" class="nav-link" data-scroll-target="#attention-based-models"><span class="header-section-number">16.8</span> Attention-based models</a></li>
+  <li><a href="#summary" id="toc-summary" class="nav-link" data-scroll-target="#summary"><span class="header-section-number">16.9</span> Summary</a></li>
+  <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references">References</a></li>
+  </ul><div class="toc-actions"><div><i class="bi bi-github"></i></div><div class="action-links"><p><a href="https://github.com/e-sensing/sitsbook/edit/quarto/cl_machinelearning.qmd" class="toc-action">Edit this page</a></p><p><a href="https://github.com/e-sensing/sitsbook/issues/new" class="toc-action">Report an issue</a></p></div></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block default"><div class="quarto-title">
+<h1 class="title">
+<span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Machine learning algorithms</span>
+</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+</header><section id="configurations-to-run-this-chapter" class="level3 unnumbered"><h3 class="unnumbered anchored" data-anchor-id="configurations-to-run-this-chapter">Configurations to run this chapter</h3>
+<div class="cell">
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># load package "tibble"</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://tibble.tidyverse.org/">tibble</a></span><span class="op">)</span></span>
+<span><span class="co"># load packages "sits" and "sitsdata"</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/e-sensing/sits/">sits</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/e-sensing/sitsdata/">sitsdata</a></span><span class="op">)</span></span>
+<span><span class="co"># set tempdir if it does not exist </span></span>
+<span><span class="va">tempdir_r</span> <span class="op">&lt;-</span> <span class="st">"~/sitsbook/tempdir/R/cl_machinelearning"</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/files2.html">dir.create</a></span><span class="op">(</span><span class="va">tempdir_r</span>, showWarnings <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><a href="https://www.kaggle.com/code/esensing/machine-learning-for-data-cubes" target="_blank"><img src="https://kaggle.com/static/images/open-in-kaggle.svg"></a></p>
+</section><section id="data-used-in-this-chapter" class="level2" data-number="16.1"><h2 data-number="16.1" class="anchored" data-anchor-id="data-used-in-this-chapter">
+<span class="header-section-number">16.1</span> Data used in this chapter</h2>
+<p>The following examples show how to train machine learning methods and apply them to classify a single time series. We use the set <code>samples_matogrosso_mod13q1</code>, containing time series samples from the Brazilian Mato Grosso state obtained from the MODIS MOD13Q1 product. It has 1,892 samples and nine classes (<code>Cerrado</code>, <code>Forest</code>, <code>Pasture</code>, <code>Soy_Corn</code>, <code>Soy_Cotton</code>, <code>Soy_Fallow</code>, <code>Soy_Millet</code>). Each time series covers 12 months (23 data points) with six bands (NDVI, EVI, BLUE, RED, NIR, MIR). The samples are arranged along an agricultural year, starting in September and ending in August. The dataset was used in the paper “Big Earth observation time series analysis for monitoring Brazilian agriculture” <span class="citation" data-cites="Picoli2018"><a href="#ref-Picoli2018" role="doc-biblioref">[1]</a></span>, being available in the R package <code>sitsdata</code>.</p>
+</section><section id="common-interface-to-machine-learning-and-deep-learning-models" class="level2" data-number="16.2"><h2 data-number="16.2" class="anchored" data-anchor-id="common-interface-to-machine-learning-and-deep-learning-models">
+<span class="header-section-number">16.2</span> Common interface to machine learning and deep learning models</h2>
+<p>The <code><a href="https://rdrr.io/pkg/sits/man/sits_train.html">sits_train()</a></code> function provides a standard interface to all machine learning models. This function takes two mandatory parameters: the training data (<code>samples</code>) and the ML algorithm (<code>ml_method</code>). After the model is estimated, it can classify individual time series or data cubes with <code><a href="https://rdrr.io/pkg/sits/man/sits_classify.html">sits_classify()</a></code>. In what follows, we show how to apply each method to classify a single time series. Then, in Chapter <a href="https://e-sensing.github.io/sitsbook/cl_raster_classification">Image classification in data cubes</a>, we discuss how to classify data cubes.</p>
+<p>Since <code>sits</code> is aimed at remote sensing users who are not machine learning experts, it provides a set of default values for all classification models. These settings have been chosen based on testing by the authors. Nevertheless, users can control all parameters for each model. Novice users can rely on the default values, while experienced ones can fine-tune model parameters to meet their needs. Model tuning is discussed at the end of this Chapter.</p>
+<p>When a set of time series organized as tibble is taken as input to the classifier, the result is the same tibble with one additional column (<code>predicted</code>), which contains the information on the labels assigned for each interval. The results can be shown in text format using the function <code><a href="https://rdrr.io/pkg/sits/man/sits_show_prediction.html">sits_show_prediction()</a></code> or graphically using <code><a href="https://rdrr.io/r/graphics/plot.default.html">plot()</a></code>.</p>
+</section><section id="random-forest" class="level2" data-number="16.3"><h2 data-number="16.3" class="anchored" data-anchor-id="random-forest">
+<span class="header-section-number">16.3</span> Random forest</h2>
+<p>Random forest is a machine learning algorithm that uses an ensemble learning method for classification tasks. The algorithm consists of multiple decision trees, each trained on a different subset of the training data and with a different subset of features. To make a prediction, each decision tree in the forest independently classifies the input data. The final prediction is made based on the majority vote of all the decision trees. The randomness in the algorithm comes from the random subsets of data and features used to train each decision tree, which helps to reduce overfitting and improve the accuracy of the model. This classifier measures the importance of each feature in the classification task, which can be helpful in feature selection and data visualization. For an in-depth discussion of the robustness of random forest method for satellite image time series classification, please see Pelletier et al <span class="citation" data-cites="Pelletier2016"><a href="#ref-Pelletier2016" role="doc-biblioref">[2]</a></span>.</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-ml-rf" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure"><p><img src="./images/random_forest.png" class="img-fluid figure-img" style="width:90.0%"></p>
+<figcaption class="figure-caption">Figure&nbsp;16.1: Random forest algorithm (source: Venkata Jagannath in Wikipedia).</figcaption></figure>
+</div>
+</div>
+</div>
+<p><code>sits</code> provides <code><a href="https://rdrr.io/pkg/sits/man/sits_rfor.html">sits_rfor()</a></code>, which uses the R <code>randomForest</code> package <span class="citation" data-cites="Wright2017"><a href="#ref-Wright2017" role="doc-biblioref">[3]</a></span>; its main parameter is <code>num_trees</code>, which is the number of trees to grow with a default value of 100. The model can be visualized using <code><a href="https://rdrr.io/r/graphics/plot.default.html">plot()</a></code>.</p>
+<div class="cell">
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span><span class="op">(</span><span class="fl">290356</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Train the Mato Grosso samples with random forest model</span></span>
+<span><span class="va">rfor_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_train.html">sits_train</a></span><span class="op">(</span></span>
+<span>    samples <span class="op">=</span> <span class="va">samples_matogrosso_mod13q1</span>, </span>
+<span>    ml_method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_rfor.html">sits_rfor</a></span><span class="op">(</span>num_trees <span class="op">=</span> <span class="fl">100</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co"># Plot the most important variables of the model</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">rfor_model</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-ml-rfimp" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure"><p><img src="./images/mlrformodel.png" class="img-fluid figure-img" style="width:90.0%"></p>
+<figcaption class="figure-caption">Figure&nbsp;16.2: Most important variables in random forest model.</figcaption></figure>
+</div>
+</div>
+</div>
+<p>The most important explanatory variables are the NIR (near infrared) band on date 17 (2007-05-25) and the MIR (middle infrared) band on date 22 (2007-08-13). The NIR value at the end of May captures the growth of the second crop for double cropping classes. Values of the MIR band at the end of the period (late July to late August) capture bare soil signatures to distinguish between agricultural and natural classes. This corresponds to summertime when the ground is drier after harvesting crops.</p>
+<div class="cell">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Classify using random forest model and plot the result</span></span>
+<span><span class="va">point_class</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_classify.html">sits_classify</a></span><span class="op">(</span></span>
+<span>    data <span class="op">=</span> <span class="va">point_mt_mod13q1</span>, </span>
+<span>    ml_model  <span class="op">=</span> <span class="va">rfor_model</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">point_class</span>, bands <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"NDVI"</span>, <span class="st">"EVI"</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-ml-rfplot" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure"><p><img src="./images/mlrforplot.png" class="img-fluid figure-img" style="width:90.0%"></p>
+<figcaption class="figure-caption">Figure&nbsp;16.3: Classification of time series using random forest.</figcaption></figure>
+</div>
+</div>
+</div>
+<p>The result shows that the area started as a forest in 2000, was deforested from 2004 to 2005, used as pasture from 2006 to 2007, and for double-cropping agriculture from 2009 onwards. This behavior is consistent with expert evaluation of land change process in this region of Amazonia.</p>
+<p>Random forest is robust to outliers and can deal with irrelevant inputs <span class="citation" data-cites="Hastie2009"><a href="#ref-Hastie2009" role="doc-biblioref">[4]</a></span>. The method tends to overemphasize some variables because its performance tends to stabilize after part of the trees is grown <span class="citation" data-cites="Hastie2009"><a href="#ref-Hastie2009" role="doc-biblioref">[4]</a></span>. In cases where abrupt change occurs, such as deforestation mapping, random forest (if properly trained) will emphasize the temporal instances and bands that capture such quick change.</p>
+</section><section id="support-vector-machine" class="level2" data-number="16.4"><h2 data-number="16.4" class="anchored" data-anchor-id="support-vector-machine">
+<span class="header-section-number">16.4</span> Support vector machine</h2>
+<p>The support vector machine (SVM) classifier is a generalization of a linear classifier that finds an optimal separation hyperplane that minimizes misclassification <span class="citation" data-cites="Cortes1995"><a href="#ref-Cortes1995" role="doc-biblioref">[5]</a></span>. Since a set of samples with <span class="math inline">\(n\)</span> features defines an n-dimensional feature space, hyperplanes are linear <span class="math inline">\({(n-1)}\)</span>-dimensional boundaries that define linear partitions in that space. If the classes are linearly separable on the feature space, there will be an optimal solution defined by the maximal margin hyperplane, which is the separating hyperplane that is farthest from the training observations <span class="citation" data-cites="James2013"><a href="#ref-James2013" role="doc-biblioref">[6]</a></span>. The maximal margin is computed as the smallest distance from the observations to the hyperplane. The solution for the hyperplane coefficients depends only on the samples that define the maximum margin criteria, the so-called support vectors.</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-ml-svm" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure"><p><img src="./images/svm_margin.png" class="img-fluid figure-img" style="width:50.0%"></p>
+<figcaption class="figure-caption">Figure&nbsp;16.4: Maximum-margin hyperplane and margins for an SVM trained with samples from two classes. Samples on the margin are called the support vectors. (source: Larhmam in Wikipedia).</figcaption></figure>
+</div>
+</div>
+</div>
+<p>For data that is not linearly separable, SVM includes kernel functions that map the original feature space into a higher dimensional space, providing nonlinear boundaries to the original feature space. Despite having a linear boundary on the enlarged feature space, the new classification model generally translates its hyperplane to a nonlinear boundary in the original attribute space. Kernels are an efficient computational strategy to produce nonlinear boundaries in the input attribute space; thus, they improve training-class separation. SVM is one of the most widely used algorithms in machine learning applications and has been applied to classify remote sensing data <span class="citation" data-cites="Mountrakis2011"><a href="#ref-Mountrakis2011" role="doc-biblioref">[7]</a></span>.</p>
+<p>In <code>sits</code>, SVM is implemented as a wrapper of <code>e1071</code> R package that uses the <code>LIBSVM</code> implementation <span class="citation" data-cites="Chang2011"><a href="#ref-Chang2011" role="doc-biblioref">[8]</a></span>. The <code>sits</code> package adopts the <em>one-against-one</em> method for multiclass classification. For a <span class="math inline">\(q\)</span> class problem, this method creates <span class="math inline">\({q(q-1)/2}\)</span> SVM binary models, one for each class pair combination, testing any unknown input vectors throughout all those models. A voting scheme computes the overall result.</p>
+<p>The example below shows how to apply SVM to classify time series using default values. The main parameters are <code>kernel</code>, which controls whether to use a nonlinear transformation (default is <code>radial</code>), <code>cost</code>, which measures the punishment for wrongly-classified samples (default is 10), and <code>cross</code>, which sets the value of the k-fold cross validation (default is 10).</p>
+<div class="cell">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span><span class="op">(</span><span class="fl">290356</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Train an SVM model</span></span>
+<span><span class="va">svm_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_train.html">sits_train</a></span><span class="op">(</span></span>
+<span>    samples <span class="op">=</span> <span class="va">samples_matogrosso_mod13q1</span>, </span>
+<span>    ml_method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_svm.html">sits_svm</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co"># Classify using the SVM model and plot the result</span></span>
+<span><span class="va">point_class</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_classify.html">sits_classify</a></span><span class="op">(</span></span>
+<span>    data <span class="op">=</span> <span class="va">point_mt_mod13q1</span>, </span>
+<span>    ml_model <span class="op">=</span> <span class="va">svm_model</span><span class="op">)</span></span>
+<span><span class="co"># Plot the result</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">point_class</span>, bands <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"NDVI"</span>, <span class="st">"EVI"</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-ml-svmplot" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure"><p><img src="./images/mlsvmplot.png" class="img-fluid figure-img" style="width:90.0%"></p>
+<figcaption class="figure-caption">Figure&nbsp;16.5: Classification of time series using SVM.</figcaption></figure>
+</div>
+</div>
+</div>
+<p>The SVM classifier is less stable and less robust to outliers than the random forest method. In this example, it tends to misclassify some of the data. In 2008, it is likely that the correct land class was still <code>Pasture</code> rather than <code>Soy_Millet</code> as produced by the algorithm, while the <code>Soy_Cotton</code> class in 2012 is also inconsistent with the previous and latter classification of <code>Soy_Corn</code>.</p>
+</section><section id="extreme-gradient-boosting" class="level2" data-number="16.5"><h2 data-number="16.5" class="anchored" data-anchor-id="extreme-gradient-boosting">
+<span class="header-section-number">16.5</span> Extreme gradient boosting</h2>
+<p>XGBoost (eXtreme Gradient Boosting) <span class="citation" data-cites="Chen2016"><a href="#ref-Chen2016" role="doc-biblioref">[9]</a></span> is an implementation of gradient boosted decision trees designed for speed and performance. It is an ensemble learning method, meaning it combines the predictions from multiple models to produce a final prediction. XGBoost builds trees one at a time, where each new tree helps to correct errors made by previously trained tree. Each tree builds a new model to correct the errors made by previous models. Using gradient descent, the algorithm iteratively adjusts the predictions of each tree by focusing on instances where previous trees made errors. Models are added sequentially until no further improvements can be made.</p>
+<p>Although random forest and boosting use trees for classification, there are significant differences. While random forest builds multiple decision trees in parallel and merges them together for a more accurate and stable prediction, XGBoost builds trees one at a time, where each new tree helps to correct errors made by previously trained tree. XGBoost is often preferred for its speed and performance, particularly on large datasets, and is well-suited for problems where precision is paramount. Random Forest, on the other hand, is simpler to implement, more interpretable, and can be more robust to overfitting, making it a good choice for general-purpose applications.</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-ml-xgb" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure"><p><img src="./images/flow_chart_xgboost.png" class="img-fluid figure-img" style="width:90.0%"></p>
+<figcaption class="figure-caption">Figure&nbsp;16.6: Flow chart of XGBoost algorithm (source: Guo et al., Applied Sciences, 2020).</figcaption></figure>
+</div>
+</div>
+</div>
+<p>The boosting method starts from a weak predictor and then improves performance sequentially by fitting a better model at each iteration. It fits a simple classifier to the training data and uses the residuals of the fit to build a predictor. Typically, the base classifier is a regression tree. Although random forest and boosting use trees for classification, there are significant differences. The performance of random forest generally increases with the number of trees until it becomes stable. Boosting trees apply finer divisions over previous results to improve performance <span class="citation" data-cites="Hastie2009"><a href="#ref-Hastie2009" role="doc-biblioref">[4]</a></span>. Some recent papers show that it outperforms random forest for remote sensing image classification <span class="citation" data-cites="Jafarzadeh2021"><a href="#ref-Jafarzadeh2021" role="doc-biblioref">[10]</a></span>. However, this result is not generalizable since the quality of the training dataset controls actual performance.</p>
+<p>In <code>sits</code>, the XGBoost method is implemented by the <code>sits_xbgoost()</code> function, based on <code>XGBoost</code> R package, and has five hyperparameters that require tuning. The <code>sits_xbgoost()</code> function takes the user choices as input to a cross-validation to determine suitable values for the predictor.</p>
+<p>The learning rate <code>eta</code> varies from 0.0 to 1.0 and should be kept small (default is 0.3) to avoid overfitting. The minimum loss value <code>gamma</code> specifies the minimum reduction required to make a split. Its default is 0; increasing it makes the algorithm more conservative. The <code>max_depth</code> value controls the maximum depth of the trees. Increasing this value will make the model more complex and likely to overfit (default is 6). The <code>subsample</code> parameter controls the percentage of samples supplied to a tree. Its default is 1 (maximum). Setting it to lower values means that xgboost randomly collects only part of the data instances to grow trees, thus preventing overfitting. The <code>nrounds</code> parameter controls the maximum number of boosting interactions; its default is 100, which has proven to be enough in most cases. To follow the convergence of the algorithm, users can turn the <code>verbose</code> parameter on. In general, the results using the extreme gradient boosting algorithm are similar to the random forest method.</p>
+<div class="cell">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span><span class="op">(</span><span class="fl">290356</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Train using  XGBoost</span></span>
+<span><span class="va">xgb_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_train.html">sits_train</a></span><span class="op">(</span></span>
+<span>    samples <span class="op">=</span> <span class="va">samples_matogrosso_mod13q1</span>, </span>
+<span>    ml_method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_xgboost.html">sits_xgboost</a></span><span class="op">(</span>verbose <span class="op">=</span> <span class="fl">0</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co"># Classify using SVM model and plot the result</span></span>
+<span><span class="va">point_class_xgb</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_classify.html">sits_classify</a></span><span class="op">(</span></span>
+<span>    data <span class="op">=</span> <span class="va">point_mt_mod13q1</span>, </span>
+<span>    ml_model <span class="op">=</span> <span class="va">xgb_model</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">point_class_xgb</span>, bands <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"NDVI"</span>, <span class="st">"EVI"</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-ml-xgbplot" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure"><p><img src="./images/mlxgbplot.png" class="img-fluid figure-img" style="width:90.0%"></p>
+<figcaption class="figure-caption">Figure&nbsp;16.7: Classification of time series using XGBoost.</figcaption></figure>
+</div>
+</div>
+</div>
+</section><section id="deep-learning-using-multilayer-perceptron" class="level2" data-number="16.6"><h2 data-number="16.6" class="anchored" data-anchor-id="deep-learning-using-multilayer-perceptron">
+<span class="header-section-number">16.6</span> Deep learning using multilayer perceptron</h2>
+<p>To support deep learning methods, <code>sits</code> uses the <code>torch</code> R package, which takes the Facebook <code>torch</code> C++ library as a back-end. Machine learning algorithms that use the R <code>torch</code> package are similar to those developed using <code>PyTorch</code>. The simplest deep learning method is multilayer perceptron (MLP), which are feedforward artificial neural networks. An MLP consists of three kinds of nodes: an input layer, a set of hidden layers, and an output layer. The input layer has the same dimension as the number of features in the dataset. The hidden layers attempt to approximate the best classification function. The output layer decides which class should be assigned to the input.</p>
+<p>In <code>sits</code>, MLP models can be built using <code><a href="https://rdrr.io/pkg/sits/man/sits_mlp.html">sits_mlp()</a></code>. Since there is no established model for generic classification of satellite image time series, designing MLP models requires parameter customization. The most important decisions are the number of layers in the model and the number of neurons per layer. These values are set by the <code>layers</code> parameter, which is a list of integer values. The size of the list is the number of layers, and each element indicates the number of nodes per layer.</p>
+<p>The choice of the number of layers depends on the inherent separability of the dataset to be classified. For datasets where the classes have different signatures, a shallow model (with three layers) may provide appropriate responses. More complex situations require models of deeper hierarchy. Models with many hidden layers may take a long time to train and may not converge. We suggest to start with three layers and test different options for the number of neurons per layer before increasing the number of layers. In our experience, using three to five layers is a reasonable compromise if the training data has a good quality. Further increase in the number of layers will not improve the model.</p>
+<p>MLP models also need to include the activation function. The activation function of a node defines the output of that node given an input or set of inputs. Following standard practices <span class="citation" data-cites="Goodfellow2016"><a href="#ref-Goodfellow2016" role="doc-biblioref">[11]</a></span>, we use the <code>relu</code> activation function.</p>
+<p>The optimization method (<code>optimizer</code>) represents the gradient descent algorithm to be used. These methods aim to maximize an objective function by updating the parameters in the opposite direction of the gradient of the objective function <span class="citation" data-cites="Ruder2016"><a href="#ref-Ruder2016" role="doc-biblioref">[12]</a></span>. Since gradient descent plays a key role in deep learning model fitting, developing optimizers is an important topic of research <span class="citation" data-cites="Bottou2018"><a href="#ref-Bottou2018" role="doc-biblioref">[13]</a></span>. Many optimizers have been proposed in the literature, and recent results are reviewed by Schmidt et al. <span class="citation" data-cites="Schmidt2021"><a href="#ref-Schmidt2021" role="doc-biblioref">[14]</a></span>. The Adamw optimizer provides a good baseline and reliable performance for general deep learning applications <span class="citation" data-cites="Kingma2017"><a href="#ref-Kingma2017" role="doc-biblioref">[15]</a></span>. By default, all deep learning algorithms in <code>sits</code> use Adamw.</p>
+<p>Another relevant parameter is the list of dropout rates (<code>dropout</code>). Dropout is a technique for randomly dropping units from the neural network during training <span class="citation" data-cites="Srivastava2014"><a href="#ref-Srivastava2014" role="doc-biblioref">[16]</a></span>. By randomly discarding some neurons, dropout reduces overfitting. Since a cascade of neural nets aims to improve learning as more data is acquired, discarding some neurons may seem like a waste of resources. In practice, dropout prevents an early convergence to a local minimum <span class="citation" data-cites="Goodfellow2016"><a href="#ref-Goodfellow2016" role="doc-biblioref">[11]</a></span>. We suggest users experiment with different dropout rates, starting from small values (10-30%) and increasing as required.</p>
+<p>The following example shows how to use <code><a href="https://rdrr.io/pkg/sits/man/sits_mlp.html">sits_mlp()</a></code>. The default parameters have been chosen based on a modified version of <span class="citation" data-cites="Wang2017"><a href="#ref-Wang2017" role="doc-biblioref">[17]</a></span>, which proposes using multilayer perceptron as a baseline for time series classification. These parameters are: (a) Three layers with 512 neurons each, specified by the parameter <code>layers</code>; (b) Using the “relu” activation function; (c) dropout rates of 40%, 30%, and 20% for the layers; (d) the “optimizer_adamw” as optimizer (default value); (e) a number of training steps (<code>epochs</code>) of 100; (f) a <code>batch_size</code> of 64, which indicates how many time series are used for input at a given step; and (g) a validation percentage of 20%, which means 20% of the samples will be randomly set aside for validation.</p>
+<p>To simplify the output, the <code>verbose</code> option has been turned off. After the model has been generated, we plot its training history.</p>
+<div class="cell">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span><span class="op">(</span><span class="fl">290356</span><span class="op">)</span></span>
+<span><span class="co"># Train using an MLP model</span></span>
+<span><span class="co"># This is an example of how to set parameters</span></span>
+<span><span class="co"># First-time users should test default options first</span></span>
+<span><span class="va">mlp_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_train.html">sits_train</a></span><span class="op">(</span></span>
+<span>    samples <span class="op">=</span> <span class="va">samples_matogrosso_mod13q1</span>, </span>
+<span>    ml_method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_mlp.html">sits_mlp</a></span><span class="op">(</span></span>
+<span>        optimizer        <span class="op">=</span> <span class="fu">torch</span><span class="fu">::</span><span class="va"><a href="https://torch.mlverse.org/docs/reference/optim_adamw.html">optim_adamw</a></span>, </span>
+<span>        layers           <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">512</span>, <span class="fl">512</span>, <span class="fl">512</span><span class="op">)</span>,</span>
+<span>        dropout_rates    <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">0.40</span>, <span class="fl">0.30</span>, <span class="fl">0.20</span><span class="op">)</span>,</span>
+<span>        epochs           <span class="op">=</span> <span class="fl">80</span>,</span>
+<span>        batch_size       <span class="op">=</span> <span class="fl">64</span>,</span>
+<span>        verbose          <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>        validation_split <span class="op">=</span> <span class="fl">0.2</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co"># Show training evolution</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">mlp_model</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-ml-mlp" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure"><p><img src="./images/mlmlpmodel.png" class="img-fluid figure-img" style="width:80.0%"></p>
+<figcaption class="figure-caption">Figure&nbsp;16.8: Evolution of training accuracy of MLP model.</figcaption></figure>
+</div>
+</div>
+</div>
+<p>Then, we classify a 16-year time series using the multilayer perceptron model.</p>
+<div class="cell">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Classify using MLP model and plot the result</span></span>
+<span><span class="va">point_mt_mod13q1</span> <span class="op">|&gt;</span>  </span>
+<span>    <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_classify.html">sits_classify</a></span><span class="op">(</span><span class="va">mlp_model</span><span class="op">)</span> <span class="op">|&gt;</span>  </span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span>bands <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"NDVI"</span>, <span class="st">"EVI"</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-ml-mlplot" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure"><p><img src="./images/mlmlpplot.png" class="img-fluid figure-img" style="width:90.0%"></p>
+<figcaption class="figure-caption">Figure&nbsp;16.9: Classification of time series using MLP.</figcaption></figure>
+</div>
+</div>
+</div>
+<p>In theory, multilayer perceptron model can capture more subtle changes than random forest and XGBoost In this specific case, the result is similar to theirs. Although the model mixes the <code>Soy_Corn</code> and <code>Soy_Millet</code> classes, the distinction between their temporal signatures is quite subtle. Also it suggests the need to improve the number of samples. In this example, the MLP model shows an increase in sensitivity compared to previous models. We recommend to compare different configurations since the MLP model is sensitive to changes in its parameters.</p>
+</section><section id="temporal-convolutional-neural-network-tempcnn" class="level2" data-number="16.7"><h2 data-number="16.7" class="anchored" data-anchor-id="temporal-convolutional-neural-network-tempcnn">
+<span class="header-section-number">16.7</span> Temporal Convolutional Neural Network (TempCNN)</h2>
+<p>Convolutional neural networks (CNN) are deep learning methods that apply convolution filters (sliding windows) to the input data sequentially. The Temporal Convolutional Neural Network (TempCNN) is a neural network architecture specifically designed to process sequential data such as time series. In the case of time series, a 1D CNN applies a moving temporal window to the time series to produce another time series as the result of the convolution.</p>
+<p>The TempCNN architecture for satellite image time series classification is proposed by Pelletier et al. <span class="citation" data-cites="Pelletier2019"><a href="#ref-Pelletier2019" role="doc-biblioref">[18]</a></span>. It has three 1D convolutional layers and a final softmax layer for classification. The authors combine different methods to avoid overfitting and reduce the vanishing gradient effect, including dropout, regularization, and batch normalization. In the TempCNN reference paper <span class="citation" data-cites="Pelletier2019"><a href="#ref-Pelletier2019" role="doc-biblioref">[18]</a></span>, the authors favourably compare their model with the Recurrent Neural Network proposed by Russwurm and Körner <span class="citation" data-cites="Russwurm2018"><a href="#ref-Russwurm2018" role="doc-biblioref">[19]</a></span>. <a href="#fig-ml-tcnn">Figure&nbsp;<span>16.10</span></a> shows the architecture of the TempCNN model. TempCNN applies one-dimensional convolutions on the input sequence to capture temporal dependencies, allowing the network to learn long-term dependencies in the input sequence. Each layer of the model captures temporal dependencies at a different scale. Due to its multi-scale approach, TempCNN can capture complex temporal patterns in the data and produce accurate predictions.</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-ml-tcnn" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure"><p><img src="./images/tempcnn.png" class="img-fluid figure-img" style="width:80.0%"></p>
+<figcaption class="figure-caption">Figure&nbsp;16.10: Structure of tempCNN architecture (source: <span class="citation" data-cites="Pelletier2019"><a href="#ref-Pelletier2019" role="doc-biblioref">[18]</a></span>).</figcaption></figure>
+</div>
+</div>
+</div>
+<p>The function <code><a href="https://rdrr.io/pkg/sits/man/sits_tempcnn.html">sits_tempcnn()</a></code> implements the model. The first parameter is the <code>optimizer</code> used in the backpropagation phase for gradient descent. The default is <code>adamw</code> which is considered as a stable and reliable optimization function. The parameter <code>cnn_layers</code> controls the number of 1D-CNN layers and the size of the filters applied at each layer; the default values are three CNNs with 128 units. The parameter <code>cnn_kernels</code> indicates the size of the convolution kernels; the default is kernels of size 7. Activation for all 1D-CNN layers uses the “relu” function. The dropout rates for each 1D-CNN layer are controlled individually by the parameter <code>cnn_dropout_rates</code>. The <code>validation_split</code> controls the size of the test set relative to the full dataset. We recommend setting aside at least 20% of the samples for validation.</p>
+<div class="cell">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span><span class="op">(</span><span class="fl">290356</span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://torch.mlverse.org/docs">torch</a></span><span class="op">)</span></span>
+<span><span class="co"># Train using tempCNN</span></span>
+<span><span class="va">tempcnn_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_train.html">sits_train</a></span><span class="op">(</span></span>
+<span>    <span class="va">samples_matogrosso_mod13q1</span>, </span>
+<span>    <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_tempcnn.html">sits_tempcnn</a></span><span class="op">(</span></span>
+<span>        optimizer            <span class="op">=</span> <span class="fu">torch</span><span class="fu">::</span><span class="va"><a href="https://torch.mlverse.org/docs/reference/optim_adamw.html">optim_adamw</a></span>,</span>
+<span>        cnn_layers           <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">256</span>, <span class="fl">256</span>, <span class="fl">256</span><span class="op">)</span>,</span>
+<span>        cnn_kernels          <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">7</span>, <span class="fl">7</span>, <span class="fl">7</span><span class="op">)</span>,</span>
+<span>        cnn_dropout_rates    <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">0.2</span>, <span class="fl">0.2</span>, <span class="fl">0.2</span><span class="op">)</span>,</span>
+<span>        epochs               <span class="op">=</span> <span class="fl">80</span>,</span>
+<span>        batch_size           <span class="op">=</span> <span class="fl">64</span>,</span>
+<span>        validation_split     <span class="op">=</span> <span class="fl">0.2</span>,</span>
+<span>        verbose              <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co"># Show training evolution</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">tempcnn_model</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-ml-tcnnmodel" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure"><p><img src="./images/mltcnnmodel.png" class="img-fluid figure-img" style="width:80.0%"></p>
+<figcaption class="figure-caption">Figure&nbsp;16.11: Training evolution of TempCNN model.</figcaption></figure>
+</div>
+</div>
+</div>
+<p>Using the TempCNN model, we classify a 16-year time series.</p>
+<div class="cell">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Classify using TempCNN model and plot the result</span></span>
+<span><span class="va">point_mt_mod13q1</span> <span class="op">|&gt;</span>  </span>
+<span>    <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_classify.html">sits_classify</a></span><span class="op">(</span><span class="va">tempcnn_model</span><span class="op">)</span> <span class="op">|&gt;</span>  </span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span>bands <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"NDVI"</span>, <span class="st">"EVI"</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-ml-tcnnplot" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure"><p><img src="./images/mltcnnplot.png" class="img-fluid figure-img" style="width:90.0%"></p>
+<figcaption class="figure-caption">Figure&nbsp;16.12: Classification of time series using TempCNN</figcaption></figure>
+</div>
+</div>
+</div>
+<p>The result has important differences from the previous ones. The TempCNN model indicates the <code>Soy_Cotton</code> class as the most likely one in 2004. While this result is possibly wrong, it shows that the time series for 2004 is different from those of Forest and Pasture classes. One possible explanation is that there was forest degradation in 2004, leading to a signature that is a mix of forest and bare soil. In this case, including forest degradation samples could improve the training data. In our experience, TempCNN models are a reliable way of classifying image time series <span class="citation" data-cites="Simoes2021"><a href="#ref-Simoes2021" role="doc-biblioref">[20]</a></span>. Recent work which compares different models also provides evidence that TempCNN models have satisfactory behavior, especially in the case of crop classes <span class="citation" data-cites="Russwurm2020"><a href="#ref-Russwurm2020" role="doc-biblioref">[21]</a></span>.</p>
+</section><section id="attention-based-models" class="level2" data-number="16.8"><h2 data-number="16.8" class="anchored" data-anchor-id="attention-based-models">
+<span class="header-section-number">16.8</span> Attention-based models</h2>
+<p>Attention-based deep learning models are a class of models that use a mechanism inspired by human attention to focus on specific parts of input during processing. These models have been shown to be effective for various tasks such as machine translation, image captioning, and speech recognition.</p>
+<p>The basic idea behind attention-based models is to allow the model to selectively focus on different input parts at different times. This can be done by introducing a mechanism that assigns weights to each element of the input, indicating the relative importance of that element to the current processing step. The model can then use them to compute a weighted sum of the input. The results capture the model’s attention on specific parts of the input.</p>
+<p>Attention-based models have become one of the most used deep learning architectures for problems that involve sequential data inputs, e.g., text recognition and automatic translation. The general idea is that not all inputs are alike in applications such as language translation. Consider the English sentence “Look at all the lonely people”. A sound translation system needs to relate the words “look” and “people” as the key parts of this sentence to ensure such link is captured in the translation. A specific type of attention models, called transformers, enables the recognition of such complex relationships between input and output sequences <span class="citation" data-cites="Vaswani2017"><a href="#ref-Vaswani2017" role="doc-biblioref">[22]</a></span>.</p>
+<p>The basic structure of transformers is the same as other neural network algorithms. They have an encoder that transforms textual input values into numerical vectors and a decoder that processes these vectors to provide suitable answers. The difference is how the values are handled internally. In an MLP, all inputs are treated equally at first; based on iterative matching of training and test data, the backpropagation technique feeds information back to the initial layers to identify the most suitable combination of inputs that produces the best output.</p>
+<p>Convolutional nets (CNN) combine input values that are close in time (1D) or space (2D) to produce higher-level information that helps to distinguish the different components of the input data. For text recognition, the initial choice of deep learning studies was to use recurrent neural networks (RNN) that handle input sequences.</p>
+<p>However, neither MLPs, CNNs, or RNNs have been able to capture the structure of complex inputs such as natural language. The success of transformer-based solutions accounts for substantial improvements in natural language processing.</p>
+<p>The two main differences between transformer models and other algorithms are positional encoding and self-attention. Positional encoding assigns an index to each input value, ensuring that the relative locations of the inputs are maintained throughout the learning and processing phases. Self-attention compares every word in a sentence to every other word in the same sentence, including itself. In this way, it learns contextual information about the relation between the words. This conception has been validated in large language models such as BERT <span class="citation" data-cites="Devlin2019"><a href="#ref-Devlin2019" role="doc-biblioref">[23]</a></span> and GPT-3 <span class="citation" data-cites="Brown2020"><a href="#ref-Brown2020" role="doc-biblioref">[24]</a></span>.</p>
+<p>The application of attention-based models for satellite image time series analysis is proposed by Garnot et al. <span class="citation" data-cites="Garnot2020a"><a href="#ref-Garnot2020a" role="doc-biblioref">[25]</a></span> and Russwurm and Körner <span class="citation" data-cites="Russwurm2020"><a href="#ref-Russwurm2020" role="doc-biblioref">[21]</a></span>. A self-attention network can learn to focus on specific time steps and image features most relevant for distinguishing between different classes. The algorithm tries to identify which combination of individual temporal observations is most relevant to identify each class. For example, crop identification will use observations that capture the onset of the growing season, the date of maximum growth, and the end of the growing season. In the case of deforestation, the algorithm tries to identify the dates when the forest is being cut. Attention-based models are a means to identify events that characterize each land class.</p>
+<p>The first model proposed by Garnot et al.&nbsp;is a full transformer-based model <span class="citation" data-cites="Garnot2020a"><a href="#ref-Garnot2020a" role="doc-biblioref">[25]</a></span>. Considering that image time series classification is easier than natural language processing, Garnot et al.&nbsp;also propose a simplified version of the full transformer model <span class="citation" data-cites="Garnot2020"><a href="#ref-Garnot2020" role="doc-biblioref">[26]</a></span>. This simpler model uses a reduced way to compute the attention matrix, reducing time for training and classification without loss of quality of the result.</p>
+<p>In <code>sits</code>, the full transformer-based model proposed by Garnot et al. <span class="citation" data-cites="Garnot2020a"><a href="#ref-Garnot2020a" role="doc-biblioref">[25]</a></span> is implemented using <code><a href="https://rdrr.io/pkg/sits/man/sits_tae.html">sits_tae()</a></code>. The default parameters are those proposed by the authors. The default optimizer is <code>optim_adamw</code>, as also used in the <code><a href="https://rdrr.io/pkg/sits/man/sits_tempcnn.html">sits_tempcnn()</a></code> function.</p>
+<div class="cell">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Train a machine learning model using TAE</span></span>
+<span><span class="va">tae_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_train.html">sits_train</a></span><span class="op">(</span><span class="va">samples_matogrosso_mod13q1</span>, </span>
+<span>                       <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_tae.html">sits_tae</a></span><span class="op">(</span></span>
+<span>                          epochs               <span class="op">=</span> <span class="fl">80</span>,</span>
+<span>                          batch_size           <span class="op">=</span> <span class="fl">64</span>,</span>
+<span>                          optimizer            <span class="op">=</span> <span class="fu">torch</span><span class="fu">::</span><span class="va"><a href="https://torch.mlverse.org/docs/reference/optim_adamw.html">optim_adamw</a></span>,</span>
+<span>                          validation_split     <span class="op">=</span> <span class="fl">0.2</span>,</span>
+<span>                          verbose              <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co"># Show training evolution</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">tae_model</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-ml-taemodel" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure"><p><img src="./images/mltaemodel.png" class="img-fluid figure-img" style="width:90.0%"></p>
+<figcaption class="figure-caption">Figure&nbsp;16.13: Training evolution of Temporal Self-Attention model.</figcaption></figure>
+</div>
+</div>
+</div>
+<p>Then, we classify a 16-year time series using the TAE model.</p>
+<div class="cell">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Classify using DL model and plot the result</span></span>
+<span><span class="va">point_mt_mod13q1</span> <span class="op">|&gt;</span>  </span>
+<span>    <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_classify.html">sits_classify</a></span><span class="op">(</span><span class="va">tae_model</span><span class="op">)</span> <span class="op">|&gt;</span>  </span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span>bands <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"NDVI"</span>, <span class="st">"EVI"</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-ml-taeplot" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure"><p><img src="./images/mltaeplot.png" class="img-fluid figure-img" style="width:90.0%"></p>
+<figcaption class="figure-caption">Figure&nbsp;16.14: Classification of time series using TAE.</figcaption></figure>
+</div>
+</div>
+</div>
+<p>Garnot and co-authors also proposed the Lightweight Temporal Self-Attention Encoder (LTAE) <span class="citation" data-cites="Garnot2020"><a href="#ref-Garnot2020" role="doc-biblioref">[26]</a></span>, which the authors claim can achieve high classification accuracy with fewer parameters compared to other neural network models. It is a good choice for applications where computational resources are limited. The <code><a href="https://rdrr.io/pkg/sits/man/sits_lighttae.html">sits_lighttae()</a></code> function implements this algorithm. The most important parameter to be set is the learning rate <code>lr</code>. Values ranging from 0.001 to 0.005 should produce good results. See also the section below on model tuning.</p>
+<div class="cell">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Train a machine learning model using TAE</span></span>
+<span><span class="va">ltae_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_train.html">sits_train</a></span><span class="op">(</span><span class="va">samples_matogrosso_mod13q1</span>, </span>
+<span>                       <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_lighttae.html">sits_lighttae</a></span><span class="op">(</span></span>
+<span>                          epochs               <span class="op">=</span> <span class="fl">80</span>,</span>
+<span>                          batch_size           <span class="op">=</span> <span class="fl">64</span>,</span>
+<span>                          optimizer            <span class="op">=</span> <span class="fu">torch</span><span class="fu">::</span><span class="va"><a href="https://torch.mlverse.org/docs/reference/optim_adamw.html">optim_adamw</a></span>,</span>
+<span>                          opt_hparams <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html">list</a></span><span class="op">(</span>lr <span class="op">=</span> <span class="fl">0.001</span><span class="op">)</span>,</span>
+<span>                          validation_split     <span class="op">=</span> <span class="fl">0.2</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co"># Show training evolution</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">ltae_model</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-ml-ltaemodel" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure"><p><img src="./images/mlltaemodel.png" class="img-fluid figure-img" style="width:90.0%"></p>
+<figcaption class="figure-caption">Figure&nbsp;16.15: Training evolution of Lightweight Temporal Self-Attention model.</figcaption></figure>
+</div>
+</div>
+</div>
+<p>Then, we classify a 16-year time series using the LightTAE model.</p>
+<div class="cell">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Classify using DL model and plot the result</span></span>
+<span><span class="va">point_mt_mod13q1</span> <span class="op">|&gt;</span>  </span>
+<span>    <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_classify.html">sits_classify</a></span><span class="op">(</span><span class="va">ltae_model</span><span class="op">)</span> <span class="op">|&gt;</span>  </span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span>bands <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"NDVI"</span>, <span class="st">"EVI"</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-ml-ltaeplot" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure"><p><img src="./images/mlltaeplot.png" class="img-fluid figure-img" style="width:90.0%"></p>
+<figcaption class="figure-caption">Figure&nbsp;16.16: Classification of time series using LightTAE.</figcaption></figure>
+</div>
+</div>
+</div>
+<p>The behaviour of both <code><a href="https://rdrr.io/pkg/sits/man/sits_tae.html">sits_tae()</a></code> and <code><a href="https://rdrr.io/pkg/sits/man/sits_lighttae.html">sits_lighttae()</a></code> is similar to that of <code><a href="https://rdrr.io/pkg/sits/man/sits_tempcnn.html">sits_tempcnn()</a></code>. It points out the possible need for more classes and training data to better represent the transition period between 2004 and 2010. One possibility is that the training data associated with the Pasture class is only consistent with the time series between the years 2005 to 2008. However, the transition from Forest to Pasture in 2004 and from Pasture to Agriculture in 2009-2010 is subject to uncertainty since the classifiers do not agree on the resulting classes. In general, deep learning temporal-aware models are more sensitive to class variability than random forest and extreme gradient boosters.</p>
+</section><section id="summary" class="level2" data-number="16.9"><h2 data-number="16.9" class="anchored" data-anchor-id="summary">
+<span class="header-section-number">16.9</span> Summary</h2>
+<p>In this chapter, we present a basic description of the machine learning algorithms available in <code>sits</code>. The basic distinction is between time-sensitive algorithms such as LightTAE and TempCNN and those who do not consider temporal order of values, such as random forests. In practice, we suggest that users take random forests as their baseline and then use LightTAE or TempCNN to try to to improve classification accuracy.</p>
+</section><section id="references" class="level2 unnumbered"><h2 class="unnumbered anchored" data-anchor-id="references">References</h2>
+
+
+<div id="refs" class="references csl-bib-body" role="list">
+<div id="ref-Picoli2018" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[1] </div>
+<div class="csl-right-inline">M. Picoli <em>et al.</em>, <span>“Big earth observation time series analysis for monitoring <span>Brazilian</span> agriculture,”</span> <em>ISPRS Journal of Photogrammetry and Remote Sensing</em>, vol. 145, pp. 328–339, 2018, doi: <a href="https://doi.org/10.1016/j.isprsjprs.2018.08.007">10.1016/j.isprsjprs.2018.08.007</a>.</div>
+</div>
+<div id="ref-Pelletier2016" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[2] </div>
+<div class="csl-right-inline">C. Pelletier, S. Valero, J. Inglada, N. Champion, and G. Dedieu, <span>“Assessing the robustness of <span>Random Forests</span> to map land cover with high resolution satellite image time series over large areas,”</span> <em>Remote Sensing of Environment</em>, vol. 187, pp. 156–168, 2016, doi: <a href="https://doi.org/10.1016/j.rse.2016.10.010">10.1016/j.rse.2016.10.010</a>.</div>
+</div>
+<div id="ref-Wright2017" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[3] </div>
+<div class="csl-right-inline">J. S. Wright <em>et al.</em>, <span>“Rainforest-initiated wet season onset over the southern <span>Amazon</span>,”</span> <em>Proceedings of the National Academy of Sciences</em>, 2017, doi: <a href="https://doi.org/10.1073/pnas.1621516114">10.1073/pnas.1621516114</a>.</div>
+</div>
+<div id="ref-Hastie2009" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[4] </div>
+<div class="csl-right-inline">T. Hastie, R. Tibshirani, and J. Friedman, <em>The <span>Elements</span> of <span>Statistical Learning</span>. <span>Data Mining</span>, <span>Inference</span>, and <span>Prediction</span></em>. New York: Springer, 2009.</div>
+</div>
+<div id="ref-Cortes1995" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[5] </div>
+<div class="csl-right-inline">C. Cortes and V. Vapnik, <span>“Support-vector networks,”</span> <em>Machine learning</em>, vol. 20, no. 3, pp. 273–297, 1995.</div>
+</div>
+<div id="ref-James2013" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[6] </div>
+<div class="csl-right-inline">G. James, D. Witten, T. Hastie, and R. Tibshirani, <em>An <span>Introduction</span> to <span>Statistical Learning</span>: With <span>Applications</span> in <span>R</span></em>. New York, EUA: Springer, 2013.</div>
+</div>
+<div id="ref-Mountrakis2011" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[7] </div>
+<div class="csl-right-inline">G. Mountrakis, J. Im, and C. Ogole, <span>“Support vector machines in remote sensing: <span>A</span> review,”</span> <em>ISPRS Journal of Photogrammetry and Remote Sensing</em>, vol. 66, no. 3, pp. 247–259, 2011.</div>
+</div>
+<div id="ref-Chang2011" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[8] </div>
+<div class="csl-right-inline">C.-C. Chang and C.-J. Lin, <span>“<span>LIBSVM</span>: A library for support vector machines,”</span> <em>ACM transactions on intelligent systems and technology (TIST)</em>, vol. 2, no. 3, p. 27, 2011.</div>
+</div>
+<div id="ref-Chen2016" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[9] </div>
+<div class="csl-right-inline">T. Chen and C. Guestrin, <span>“<span>XGBoost</span>: <span>A Scalable Tree Boosting System</span>,”</span> in <em>Proceedings of the 22nd <span>ACM SIGKDD International Conference</span> on <span>Knowledge Discovery</span> and <span>Data Mining</span></em>, 2016, pp. 785–794, doi: <a href="https://doi.org/10.1145/2939672.2939785">10.1145/2939672.2939785</a>.</div>
+</div>
+<div id="ref-Jafarzadeh2021" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[10] </div>
+<div class="csl-right-inline">H. Jafarzadeh, M. Mahdianpari, E. Gill, F. Mohammadimanesh, and S. Homayouni, <span>“Bagging and <span>Boosting Ensemble Classifiers</span> for <span>Classification</span> of <span>Multispectral</span>, <span>Hyperspectral</span> and <span>PolSAR Data</span>: <span>A Comparative Evaluation</span>,”</span> <em>Remote Sensing</em>, vol. 13, no. 21, p. 4405, 2021, doi: <a href="https://doi.org/10.3390/rs13214405">10.3390/rs13214405</a>.</div>
+</div>
+<div id="ref-Goodfellow2016" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[11] </div>
+<div class="csl-right-inline">I. Goodfellow, Y. Bengio, and A. Courville, <em>Deep <span>Learning</span></em>. MIT Press, 2016.</div>
+</div>
+<div id="ref-Ruder2016" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[12] </div>
+<div class="csl-right-inline">S. Ruder, <span>“An overview of gradient descent optimization algorithms,”</span> <em>CoRR</em>, vol. abs/1609.04747, 2016, [Online]. Available: <a href="http://arxiv.org/abs/1609.04747">http://arxiv.org/abs/1609.04747</a>.</div>
+</div>
+<div id="ref-Bottou2018" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[13] </div>
+<div class="csl-right-inline">L. Bottou, F. E. Curtis, and J. Nocedal, <span>“Optimization <span>Methods</span> for <span>Large-Scale Machine Learning</span>,”</span> <em>SIAM Review</em>, vol. 60, no. 2, pp. 223–311, 2018, doi: <a href="https://doi.org/10.1137/16M1080173">10.1137/16M1080173</a>.</div>
+</div>
+<div id="ref-Schmidt2021" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[14] </div>
+<div class="csl-right-inline">R. M. Schmidt, F. Schneider, and P. Hennig, <span>“Descending through a <span>Crowded Valley</span> - <span>Benchmarking Deep Learning Optimizers</span>,”</span> in <em>Proceedings of the 38th <span>International Conference</span> on <span>Machine Learning</span></em>, 2021, pp. 9367–9376, [Online]. Available: <a href="https://proceedings.mlr.press/v139/schmidt21a.html">https://proceedings.mlr.press/v139/schmidt21a.html</a>.</div>
+</div>
+<div id="ref-Kingma2017" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[15] </div>
+<div class="csl-right-inline">D. P. Kingma and J. Ba, <span>“Adam: <span>A Method</span> for <span>Stochastic Optimization</span>.”</span> arXiv, 2017, doi: <a href="https://doi.org/10.48550/arXiv.1412.6980">10.48550/arXiv.1412.6980</a>.</div>
+</div>
+<div id="ref-Srivastava2014" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[16] </div>
+<div class="csl-right-inline">N. Srivastava, G. Hinton, A. Krizhevsky, I. Sutskever, and R. Salakhutdinov, <span>“Dropout: <span>A</span> simple way to prevent neural networks from overfitting,”</span> <em>The Journal of Machine Learning Research</em>, vol. 15, no. 1, pp. 1929–1958, 2014.</div>
+</div>
+<div id="ref-Wang2017" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[17] </div>
+<div class="csl-right-inline">Z. Wang, W. Yan, and T. Oates, <span>“Time <span>Series Classification</span> from <span>Scratch</span> with <span>Deep Neural Networks</span>: <span>A Strong Baseline</span>,”</span> 2017.</div>
+</div>
+<div id="ref-Pelletier2019" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[18] </div>
+<div class="csl-right-inline">C. Pelletier, G. I. Webb, and F. Petitjean, <span>“Temporal <span>Convolutional Neural Network</span> for the <span>Classification</span> of <span>Satellite Image Time Series</span>,”</span> <em>Remote Sensing</em>, vol. 11, no. 5, 2019.</div>
+</div>
+<div id="ref-Russwurm2018" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[19] </div>
+<div class="csl-right-inline">M. Russwurm and M. Korner, <span>“Multi-temporal land cover classification with sequential recurrent encoders,”</span> <em>ISPRS International Journal of Geo-Information</em>, vol. 7, no. 4, p. 129, 2018.</div>
+</div>
+<div id="ref-Simoes2021" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[20] </div>
+<div class="csl-right-inline">R. Simoes <em>et al.</em>, <span>“Satellite <span>Image Time Series Analysis</span> for <span>Big Earth Observation Data</span>,”</span> <em>Remote Sensing</em>, vol. 13, no. 13, p. 2428, 2021, doi: <a href="https://doi.org/10.3390/rs13132428">10.3390/rs13132428</a>.</div>
+</div>
+<div id="ref-Russwurm2020" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[21] </div>
+<div class="csl-right-inline">M. Rußwurm, C. Pelletier, M. Zollner, S. Lefèvre, and M. Körner, <span>“<span>BreizhCrops</span>: <span>A Time Series Dataset</span> for <span>Crop Type Mapping</span>,”</span> 2020, [Online]. Available: <a href="http://arxiv.org/abs/1905.11893">http://arxiv.org/abs/1905.11893</a>.</div>
+</div>
+<div id="ref-Vaswani2017" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[22] </div>
+<div class="csl-right-inline">A. Vaswani <em>et al.</em>, <span>“Attention is <span>All</span> you <span>Need</span>,”</span> in <em>Advances in <span>Neural Information Processing Systems</span></em>, 2017, vol. 30, [Online]. Available: <a href="https://papers.nips.cc/paper/2017/hash/3f5ee243547dee91fbd053c1c4a845aa-Abstract.html">https://papers.nips.cc/paper/2017/hash/3f5ee243547dee91fbd053c1c4a845aa-Abstract.html</a>.</div>
+</div>
+<div id="ref-Devlin2019" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[23] </div>
+<div class="csl-right-inline">J. Devlin, M.-W. Chang, K. Lee, and K. Toutanova, <span>“<span>BERT</span>: <span class="nocase">Pre-training</span> of <span>Deep Bidirectional Transformers</span> for <span>Language Understanding</span>.”</span> arXiv, 2019, doi: <a href="https://doi.org/10.48550/arXiv.1810.04805">10.48550/arXiv.1810.04805</a>.</div>
+</div>
+<div id="ref-Brown2020" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[24] </div>
+<div class="csl-right-inline">T. B. Brown <em>et al.</em>, <span>“Language <span>Models</span> are <span>Few-Shot Learners</span>.”</span> arXiv, 2020, doi: <a href="https://doi.org/10.48550/arXiv.2005.14165">10.48550/arXiv.2005.14165</a>.</div>
+</div>
+<div id="ref-Garnot2020a" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[25] </div>
+<div class="csl-right-inline">V. Garnot, L. Landrieu, S. Giordano, and N. Chehata, <span>“Satellite <span>Image Time Series Classification With Pixel-Set Encoders</span> and <span>Temporal Self-Attention</span>,”</span> in <em>2020 <span>IEEE</span>/<span>CVF Conference</span> on <span>Computer Vision</span> and <span>Pattern Recognition</span> (<span>CVPR</span>)</em>, 2020, pp. 12322–12331, doi: <a href="https://doi.org/10.1109/CVPR42600.2020.01234">10.1109/CVPR42600.2020.01234</a>.</div>
+</div>
+<div id="ref-Garnot2020" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[26] </div>
+<div class="csl-right-inline">V. S. F. Garnot and L. Landrieu, <span>“Lightweight <span class="nocase">Temporal Self-attention</span> for&nbsp;<span>Classifying Satellite Images Time&nbsp;Series</span>,”</span> in <em>Advanced <span>Analytics</span> and <span>Learning</span> on <span>Temporal Data</span></em>, 2020, pp. 171–181.</div>
+</div>
+</div>
+</section></main><!-- /main --><script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script><nav class="page-navigation"><div class="nav-page nav-page-previous">
+      <a href="./classification.html" class="pagination-link">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Machine learning for image time series</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./cl_tuning.html" class="pagination-link">
+        <span class="nav-page-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Deep learning model tuning</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer"><div class="nav-footer">
+    <div class="nav-footer-left">The SITS book was written by Gilberto Camara, Rolf Simoes, Felipe Souza, Felipe Carlos, Pedro Andrade, Karine Ferreira, Pedro Brito, Alexandre Assunção, and Charlotte Pelletier.</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">This book was built with <a href="https://quarto.org/">Quarto</a>.</div>
+  </div>
+</footer>
+
+
+</body></html>

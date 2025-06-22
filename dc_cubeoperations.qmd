@@ -1,0 +1,299 @@
+---
+title: "Computing NDVI and other spectral indices"
+format: html
+---  
+
+### Configurations to run this chapter {-}
+
+:::{.panel-tabset}
+## R
+```{r}
+#| echo: true
+#| eval: true
+#| output: false
+# load package "tibble"
+library(tibble)
+# load packages "sits" and "sitsdata"
+library(sits)
+library(sitsdata)
+# set tempdir if it does not exist 
+tempdir_r <- "~/sitsbook/tempdir/R/dc_cubeoperations"
+dir.create(tempdir_r, showWarnings = FALSE, recursive = TRUE)
+```
+## Python
+```{python}
+#| echo: true
+#| eval: true
+#| output: false
+# load "pysits" library
+from pysits import *
+from pathlib import Path
+# set tempdir if it does not exist 
+tempdir_py = Path.home() / "sitsbook/tempdir/Python/dc_cubeoperations"
+tempdir_py.mkdir(parents=True, exist_ok=True)
+```
+:::
+
+<a href="https://www.kaggle.com/code/esensing/operations-in-data-cubes" target="_blank"><img src="https://kaggle.com/static/images/open-in-kaggle.svg"/></a>
+
+## Pixel-based and neighborhood-based operations
+
+Pixel-based operations in remote sensing images refer to image processing techniques that operate on individual pixels or cells in an image without considering their spatial relationships with neighboring pixels. These operations are typically applied to each pixel in the image independently and can be used to extract information on spectral, radiometric, or spatial properties. Pixel-based operations produce spectral indexes which combine data from multiple bands.
+
+Neighborhood-based operations are applied to groups of pixels in an image. The neighborhood is typically defined as a rectangular or circular region centered on a given pixel. These operations can be used for removing noise, detecting edges, and sharpening, among other uses.
+
+The `sits_apply()` function computes new indices from a desired mathematical operation as a function of the bands available on the cube using any valid R expression. It applies the operation for all tiles and all temporal intervals. There are two types of operations in `sits_apply()`: 
+
+- Pixel-based operations that produce an index based on individual pixels of existing bands. The input bands and indexes should be part of the input data cube and have the same names used in the cube. The new index will be computed for every pixel of all images in the time series. Besides arithmetic operators, the function also accepts vectorized R functions that can be applied to matrices (e.g., `sqrt()`, `log()`, and `sin()`).
+
+- Neighborhood-based operations that produce a derived value based on a window centered around each individual pixel. The available functions  are `w_median()`, `w_sum()`, `w_mean()`, `w_min()`, `w_max()`, `w_sd()` (standard deviation), and `w_var()` (variance). Users set the window size (only odd values are allowed).
+
+The following examples show how to use `sits_apply()`.
+
+## Computing vegetation indexes
+
+Using vegetation indexes is an established practice in remote sensing. These indexes aim to improve the discrimination of vegetation structure by combining two wavebands, one where leaf pigments reflect incoming light with another where leaves absorb incoming radiation. Green leaves from natural vegetation such as forests have a strong emissivity rate in the near-infrared bands and low emissivity rates in the red bands of the electromagnetic spectrum. These spectral properties are used to calculate the Normalized Difference Vegetation Index (NDVI), a widely used index that is computed as the normalized difference between the values of infra-red and red bands. Including red-edge bands in Sentinel-2 images has broadened the scope of the bands used to calculate these indices [@Xie2019; @Sun2020a]. In what follows, we show examples of vegetation index calculation using a Sentinel-2 data cube. 
+
+First, we define a data cube for a tile in the state of Rondonia, Brazil, including bands used to compute different vegetation indexes. We regularize the cube using a target resolution of 60-meters to reduce processing time. 
+
+:::{.panel-tabset}
+## R
+```{r}
+#| eval: false
+# Create an non-regular data cube from AWS
+s2_cube <- sits_cube(
+    source = "AWS",
+    collection = "SENTINEL-S2-L2A-COGS",
+    tiles = "20LKP",
+    bands = c("B02", "B03", "B04", 
+              "B05", "B06", "B07", 
+              "B08", "B8A", "B11", 
+              "B12","CLOUD"),
+    start_date = as.Date("2018-07-01"),
+    end_date = as.Date("2018-08-31"))
+
+# Regularize the cube to 15 day intervals
+reg_cube <- sits_regularize(
+          cube       = s2_cube,
+          output_dir = tempdir_r,
+          res        = 60,
+          period     = "P15D",
+          multicores = 4)
+```
+## Python
+```{python}
+#| eval: false
+# Create an non-regular data cube from AWS
+s2_cube = sits_cube(
+    source = "AWS",
+    collection = "SENTINEL-S2-L2A-COGS",
+    tiles = "20LKP",
+    bands = ("B02", "B03", "B04", 
+              "B05", "B06", "B07", 
+              "B08", "B8A", "B11", 
+              "B12","CLOUD"),
+    start_date = "2018-07-01",
+    end_date = "2018-08-31")
+    
+# Regularize the cube to 15 day intervals
+reg_cube = sits_regularize(
+          cube       = s2_cube,
+          output_dir = tempdir_py,
+          res        = 60,
+          period     = "P15D",
+          multicores = 4)
+```
+:::
+
+```{r}
+#| eval: true
+#| echo: false
+# Regularize the cube to 15 day intervals
+reg_cube <- sits_cube(
+    source = "AWS",
+    collection = "SENTINEL-S2-L2A-COGS",
+    bands = c("B02", "B03", "B04", 
+              "B05", "B06", "B07", 
+              "B08", "B8A", "B11", 
+              "B12"),
+    data_dir = tempdir_r
+)
+```
+
+
+```{python}
+#| eval: true
+#| echo: false
+# Regularize the cube to 15 day intervals
+reg_cube = sits_cube(
+    source = "AWS",
+    collection = "SENTINEL-S2-L2A-COGS",
+    bands = ("B02", "B03", "B04", 
+              "B05", "B06", "B07", 
+              "B08", "B8A", "B11", 
+              "B12"),
+    data_dir = tempdir_py
+)
+```
+
+
+There are many options for calculating vegetation indexes using Sentinel-2 bands. The most widely used method combines band B08 (785-899 nm) and band B04 (650-680 nm). Recent works in the literature propose using the red-edge bands B05 (698-713 nm), B06 (733-748 nm), and B07 (773-793 nm) for capturing subtle variations in chlorophyll absorption producing indexes, which are called Normalized Difference Vegetation Red-edge indexes (NDRE) [@Xie2019].  In a recent review, Chaves et al. argue that red-edge bands are important for distinguishing leaf structure and chlorophyll content of different vegetation species [@Chaves2020]. In the example below, we show how to include indexes in the regular data cube with the Sentinel-2 spectral bands. 
+
+We first calculate the NDVI in the usual way, using bands B08 and B04.
+
+:::{.panel-tabset}
+## R
+```{r}
+#| label: fig-dcops-ndvi
+#| out-width: 100%
+#| fig-cap: | 
+#|   NDVI using bands B08 and B04 of Sentinel-2. 
+#| fig-align: center
+# Calculate NDVI index using bands B08 and B04
+reg_cube <- sits_apply(reg_cube,
+    NDVI = (B08 - B04)/(B08 + B04),
+    output_dir = tempdir_r
+)
+
+# Plot
+plot(reg_cube, band = "NDVI", palette = "RdYlGn")
+```
+## Python
+```{python}
+#| label: fig-dcops-ndvi-py
+#| out-width: 100%
+#| fig-cap: | 
+#|   NDVI using bands B08 and B04 of Sentinel-2. 
+#| fig-align: center
+# Calculate NDVI index using bands B08 and B04
+reg_cube = sits_apply(reg_cube,
+    NDVI = "(B08 - B04)/(B08 + B04)",
+    output_dir = tempdir_py
+)
+
+# Plot
+plot(reg_cube, band = "NDVI", palette = "RdYlGn")
+```
+:::
+
+We now compare the traditional NDVI with other vegetation index computed using red-edge bands. The example below such the NDRE1 index, obtained using bands B06 and B05. Sun et al. argue that a vegetation index built using bands B06 and B07 provides a better approximation to leaf area index estimates than NDVI [@Sun2020a]. Notice that the contrast between forests and deforested areas is more robust in the NDRE1 index than with NDVI. 
+
+:::{.panel-tabset}
+## R
+```{r}
+#| label: fid-dcops-ndre1
+#| out.width: "100%"
+#| fig.align: "center"
+#| fig.cap: | 
+#|     NDRE1 using bands B06 and B05 of Sentinel-2.
+# Calculate NDRE1 index using bands B06 and B05
+reg_cube <- sits_apply(reg_cube,
+    NDRE1 = (B06 - B05)/(B06 + B05),
+    output_dir = tempdir_r
+)
+
+# Plot NDRE1 index
+plot(reg_cube, band = "NDRE1",  palette = "RdYlGn")
+```
+## Python
+```{python}
+#| label: fid-dcops-ndre1-py
+#| out.width: "100%"
+#| fig.align: "center"
+#| fig.cap: | 
+#|     NDRE1 using bands B06 and B05 of Sentinel-2.
+# Calculate NDRE1 index using bands B06 and B05
+reg_cube = sits_apply(reg_cube,
+    NDRE1 = "(B06 - B05)/(B06 + B05)",
+    output_dir = tempdir_py
+)
+
+# Plot NDRE1 index
+plot(reg_cube, band = "NDRE1",  palette = "RdYlGn")
+```
+:::
+
+## Spectral indexes for identifying burned areas
+
+Band combinations can also generate spectral indices for detecting degradation by fires, which are an important element in environmental degradation. Forest fires significantly impact emissions and impoverish natural ecosystems [@Nepstad1999]. Fires open the canopy, making the microclimate drier and increasing the amount of dry fuel [@Gao2020]. One well-established technique for detecting burned areas with remote sensing images is the normalized burn ratio (NBR), the difference between the near-infrared and the short wave infrared band,  calculated using bands B8A and B12.
+
+:::{.panel-tabset}
+## R
+```{r}
+#| label: fig-docops-nbr
+#| out.width: "100%"
+#| fig.align: "center"
+#| fig.cap: | 
+#|   NBR ratio using Sentinel-2 B11 and B8A.
+# Calculate the NBR index
+reg_cube <- sits_apply(reg_cube,
+    NBR = (B12 - B8A)/(B12 + B8A),
+    output_dir = tempdir_r
+)
+
+# Plot the NBR for the first date
+plot(reg_cube, band = "NBR", palette = "Reds")
+```
+## Python
+```{python}
+#| label: fig-docops-nbr-py
+#| out.width: "100%"
+#| fig.align: "center"
+#| fig.cap: | 
+#|   NBR ratio using Sentinel-2 B11 and B8A.
+# Calculate the NBR index
+reg_cube = sits_apply(reg_cube,
+    NBR = "(B12 - B8A)/(B12 + B8A)",
+    output_dir = tempdir_py
+)
+
+# Plot the NBR for the first date
+plot(reg_cube, band = "NBR", palette = "Reds")
+```
+:::
+
+## Support for non-normalized indexes{-}
+
+All data cube operations discussed so far produce normalized indexes. By default, the indexes generated by the sits_apply() function are normalized between -1 and 1, scaled by a factor of 0.0001. Normalized indexes are saved as INT2S (Integer with sign). If the normalized parameter is FALSE, no scaling factor will be applied and the index will be saved as FLT4S (Float with sign). The code below shows an example of  the non-normalized index, CVI - chlorophyll vegetation index. CVI is a spectral index used to estimate the chlorophyll content and overall health of vegetation. It combines bands in visible and near-infrared (NIR) regions to assess vegetation characteristics. Since CVI is not normalized, we have to set the parameter `normalized` to `FALSE` to inform `sits_apply()` to generate an FLT4S image.
+
+:::{.panel-tabset}
+## R
+```{r}
+#| label: fig-dcoops-cvi
+#| out.width: 100%
+#| fig.align: "center"
+#| fig.cap: | 
+#|   CVI index using bands B03, B05, and B8A.
+# Calculate the NBR index
+reg_cube <- sits_apply(reg_cube,
+    CVI = (B8A / B03) * (B05 / B03 ),
+    normalized = FALSE, 
+    output_dir = tempdir_r
+)
+
+# Plot
+plot(reg_cube, band = "CVI", palette = "Greens")
+```
+## Python
+```{python}
+#| label: fig-dcoops-cvi-py
+#| fig.align: "center"
+#| fig.cap: | 
+#|   CVI index using bands B03, B05, and B8A.
+# Calculate the NBR index
+reg_cube = sits_apply(reg_cube,
+    CVI = "(B8A / B03) * (B05 / B03 )",
+    normalized = False, 
+    output_dir = tempdir_py
+)
+
+# Plot
+plot(reg_cube, band = "CVI", palette = "Greens")
+```
+:::
+
+## Summary
+
+In this chapter, we learned how to operate on data cubes, including how to compute spectral indexes, estimate mixture models, and do reducing operations. This chapter concludes our overview of how data cubes work in `sits`. In the next part, we will describe how to work with time series.
+
+## References{-}
