@@ -32,6 +32,13 @@ from pathlib import Path
 tempdir_py = Path.home() / "sitsbook/tempdir/Python/ts_som"
 tempdir_py.mkdir(parents=True, exist_ok=True)
 ```
+```{python}
+#| echo: false
+import pandas as pd
+pd.set_option('display.max_columns', 7)
+pd.set_option('display.width', 600)
+pd.set_option('display.max_rows', 10)
+```
 :::
 
 <a href="https://www.kaggle.com/esensing/using-som-for-sample-quality-control-in-sits" target="_blank"><img src="https://kaggle.com/static/images/open-in-kaggle.svg"></a>
@@ -83,10 +90,12 @@ samples_cerrado_mod13q1 = load_samples_dataset(
     name = "samples_cerrado_mod13q1", 
     package = "sitsdata"
 )
+
 # Take only the NDVI and EVI bands
 samples_cerrado_mod13q1_2bands = sits_select(
     data = samples_cerrado_mod13q1, 
     bands = ("NDVI", "EVI"))
+
 # Show the summary of the samples
 summary(samples_cerrado_mod13q1_2bands)
 ```
@@ -98,32 +107,6 @@ summary(samples_cerrado_mod13q1_2bands)
 To perform the SOM-based quality assessment, the first step is to run `sits_som_map()`, which uses the `kohonen` R package to compute a SOM grid [@Wehrens2018], controlled by five parameters. The grid size is given by `grid_xdim` and `grid_ydim`. The starting learning rate is `alpha`, which decreases during the interactions. To measure the separation between samples, use `distance` (either "dtw" or "euclidean"). The number of iterations is set by `rlen`. When using `sits_som_map()` in machines which have multiprocessing support for the OpenMP protocol, setting the learning mode parameter `mode` to "patch" improves processing time. In Windows, please use "online". 
 
 We suggest using the Dynamic Time Warping ("dtw") metric as the distance measure. It is a technique used to measure the similarity between two temporal sequences that may vary in speed or timing [@Berndt1994]. The core idea of DTW is to find the optimal alignment between two sequences by allowing non-linear mapping of one sequence onto another. In time series analysis, DTW matches two series slightly out of sync. This property is useful in land use studies for matching time series of agricultural areas [@Maus2015].
-
-:::{.panel-tabset}
-## R
-```{r}
-#| eval: false
-# Clustering time series using SOM
-som_cluster <- sits_som_map(samples_cerrado_mod13q1_2bands,
-    grid_xdim = 15,
-    grid_ydim = 15,
-    alpha = 1.0,
-    distance = "dtw",
-    rlen = 20)
-```
-## Python
-```{python}
-#| eval: false
-# Clustering time series using SOM
-som_cluster = sits_som_map(samples_cerrado_mod13q1_2bands,
-    grid_xdim = 15,
-    grid_ydim = 15,
-    alpha = 1.0,
-    distance = "dtw",
-    rlen = 20
-)
-```
-:::
 
 ```{r}
 #| echo: false
@@ -141,6 +124,21 @@ som_cluster = read_rds(file = "./etc/som_cluster.rds")
 :::{.panel-tabset}
 ## R
 ```{r}
+#| eval: false
+# Clustering time series using SOM
+som_cluster <- sits_som_map(samples_cerrado_mod13q1_2bands,
+    grid_xdim = 15,
+    grid_ydim = 15,
+    alpha = 1.0,
+    distance = "dtw",
+    rlen = 20
+)
+
+# Plot the SOM map
+plot(som_cluster)
+```
+```{r}
+#| echo: false
 #| label: fig-ts-sommap
 #| out.width: "100%"
 #| fig.cap: "SOM map for the Cerrado samples."
@@ -150,10 +148,26 @@ plot(som_cluster)
 ```
 ## Python
 ```{python}
+#| eval: false
+# Clustering time series using SOM
+som_cluster = sits_som_map(samples_cerrado_mod13q1_2bands,
+    grid_xdim = 15,
+    grid_ydim = 15,
+    alpha = 1.0,
+    distance = "dtw",
+    rlen = 20
+)
+
+# Plot the SOM map
+plot(som_cluster)
+```
+```{python}
+#| echo: false
 #| label: fig-ts-sommap-py
 #| out.width: "100%"
 #| fig.cap: "SOM map for the Cerrado samples."
 #| fig.align: "center"
+# Clustering time series using SOM
 # Plot the SOM map
 plot(som_cluster)
 ```
@@ -172,6 +186,7 @@ The second step in SOM-based quality assessment is understanding the confusion b
 ```{r}
 # Produce a tibble with a summary of the mixed labels
 som_eval <- sits_som_evaluate_cluster(som_cluster)
+
 # Show the result
 som_eval 
 ```
@@ -179,6 +194,7 @@ som_eval
 ```{python}
 # Produce a tibble with a summary of the mixed labels
 som_eval = sits_som_evaluate_cluster(som_cluster)
+
 # Show the result
 som_eval 
 ```
@@ -241,6 +257,7 @@ all_samples <- sits_som_clean_samples(
     prior_threshold = 0.6,
     posterior_threshold = 0.6,
     keep = c("clean", "analyze", "remove"))
+
 # Print the sample distribution based on evaluation
 plot(all_samples)
 ```
@@ -257,6 +274,7 @@ all_samples = sits_som_clean_samples(
     prior_threshold = 0.6,
     posterior_threshold = 0.6,
     keep = ("clean", "analyze", "remove"))
+
 # Print the sample distribution based on evaluation
 plot(all_samples)
 ```
@@ -274,6 +292,7 @@ new_samples <- sits_som_clean_samples(
     prior_threshold = 0.6,
     posterior_threshold = 0.6,
     keep = c("clean", "analyze"))
+
 # Print the new sample distribution
 summary(new_samples)
 ```
@@ -286,6 +305,7 @@ new_samples = sits_som_clean_samples(
     prior_threshold = 0.6,
     posterior_threshold = 0.6,
     keep = ("clean", "analyze"))
+
 # Print the new sample distribution
 summary(new_samples)
 ```
@@ -297,6 +317,12 @@ All samples of the classes which had the highest confusion with others(`Fallow_C
 ## R
 ```{r}
 #| eval: false
+#| label: fig-ts-newcluster
+#| out-width: 90%
+#| fig-align: "center"
+#| fig-cap: "Cluster confusion plot for samples cleaned by SOM."
+#| message: false
+#| warning: false
 # Produce a new SOM map with the cleaned samples
 new_cluster <- sits_som_map(
    data = new_samples,
@@ -305,21 +331,13 @@ new_cluster <- sits_som_map(
    alpha = 1.0,
    rlen = 20,
    distance = "dtw")
-```
-## Python
-```{python}
-#| eval: false
-# Produce a new SOM map with the cleaned samples
-new_cluster = sits_som_map(
-   data = new_samples,
-   grid_xdim = 15,
-   grid_ydim = 15,
-   alpha = 1.0,
-   rlen = 20,
-   distance = "dtw")
-```
-:::
 
+# Evaluate the mixture in the new SOM clusters
+new_cluster_mixture <- sits_som_evaluate_cluster(new_cluster)
+
+# Plot the mixture information.
+plot(new_cluster_mixture)
+```
 ```{r}
 #| message: false
 #| warning: false
@@ -328,40 +346,43 @@ new_cluster = sits_som_map(
 library(sits)
 library(kohonen)
 new_cluster <- readRDS("./etc/new_cluster.rds")
+plot(
+    sits_som_evaluate_cluster(new_cluster)
+)
 ```
 
+## Python
 ```{python}
-#| message: false
-#| warning: false
-#| echo: false
-new_cluster = read_rds("./etc/new_cluster.rds")
-```
-
-:::{.panel-tabset}
-## R
-```{r}
-#| label: fig-ts-newcluster
-#| out-width: 90%
-#| fig-align: "center"
-#| fig-cap: "Cluster confusion plot for samples cleaned by SOM."
-#| message: false
-#| warning: false
-# Evaluate the mixture in the new SOM clusters
-new_cluster_mixture <- sits_som_evaluate_cluster(new_cluster)
-# Plot the mixture information.
-plot(new_cluster_mixture)
-```
-```{python}
+#| eval: false
 #| label: fig-ts-newcluster-py
 #| out-width: 90%
 #| fig-align: "center"
 #| fig-cap: "Cluster confusion plot for samples cleaned by SOM."
 #| message: false
 #| warning: false
+# Produce a new SOM map with the cleaned samples
+new_cluster = sits_som_map(
+   data = new_samples,
+   grid_xdim = 15,
+   grid_ydim = 15,
+   alpha = 1.0,
+   rlen = 20,
+   distance = "dtw")
+   
 # Evaluate the mixture in the new SOM clusters
 new_cluster_mixture = sits_som_evaluate_cluster(new_cluster)
+
 # Plot the mixture information.
 plot(new_cluster_mixture)
+```
+```{python}
+#| message: false
+#| warning: false
+#| echo: false
+new_cluster = read_rds("./etc/new_cluster.rds")
+plot(
+    sits_som_evaluate_cluster(new_cluster)
+)
 ```
 :::
 

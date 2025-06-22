@@ -55,6 +55,8 @@ To run the mixture model in `sits`, it is necessary to inform the values of pixe
 
 In `sits`, spectral mixture analysis is done by `sits_mixture_model()`, which has two mandatory parameters: `cube` (a data cube) and `endmembers`, a named table (or equivalent) that defines the pure pixels. The `endmembers` table must have the following named columns: (a) `type`, which defines the class associated with an endmember; (b) names, the names of the bands. Each line of the table must contain the value of each endmember for all bands (see example). To improve readability, we suggest that the `endmembers` parameters be defined as a `tribble`. A `tribble` is a `tibble` with an easier to read row-by-row layout. In the example below, we define three endmembers for classes `Forest`, `Soil`, and `Water`.  Note that the values for each band are expressed as integers ranging from 0 to 10,000. We use the same data cube which was used in the previous chapter.
 
+**Create Sentinel-2 Data Cube**
+
 :::{.panel-tabset}
 ## R
 ```{r}
@@ -70,6 +72,14 @@ s2_cube <- sits_cube(
               "B12","CLOUD"),
     start_date = as.Date("2018-07-01"),
     end_date = as.Date("2018-08-31"))
+
+# Regularize the cube to 15 day intervals
+reg_cube <- sits_regularize(
+          cube       = s2_cube,
+          output_dir = tempdir_r,
+          res        = 60,
+          period     = "P15D",
+          multicores = 4)
 ```
 ## Python
 ```{python}
@@ -85,24 +95,7 @@ s2_cube = sits_cube(
               "B12","CLOUD"),
     start_date = "2018-07-01",
     end_date = "2018-08-31")
-```
-:::
-
-:::{.panel-tabset}
-## R
-```{r}
-#| eval: false
-# Regularize the cube to 15 day intervals
-reg_cube <- sits_regularize(
-          cube       = s2_cube,
-          output_dir = tempdir_r,
-          res        = 60,
-          period     = "P15D",
-          multicores = 4)
-```
-## Python
-```{python}
-#| eval: false
+    
 # Regularize the cube to 15 day intervals
 reg_cube = sits_regularize(
           cube       = s2_cube,
@@ -113,8 +106,6 @@ reg_cube = sits_regularize(
 ```
 :::
 
-:::{.panel-tabset}
-## R
 ```{r}
 #| eval: true
 #| echo: false
@@ -129,7 +120,6 @@ reg_cube <- sits_cube(
     data_dir = tempdir_r
 )
 ```
-## Python
 ```{python}
 #| eval: true
 #| echo: false
@@ -144,7 +134,9 @@ reg_cube = sits_cube(
     data_dir = tempdir_py
 )
 ```
-:::
+
+
+**Generate the mixture model**
 
 :::{.panel-tabset}
 ## R
@@ -155,6 +147,7 @@ em <- tibble::tribble(
     "forest",  200,  352,  189, 2800, 1340,  546,
     "soil",    400,  650,  700, 3600, 3500, 1800,
     "water",   700, 1100, 1400,  850,   40,   26)
+
 # Generate the mixture model
 reg_cube <- sits_mixture_model(
     data = reg_cube,
@@ -167,6 +160,7 @@ reg_cube <- sits_mixture_model(
 ```{python}
 # Import pandas
 import pandas as pd
+
 # Define the endmembers for three classes and six bands
 em = pd.DataFrame({
     "class": ["forest", "soil", "water"],
@@ -177,6 +171,7 @@ em = pd.DataFrame({
     "B11": [1340, 3500, 40],
     "B12": [546, 1800, 26]
 })
+
 # Generate the mixture model
 reg_cube = sits_mixture_model(
     data = reg_cube,
@@ -187,6 +182,8 @@ reg_cube = sits_mixture_model(
 )
 ```
 :::
+
+**Visualize forest endmember**
 
 :::{.panel-tabset}
 ## R
@@ -211,6 +208,8 @@ plot(reg_cube, band = "FOREST", palette = "Greens")
 ```
 :::
 
+**Visualize water endmember**
+
 :::{.panel-tabset}
 ## R
 ```{r}
@@ -233,6 +232,8 @@ plot(reg_cube, band = "WATER", palette = "Blues")
 plot(reg_cube, band = "WATER", palette = "Blues")
 ```
 :::
+
+**Visualize soil endmember**
 
 :::{.panel-tabset}
 ## R

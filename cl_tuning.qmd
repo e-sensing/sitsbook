@@ -34,6 +34,13 @@ from pathlib import Path
 tempdir_py = Path.home() / "sitsbook/tempdir/Python/cl_tuning"
 tempdir_py.mkdir(parents=True, exist_ok=True)
 ```
+```{python}
+#| echo: false
+import pandas as pd
+pd.set_option('display.max_columns', 7)
+pd.set_option('display.width', 600)
+pd.set_option('display.max_rows', 10)
+```
 :::
 
 ## Introduction
@@ -108,6 +115,7 @@ samples_matogrosso_mod13q1 = load_samples_dataset(
     name = "samples_matogrosso_mod13q1", 
     package = "sitsdata"
 )
+
 # Tuning ``sits_lighttae`` model
 tuned_mt = sits_tuning(
      samples = samples_matogrosso_mod13q1,
@@ -144,6 +152,7 @@ The result is a tibble with different values of accuracy, kappa, decision matrix
 # Obtain accuracy, kappa, lr, and weight decay for the 5 best results
 # Hyperparameters are organized as a list
 hparams_5 <- tuned_mt[1:5,]$opt_hparams
+
 # Extract learning rate and weight decay from the list
 lr_5 <- purrr::map_dbl(hparams_5, function(h) h$lr)
 wd_5 <- purrr::map_dbl(hparams_5, function(h) h$weight_decay)
@@ -154,6 +163,7 @@ best_5 <- tibble::tibble(
     kappa = tuned_mt[1:5,]$kappa,
     lr    = lr_5,
     weight_decay = wd_5)
+
 # Print the best five combination of hyperparameters
 best_5
 ```
@@ -161,12 +171,15 @@ best_5
 ```{python} 
 # Import pandas
 import pandas as pd
+
 # Obtain accuracy, kappa, lr, and weight decay for the 5 best results
 # Hyperparameters are organized as a list
 hparams_5 = tuned_mt.opt_hparams[0:5]
+
 # Extract learning rate and weight decay from the list
 lr_5 = [x for x_ in hparams_5 for x in x_["lr"]]
 wd_5 = [x for x_ in hparams_5 for x in x_["weight_decay"]]
+
 # Create a tibble to display the results
 best_5 = pd.DataFrame(dict(
     accuracy = tuned_mt.accuracy[0:5],
@@ -174,6 +187,7 @@ best_5 = pd.DataFrame(dict(
     lr = lr_5,
     weight_decay = wd_5
 ))
+
 # Print the best five combination of hyperparameters
 best_5
 ```
@@ -190,6 +204,7 @@ The hyperparameters for the `sits_tempcnn()` method include the size of the laye
 ## R
 ```{r}
 #| eval: false
+# Tuning ``sits_tempcnn`` model
 tuned_tempcnn <- sits_tuning(
   samples = samples_deforestation_rondonia,
   ml_method = sits_tempcnn(),
@@ -216,6 +231,7 @@ samples_deforestation_rondonia = load_samples_dataset(
     name = "samples_deforestation_rondonia", 
     package = "sitsdata"
 )
+
 # Tuning ``sits_tempcnn`` model
 tuned_tempcnn = sits_tuning(
   samples = samples_deforestation_rondonia,
@@ -260,11 +276,14 @@ The result of `sits_tuning()` is  tibble with different values of accuracy, kapp
 ```{r} 
 # Obtain accuracy, kappa, cnn_layers, cnn_kernels, and cnn_dropout_rates the best result
 cnn_params <- tuned_tempcnn[1,c("accuracy", "kappa", "cnn_layers", "cnn_kernels", "cnn_dropout_rates"), ]
+
 # Learning rates and weight decay are organized as a list
 hparams_best <- tuned_tempcnn[1,]$opt_hparams[[1]]
+
 # Extract learning rate and weight decay 
 lr_wd <- tibble::tibble(lr_best = hparams_best$lr, 
                         wd_best = hparams_best$weight_decay)
+
 # Print the best parameters 
 dplyr::bind_cols(cnn_params, lr_wd)
 ```
@@ -272,8 +291,10 @@ dplyr::bind_cols(cnn_params, lr_wd)
 ```{python} 
 # Import pandas
 import pandas as pd
+
 # Learning rates and weight decay are organized as a list
 hparams_best = tuned_tempcnn.opt_hparams[0]
+
 # Obtain accuracy, kappa, cnn_layers, cnn_kernels, and cnn_dropout_rates the best result
 pd.DataFrame(dict(
     accuracy = tuned_tempcnn.accuracy[0:1],

@@ -34,6 +34,13 @@ from pathlib import Path
 tempdir_py = Path.home() / "sitsbook/tempdir/Python/cl_rasterclassification"
 tempdir_py.mkdir(parents=True, exist_ok=True)
 ```
+```{python}
+#| echo: false
+import pandas as pd
+pd.set_option('display.max_columns', 7)
+pd.set_option('display.width', 600)
+pd.set_option('display.max_rows', 10)
+```
 :::
 
 <a href="https://www.kaggle.com/code/esensing/classification-of-raster-data-cubes" target="_blank"><img src="https://kaggle.com/static/images/open-in-kaggle.svg"/></a>
@@ -51,12 +58,14 @@ The examples of this chapter use a pre-built data cube of Sentinel-2 images, ava
 # Files are available in a local directory 
 data_dir <- system.file("extdata/Rondonia-20LMR/", 
                         package = "sitsdata")
+
 # Read data cube
 rondonia_20LMR <- sits_cube(
     source = "MPC",
     collection = "SENTINEL-2-L2A",
     data_dir = data_dir
 )
+
 # Plot the cube
 plot(rondonia_20LMR, date = "2022-07-16", band = "NDVI")
 ```
@@ -66,12 +75,14 @@ plot(rondonia_20LMR, date = "2022-07-16", band = "NDVI")
 # Files are available in a local directory 
 data_dir = r_package_dir("extdata/Rondonia-20LMR/", 
                         package = "sitsdata")
+
 # Read data cube
 rondonia_20LMR = sits_cube(
     source = "MPC",
     collection = "SENTINEL-2-L2A",
     data_dir = data_dir
 )
+
 # Plot the cube
 plot(rondonia_20LMR, date = "2022-07-16", band = "NDVI")
 ```
@@ -94,9 +105,9 @@ This case study uses the training dataset `samples_deforestation_rondonia`, avai
 :::{.panel-tabset}
 ## R
 ```{r}
-library(sitsdata)
 # Obtain the samples 
 data("samples_deforestation_rondonia")
+
 # Show the contents of the samples
 summary(samples_deforestation_rondonia)
 ```
@@ -107,6 +118,7 @@ samples_deforestation_rondonia = load_samples_dataset(
     name = "samples_deforestation_rondonia", 
     package = "sitsdata"
 )
+
 # Show the contents of the samples
 summary(samples_deforestation_rondonia)
 ```
@@ -184,6 +196,7 @@ rfor_model <- sits_train(
   samples_deforestation_rondonia,
   ml_method = sits_rfor()
 )
+
 # plot the model results
 plot(rfor_model)
 ```
@@ -278,25 +291,27 @@ The probability cube provides information on the output values of the algorithm 
 ## R
 ```{r}
 #| eval: false
-# Smoothen a  probability cube
+# Smoothen a probability cube
 rondonia_20LMR_bayes <- sits_smooth(
     cube    = rondonia_20LMR_probs,
     output_dir = tempdir_r,
     version = "rf-raster",
     multicores = 4,
     memsize = 16)
+
 plot(rondonia_20LMR_bayes, labels = c("Forest"),  palette = "YlGn")
 ```
 ## Python
 ```{python}
 #| eval: false
-# Smooth a probability cube
+# Smoothen a probability cube
 rondonia_20LMR_bayes = sits_smooth(
     cube    = rondonia_20LMR_probs,
     output_dir = tempdir_py,
     version = "rf-raster",
     multicores = 4,
     memsize = 16)
+
 plot(rondonia_20LMR_bayes, labels = ("Forest"),  palette = "YlGn")
 ```
 :::
@@ -411,6 +426,7 @@ rondonia_20LMR_probs_tcnn <- sits_classify(
     multicores = 6,
     memsize = 24
 )
+
 plot(rondonia_20LMR_probs_tcnn, labels = c("Forest"),  palette = "YlGn")
 ```
 ## Python
@@ -421,10 +437,11 @@ rondonia_20LMR_probs_tcnn = sits_classify(
     ml_model = tcnn_model,
     output_dir = tempdir_py,
     version = "tcnn-raster",
-    gpu_memory = 1,
-    multicores = 4,
-    memsize = 4
+    gpu_memory = 16,
+    multicores = 6,
+    memsize = 24
 )
+
 plot(rondonia_20LMR_probs_tcnn, labels = c("Forest"),  palette = "YlGn")
 ```
 :::
@@ -453,6 +470,7 @@ rondonia_20LMR_bayes_tcnn <- sits_smooth(
     multicores = 6,
     memsize = 24
 )
+
 plot(rondonia_20LMR_bayes_tcnn, labels = c("Forest"),  palette = "YlGn")
 ```
 ## Python
@@ -466,6 +484,7 @@ rondonia_20LMR_bayes_tcnn = sits_smooth(
     multicores = 6,
     memsize = 24
 )
+
 plot(rondonia_20LMR_bayes_tcnn, labels = ("Forest"),  palette = "YlGn")
 ```
 :::
@@ -494,6 +513,7 @@ rondonia_20LMR_class_tcnn <- sits_label_classification(
     multicores = 6,
     memsize = 24
 )
+
 plot(rondonia_20LMR_class_tcnn)
 ```
 ## Python
@@ -507,6 +527,7 @@ rondonia_20LMR_class_tcnn = sits_label_classification(
     multicores = 6,
     memsize = 24
 )
+
 plot(rondonia_20LMR_class_tcnn)
 ```
 :::

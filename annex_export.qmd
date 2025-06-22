@@ -5,7 +5,8 @@ format: html
 
 ### Configurations to run this chapter{-}
 
-
+:::{.panel-tabset}
+## R
 ```{r}
 #| echo: true
 #| eval: true
@@ -23,8 +24,32 @@ library(terra)
 tempdir_r <- "~/sitsbook/tempdir/R/annex_export"
 dir.create(tempdir_r, showWarnings = FALSE)
 ```
+## Python
+```{python}
+#| echo: true
+#| eval: true
+#| output: false
+# load "pysits" library
+from pysits import *
+from pathlib import Path
+# set tempdir if it does not exist 
+tempdir_py = Path.home() / "sitsbook/tempdir/Python/annex_export"
+tempdir_py.mkdir(parents=True, exist_ok=True)
+```
+```{python}
+#| echo: false
+import pandas as pd
+pd.set_option('display.max_columns', 7)
+pd.set_option('display.width', 600)
+pd.set_option('display.max_rows', 10)
+```
+:::
 
-## Exporting time series data to sf 
+## R formats
+
+This section demonstrates how to export sits data to commonly used data structures in R, facilitating integration with other R packages.
+
+### Exporting time series data to sf 
 
 The `sf` package is the backbone of geospatial vector processing in R [@Pebesma2018]. To export time series tibbles from `sits` to `sf`, the function `sits_as_sf()` creates an `sf` POINT object with the locations of each sample and includes the `time_series` column as a list. Each row in the `sf` object contains the time series associated to the sample.
 
@@ -36,7 +61,7 @@ sf_obj <- sits_as_sf(samples_modis_ndvi)
 sf_obj
 ```
 
-## Exporting data cubes to stars
+### Exporting data cubes to stars
 
 The `stars` R package handles spatiotemporal arrays. It provides a general framework for working with raster and vector data. Data cubes in `sits` can be converted to `stars` objects using `sits_as_stars()`. By default, the stars object will be loaded in memory. This can result in heavy memory usage. To produce a `stars.proxy` object, users have to select a single date, since stars does not allow proxy objects to be created with two dimensions.
 
@@ -54,7 +79,7 @@ stars_object <- sits_as_stars(cube)
 plot(stars_object[,,,,1])
 ```
 
-## Exporting data cubes to terra
+### Exporting data cubes to terra
 
 The `terra` package in R is a high-performance framework for spatial raster and vector data analysis. It was developed as the successor to the older raster package, offering a faster, more memory-efficient, and flexible API for working with geographic data. To export data cubes to `terra`, `sits` uses `sits_as_terra()` function which takes information about files, bands and dates in a data cube to produce an object of class  `SpatRaster` in `terra`. Because `terra` does not understand multi-tiles and multi-temporal cubes, users have to select a tile and a date from the data cube. By default, all bands are included in the terra object, but users can also select which bands to export.
 
@@ -70,4 +95,104 @@ cube <- sits_cube(
 terra_object <- sits_as_terra(cube, date = "2013-09-14")
 # plot the first date of the stars object
 terra_object
+```
+
+
+## Python formats
+
+This section presents the available options for Python users to export sits data to various formats for further analysis and interoperability
+
+### Exporting time series and data cubes to xarray
+
+The `xarray` library is a core tool for labeled multi-dimensional arrays in Python and it is widely used for handling various types of data, including time-series and Earth Observation Data Cubes. This section presents how to convert sits objects to `xarray`.
+
+**Exporting data cubes**
+
+Data cubes in `sits` can be converted to `xarray` objects using `sits_as_xarray()`. By default, the `xarray` object will be loaded in memory. This can result in heavy memory usage.
+
+```{python}
+from pysits import sits_cube, sits_as_xarray
+from pysits import r_package_dir
+
+# Create a data cube from a local set of TIFF files
+# this is a cube with 23 instances and one band ("NDVI")
+data_dir = r_package_dir("extdata/raster/mod13q1", package = "sits")
+
+# Load cube
+cube = sits_cube(
+    source = "BDC",
+    collection = "MOD13Q1-6.1",
+    data_dir = data_dir
+)
+
+# Transform to xarray
+xcube = sits_as_xarray(cube)
+xcube
+```
+
+As an example, to plot the new `xarray` variable, you can use:
+
+```{python}
+import matplotlib.pyplot as plt
+
+# Select first time
+xcube_slice = xcube.NDVI.sel(time=xcube.time[0])
+
+# Extract timestamp
+timestamp = str(xcube_slice.time.values)[:10]
+
+# Plot
+plt.figure(figsize=(10, 6))
+xcube_slice.plot(cmap='YlGn')
+plt.title(f"NDVI - {timestamp}")
+plt.xlabel("X")
+plt.ylabel("Y")
+plt.show()
+```
+
+**Exporting time series**
+
+Following the same strategy used for data cubes, you can convert sits time series to `xarray` using the `sits_as_xarray()` function. The example below demonstrates the process
+
+```{python}
+from pysits import sits_as_xarray
+from pysits import samples_modis_ndvi
+
+xts = sits_as_xarray(samples_modis_ndvi)
+xts
+```
+
+As an example, to plot the new `xarray` variable, you can use:
+
+```{python}
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Extract time and NDVI values
+time = xts.time.values
+labels = xts.label.values
+ndvi_values = xts.NDVI.values
+
+# Assign a color to each unique label
+unique_labels = pd.unique(labels)
+label_colors = {label: color for label, color in zip(unique_labels, plt.cm.tab10.colors)}
+
+# Plot all time series
+plt.figure(figsize=(12, 6))
+
+for i in range(ndvi_values.shape[0]):
+    plt.plot(time, ndvi_values[i], alpha=0.2, color=label_colors[ labels[i] ])
+
+# Add legend
+for label in unique_labels:
+    plt.plot([], [], color=label_colors[label], label=label)
+
+# Add labels
+plt.xlabel("Time")
+plt.ylabel("NDVI")
+plt.title("NDVI Time Series")
+plt.legend(title="Label")
+plt.grid(True, linestyle='--', alpha=0.5)
+plt.tight_layout()
+plt.show()
 ```
