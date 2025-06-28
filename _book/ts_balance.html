@@ -5,7 +5,7 @@
 <meta name="generator" content="quarto-1.3.361">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 <meta name="author" content="Gilberto Camara, Rolf Simoes, Felipe Souza, Felipe Carlos, Pedro Andrade, Karine Ferreira, Lorena Santos and Charlotte Pelletier">
-<title>Satellite Image Time Series Analysis on Earth Observation Data Cubes - 15&nbsp; Reducing sample imbalance</title>
+<title>Satellite Image Time Series Analysis on Earth Observation Data Cubes - 15&nbsp; Reducing imbalances in training samples</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -119,7 +119,7 @@ div.csl-indent {
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-      <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./timeseries.html">Satellite image time series</a></li><li class="breadcrumb-item"><a href="./ts_balance.html"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Reducing sample imbalance</span></a></li></ol></nav>
+      <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./timeseries.html">Satellite image time series</a></li><li class="breadcrumb-item"><a href="./ts_balance.html"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Reducing imbalances in training samples</span></a></li></ol></nav>
       <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
       </a>
       <button type="button" class="btn quarto-search-button" aria-label="" onclick="window.quartoOpenSearch();">
@@ -184,7 +184,7 @@ div.csl-indent {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./intro_examples.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">How to use SITS: example scripts</span></span></a>
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">How to use SITS with real examples</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -219,7 +219,7 @@ div.csl-indent {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./dc_merge.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Multi-source EO data cubes</span></span></a>
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Merging multi-source EO data cubes</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -284,7 +284,7 @@ div.csl-indent {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./ts_balance.html" class="sidebar-item-text sidebar-link active">
- <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Reducing sample imbalance</span></span></a>
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Reducing imbalances in training samples</span></span></a>
   </div>
 </li>
       </ul>
@@ -301,7 +301,7 @@ div.csl-indent {
 <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./cl_machinelearning.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Machine learning algorithms</span></span></a>
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Machine learning algorithms for image time series</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -454,7 +454,7 @@ div.csl-indent {
 <!-- main -->
 <main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block default"><div class="quarto-title">
 <h1 class="title">
-<span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Reducing sample imbalance</span>
+<span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Reducing imbalances in training samples</span>
 </h1>
 </div>
 
@@ -469,6 +469,13 @@ div.csl-indent {
   
 
 </header><section id="configurations-to-run-this-chapter" class="level3 unnumbered"><h3 class="unnumbered anchored" data-anchor-id="configurations-to-run-this-chapter">Configurations to run this chapter</h3>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist">
+<li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true" aria-current="page">R</a></li>
+<li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false">Python</a></li>
+</ul>
+<div class="tab-content">
+<div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
 <div class="cell">
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># load package "tibble"</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://tibble.tidyverse.org/">tibble</a></span><span class="op">)</span></span>
@@ -479,14 +486,34 @@ div.csl-indent {
 <span><span class="va">tempdir_r</span> <span class="op">&lt;-</span> <span class="st">"~/sitsbook/tempdir/R/ts_balance"</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/files2.html">dir.create</a></span><span class="op">(</span><span class="va">tempdir_r</span>, showWarnings <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+</div>
+<div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># load "pysits" library</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pysits <span class="im">import</span> <span class="op">*</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pathlib <span class="im">import</span> Path</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># set tempdir if it does not exist </span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>tempdir_py <span class="op">=</span> Path.home() <span class="op">/</span> <span class="st">"sitsbook/tempdir/Python/ts_balance"</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>tempdir_py.mkdir(parents<span class="op">=</span><span class="va">True</span>, exist_ok<span class="op">=</span><span class="va">True</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
 </section><section id="introduction" class="level2" data-number="15.1"><h2 data-number="15.1" class="anchored" data-anchor-id="introduction">
 <span class="header-section-number">15.1</span> Introduction</h2>
 <p>Many training samples for Earth observation data analysis are imbalanced. This situation arises when the distribution of samples associated with each label is uneven. Sample imbalance is an undesirable property of a training set since machine learning algorithms tend to be more accurate for classes with many samples. The instances belonging to the minority group are misclassified more often than those belonging to the majority group. Thus, reducing sample imbalance can positively affect classification accuracy <span class="citation" data-cites="Johnson2019"><a href="#ref-Johnson2019" role="doc-biblioref">[1]</a></span>.</p>
 </section><section id="dataset-using-in-this-chapter" class="level2" data-number="15.2"><h2 data-number="15.2" class="anchored" data-anchor-id="dataset-using-in-this-chapter">
 <span class="header-section-number">15.2</span> Dataset using in this chapter</h2>
 <p>The examples of this chapter use <code>samples_cerrado_mod13q1</code>, a set of time series from the Cerrado region of Brazil. The data ranges from 2000 to 2017 and includes 50,160 samples divided into 12 classes (<code>Dense_Woodland</code>, <code>Dunes</code>, <code>Fallow_Cotton</code>, <code>Millet_Cotton</code>, <code>Pasture</code>, <code>Rocky_Savanna</code>, <code>Savanna</code>, <code>Savanna_Parkland</code>, <code>Silviculture</code>, <code>Soy_Corn</code>, <code>Soy_Cotton</code>, and <code>Soy_Fallow</code>). Each time series covers 12 months (23 data points) from MOD13Q1 product, and has 4 bands (EVI, NDVI, MIR, and NIR). We use bands NDVI and EVI for faster processing.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist">
+<li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true">R</a></li>
+<li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false">Python</a></li>
+</ul>
+<div class="tab-content">
+<div id="tabset-2-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-2-1-tab">
 <div class="cell">
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Take only the NDVI and EVI bands</span></span>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Take only the NDVI and EVI bands</span></span>
 <span><span class="va">samples_cerrado_mod13q1_2bands</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_select.html">sits_select</a></span><span class="op">(</span></span>
 <span>    data <span class="op">=</span> <span class="va">samples_cerrado_mod13q1</span>, </span>
 <span>    bands <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"NDVI"</span>, <span class="st">"EVI"</span><span class="op">)</span><span class="op">)</span></span>
@@ -511,25 +538,69 @@ div.csl-indent {
 12 Soy_Fallow        2098 0.0418 </code></pre>
 </div>
 </div>
+</div>
+<div id="tabset-2-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-2-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load samples</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>samples_cerrado_mod13q1 <span class="op">=</span> load_samples_dataset(</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    name <span class="op">=</span> <span class="st">"samples_cerrado_mod13q1"</span>,</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    package <span class="op">=</span> <span class="st">"sitsdata"</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Take only the NDVI and EVI bands</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>samples_cerrado_mod13q1_2bands <span class="op">=</span> sits_select(</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    data <span class="op">=</span> samples_cerrado_mod13q1, </span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    bands <span class="op">=</span> (<span class="st">"NDVI"</span>, <span class="st">"EVI"</span>))</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Show the summary of the samples</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>summary(samples_cerrado_mod13q1_2bands)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>               label  count      prop
+1     Dense_Woodland   9966  0.198684
+2              Dunes    550  0.010965
+3      Fallow_Cotton    630  0.012560
+4      Millet_Cotton    316  0.006300
+5            Pasture   7206  0.143660
+..               ...    ...       ...
+8   Savanna_Parkland   2699  0.053808
+9       Silviculture    423  0.008433
+10          Soy_Corn   4971  0.099103
+11        Soy_Cotton   4124  0.082217
+12        Soy_Fallow   2098  0.041826
+
+[12 rows x 3 columns]</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
 <p>The Cerrado dataset is highly imbalanced. The three most frequent labels (<code>Dense Woodland</code>, <code>Savanna</code>, and <code>Pasture</code>) include 53% of all samples, while the three least frequent labels (<code>Millet-Cotton</code>, <code>Silviculture</code>, and <code>Dunes</code>) comprise only 2.5% of the dataset. This is a good dataset to investigate the impact of rebalancing.</p>
 </section><section id="producing-a-balanced-training-set" class="level2" data-number="15.3"><h2 data-number="15.3" class="anchored" data-anchor-id="producing-a-balanced-training-set">
 <span class="header-section-number">15.3</span> Producing a balanced training set</h2>
 <p>The function <code><a href="https://rdrr.io/pkg/sits/man/sits_reduce_imbalance.html">sits_reduce_imbalance()</a></code> deals with training set imbalance; it increases the number of samples of least frequent labels, and reduces the number of samples of most frequent labels. Oversampling requires generating synthetic samples. The package uses the SMOTE method that estimates new samples by considering the cluster formed by the nearest neighbors of each minority label. SMOTE takes two samples from this cluster and produces a new one by randomly interpolating them <span class="citation" data-cites="Chawla2002"><a href="#ref-Chawla2002" role="doc-biblioref">[2]</a></span>.</p>
 <p>To perform undersampling, <code><a href="https://rdrr.io/pkg/sits/man/sits_reduce_imbalance.html">sits_reduce_imbalance()</a></code> builds a SOM map for each majority label based on the required number of samples to be selected. Each dimension of the SOM is set to <code>ceiling(sqrt(new_number_samples/4))</code> to allow a reasonable number of neurons to group similar samples. After calculating the SOM map, the algorithm extracts four samples per neuron to generate a reduced set of samples that approximates the variation of the original one.</p>
 <p>The <code><a href="https://rdrr.io/pkg/sits/man/sits_reduce_imbalance.html">sits_reduce_imbalance()</a></code> algorithm has two parameters: <code>n_samples_over</code> and <code>n_samples_under</code>. The first parameter indicates the minimum number of samples per class. All classes with samples less than its value are oversampled. The second parameter controls the maximum number of samples per class; all classes with more samples than its value are undersampled. The following example uses <code><a href="https://rdrr.io/pkg/sits/man/sits_reduce_imbalance.html">sits_reduce_imbalance()</a></code> with the Cerrado samples used in the previous chapter. We generate a balanced dataset where all classes have a minimum of 1000 and and a maximum of 1500 samples.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist">
+<li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-3-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-1" role="tab" aria-controls="tabset-3-1" aria-selected="true">R</a></li>
+<li class="nav-item" role="presentation"><a class="nav-link" id="tabset-3-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-2" role="tab" aria-controls="tabset-3-2" aria-selected="false">Python</a></li>
+</ul>
+<div class="tab-content">
+<div id="tabset-3-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-3-1-tab">
 <div class="cell">
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Reducing imbalances in the Cerrado dataset</span></span>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Reducing imbalances in the Cerrado dataset</span></span>
 <span><span class="va">balanced_samples</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_reduce_imbalance.html">sits_reduce_imbalance</a></span><span class="op">(</span></span>
 <span>    samples <span class="op">=</span> <span class="va">samples_cerrado_mod13q1_2bands</span>,</span>
 <span>    n_samples_over <span class="op">=</span> <span class="fl">1000</span>,</span>
 <span>    n_samples_under <span class="op">=</span> <span class="fl">1500</span>,</span>
-<span>    multicores <span class="op">=</span> <span class="fl">4</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="cell">
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Show summary of balanced samples</span></span>
+<span>    multicores <span class="op">=</span> <span class="fl">4</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Show summary of balanced samples</span></span>
 <span><span class="co"># Some classes have more than 1500 samples due to the SOM map</span></span>
 <span><span class="co"># Each label has between 10% and 6% of the full set</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html">summary</a></span><span class="op">(</span><span class="va">balanced_samples</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 12 × 3
    label            count   prop
@@ -548,21 +619,65 @@ div.csl-indent {
 12 Soy_Fallow        1404 0.0857</code></pre>
 </div>
 </div>
-<p>To assess the impact of reducing imbalance, we use the SOM cluster technique described in the previous chapter. In synthesis, SOM builds clusters out of the training data. Ideally, each cluster would be composed by a samples of a single class. Mixed clusters indicate possible confusion between samples of different classes. We fist build a SOM using <code><a href="https://rdrr.io/pkg/sits/man/sits_som_map.html">sits_som_map()</a></code> and then assess the results with <code>sits_som_evaluate_clusters()</code>.</p>
+</div>
+<div id="tabset-3-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-3-2-tab">
 <div class="cell">
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Clustering time series using SOM</span></span>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Reducing imbalances in the Cerrado dataset</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>balanced_samples <span class="op">=</span> sits_reduce_imbalance(</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    samples <span class="op">=</span> samples_cerrado_mod13q1_2bands,</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    n_samples_over <span class="op">=</span> <span class="dv">1000</span>,</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    n_samples_under <span class="op">=</span> <span class="dv">1500</span>,</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    multicores <span class="op">=</span> <span class="dv">4</span>)</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Show summary of balanced samples</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Some classes have more than 1500 samples due to the SOM map</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Each label has between 10% and 6% of the full set</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>summary(balanced_samples)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>               label  count      prop
+1     Dense_Woodland   1596  0.097388
+2              Dunes   1000  0.061020
+3      Fallow_Cotton   1000  0.061020
+4      Millet_Cotton   1000  0.061020
+5            Pasture   1592  0.097144
+..               ...    ...       ...
+8   Savanna_Parkland   1564  0.095436
+9       Silviculture   1000  0.061020
+10          Soy_Corn   1588  0.096900
+11        Soy_Cotton   1568  0.095680
+12        Soy_Fallow   1404  0.085672
+
+[12 rows x 3 columns]</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<p>To assess the impact of reducing imbalance, we use the SOM cluster technique described in the previous chapter. In synthesis, SOM builds clusters out of the training data. Ideally, each cluster would be composed by a samples of a single class. Mixed clusters indicate possible confusion between samples of different classes. We fist build a SOM using <code><a href="https://rdrr.io/pkg/sits/man/sits_som_map.html">sits_som_map()</a></code> and then assess the results with <code>sits_som_evaluate_clusters()</code>.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist">
+<li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-4-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-1" role="tab" aria-controls="tabset-4-1" aria-selected="true">R</a></li>
+<li class="nav-item" role="presentation"><a class="nav-link" id="tabset-4-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-2" role="tab" aria-controls="tabset-4-2" aria-selected="false">Python</a></li>
+</ul>
+<div class="tab-content">
+<div id="tabset-4-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-4-1-tab">
+<div class="cell">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Clustering time series using SOM</span></span>
 <span><span class="va">som_cluster_bal</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_som_map.html">sits_som_map</a></span><span class="op">(</span></span>
 <span>    data <span class="op">=</span> <span class="va">balanced_samples</span>,</span>
 <span>    grid_xdim <span class="op">=</span> <span class="fl">15</span>,</span>
 <span>    grid_ydim <span class="op">=</span> <span class="fl">15</span>,</span>
 <span>    alpha <span class="op">=</span> <span class="fl">1.0</span>,</span>
 <span>    distance <span class="op">=</span> <span class="st">"dtw"</span>,</span>
-<span>    rlen <span class="op">=</span> <span class="fl">20</span>,</span>
-<span>    mode <span class="op">=</span> <span class="st">"pbatch"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<div class="cell">
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Produce a tibble with a summary of the mixed labels</span></span>
-<span><span class="va">som_eval</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_som_evaluate_cluster.html">sits_som_evaluate_cluster</a></span><span class="op">(</span><span class="va">som_cluster_bal</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span>    rlen <span class="op">=</span> <span class="fl">20</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Produce a tibble with a summary of the mixed labels</span></span>
+<span><span class="va">som_eval</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_som_evaluate_cluster.html">sits_som_evaluate_cluster</a></span><span class="op">(</span><span class="va">som_cluster_bal</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Show the result</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">som_eval</span><span class="op">)</span> </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell" data-layout-align="center">
 <div class="cell-output cell-output-stderr">
@@ -572,7 +687,36 @@ div.csl-indent {
 <div class="cell-output-display">
 <div id="fig-ts-bal-mt" class="quarto-figure quarto-figure-center anchored">
 <figure class="figure"><p><img src="ts_balance_files/figure-html/fig-ts-bal-mt-1.png" class="img-fluid figure-img" style="width:90.0%"></p>
-<figcaption class="figure-caption">Figure&nbsp;15.1: Confusion by cluster for the balanced dataset</figcaption></figure>
+<figcaption class="figure-caption">Figure&nbsp;15.1: Confusion by cluster for the balanced dataset (source: authors).</figcaption></figure>
+</div>
+</div>
+</div>
+</div>
+<div id="tabset-4-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-4-2-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Clustering time series using SOM</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>som_cluster_bal <span class="op">=</span> sits_som_map(</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    data <span class="op">=</span> balanced_samples,</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    grid_xdim <span class="op">=</span> <span class="dv">15</span>,</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>    grid_ydim <span class="op">=</span> <span class="dv">15</span>,</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>    alpha <span class="op">=</span> <span class="fl">1.0</span>,</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>    distance <span class="op">=</span> <span class="st">"dtw"</span>,</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>    rlen <span class="op">=</span> <span class="dv">20</span>)</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Produce a tibble with a summary of the mixed labels</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>som_eval <span class="op">=</span> sits_som_evaluate_cluster(som_cluster_bal)</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Show the result</span></span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>plot(som_eval) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-ts-bal-mt-py" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure"><p><img src="ts_balance_files/figure-html/fig-ts-bal-mt-py-1.png" class="img-fluid figure-img" style="width:90.0%"></p>
+<figcaption class="figure-caption">Figure&nbsp;15.2: Confusion by cluster for the balanced dataset (source: authors).</figcaption></figure>
+</div>
+</div>
+</div>
 </div>
 </div>
 </div>

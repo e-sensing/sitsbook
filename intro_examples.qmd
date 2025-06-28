@@ -3,7 +3,7 @@ title: "How to use SITS with real examples"
 format: html
 ---
 
-The following scripts show examples of how to use `sits` with increasing levels of complexity.
+The following scripts show examples of how to use `sits` for land classification. The first is a classification of a Sentinel-2 tile in Rondonia (Brasil) to detect deforestation and the second a land use and land cover classification of area in the Cerrado biome in Brazil.
 
 ### Configuration to run the examples in this chapter{-}
 
@@ -57,6 +57,363 @@ pd.set_option('display.width', 600)
 pd.set_option('display.max_rows', 10)
 ```
 :::
+
+## Classifying deforestation in Rondonia
+
+The Amazon rainforest has a global importance due to its vast biodiversity and the critical ecosystem services it provides. As one of the most biodiverse regions on Earth, it plays a central role in regulating the planet’s climate and ecological balance. Undisturbed natural forests absorb large amounts of carbon dioxide from the atmosphere, which is vital for mitigating climate change. 
+
+Our study area is the state of Rondônia (RO), located in the Brazilian Amazon. Deforestation in Rondonia is fragmented, in part due to the region’s historical occupation by smallholder settlers. This high degree of fragmentation presents significant challenges for automated classification methods, particularly in distinguishing between clear-cut areas and those that are highly degraded. While visual interpreters can rely on their experience and contextual field knowledge, automated approaches must be carefully trained to reach similar levels of accuracy and discernment.
+
+### Deforestation samples in the Brazilian Amazon
+
+We used an event-based sample, where an "event" refers to a specific occurrence associated with changes in land cover. For example, deforestation is a process characterized by multiple sequential events. Initially, portions of the forest are removed through selective logging; subsequently, surface fires—often set by poachers—are used to degrade the remaining forest and facilitate the extraction of large trees [@Nepstad1999]. The process continues with the manual or mechanized removal of timber, potentially followed by additional fires to clear the area completely [@Gerwing2002]. These events were associated with distinct land cover classes to be detected through time series classification, allowing the model to recognize and differentiate between various stages and types of land cover change.
+
+The [`rondonia20LMR`](https://github.com/e-sensing/rondonia20LMR) repository provides a dataset for testing machine learning algorithms applied to the mapping and monitoring of deforestation in the Brazilian Amazon. The dataset consists of a regular time series of Sentinel-2 satellite images covering the `MGRS 20LMR` tile, with 23 temporal instances from January 5 to December 23, 2022, at 16-day intervals. Each instance includes the spectral bands `B02`, `B03`, `B04`, `B05`, `B06`, `B07`, `B08`, `B8A`, `B11`, and `B12`. The samples contain time series for `792` selected locations, each assigned to one of the following classes: `Clear_Cut_Bare_Soil` (`944`), `Clear_Cut_Burned_Area` (`983`), `Clear_Cut_Vegetation` (`603`), `Forest` (`964`), `Mountainside_Forest` (`211`), `Riparian_Forest` (`1247`), `Seasonally_Flooded` (`731`), `Water` (`109`) and `Wetland` (`215`).
+
+To access the data, it is needed to clone the [`rondonia20LMR`](https://github.com/e-sensing/rondonia20LMR) repository from the e-sensing GitHub repository into a local directory. To do this, open a terminal and execute the following commands:
+
+```{bash}
+#| eval: false
+git clone https://github.com/e-sensing/rondonia20LMR.git
+```
+
+After cloning the repository, the local directory path can be used to proceed with the example. This path will serve as the reference location for accessing the dataset and continuing with the subsequent steps in the analysis workflow. 
+
+In the `rondonia20LMR` directory, the file `deforestation_samples_v18.rds` contains time series extracted from Sentinel-2 satellite images over tile `20LMR`. These data are automatically made available when the package is loaded. Each time series includes the following columns: `longitude`, `latitude`, `start date`, `end date`, `label`, `cube`, and `time series`.
+
+:::{.panel-tabset}
+## R
+```{r}
+#| eval: false
+# Samples path
+samples_path <- "rondonia20LMR/inst/extdata/samples/deforestation_samples_v18.rds"
+
+# Read the Cerrado samples
+deforestation_samples_v18 <- readRDS(samples_path)
+```
+
+## Python
+```{python}
+#| eval: false
+# Samples path
+samples_path = "rondonia20LMR/inst/extdata/samples/deforestation_samples_v18.rds"
+
+# Read the Cerrado samples
+deforestation_samples_v18 = read_rds(samples_path)
+```
+:::
+
+As shown in the previous example, the `sits_patterns()` function from the `sits` package allows the visualization of the temporal patterns of the classes. In the example below, we show these patterns for each class:
+
+:::{.panel-tabset}
+## R
+```{r}
+#| echo: true
+#| eval: false
+# Generate the temporal patterns
+deforestation_samples_v18  |> 
+     sits_select(bands = c("B02", "B8A", "B11")) |> 
+     sits_patterns() |> 
+     plot()
+```
+
+## Python
+```{python}
+#| echo: true
+#| eval: false
+# Generate the temporal patterns
+plot(
+    sits_patterns(
+        sits_select(deforestation_samples_v18, bands = ("B02", "B8A", "B11"))
+    )
+)
+```
+:::
+
+```{r}
+#| label: fig-pattern-intro-rondonia
+#| echo: false
+#| out-width: 100%
+#| out-height: 100%
+#| fig-cap: |
+#|   Temporal patterns for each class.
+#| fig-align: center
+knitr::include_graphics("./images/intro_examples_rondonia/intro_patterns_rondonia.png") 
+```
+
+The plot shows the temporal patterns of the different classes throughout the period. The classes `Forest`, `Mountainside_Forest` and `Riparian_Forest` display high values in band `B8A` (`near-infrared`), indicating high photosynthetic activity throughout the year. This is a typical characteristic of dense and evergreen vegetation. In contrast, the classes `Clear_Cut_Bare_Soil` and `Clear_Cut_Burned_Area` exhibit lower values in band `B8A` and increasing values in band `B11` (`shortwave infrared`) during the second half of the year, suggesting exposed soil and possible presence of burned or degraded areas. The `Seasonally_Flooded` class shows seasonal variations in bands `B8A` and `B11`, possibly related to the hydrological dynamics of these areas. The `Water` class shows very low values across all analyzed bands, especially in `B8A` and `B11`, reflecting the strong absorption of water in these spectral regions. Finally, the `Wetland` class shows increasing values in bands `B8A` and `B11` over the course of the year, indicating a possible transition between periods of water saturation and greater vegetation presence.
+
+### Build Data Cube and visualize band combination
+
+Let us access the Sentinel images available in the repository. First, it is necessary to define the provider, which in this case is the `Microsoft Planetary Computer` (MPC). Then, we specify the directory path, as shown below:
+
+:::{.panel-tabset}
+## R
+```{r}
+#| eval: false
+#| echo: true
+# Images path
+images_path <- "rondonia20LMR/inst/extdata/images/"
+
+# Access local data cube
+cube_20LMR <- sits_cube(
+     source = "MPC",
+     collection = "SENTINEL-2-L2A",
+     data_dir = images_path
+)
+```
+
+## Python
+```{python}
+#| eval: false
+#| echo: true
+# Images path
+images_path = "rondonia20LMR/inst/extdata/images/"
+
+# Access local data cube
+cube_20LMR = sits_cube(
+    source = "MPC",
+    collection = "SENTINEL-2-L2A",
+    data_dir = images_path
+)
+```
+:::
+
+
+The `sits_cube()` function creates the data cube `cube_20LMR` with the Sentinel-2 tile `20LMR` images available in the repository. Each temporal instance includes the spectral bands `B02`, `B03`, `B04`, `B05`, `B06`, `B07`, `B08`, `B8A`, `B11` and `B12`.
+
+:::{.panel-tabset}
+## R
+```{r}
+#| eval: false
+#| echo: true
+# Plot one temporal instance
+plot(cube_20LMR, red = "B11", green = "B8A", blue = "B02", date = "2022-07-16")
+```
+
+## Python
+```{python}
+#| eval: false
+#| echo: true
+# Plot one temporal instance
+plot(cube_20LMR, red = "B11", green = "B8A", blue = "B02", date = "2022-07-16")
+```
+:::
+
+```{r}
+#| label: fig-pattern-intro-cube
+#| echo: false
+#| out-width: 100%
+#| out-height: 100%
+#| fig-cap: |
+#|   Visualization of band composition in Rondonia.
+#| fig-align: center
+knitr::include_graphics("./images/intro_examples_rondonia/intro_cube_20LMR_rondonia.png") 
+```
+
+SITS provides the `sits_select()` function, which filters only the selected bands and dates from a set of time series or a data cube. As shown in the code below:
+
+:::{.panel-tabset}
+## R
+```{r}
+#| eval: false
+#| echo: true
+# Select only bands B02, B8A and B11
+samples_3bands <- sits_select(
+        data = deforestation_samples_v18,
+        bands = c("B02", "B8A", "B11")
+)
+```
+
+## Python
+```{python}
+#| eval: false
+#| echo: true
+# Select only bands B02, B8A and B11
+samples_3bands = sits_select(
+    data = deforestation_samples_v18,
+    bands = ("B02", "B8A", "B11")
+)
+```
+:::
+
+### Training a Machine Learning model
+
+The next step in producing a classified map is to train a model. In the code below, we use the `sits_train()` function to train a Random Forest classifier with the samples containing the `B02`, `B8A` and `B11` bands:
+
+:::{.panel-tabset}
+## R
+```{r}
+#| eval: false
+#| echo: true
+# Train the selected samples set using Rfor
+rfor_model <- sits_train(
+        samples = samples_3bands,
+        ml_method = sits_rfor()
+)
+```
+
+## Python
+```{python}
+#| eval: false
+#| echo: true
+# Train the selected samples set using Rfor
+rfor_model = sits_train(
+    samples = samples_3bands,
+    ml_method = sits_rfor()
+)
+```
+:::
+
+Random Forest is a classification algorithm based on multiple decision trees, each trained with random subsets of data and attributes. The final prediction is made by majority voting among the trees. This approach reduces overfitting and improves model accuracy. The method also provides the importance of each attribute, which can assist in feature selection. For more details on the use of Random Forest in time series classification of satellite images, see Pelletier et al., (2016) [@Pelletier2016]. For more, refer to [Random Forest](cl_machinelearning.qmd#random-forest) section.
+
+### Data cube classification
+
+The next step in producing a classified map is to apply the trained model to the data cube. In the example below, we use the `sits_classify()` function to classify the `cube_20LMR` cube using the Random Forest model. The `sits_classify()` function creates one raster probability map per class, showing the model's confidence for each pixel. It requires two main arguments: `data` (a data cube or time series) and `ml_model` (the trained model). Optional arguments include `multicores` (number of processing cores), `memsize` (available memory) and `output_dir` (output directory).
+
+:::{.panel-tabset}
+## R
+```{r}
+#| eval: false
+#| echo: true
+# Classify the data cube
+cube_20LMR_probs <- sits_classify(
+        data = cube_20LMR,
+        ml_model = rfor_model,
+        multicores = 5,
+        memsize = 8,
+        output_dir = tempdir_rondonia
+)
+
+# Plot the probabilities
+plot(cube_20LMR_probs, labels = "Forest", palette = "YlGn")
+```
+
+## Python
+```{python}
+#| eval: false
+#| echo: true
+# Classify the data cube
+cube_20LMR_probs = sits_classify(
+    data = cube_20LMR,
+    ml_model = rfor_model,
+    multicores = 5,
+    memsize = 8,
+    output_dir = tempdir_rondonia
+)
+
+# Plot the probabilities
+plot(cube_20LMR_probs, labels = "Forest", palette = "YlGn")
+```
+:::
+
+```{r}
+#| label: fig-probs-intro-rondonia
+#| echo: false
+#| out-width: 100%
+#| out-height: 100%
+#| fig-cap: |
+#|   Visualization of forest probabilities in Rondonia.
+#| fig-align: center
+knitr::include_graphics("./images/intro_examples_rondonia/intro_cube_20LMR_probs_rondonia.png") 
+```
+
+After classification, the probability maps can be visualized, such as for the `Forest` class. These maps help assess classification uncertainty and can support active learning approaches, as discussed in the section on image classification in data cubes.
+
+We recommend smoothing the results based on the spatial neighborhood of the pixels. This step helps incorporate spatial context and reduce isolated errors, especially in transition areas. The `sits_smooth()` function performs this task by applying a spatial Bayesian model to adjust predictions using neighboring class probabilities. In the code below, we apply smoothing to the classified cube `cube_20LMR_probs`.
+
+:::{.panel-tabset}
+## R
+```{r}
+#| eval: false
+#| echo: true
+# Smoothing the probabilities
+cube_20LMR_bayes <- sits_smooth(
+        cube = cube_20LMR_probs,
+        multicores = 5,
+        memsize = 8,
+        output_dir = tempdir_rondonia
+)
+
+# Plot the smoothed probabilities
+plot(cube_20LMR_bayes, labels = "Forest", palette = "YlGn")
+```
+
+## Python
+```{python}
+#| eval: false
+#| echo: true
+# Smoothing the probabilities
+cube_20LMR_bayes = sits_smooth(
+    cube = cube_20LMR_probs,
+    multicores = 5,
+    memsize = 8,
+    output_dir = tempdir_rondonia
+)
+
+# Plot the smoothed probabilities
+plot(cube_20LMR_bayes, labels = "Forest", palette = "YlGn")
+```
+:::
+
+```{r}
+#| label: fig-smooth-intro-rondonia
+#| echo: false
+#| out-width: 100%
+#| out-height: 100%
+#| fig-cap: |
+#|   Visualization of forest smoothing in Rondonia.
+#| fig-align: center
+knitr::include_graphics("./images/intro_examples_rondonia/intro_cube_20LMR_bayes_rondonia.png") 
+```
+
+We use the default values for `smoothness` and `window_size`, which generally yield good results. However, we recommend tuning these parameters based on the specific needs of your application. Smoothing reduces classification uncertainty by removing isolated low-confidence pixels. In the smoothed map for the `Forest` class, most outliers are corrected, resulting in a more spatially consistent classification.
+
+The final step is to assign a class label to each pixel by selecting the one with the highest probability value. After spatial smoothing, we use the `sits_label_classification()` function to generate the final classification map:
+
+:::{.panel-tabset}
+## R
+```{r}
+#| eval: false
+#| echo: true
+cube_20LMR_map <- sits_label_classification(
+        cube = cube_20LMR_bayes,
+        multicores = 5,
+        memsize = 8,
+        output_dir = tempdir_rondonia
+)
+
+# Plot the map
+plot(cube_20LMR_map)
+```
+
+## Python
+```{python}
+#| eval: false
+#| echo: true
+cube_20LMR_map = sits_label_classification(
+    cube = cube_20LMR_bayes,
+    multicores = 5,
+    memsize = 8,
+    output_dir = tempdir_rondonia
+)
+
+# Plot the map
+plot(cube_20LMR_map)
+```
+:::
+
+```{r}
+#| label: fig-label-classification-intro-rondonia
+#| echo: false
+#| out-width: 100%
+#| out-height: 100%
+#| fig-cap: |
+#|   Visualization of classification map in Rondonia.
+#| fig-align: center
+knitr::include_graphics("./images/intro_examples_rondonia/intro_cube_20LMR_map_rondonia.png") 
+```
+
 
 ## Land Use and Land cover Map for Brazilian Cerrado
 
@@ -829,361 +1186,6 @@ area_acc
 :::
 
 
-## Classifying deforestation in Rondonia
-
-The Amazon rainforest has a global importance due to its vast biodiversity and the critical ecosystem services it provides. As one of the most biodiverse regions on Earth, it plays a central role in regulating the planet’s climate and ecological balance. Undisturbed natural forests absorb large amounts of carbon dioxide from the atmosphere, which is vital for mitigating climate change. 
-
-Our study area is the state of Rondônia (RO), located in the Brazilian Amazon. Deforestation in Rondonia is fragmented, in part due to the region’s historical occupation by smallholder settlers. This high degree of fragmentation presents significant challenges for automated classification methods, particularly in distinguishing between clear-cut areas and those that are highly degraded. While visual interpreters can rely on their experience and contextual field knowledge, automated approaches must be carefully trained to reach similar levels of accuracy and discernment.
-
-### Deforestation samples in the Brazilian Amazon
-
-We used an event-based sample, where an "event" refers to a specific occurrence associated with changes in land cover. For example, deforestation is a process characterized by multiple sequential events. Initially, portions of the forest are removed through selective logging; subsequently, surface fires—often set by poachers—are used to degrade the remaining forest and facilitate the extraction of large trees [@Nepstad1999]. The process continues with the manual or mechanized removal of timber, potentially followed by additional fires to clear the area completely [@Gerwing2002]. These events were associated with distinct land cover classes to be detected through time series classification, allowing the model to recognize and differentiate between various stages and types of land cover change.
-
-The [`rondonia20LMR`](https://github.com/e-sensing/rondonia20LMR) repository provides a dataset for testing machine learning algorithms applied to the mapping and monitoring of deforestation in the Brazilian Amazon. The dataset consists of a regular time series of Sentinel-2 satellite images covering the `MGRS 20LMR` tile, with 23 temporal instances from January 5 to December 23, 2022, at 16-day intervals. Each instance includes the spectral bands `B02`, `B03`, `B04`, `B05`, `B06`, `B07`, `B08`, `B8A`, `B11`, and `B12`. The samples contain time series for `792` selected locations, each assigned to one of the following classes: `Clear_Cut_Bare_Soil` (`944`), `Clear_Cut_Burned_Area` (`983`), `Clear_Cut_Vegetation` (`603`), `Forest` (`964`), `Mountainside_Forest` (`211`), `Riparian_Forest` (`1247`), `Seasonally_Flooded` (`731`), `Water` (`109`) and `Wetland` (`215`).
-
-To access the data, it is needed to clone the [`rondonia20LMR`](https://github.com/e-sensing/rondonia20LMR) repository from the e-sensing GitHub repository into a local directory. To do this, open a terminal and execute the following commands:
-
-```{bash}
-#| eval: false
-git clone https://github.com/e-sensing/rondonia20LMR.git
-```
-
-After cloning the repository, the local directory path can be used to proceed with the example. This path will serve as the reference location for accessing the dataset and continuing with the subsequent steps in the analysis workflow. 
-
-In the `rondonia20LMR` directory, the file `deforestation_samples_v18.rds` contains time series extracted from Sentinel-2 satellite images over tile `20LMR`. These data are automatically made available when the package is loaded. Each time series includes the following columns: `longitude`, `latitude`, `start date`, `end date`, `label`, `cube`, and `time series`.
-
-:::{.panel-tabset}
-## R
-```{r}
-#| eval: false
-# Samples path
-samples_path <- "rondonia20LMR/inst/extdata/samples/deforestation_samples_v18.rds"
-
-# Read the Cerrado samples
-deforestation_samples_v18 <- readRDS(samples_path)
-```
-
-## Python
-```{python}
-#| eval: false
-# Samples path
-samples_path = "rondonia20LMR/inst/extdata/samples/deforestation_samples_v18.rds"
-
-# Read the Cerrado samples
-deforestation_samples_v18 = read_rds(samples_path)
-```
-:::
-
-As shown in the previous example, the `sits_patterns()` function from the `sits` package allows the visualization of the temporal patterns of the classes. In the example below, we show these patterns for each class:
-
-:::{.panel-tabset}
-## R
-```{r}
-#| echo: true
-#| eval: false
-# Generate the temporal patterns
-deforestation_samples_v18  |> 
-     sits_select(bands = c("B02", "B8A", "B11")) |> 
-     sits_patterns() |> 
-     plot()
-```
-
-## Python
-```{python}
-#| echo: true
-#| eval: false
-# Generate the temporal patterns
-plot(
-    sits_patterns(
-        sits_select(deforestation_samples_v18, bands = ("B02", "B8A", "B11"))
-    )
-)
-```
-:::
-
-```{r}
-#| label: fig-pattern-intro-rondonia
-#| echo: false
-#| out-width: 100%
-#| out-height: 100%
-#| fig-cap: |
-#|   Temporal patterns for each class.
-#| fig-align: center
-knitr::include_graphics("./images/intro_examples_rondonia/intro_patterns_rondonia.png") 
-```
-
-The plot shows the temporal patterns of the different classes throughout the period. The classes `Forest`, `Mountainside_Forest` and `Riparian_Forest` display high values in band `B8A` (`near-infrared`), indicating high photosynthetic activity throughout the year. This is a typical characteristic of dense and evergreen vegetation. In contrast, the classes `Clear_Cut_Bare_Soil` and `Clear_Cut_Burned_Area` exhibit lower values in band `B8A` and increasing values in band `B11` (`shortwave infrared`) during the second half of the year, suggesting exposed soil and possible presence of burned or degraded areas. The `Seasonally_Flooded` class shows seasonal variations in bands `B8A` and `B11`, possibly related to the hydrological dynamics of these areas. The `Water` class shows very low values across all analyzed bands, especially in `B8A` and `B11`, reflecting the strong absorption of water in these spectral regions. Finally, the `Wetland` class shows increasing values in bands `B8A` and `B11` over the course of the year, indicating a possible transition between periods of water saturation and greater vegetation presence.
-
-### Build Data Cube and visualize band combination
-
-Let us access the Sentinel images available in the repository. First, it is necessary to define the provider, which in this case is the `Microsoft Planetary Computer` (MPC). Then, we specify the directory path, as shown below:
-
-:::{.panel-tabset}
-## R
-```{r}
-#| eval: false
-#| echo: true
-# Images path
-images_path <- "rondonia20LMR/inst/extdata/images/"
-
-# Access local data cube
-cube_20LMR <- sits_cube(
-     source = "MPC",
-     collection = "SENTINEL-2-L2A",
-     data_dir = images_path
-)
-```
-
-## Python
-```{python}
-#| eval: false
-#| echo: true
-# Images path
-images_path = "rondonia20LMR/inst/extdata/images/"
-
-# Access local data cube
-cube_20LMR = sits_cube(
-    source = "MPC",
-    collection = "SENTINEL-2-L2A",
-    data_dir = images_path
-)
-```
-:::
-
-
-The `sits_cube()` function creates the data cube `cube_20LMR` with the Sentinel-2 tile `20LMR` images available in the repository. Each temporal instance includes the spectral bands `B02`, `B03`, `B04`, `B05`, `B06`, `B07`, `B08`, `B8A`, `B11` and `B12`.
-
-:::{.panel-tabset}
-## R
-```{r}
-#| eval: false
-#| echo: true
-# Plot one temporal instance
-plot(cube_20LMR, red = "B11", green = "B8A", blue = "B02", date = "2022-07-16")
-```
-
-## Python
-```{python}
-#| eval: false
-#| echo: true
-# Plot one temporal instance
-plot(cube_20LMR, red = "B11", green = "B8A", blue = "B02", date = "2022-07-16")
-```
-:::
-
-```{r}
-#| label: fig-pattern-intro-cube
-#| echo: false
-#| out-width: 100%
-#| out-height: 100%
-#| fig-cap: |
-#|   Visualization of band composition in Rondonia.
-#| fig-align: center
-knitr::include_graphics("./images/intro_examples_rondonia/intro_cube_20LMR_rondonia.png") 
-```
-
-SITS provides the `sits_select()` function, which filters only the selected bands and dates from a set of time series or a data cube. As shown in the code below:
-
-:::{.panel-tabset}
-## R
-```{r}
-#| eval: false
-#| echo: true
-# Select only bands B02, B8A and B11
-samples_3bands <- sits_select(
-        data = deforestation_samples_v18,
-        bands = c("B02", "B8A", "B11")
-)
-```
-
-## Python
-```{python}
-#| eval: false
-#| echo: true
-# Select only bands B02, B8A and B11
-samples_3bands = sits_select(
-    data = deforestation_samples_v18,
-    bands = ("B02", "B8A", "B11")
-)
-```
-:::
-
-### Training a Machine Learning model
-
-The next step in producing a classified map is to train a model. In the code below, we use the `sits_train()` function to train a Random Forest classifier with the samples containing the `B02`, `B8A` and `B11` bands:
-
-:::{.panel-tabset}
-## R
-```{r}
-#| eval: false
-#| echo: true
-# Train the selected samples set using Rfor
-rfor_model <- sits_train(
-        samples = samples_3bands,
-        ml_method = sits_rfor()
-)
-```
-
-## Python
-```{python}
-#| eval: false
-#| echo: true
-# Train the selected samples set using Rfor
-rfor_model = sits_train(
-    samples = samples_3bands,
-    ml_method = sits_rfor()
-)
-```
-:::
-
-Random Forest is a classification algorithm based on multiple decision trees, each trained with random subsets of data and attributes. The final prediction is made by majority voting among the trees. This approach reduces overfitting and improves model accuracy. The method also provides the importance of each attribute, which can assist in feature selection. For more details on the use of Random Forest in time series classification of satellite images, see Pelletier et al., (2016) [@Pelletier2016]. For more, refer to [Random Forest](cl_machinelearning.qmd#random-forest) section.
-
-### Data cube classification
-
-The next step in producing a classified map is to apply the trained model to the data cube. In the example below, we use the `sits_classify()` function to classify the `cube_20LMR` cube using the Random Forest model. The `sits_classify()` function creates one raster probability map per class, showing the model's confidence for each pixel. It requires two main arguments: `data` (a data cube or time series) and `ml_model` (the trained model). Optional arguments include `multicores` (number of processing cores), `memsize` (available memory) and `output_dir` (output directory).
-
-:::{.panel-tabset}
-## R
-```{r}
-#| eval: false
-#| echo: true
-# Classify the data cube
-cube_20LMR_probs <- sits_classify(
-        data = cube_20LMR,
-        ml_model = rfor_model,
-        multicores = 5,
-        memsize = 8,
-        output_dir = tempdir_rondonia
-)
-
-# Plot the probabilities
-plot(cube_20LMR_probs, labels = "Forest", palette = "YlGn")
-```
-
-## Python
-```{python}
-#| eval: false
-#| echo: true
-# Classify the data cube
-cube_20LMR_probs = sits_classify(
-    data = cube_20LMR,
-    ml_model = rfor_model,
-    multicores = 5,
-    memsize = 8,
-    output_dir = tempdir_rondonia
-)
-
-# Plot the probabilities
-plot(cube_20LMR_probs, labels = "Forest", palette = "YlGn")
-```
-:::
-
-```{r}
-#| label: fig-probs-intro-rondonia
-#| echo: false
-#| out-width: 100%
-#| out-height: 100%
-#| fig-cap: |
-#|   Visualization of forest probabilities in Rondonia.
-#| fig-align: center
-knitr::include_graphics("./images/intro_examples_rondonia/intro_cube_20LMR_probs_rondonia.png") 
-```
-
-After classification, the probability maps can be visualized, such as for the `Forest` class. These maps help assess classification uncertainty and can support active learning approaches, as discussed in the section on image classification in data cubes.
-
-We recommend smoothing the results based on the spatial neighborhood of the pixels. This step helps incorporate spatial context and reduce isolated errors, especially in transition areas. The `sits_smooth()` function performs this task by applying a spatial Bayesian model to adjust predictions using neighboring class probabilities. In the code below, we apply smoothing to the classified cube `cube_20LMR_probs`.
-
-:::{.panel-tabset}
-## R
-```{r}
-#| eval: false
-#| echo: true
-# Smoothing the probabilities
-cube_20LMR_bayes <- sits_smooth(
-        cube = cube_20LMR_probs,
-        multicores = 5,
-        memsize = 8,
-        output_dir = tempdir_rondonia
-)
-
-# Plot the smoothed probabilities
-plot(cube_20LMR_bayes, labels = "Forest", palette = "YlGn")
-```
-
-## Python
-```{python}
-#| eval: false
-#| echo: true
-# Smoothing the probabilities
-cube_20LMR_bayes = sits_smooth(
-    cube = cube_20LMR_probs,
-    multicores = 5,
-    memsize = 8,
-    output_dir = tempdir_rondonia
-)
-
-# Plot the smoothed probabilities
-plot(cube_20LMR_bayes, labels = "Forest", palette = "YlGn")
-```
-:::
-
-```{r}
-#| label: fig-smooth-intro-rondonia
-#| echo: false
-#| out-width: 100%
-#| out-height: 100%
-#| fig-cap: |
-#|   Visualization of forest smoothing in Rondonia.
-#| fig-align: center
-knitr::include_graphics("./images/intro_examples_rondonia/intro_cube_20LMR_bayes_rondonia.png") 
-```
-
-We use the default values for `smoothness` and `window_size`, which generally yield good results. However, we recommend tuning these parameters based on the specific needs of your application. Smoothing reduces classification uncertainty by removing isolated low-confidence pixels. In the smoothed map for the `Forest` class, most outliers are corrected, resulting in a more spatially consistent classification.
-
-The final step is to assign a class label to each pixel by selecting the one with the highest probability value. After spatial smoothing, we use the `sits_label_classification()` function to generate the final classification map:
-
-:::{.panel-tabset}
-## R
-```{r}
-#| eval: false
-#| echo: true
-cube_20LMR_map <- sits_label_classification(
-        cube = cube_20LMR_bayes,
-        multicores = 5,
-        memsize = 8,
-        output_dir = tempdir_rondonia
-)
-
-# Plot the map
-plot(cube_20LMR_map)
-```
-
-## Python
-```{python}
-#| eval: false
-#| echo: true
-cube_20LMR_map = sits_label_classification(
-    cube = cube_20LMR_bayes,
-    multicores = 5,
-    memsize = 8,
-    output_dir = tempdir_rondonia
-)
-
-# Plot the map
-plot(cube_20LMR_map)
-```
-:::
-
-```{r}
-#| label: fig-label-classification-intro-rondonia
-#| echo: false
-#| out-width: 100%
-#| out-height: 100%
-#| fig-cap: |
-#|   Visualization of classification map in Rondonia.
-#| fig-align: center
-knitr::include_graphics("./images/intro_examples_rondonia/intro_cube_20LMR_map_rondonia.png") 
-```
 
 # Conclusion
 

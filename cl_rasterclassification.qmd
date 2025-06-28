@@ -49,7 +49,7 @@ This Chapter discusses how to classify data cubes by providing a step-by-step ex
 
 ## Data cube for case study
 
-The examples of this chapter use a pre-built data cube of Sentinel-2 images, available in the package `sitsdata`. These images are from the `SENTINEL-2-L2A` collection in Microsoft Planetary Computer (`MPC`). The data consists of bands BO2, B8A, and B11, and indexes NDVI, EVI and NBR in a small area of $1200 \times 1200$ pixels in the state of Rondonia. As explained in Chapter [Earth observation data cubes](https://e-sensing.github.io/sitsbook/dc_localcubes.html), we need to inform `sits` how to parse these file names to obtain tile, date, and band information. Image files are named according to the convention "satellite_sensor_tile_band_date" (e.g., `SENTINEL-2_MSI_20LKP_BO2_2020_06_04.tif`) which is the default format in `sits`. 
+The examples of this chapter use a pre-built data cube of Sentinel-2 images, available in the package `sitsdata`. These images are from the `SENTINEL-2-L2A` collection in Microsoft Planetary Computer (`MPC`). The data consists of bands BO2, B8A, and B11, and indexes NDVI, EVI and NBR in a small area of $1200 \times 1200$ pixels in the state of Rondonia. As explained in Chapter [Data cubes from local files](https://e-sensing.github.io/sitsbook/dc_localcubes.html), we need to inform `sits` how to parse these file names to obtain tile, date, and band information. Image files are named according to the convention "satellite_sensor_tile_band_date" (e.g., `SENTINEL-2_MSI_20LKP_BO2_2020_06_04.tif`) which is the default format in `sits`. 
 
 :::{.panel-tabset}
 ## R
@@ -182,7 +182,7 @@ The patterns show different temporal responses for the selected classes. They ma
 
 ## Training machine learning models{-}
 
-The next step is to train a machine learning model to illustrate CPU-based classification. We build a random forest model using `sits_train()` and then create a plot to find out what are the most important variables for the model.
+The next step is to train a machine learning model to illustrate CPU-based classification. We build a Random Forest model using `sits_train()` and then create a plot to find out what are the most important variables for the model.
 
 :::{.panel-tabset}
 ## R
@@ -191,7 +191,7 @@ The next step is to train a machine learning model to illustrate CPU-based class
 # set the seed to get the same result
 set.seed(03022024)
 
-# Train model using random forest model
+# Train model using Random Forest algorithm
 rfor_model <- sits_train(
   samples_deforestation_rondonia,
   ml_method = sits_rfor()
@@ -206,7 +206,7 @@ plot(rfor_model)
 # set the seed to get the same result
 r_set_seed(03022024)
 
-# Train model using random forest model
+# Train model using Random Forest algorithm
 rfor_model = sits_train(
   samples_deforestation_rondonia,
   ml_method = sits_rfor()
@@ -233,14 +233,14 @@ rfor_model = read_rds("./etc/rfor_model_cl_rasterclassification.rds")
 #| out.width: "80%"
 #| fig.align: "center"
 #| fig.cap: |
-#|   Most relevant variables of the random forest model.
+#|   Most relevant variables of the Random Forest model.
 knitr::include_graphics("./images/ml_rond_rf_vars.png")
 ```
 The figure shows bands and dates represent relevant inflection points in the image time series. 
 
 ## Classification of machine learning models in CPUs{-}
 
-By default, all classification algorithms in `sits` use CPU-based parallel processing, done internally by the package. The algorithms are adaptable; the only requirement for users is to inform the configuration of their machines. To achieve efficiency, `sits` implements a fault-tolerant multitasking procedure, using a cluster of independent workers linked to a virtual machine. To avoid communication overhead, all large payloads are read and stored independently; direct interaction between the main process and the workers is kept at a minimum. Details of CPU-based parallel processing in `sits` can be found in the [Technical annex](https://e-sensing.github.io/sitsbook/annex.html).
+By default, all classification algorithms in `sits` use CPU-based parallel processing, done internally by the package. The algorithms are adaptable; the only requirement for users is to inform the configuration of their machines. To achieve efficiency, `sits` implements a fault-tolerant multitasking procedure, using a cluster of independent workers linked to a virtual machine. To avoid communication overhead, all large payloads are read and stored independently; direct interaction between the main process and the workers is kept at a minimum. Details of CPU-based parallel processing in `sits` can be found in the Chapter [How parallel processing works in SITS](https://e-sensing.github.io/sitsbook/annex_parallel.html).
 
 To classify both data cubes and sets of time series, use `sits_classify()`, which uses parallel processing to speed up the performance, as described at the end of this Chapter. Its most relevant parameters are: (a) `data`, either a data cube or a set of time series; (b) `ml_model`, a trained model using one of the machine learning methods provided; (c) `multicores`, number of CPU cores that will be used for processing; (d) `memsize`, memory available for classification; (e) `output_dir`, directory where results will be stored; (f) `version`, for version control. To follow the processing steps, turn on the parameters `verbose` to print information and `progress` to get a progress bar. The classification result is a data cube with a set of probability layers, one for each output class. Each probability layer contains the model's assessment of how likely each pixel belongs to the related class. The probability cube can be visualized with `plot()`. In this example, we show only the probabilities associated to label "Forest". 
 
@@ -281,7 +281,7 @@ plot(rondonia_20LMR_probs, labels = "Forest", palette = "YlGn")
 #| out.width: "80%"
 #| fig.align: "center"
 #| fig.cap: |
-#|   Probability map for class Forest for random forest model.
+#|   Probability map for class Forest for Random Forest model.
 knitr::include_graphics("./images/ml_rond_probs.png")
 ```
 
@@ -366,7 +366,7 @@ plot(rondonia_20LMR_class, legend_text_size = 0.7)
 #| out.width: "80%"
 #| fig.align: "center"
 #| fig.cap: |
-#|   Final map of deforestation obtained by random forest model.
+#|   Final map of deforestation obtained by Random Forest model.
 knitr::include_graphics("./images/ml_rond_class.png")
 ```
 
@@ -456,7 +456,7 @@ plot(rondonia_20LMR_probs_tcnn, labels = c("Forest"),  palette = "YlGn")
 knitr::include_graphics("./images/ml_rond_probs_tcnn.png")
 ```
 
-After classification, we can smooth the probability cube. It is useful to compare the smoothed map for class Forest resulting from the TempCNN model with that produced by random forests. The TempCNN model tends to show more confidence in its predictions than the random forests one. This is a feature of the model more than an intrinsic property of the training data or the data cube.
+After classification, we can smooth the probability cube. It is useful to compare the smoothed map for class `Forest` resulting from the TempCNN model with that produced by the Random Forest algorithm. The TempCNN model tends to show more confidence in its predictions than the random forests one. This is a feature of the model more than an intrinsic property of the training data or the data cube.
 
 :::{.panel-tabset}
 ## R
@@ -544,7 +544,7 @@ knitr::include_graphics("./images/ml_rond_class_tcnn.png")
 
 ## Summary
 
-This chapter presents a detailed example of how to train models and apply them to raster classification in `sits`. The procedure is simple and direct, using a workflow that combines `sits_train()`, `sits_classify()`, `sits_smooth()` and `sits_label_classification()`. For traditional machine learning models, such as random forests, the code is optimized for CPU processing and users will see good performance. In case of deep learning model, `sits` is optimized for GPU processing. The typical time for classifying a 10-band Sentinel-2 tile in a CPU using random forests is 20 minutes in a moderately sized machine (16 cores, 64 GB RAM). The same performance is expected when running deep learning models in a standard GPU with 16 GB memory. 
+This chapter presents a detailed example of how to train models and apply them to raster classification in `sits`. The procedure is simple and direct, using a workflow that combines `sits_train()`, `sits_classify()`, `sits_smooth()` and `sits_label_classification()`. For traditional machine learning models, such as Random Forest, the code is optimized for CPU processing and users will see good performance. In case of deep learning model, `sits` is optimized for GPU processing. The typical time for classifying a 10-band Sentinel-2 tile in a CPU using rRandom Forest is 20 minutes in a moderately sized machine (16 cores, 64 GB RAM). The same performance is expected when running deep learning models in a standard GPU with 16 GB memory. 
 
 
 ## References{-}

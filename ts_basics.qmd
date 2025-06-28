@@ -47,7 +47,7 @@ pd.set_option('display.max_rows', 10)
 <a href="https://www.kaggle.com/esensing/working-with-time-series-in-sits" target="_blank"><img src="https://kaggle.com/static/images/open-in-kaggle.svg"/></a>
 
 
-In `sits`, time series are stored in a `tibble` data structure. The following code shows the first three lines of a time series tibble containing 1,882 labeled samples of land classes in Mato Grosso state of Brazil. The samples have time series extracted from the MODIS MOD13Q1 product from 2000 to 2016, provided every 16 days at 250 m resolution in the Sinusoidal projection. Based on ground surveys and high-resolution imagery, it includes samples of seven classes: `Forest`, `Cerrado`, `Pasture`, `Soy_Fallow`, `Soy_Cotton`, `Soy_Corn`, and `Soy_Millet`. 
+In `sits`, time series are stored in a data frame data structure, both in R and Python. The following code shows the first three lines of a time series containing 1,882 labeled samples of land classes in Mato Grosso state of Brazil. The samples have time series extracted from the MODIS MOD13Q1 product from 2000 to 2016, provided every 16 days at 250 m resolution in the Sinusoidal projection. Based on ground surveys and high-resolution imagery, it includes samples of seven classes: `Forest`, `Cerrado`, `Pasture`, `Soy_Fallow`, `Soy_Cotton`, `Soy_Corn`, and `Soy_Millet`. 
 
 :::{.panel-tabset}
 ## R
@@ -68,11 +68,11 @@ samples_matogrosso_mod13q1[0:4]
 ```
 :::
 
-The time series tibble contains data and metadata. The first six columns contain spatial and temporal information, the label assigned to the sample, and the data cube from where the data has been extracted. The first sample has been labeled `Pasture` at location (-58.5631, -13.8844), being valid for the period (2006-09-14, 2007-08-29). Informing the dates where the label is valid is crucial for correct classification. In this case, the researchers labeling the samples used the agricultural calendar in Brazil. The relevant dates for other applications and other countries will likely differ from those used in the example. The `time_series` column contains the time series data for each spatiotemporal location. This data is also organized as a tibble, with a column with the dates and the other columns with the values for each spectral band. 
+The time series data frame contains data and metadata. The first six columns contain spatial and temporal information, the label assigned to the sample, and the data cube from where the data has been extracted. The first sample has been labeled `Pasture` at location (-58.5631, -13.8844), being valid for the period (2006-09-14, 2007-08-29). Informing the dates where the label is valid is crucial for correct classification. In this case, the researchers labeling the samples used the agricultural calendar in Brazil. The relevant dates for other applications and other countries will likely differ from those used in the example. The `time_series` column contains the time series data for each spatiotemporal location. This data is also organized as a data frame, with a column with the dates and the other columns with the values for each spectral band. 
 
 ## Utilities for handling time series
 
-The package provides functions for data manipulation and displaying information for time series tibbles. For example, `summary()` shows the labels of the sample set and their frequencies.
+The package provides functions for data manipulation and displaying information for time series data frames. For example, `summary()` shows the labels of the sample set and their frequencies.
 
 ```{python}
 #| echo: false
@@ -130,7 +130,7 @@ summary(samples_new_labels)
 ```
 :::
 
-Since metadata and the embedded time series use the tibble data format, the functions from `dplyr`, `tidyr`, and `purrr` packages of the `tidyverse` [@Wickham2017] can be used to process the data. For example, the following code uses `sits_select()` to get a subset of the sample dataset with two bands (NDVI and EVI) and then uses the `dplyr::filter()` to select the samples labeled as `Cerrado`. 
+In R, the functions from `dplyr`, `tidyr`, and `purrr` packages of the `tidyverse` [@Wickham2017] can be used to process the data. In Python, time series data frames can be processed using `pandas`. For example, the following code uses `sits_select()` to get a subset of the sample dataset with two bands (NDVI and EVI). In R, it then uses the `dplyr::filter()` to select the samples labeled as `Cerrado`, while in Python the code uses the `query` function from the `pandas` package.
 
 :::{.panel-tabset}
 ## R
@@ -207,7 +207,7 @@ knitr::include_graphics("./images/view_samples.png")
 
 ## Patterns of training samples
 
-When dealing with large time series, its is useful to obtain a single plot that captures the essential temporal variability of each class. Following the work on the `dtwSat` R package [@Maus2019], we use a generalized additive model (GAM) to obtain a single time series based on statistical approximation. In a GAM, the predictor depends linearly on a smooth function of the predictor variables. 
+When dealing with large time series, it is useful to obtain a single plot that captures the essential temporal variability of each class. Following the work on the `dtwSat` R package [@Maus2019], we use a generalized additive model (GAM) to obtain a single time series based on statistical approximation. In a GAM, the predictor depends linearly on a smooth function of the predictor variables. 
 
 $$
 y = \beta_{i} + f(x) + \epsilon, \epsilon \sim N(0, \sigma^2).
@@ -321,7 +321,8 @@ To get a set of time series in `sits`, first create a regular data cube and then
 - A data.frame with information on `latitude` and `longitude` (mandatory), `start_date`, `end_date`, and `label` for each sample point.
 - A csv file with columns `latitude`, `longitude`, `start_date`, `end_date`, and `label`.
 - A shapefile containing either `POINT`or `POLYGON` geometries. See details below.
-- An `sf` object (from the `sf` package) with `POINT` or `POLYGON` geometry information. See details below.
+- An `sf` object (from the `sf` package in R) with `POINT` or `POLYGON` geometry.
+- A `geopandas` object from the `geopandas` package in Python with `POINT` or `POLYGON` geometry.
 
 In the example below, given a data cube, the user provides the latitude and longitude of the desired location. Since the bands, start date, and end date of the time series are missing, `sits` obtains them from the data cube. The result is a tibble with one time series that can be visualized using `plot()`.
 
@@ -436,7 +437,7 @@ points[1:3]
 ```
 :::
 
-Users can also specify samples by providing shapefiles or `sf` objects containing `POINT` or `POLYGON` geometries. The geographical location is inferred from the geometries associated with the shapefile or `sf` object. For files containing points, the geographical location is obtained directly. For polygon geometries, the parameter `n_sam_pol` (defaults to 20) determines the number of samples to be extracted from each polygon. The temporal information can be provided explicitly by the user; if absent, it is inferred from the data cube. If label information is available in the shapefile or `sf` object, the parameter `label_attr` is indicates which column contains the label associated with each time series.
+Users can also specify samples by providing shapefiles, `sf` objects (in R), or `geopandas` objects (in Python) containing `POINT` or `POLYGON` geometries. The geographical location is inferred from the geometries associated with the shapefile or `sf` (or `geopandas`) object. For files containing points, the geographical location is obtained directly. For polygon geometries, the parameter `n_sam_pol` (defaults to 20) determines the number of samples to be extracted from each polygon. The temporal information can be provided explicitly by the user; if absent, it is inferred from the data cube. If label information is available in the shapefile or `sf` object, the parameter `label_attr` is indicates which column contains the label associated with each time series.
 
 In what follows, we provide a shapefile with location of forested areas in the Cerrado biome in Brazil. The shapefile is first used to define the region of interest to retrieve a data cube. Then the point locations are used to retrieve the time series.
 
@@ -477,7 +478,7 @@ samples_cerrado_forested
 # Obtain a set of points inside the state of Mato Grosso, Brazil
 shp_file = r_package_dir("extdata/shapefiles/cerrado/cerrado_forested.shp", 
                         package = "sits")
-# Read the shapefile into an "sf" object
+# Read the shapefile into an "geopandas" object
 sf_shape = gpd.read_file(shp_file)
 
 # Create a data cube based on MOD13Q1 collection from BDC

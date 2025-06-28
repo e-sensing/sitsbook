@@ -1,5 +1,5 @@
 ---
-title: "Multi-source EO data cubes"
+title: "Merging multi-source EO data cubes"
 format: html
 ---
 
@@ -224,7 +224,7 @@ cube_hls_local = sits_cube_copy(
 ```
 :::
 
-Copying the merged HLS data to a local directory is an optional procedure, which is recommended in the case of optical data because it speeds the regularization procedure. After the regular data cube is completed, these files can be removed. The next step is to proceed with the regularization. In this example, we select a period of 16-days and keep the original 30-meter resolution of the HLS data. 
+Copying the merged HLS data to a local directory is an optional procedure, which is recommended in the case of optical data because it speeds up regularization. After the regular data cube is built, these files can be removed. In this example, we select a period of 16-days and keep the original 30-meter resolution of the HLS data for the resulting regular cube.
 
 :::{.panel-tabset}
 ## R
@@ -584,7 +584,7 @@ s2_cube_19HBA_reg = sits_regularize(
 s2_cube_19HBA_reg <- sits_cube(
   source = "MPC",
   collection = "SENTINEL-2-L2A",
-  data_dir = "~/sitsbook/tempdir/R/dc_merge/s2_19HBA"
+  data_dir = file.path(tempdir_r, "s2_19HBA")
 )
 ```
 
@@ -674,7 +674,7 @@ plot(dem_cube_19HBA_reg, band = "ELEVATION", palette = "Spectral", rev = True)
 dem_cube_19HBA_reg <- sits_cube(
     source = "MPC",
     collection = "COP-DEM-GLO-30",
-    data_dir = "~/sitsbook/tempdir/R/dc_merge/dem_19HBA"
+    data_dir = file.path(tempdir_r, "dem_19HBA")
 )
 ```
 
@@ -713,7 +713,7 @@ merged_cube_base["base_info"][0]
 ```
 :::
 
-Although this combination is conceptually simple, it has drawbacks. Since the attribute space now mixes times series with fixed-time information, the only applicable classification method is random forests. Because of the way random forest works, not all attributes are used by every decision tree. During the training of each tree, at each node, a random subset of features is selected, and the best split is chosen based on this subset rather than all features. Thus, there may be a significant number of decision trees that do use the DEM attribute. As a result, the effect of the DEM information may be underestimated. 
+Although this combination is conceptually simple, it has drawbacks. Since the attribute space now mixes times series with fixed-time information, the only applicable classification method is Random Forest. Because of the way Random Forest works, not all attributes are used by every decision tree. During the training of each tree, at each node, a random subset of features is selected, and the best split is chosen based on this subset rather than all features. Thus, there may be a significant number of decision trees that do use the DEM attribute. As a result, the effect of the DEM information may be underestimated. 
 
 The alternative is to combine the image data cube and the DEM using `sits_merge`. In this case, the DEM becomes another band. Although it may look peculiar to replicate the DEM many time to build an artificial time series, there are many advantages in doing so. All classification algorithms available in `sits` (including the deep learning ones) can be used to classify the resulting cube. For cases where the DEM information is particularly important, such organisation places DEM data at a par with other spectral bands. Users are encouraged to compare the results obtained by direct merging of DEM with spectral bands with the method where DEM is taken as a base cube. 
 

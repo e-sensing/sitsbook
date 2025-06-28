@@ -150,7 +150,7 @@ div.csl-indent {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./intro_examples.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">How to use SITS: example scripts</span></span></a>
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">How to use SITS with real examples</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -185,7 +185,7 @@ div.csl-indent {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./dc_merge.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Multi-source EO data cubes</span></span></a>
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Merging multi-source EO data cubes</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -250,7 +250,7 @@ div.csl-indent {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./ts_balance.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Reducing sample imbalance</span></span></a>
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Reducing imbalances in training samples</span></span></a>
   </div>
 </li>
       </ul>
@@ -267,7 +267,7 @@ div.csl-indent {
 <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./cl_machinelearning.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Machine learning algorithms</span></span></a>
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Machine learning algorithms for image time series</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -431,7 +431,7 @@ div.csl-indent {
 
 </header><p><a href="https://www.kaggle.com/code/esensing/creating-data-cubes-in-sits" target="_blank"><img src="https://kaggle.com/static/images/open-in-kaggle.svg"></a></p>
 <section id="analysis-ready-data-collections" class="level2"><h2 class="anchored" data-anchor-id="analysis-ready-data-collections">Analysis-ready data collections</h2>
-<p>Analysis Ready Data (CEOS-ARD) are satellite data that have been processed to meet the <a href="https://ceos.org/ard/">ARD standards</a> defined by the Committee on Earth Observation Satellites (CEOS). ARD data simplify and accelerate the analysis of Earth observation data by providing consistent and high-quality data that are standardized across different sensors and platforms. ARD image processing includes geometric corrections, radiometric corrections, and sometimes atmospheric corrections. Images are georeferenced, meaning they are accurately aligned with a coordinate system. Optical ARD images include cloud and shadow masking information. These masks indicate which pixels are affected by clouds or cloud shadows. For optical sensors, CEOS-ARD images have to be converted to surface reflectance values, which represent the fraction of light that is reflected by the surface. This makes the data more comparable across different times and locations. For SAR images, CEOS-ARD specification require images to undergo Radiometric Terrain Correction (RTC) and be provided in the GammaNought (<span class="math inline">\(\gamma_0\)</span>) backscatter values. This value which mitigates the variations from diverse observation geometries and is recommended for most land applications.</p>
+<p>Analysis Ready Data (CEOS-ARD) are satellite data that have been processed to meet the <a href="https://ceos.org/ard/">ARD standards</a> defined by the Committee on Earth Observation Satellites (CEOS). ARD data simplify and accelerate the analysis of Earth observation data by providing consistent and high-quality images that are standardized across different sensors and platforms. ARD image processing includes geometric, radiometric, and atmospheric corrections. Images are georeferenced, meaning they are accurately aligned with a coordinate system. Optical ARD images include cloud and shadow masking information. These masks indicate which pixels are affected by clouds or cloud shadows. For optical sensors, CEOS-ARD images are converted to surface reflectance values, which represent the fraction of light that is reflected by the surface. This makes the data more comparable across different times and locations. For SAR images, CEOS-ARD specification require images to undergo Radiometric Terrain Correction (RTC) and be provided in the gamma nought (<span class="math inline">\(\gamma_0\)</span>) backscatter values. This value which mitigates the variations from diverse observation geometries and is recommended for most land applications.</p>
 <p>ARD images are available from various satellite platforms, including Landsat, Sentinel, and commercial satellites. This provides a wide range of spatial, spectral, and temporal resolutions to suit different applications. They are organized as a collection of files, where each pixel contains a single value for each spectral band for a given date. These collections are available in cloud services such as Brazil Data Cube, Digital Earth Africa, and Microsoft’s Planetary Computer. In general, the timelines of the images in an ARD collection are different. Images may still contain cloudy or missing pixels, and bands for the images in the collection may have different resolutions. <a href="#fig-ard-datacubes">Figure&nbsp;<span>1</span></a> shows an example of the Landsat ARD image collection.</p>
 <div class="cell" data-layout-align="center">
 <div class="cell-output-display">
@@ -442,15 +442,18 @@ div.csl-indent {
 </div>
 </div>
 </section><section id="regular-earth-observation-data-cubes" class="level2"><h2 class="anchored" data-anchor-id="regular-earth-observation-data-cubes">Regular Earth observation data cubes</h2>
-<p>A regular EO data cube is a multidimensional array—typically x (longitude), y (latitude), time, and spectral band—containing “analysis-ready” satellite observations that have already been geometrically aligned, radiometrically calibrated, and stored on a common grid. In other words, every pixel in the cube represents the same ground location over a sequence of dates, so the user can retrieve a complete, consistent time series with a single query.</p>
-<p>Machine learning and deep learning (ML/DL) classification algorithms require the input data to be consistent. The dimensionality of the data used for training the model has to be the same as that of the data to be classified. There should be no gaps and no missing values. Thus, to use ML/DL algorithms for remote sensing data, ARD image collections should be converted to regular data cubes. Adapting a previous definition by Appel and Pebesma <span class="citation" data-cites="Appel2019"><a href="#ref-Appel2019" role="doc-biblioref">[1]</a></span>, we consider a <em>regular data cube</em> to have the following definition and properties:</p>
+<p>In general term, a regular EO data cube is a partition of the Earth’s surface which covers the area in periodic intervals. Regular data cubes are derived by ARD images by filling coverage gaps, accounting for cloud coverage, and reprocessing irregular temporal coverage to regular periods. Also, regular data cubes can cover more than a single coordinate projection zone, so as to be defined in large areas.</p>
+<p>A regular data cube is a set of three-dimensional arrays. Each array has three fixed dimensions: a 2D spatial area (x and y) and a 1D temporal dimension. Each spatio-temporal location (x, y, t) is associated to a set of attributes (spectral bands or indices). More formally, a regular data cube is represented by a set of locations <span class="math inline">\(L\)</span> and attributes <span class="math inline">\(A\)</span>. For each location <span class="math inline">\((x, y, t)}\)</span>, there is a cell with values taken from a set of attributes (spectral bands and/or indices).</p>
+<p>Thus, a regular data cube contains “analysis-ready” satellite observations that have already been geometrically aligned, radiometrically calibrated, and stored on a common grid. In other words, every cell in the array represents the same ground location over a sequence of dates.</p>
+<p>Machine learning and deep learning (ML/DL) classification algorithms require the input data to be consistent. The dimensionality of the data used for training the model has to be the same as that of the data to be classified. There should be no gaps and no missing values. Thus, to use ML/DL algorithms for remote sensing data, ARD image collections should be converted to regular data cubes.</p>
+<p>In <code>sits</code>, <em>regular data cubes</em> have the following properties:</p>
 <ol type="1">
-<li>A regular data cube is a four-dimensional data structure with explicit dimensions x (longitude or easting), y (latitude or northing), time, and bands. The spatial, temporal, and attribute dimensions are independent and not interchangeable.</li>
-<li>The spatial dimensions refer to a coordinate system, such as the grids defined by UTM (Universal Transverse Mercator) or MGRS (Military Grid Reference System). A tile of the grid corresponds to a unique zone of the coordinate system. A data cube may span various tiles and UTM zones.</li>
+<li>A regular data cube is a set of three-dimensional arrays with two spatial dimensions and one temporal dimension. Each array contains cells which have the same spatial resolution, the same temporal duration, and the same set of attrubutes (spectral bands and/or indices).</li>
+<li>The number of dimensions is fixed (2D + time), while the number of attributes is not limited.</li>
+<li>The spatial dimensions are associated to a coordinate projection system, such as the MGRS grid (Military Grid Reference System). A tile of the grid corresponds to a unique zone of the coordinate system. A data cube may span various tiles and projection zones.</li>
 <li>The temporal dimension is a set of continuous and equally spaced intervals.</li>
-<li>For every combination of dimensions, a cell has a single value.</li>
+<li>For each position in space, the cube should provide a multiband time series. For each time interval, the cube should provide a multiband 2D image (see <a href="#fig-dc-datacubes">Figure&nbsp;<span>2</span></a>).</li>
 </ol>
-<p>All cells of a data cube have the same spatiotemporal extent. The spatial resolution of each cell is the same in the X and Y dimensions. All temporal intervals are the same. Each cell contains a valid set of measures. Each pixel is associated with a unique coordinate in a zone of the coordinate system. For each position in space, the data cube should provide a set of valid time series. For each time interval, the regular data cube should provide a valid 2D image (see Figure <a href="#fig-dc-datacubes">Figure&nbsp;<span>2</span></a>).</p>
 <div class="cell" data-layout-align="center">
 <div class="cell-output-display">
 <div id="fig-dc-datacubes" class="quarto-figure quarto-figure-center anchored">
@@ -459,6 +462,7 @@ div.csl-indent {
 </div>
 </div>
 </div>
+<p>The definition of data cubes in <code>sits</code> differs from an earlier proposal by Appel and Pebesma <span class="citation" data-cites="Appel2019"><a href="#ref-Appel2019" role="doc-biblioref">[1]</a></span> which has been used in the R package <code>stars</code> and in the <code>openEO</code> system. Appel and Pebesma consider that a data cube will only cover a single tile of a coordinate system (e.g., MGRS). In <code>sits</code>, this restriction has been removed and data cubes many span multiple tiles.</p>
 <p>Currently, the only cloud service that provides regular data cubes by default is the Brazil Data Cube (BDC). ARD collections available in other cloud services are not regular in space and time. Bands may have different resolutions, images may not cover the entire timeline, and time intervals may be irregular. For this reason, subsets of these collections need to be converted into regular data cubes before further processing. To produce data cubes for machine learning data analysis, this part of the book describes the steps involved in producing and using regular data cubes:</p>
 <ul>
 <li>Obtaining data from ARD image collections</li>
