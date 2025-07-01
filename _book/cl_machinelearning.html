@@ -451,8 +451,9 @@ div.csl-indent {
   <li><a href="#extreme-gradient-boosting" id="toc-extreme-gradient-boosting" class="nav-link" data-scroll-target="#extreme-gradient-boosting"><span class="header-section-number">16.5</span> Extreme gradient boosting</a></li>
   <li><a href="#deep-learning-using-multilayer-perceptron" id="toc-deep-learning-using-multilayer-perceptron" class="nav-link" data-scroll-target="#deep-learning-using-multilayer-perceptron"><span class="header-section-number">16.6</span> Deep learning using multilayer perceptron</a></li>
   <li><a href="#temporal-convolutional-neural-network-tempcnn" id="toc-temporal-convolutional-neural-network-tempcnn" class="nav-link" data-scroll-target="#temporal-convolutional-neural-network-tempcnn"><span class="header-section-number">16.7</span> Temporal Convolutional Neural Network (TempCNN)</a></li>
-  <li><a href="#attention-based-models" id="toc-attention-based-models" class="nav-link" data-scroll-target="#attention-based-models"><span class="header-section-number">16.8</span> Attention-based models</a></li>
-  <li><a href="#summary" id="toc-summary" class="nav-link" data-scroll-target="#summary"><span class="header-section-number">16.9</span> Summary</a></li>
+  <li><a href="#residual-1d-cnn-networks-resnet" id="toc-residual-1d-cnn-networks-resnet" class="nav-link" data-scroll-target="#residual-1d-cnn-networks-resnet"><span class="header-section-number">16.8</span> Residual 1D CNN networks (ResNet)</a></li>
+  <li><a href="#attention-based-models" id="toc-attention-based-models" class="nav-link" data-scroll-target="#attention-based-models"><span class="header-section-number">16.9</span> Attention-based models</a></li>
+  <li><a href="#summary" id="toc-summary" class="nav-link" data-scroll-target="#summary"><span class="header-section-number">16.10</span> Summary</a></li>
   <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references">References</a></li>
   </ul><div class="toc-actions"><div><i class="bi bi-github"></i></div><div class="action-links"><p><a href="https://github.com/e-sensing/sitsbook/edit/quarto/cl_machinelearning.qmd" class="toc-action">Edit this page</a></p><p><a href="https://github.com/e-sensing/sitsbook/issues/new" class="toc-action">Report an issue</a></p></div></div></nav>
     </div>
@@ -968,15 +969,65 @@ div.csl-indent {
 </div>
 </div>
 <p>The result has important differences from the previous ones. The TempCNN model indicates the <code>Soy_Cotton</code> class as the most likely one in 2004. While this result is possibly wrong, it shows that the time series for 2004 is different from those of Forest and Pasture classes. One possible explanation is that there was forest degradation in 2004, leading to a signature that is a mix of forest and bare soil. In this case, including forest degradation samples could improve the training data. In our experience, TempCNN models are a reliable way of classifying image time series <span class="citation" data-cites="Simoes2021"><a href="#ref-Simoes2021" role="doc-biblioref">[20]</a></span>. Recent work which compares different models also provides evidence that TempCNN models have satisfactory behavior, especially in the case of crop classes <span class="citation" data-cites="Russwurm2020"><a href="#ref-Russwurm2020" role="doc-biblioref">[21]</a></span>.</p>
-</section><section id="attention-based-models" class="level2" data-number="16.8"><h2 data-number="16.8" class="anchored" data-anchor-id="attention-based-models">
-<span class="header-section-number">16.8</span> Attention-based models</h2>
+</section><section id="residual-1d-cnn-networks-resnet" class="level2" data-number="16.8"><h2 data-number="16.8" class="anchored" data-anchor-id="residual-1d-cnn-networks-resnet">
+<span class="header-section-number">16.8</span> Residual 1D CNN networks (ResNet)</h2>
+<p>A residual 1D CNN network, also known as ResNet, is an extension of the standard 1D CNN architecture, adding residual connections between the layers. Residual connections allow the network to learn residual mappings, which are the difference between the input and output of a layer. By adding these residual connections, the network can learn to bypass specific layers and still capture essential features in the data.</p>
+<p>The Residual Network (ResNet) for time series classification was proposed by Wang et al. <span class="citation" data-cites="Wang2017"><a href="#ref-Wang2017" role="doc-biblioref">[17]</a></span>, based on the idea of deep residual networks for 2D image recognition <span class="citation" data-cites="He2016"><a href="#ref-He2016" role="doc-biblioref">[22]</a></span>. The ResNet architecture comprises 11 layers, with three blocks of three 1D CNN layers each (see <a href="#fig-ml-rnet">Figure&nbsp;<span>16.13</span></a>). Each block corresponds to a 1D CNN architecture. The output of each block is combined with a shortcut that links its output to its input, called a skip connection. The purpose of combining the input layer of each block with its output layer (after the convolutions) is to avoid the so-called “vanishing gradient problem”. This issue occurs in deep networks as the neural network’s weights are updated based on the partial derivative of the error function. If the gradient is too small, the weights will not be updated, stopping the training <span class="citation" data-cites="Hochreiter1998"><a href="#ref-Hochreiter1998" role="doc-biblioref">[23]</a></span>. Skip connections aim to avoid vanishing gradients from occurring, allowing deep networks to be trained.</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-ml-rnet" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure"><p><img src="./images/resnet.png" class="img-fluid figure-img" style="width:100.0%"></p>
+<figcaption class="figure-caption">Figure&nbsp;16.13: Structure of ResNet architecture (source: <span class="citation" data-cites="Wang2017"><a href="#ref-Wang2017" role="doc-biblioref">[17]</a></span>).</figcaption></figure>
+</div>
+</div>
+</div>
+<p>In <code>sits</code>, the Residual Network is implemented using <code><a href="https://rdrr.io/pkg/sits/man/sits_resnet.html">sits_resnet()</a></code>. The default parameters are those proposed by Wang et al. <span class="citation" data-cites="Wang2017"><a href="#ref-Wang2017" role="doc-biblioref">[17]</a></span>, as implemented by Fawaz et al. <span class="citation" data-cites="Fawaz2019"><a href="#ref-Fawaz2019" role="doc-biblioref">[24]</a></span>. The first parameter is <code>blocks</code>, which controls the number of blocks and the size of filters in each block. By default, the model implements three blocks, the first with 64 filters and the others with 128. The parameter <code>kernels</code> controls the size of the kernels of the three layers inside each block. It is useful to experiment a bit with these kernel sizes in the case of satellite image time series. The default activation is “relu”, which is recommended in the literature to reduce the problem of vanishing gradients. The default optimizer is <code>optim_adamw</code>, available in package <code>torchopt</code>.</p>
+<div class="cell">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Train using ResNet</span></span>
+<span><span class="va">resnet_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_train.html">sits_train</a></span><span class="op">(</span><span class="va">samples_matogrosso_mod13q1</span>, </span>
+<span>                       <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_resnet.html">sits_resnet</a></span><span class="op">(</span></span>
+<span>                          blocks               <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">64</span>, <span class="fl">128</span>, <span class="fl">128</span><span class="op">)</span>,</span>
+<span>                          kernels              <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">7</span>, <span class="fl">5</span>, <span class="fl">3</span><span class="op">)</span>,</span>
+<span>                          epochs               <span class="op">=</span> <span class="fl">100</span>,</span>
+<span>                          batch_size           <span class="op">=</span> <span class="fl">64</span>,</span>
+<span>                          validation_split     <span class="op">=</span> <span class="fl">0.2</span>,</span>
+<span>                          verbose              <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co"># Show training evolution</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">resnet_model</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-ml-resnetmodel" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure"><p><img src="./images/mlresnetmodel.png" class="img-fluid figure-img" style="width:80.0%"></p>
+<figcaption class="figure-caption">Figure&nbsp;16.14: Training evolution of ResNet model.</figcaption></figure>
+</div>
+</div>
+</div>
+<p>Using the TempCNN model, we classify a 16-year time series.</p>
+<div class="cell">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Classify using Resnet model and plot the result</span></span>
+<span><span class="va">point_mt_mod13q1</span> <span class="op">|&gt;</span>  </span>
+<span>    <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_classify.html">sits_classify</a></span><span class="op">(</span><span class="va">resnet_model</span><span class="op">)</span> <span class="op">|&gt;</span>  </span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span>bands <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"NDVI"</span>, <span class="st">"EVI"</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-ml-resnetplot" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure"><p><img src="./images/mlresnetplot.png" class="img-fluid figure-img" style="width:90.0%"></p>
+<figcaption class="figure-caption">Figure&nbsp;16.15: Classification of time series using TempCNN</figcaption></figure>
+</div>
+</div>
+</div>
+<p>In this case, the result of the ResNet model is quite similar to that of the TempCNN model. In the same way as TempCNN, the ResNet algorithm tends to be better at detecting agricultural or natural forest classes. When it comes to situation where transitions happen during the classification period, as in the case of the transition from forest to pasture in 2004, random forest models tend to be more efficient than TempCNN or ResNet.</p>
+</section><section id="attention-based-models" class="level2" data-number="16.9"><h2 data-number="16.9" class="anchored" data-anchor-id="attention-based-models">
+<span class="header-section-number">16.9</span> Attention-based models</h2>
 <p>Attention-based deep learning models are a class of models that use a mechanism inspired by human attention to focus on specific parts of input during processing. These models have been shown to be effective for various tasks such as machine translation, image captioning, and speech recognition.</p>
 <p>The basic idea behind attention-based models is to allow the model to selectively focus on different input parts at different times. This can be done by introducing a mechanism that assigns weights to each element of the input, indicating the relative importance of that element to the current processing step. The model can then use them to compute a weighted sum of the input. The results capture the model’s attention on specific parts of the input.</p>
-<p>Attention-based models have become one of the most used deep learning architectures for problems that involve sequential data inputs, e.g., text recognition and automatic translation. The general idea is that not all inputs are alike in applications such as language translation. Consider the English sentence “Look at all the lonely people”. A sound translation system needs to relate the words “look” and “people” as the key parts of this sentence to ensure such link is captured in the translation. A specific type of attention models, called transformers, enables the recognition of such complex relationships between input and output sequences <span class="citation" data-cites="Vaswani2017"><a href="#ref-Vaswani2017" role="doc-biblioref">[22]</a></span>.</p>
-<p>The basic structure of transformers is the same as other neural network algorithms. They have an encoder that transforms textual input values into numerical vectors and a decoder that processes these vectors to provide suitable answers. The difference is how the values are handled internally. The two main differences between transformer models and other algorithms are positional encoding and self-attention. Positional encoding assigns an index to each input value, ensuring that the relative locations of the inputs are maintained throughout the learning and processing phases. Self-attention compares every word in a sentence to every other word in the same sentence, including itself. In this way, it learns contextual information about the relation between the words. This conception has been validated in large language models such as BERT <span class="citation" data-cites="Devlin2019"><a href="#ref-Devlin2019" role="doc-biblioref">[23]</a></span> and GPT-3 <span class="citation" data-cites="Brown2020"><a href="#ref-Brown2020" role="doc-biblioref">[24]</a></span>.</p>
-<p>The application of attention-based models for satellite image time series analysis is proposed by Garnot et al. <span class="citation" data-cites="Garnot2020a"><a href="#ref-Garnot2020a" role="doc-biblioref">[25]</a></span> and Russwurm and Körner <span class="citation" data-cites="Russwurm2020"><a href="#ref-Russwurm2020" role="doc-biblioref">[21]</a></span>. A self-attention network can learn to focus on specific time steps and image features most relevant for distinguishing between different classes. The algorithm tries to identify which combination of individual temporal observations is most relevant to identify each class. For example, crop identification will use observations that capture the onset of the growing season, the date of maximum growth, and the end of the growing season. In the case of deforestation, the algorithm tries to identify the dates when the forest is being cut. Attention-based models are a means to identify events that characterize each land class.</p>
-<p>The first model proposed by Garnot et al.&nbsp;is a full transformer-based model <span class="citation" data-cites="Garnot2020a"><a href="#ref-Garnot2020a" role="doc-biblioref">[25]</a></span>. Considering that image time series classification is easier than natural language processing, Garnot et al.&nbsp;also propose a simplified version of the full transformer model <span class="citation" data-cites="Garnot2020"><a href="#ref-Garnot2020" role="doc-biblioref">[26]</a></span>. This simpler model uses a reduced way to compute the attention matrix, reducing time for training and classification without loss of quality of the result.</p>
-<p>In <code>sits</code>, the full transformer-based model proposed by Garnot et al. <span class="citation" data-cites="Garnot2020a"><a href="#ref-Garnot2020a" role="doc-biblioref">[25]</a></span> is implemented using <code><a href="https://rdrr.io/pkg/sits/man/sits_tae.html">sits_tae()</a></code>. The default parameters are those proposed by the authors. The default optimizer is <code>optim_adamw</code>, as also used in the <code><a href="https://rdrr.io/pkg/sits/man/sits_tempcnn.html">sits_tempcnn()</a></code> function.</p>
+<p>Attention-based models have become one of the most used deep learning architectures for problems that involve sequential data inputs, e.g., text recognition and automatic translation. The general idea is that not all inputs are alike in applications such as language translation. Consider the English sentence “Look at all the lonely people”. A sound translation system needs to relate the words “look” and “people” as the key parts of this sentence to ensure such link is captured in the translation. A specific type of attention models, called transformers, enables the recognition of such complex relationships between input and output sequences <span class="citation" data-cites="Vaswani2017"><a href="#ref-Vaswani2017" role="doc-biblioref">[25]</a></span>.</p>
+<p>The basic structure of transformers is the same as other neural network algorithms. They have an encoder that transforms textual input values into numerical vectors and a decoder that processes these vectors to provide suitable answers. The difference is how the values are handled internally. The two main differences between transformer models and other algorithms are positional encoding and self-attention. Positional encoding assigns an index to each input value, ensuring that the relative locations of the inputs are maintained throughout the learning and processing phases. Self-attention compares every word in a sentence to every other word in the same sentence, including itself. In this way, it learns contextual information about the relation between the words. This conception has been validated in large language models such as BERT <span class="citation" data-cites="Devlin2019"><a href="#ref-Devlin2019" role="doc-biblioref">[26]</a></span> and GPT-3 <span class="citation" data-cites="Brown2020"><a href="#ref-Brown2020" role="doc-biblioref">[27]</a></span>.</p>
+<p>The application of attention-based models for satellite image time series analysis is proposed by Garnot et al. <span class="citation" data-cites="Garnot2020a"><a href="#ref-Garnot2020a" role="doc-biblioref">[28]</a></span> and Russwurm and Körner <span class="citation" data-cites="Russwurm2020"><a href="#ref-Russwurm2020" role="doc-biblioref">[21]</a></span>. A self-attention network can learn to focus on specific time steps and image features most relevant for distinguishing between different classes. The algorithm tries to identify which combination of individual temporal observations is most relevant to identify each class. For example, crop identification will use observations that capture the onset of the growing season, the date of maximum growth, and the end of the growing season. In the case of deforestation, the algorithm tries to identify the dates when the forest is being cut. Attention-based models are a means to identify events that characterize each land class.</p>
+<p>The first model proposed by Garnot et al.&nbsp;is a full transformer-based model <span class="citation" data-cites="Garnot2020a"><a href="#ref-Garnot2020a" role="doc-biblioref">[28]</a></span>. Considering that image time series classification is easier than natural language processing, Garnot et al.&nbsp;also propose a simplified version of the full transformer model <span class="citation" data-cites="Garnot2020"><a href="#ref-Garnot2020" role="doc-biblioref">[29]</a></span>. This simpler model uses a reduced way to compute the attention matrix, reducing time for training and classification without loss of quality of the result.</p>
+<p>In <code>sits</code>, the full transformer-based model proposed by Garnot et al. <span class="citation" data-cites="Garnot2020a"><a href="#ref-Garnot2020a" role="doc-biblioref">[28]</a></span> is implemented using <code><a href="https://rdrr.io/pkg/sits/man/sits_tae.html">sits_tae()</a></code>. The default parameters are those proposed by the authors. The default optimizer is <code>optim_adamw</code>, as also used in the <code><a href="https://rdrr.io/pkg/sits/man/sits_tempcnn.html">sits_tempcnn()</a></code> function.</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
 <ul class="nav nav-tabs" role="tablist">
 <li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-10-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-10-1" role="tab" aria-controls="tabset-10-1" aria-selected="true">R</a></li>
@@ -985,7 +1036,7 @@ div.csl-indent {
 <div class="tab-content">
 <div id="tabset-10-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-10-1-tab">
 <div class="cell">
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Train a machine learning model using TAE</span></span>
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Train a machine learning model using TAE</span></span>
 <span><span class="va">tae_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_train.html">sits_train</a></span><span class="op">(</span><span class="va">samples_matogrosso_mod13q1</span>, </span>
 <span>                       <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_tae.html">sits_tae</a></span><span class="op">(</span></span>
 <span>                          epochs               <span class="op">=</span> <span class="fl">80</span>,</span>
@@ -1000,17 +1051,17 @@ div.csl-indent {
 </div>
 <div id="tabset-10-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-10-2-tab">
 <div class="cell">
-<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Train a machine learning model using TAE</span></span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>tae_model <span class="op">=</span> sits_train(samples_matogrosso_mod13q1, </span>
-<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>                       sits_tae(</span>
-<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>                          epochs               <span class="op">=</span> <span class="dv">80</span>,</span>
-<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>                          batch_size           <span class="op">=</span> <span class="dv">64</span>,</span>
-<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>                          optimizer            <span class="op">=</span> <span class="st">"torch::optim_adamw"</span>,</span>
-<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>                          validation_split     <span class="op">=</span> <span class="fl">0.2</span>,</span>
-<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>                          verbose              <span class="op">=</span> <span class="va">False</span>))</span>
-<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Show training evolution</span></span>
-<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>plot(tae_model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Train a machine learning model using TAE</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>tae_model <span class="op">=</span> sits_train(samples_matogrosso_mod13q1, </span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>                       sits_tae(</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>                          epochs               <span class="op">=</span> <span class="dv">80</span>,</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>                          batch_size           <span class="op">=</span> <span class="dv">64</span>,</span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>                          optimizer            <span class="op">=</span> <span class="st">"torch::optim_adamw"</span>,</span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>                          validation_split     <span class="op">=</span> <span class="fl">0.2</span>,</span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>                          verbose              <span class="op">=</span> <span class="va">False</span>))</span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Show training evolution</span></span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a>plot(tae_model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </div>
 </div>
@@ -1019,7 +1070,7 @@ div.csl-indent {
 <div class="cell-output-display">
 <div id="fig-ml-taemodel" class="quarto-figure quarto-figure-center anchored">
 <figure class="figure"><p><img src="./images/mltaemodel.png" class="img-fluid figure-img" style="width:90.0%"></p>
-<figcaption class="figure-caption">Figure&nbsp;16.13: Training evolution of Temporal Self-Attention model.</figcaption></figure>
+<figcaption class="figure-caption">Figure&nbsp;16.16: Training evolution of Temporal Self-Attention model.</figcaption></figure>
 </div>
 </div>
 </div>
@@ -1032,7 +1083,7 @@ div.csl-indent {
 <div class="tab-content">
 <div id="tabset-11-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-11-1-tab">
 <div class="cell">
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Classify using DL model and plot the result</span></span>
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Classify using DL model and plot the result</span></span>
 <span><span class="va">point_mt_mod13q1</span> <span class="op">|&gt;</span>  </span>
 <span>    <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_classify.html">sits_classify</a></span><span class="op">(</span><span class="va">tae_model</span><span class="op">)</span> <span class="op">|&gt;</span>  </span>
 <span>    <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span>bands <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"NDVI"</span>, <span class="st">"EVI"</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -1040,13 +1091,13 @@ div.csl-indent {
 </div>
 <div id="tabset-11-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-11-2-tab">
 <div class="cell">
-<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Classify using DL model</span></span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>point_class <span class="op">=</span> sits_classify(point_mt_mod13q1, tae_model)</span>
-<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot</span></span>
-<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>plot(</span>
-<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>    point_class, bands <span class="op">=</span> (<span class="st">"NDVI"</span>, <span class="st">"EVI"</span>)</span>
-<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Classify using DL model</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>point_class <span class="op">=</span> sits_classify(point_mt_mod13q1, tae_model)</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot</span></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>plot(</span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>    point_class, bands <span class="op">=</span> (<span class="st">"NDVI"</span>, <span class="st">"EVI"</span>)</span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </div>
 </div>
@@ -1055,11 +1106,11 @@ div.csl-indent {
 <div class="cell-output-display">
 <div id="fig-ml-taeplot" class="quarto-figure quarto-figure-center anchored">
 <figure class="figure"><p><img src="./images/mltaeplot.png" class="img-fluid figure-img" style="width:90.0%"></p>
-<figcaption class="figure-caption">Figure&nbsp;16.14: Classification of time series using TAE.</figcaption></figure>
+<figcaption class="figure-caption">Figure&nbsp;16.17: Classification of time series using TAE.</figcaption></figure>
 </div>
 </div>
 </div>
-<p>Garnot and co-authors also proposed the Lightweight Temporal Self-Attention Encoder (LTAE) <span class="citation" data-cites="Garnot2020"><a href="#ref-Garnot2020" role="doc-biblioref">[26]</a></span>, which the authors claim can achieve high classification accuracy with fewer parameters compared to other neural network models. It is a good choice for applications where computational resources are limited. The <code><a href="https://rdrr.io/pkg/sits/man/sits_lighttae.html">sits_lighttae()</a></code> function implements this algorithm. The most important parameter to be set is the learning rate <code>lr</code>. Values ranging from 0.001 to 0.005 should produce good results. See also the section below on model tuning.</p>
+<p>Garnot and co-authors also proposed the Lightweight Temporal Self-Attention Encoder (LTAE) <span class="citation" data-cites="Garnot2020"><a href="#ref-Garnot2020" role="doc-biblioref">[29]</a></span>, which the authors claim can achieve high classification accuracy with fewer parameters compared to other neural network models. It is a good choice for applications where computational resources are limited. The <code><a href="https://rdrr.io/pkg/sits/man/sits_lighttae.html">sits_lighttae()</a></code> function implements this algorithm. The most important parameter to be set is the learning rate <code>lr</code>. Values ranging from 0.001 to 0.005 should produce good results. See also the section below on model tuning.</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
 <ul class="nav nav-tabs" role="tablist">
 <li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-12-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-12-1" role="tab" aria-controls="tabset-12-1" aria-selected="true">R</a></li>
@@ -1068,7 +1119,7 @@ div.csl-indent {
 <div class="tab-content">
 <div id="tabset-12-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-12-1-tab">
 <div class="cell">
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Train a machine learning model using TAE</span></span>
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Train a machine learning model using TAE</span></span>
 <span><span class="va">ltae_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_train.html">sits_train</a></span><span class="op">(</span><span class="va">samples_matogrosso_mod13q1</span>, </span>
 <span>                       <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_lighttae.html">sits_lighttae</a></span><span class="op">(</span></span>
 <span>                          epochs               <span class="op">=</span> <span class="fl">80</span>,</span>
@@ -1083,17 +1134,17 @@ div.csl-indent {
 </div>
 <div id="tabset-12-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-12-2-tab">
 <div class="cell">
-<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Train a machine learning model using TAE</span></span>
-<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>ltae_model <span class="op">=</span> sits_train(samples_matogrosso_mod13q1, </span>
-<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>                       sits_lighttae(</span>
-<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>                          epochs               <span class="op">=</span> <span class="dv">80</span>,</span>
-<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>                          batch_size           <span class="op">=</span> <span class="dv">64</span>,</span>
-<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>                          optimizer            <span class="op">=</span> <span class="st">"torch::optim_adamw"</span>,</span>
-<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>                          opt_hparams <span class="op">=</span> <span class="bu">dict</span>(lr <span class="op">=</span> <span class="fl">0.001</span>),</span>
-<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>                          validation_split      <span class="op">=</span> <span class="fl">0.2</span>))</span>
-<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Show training evolution</span></span>
-<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a>plot(ltae_model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Train a machine learning model using TAE</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>ltae_model <span class="op">=</span> sits_train(samples_matogrosso_mod13q1, </span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>                       sits_lighttae(</span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>                          epochs               <span class="op">=</span> <span class="dv">80</span>,</span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>                          batch_size           <span class="op">=</span> <span class="dv">64</span>,</span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>                          optimizer            <span class="op">=</span> <span class="st">"torch::optim_adamw"</span>,</span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>                          opt_hparams <span class="op">=</span> <span class="bu">dict</span>(lr <span class="op">=</span> <span class="fl">0.001</span>),</span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>                          validation_split      <span class="op">=</span> <span class="fl">0.2</span>))</span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Show training evolution</span></span>
+<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a>plot(ltae_model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </div>
 </div>
@@ -1102,7 +1153,7 @@ div.csl-indent {
 <div class="cell-output-display">
 <div id="fig-ml-ltaemodel" class="quarto-figure quarto-figure-center anchored">
 <figure class="figure"><p><img src="./images/mlltaemodel.png" class="img-fluid figure-img" style="width:90.0%"></p>
-<figcaption class="figure-caption">Figure&nbsp;16.15: Training evolution of Lightweight Temporal Self-Attention model.</figcaption></figure>
+<figcaption class="figure-caption">Figure&nbsp;16.18: Training evolution of Lightweight Temporal Self-Attention model.</figcaption></figure>
 </div>
 </div>
 </div>
@@ -1115,7 +1166,7 @@ div.csl-indent {
 <div class="tab-content">
 <div id="tabset-13-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-13-1-tab">
 <div class="cell">
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Classify using DL model and plot the result</span></span>
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Classify using DL model and plot the result</span></span>
 <span><span class="va">point_mt_mod13q1</span> <span class="op">|&gt;</span>  </span>
 <span>    <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_classify.html">sits_classify</a></span><span class="op">(</span><span class="va">ltae_model</span><span class="op">)</span> <span class="op">|&gt;</span>  </span>
 <span>    <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span>bands <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"NDVI"</span>, <span class="st">"EVI"</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -1123,13 +1174,13 @@ div.csl-indent {
 </div>
 <div id="tabset-13-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-13-2-tab">
 <div class="cell">
-<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Classify using DL model</span></span>
-<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>point_class <span class="op">=</span> sits_classify(point_mt_mod13q1, ltae_model)</span>
-<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot</span></span>
-<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>plot(</span>
-<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>    point_class, bands <span class="op">=</span> (<span class="st">"NDVI"</span>, <span class="st">"EVI"</span>)</span>
-<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Classify using DL model</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>point_class <span class="op">=</span> sits_classify(point_mt_mod13q1, ltae_model)</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot</span></span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>plot(</span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>    point_class, bands <span class="op">=</span> (<span class="st">"NDVI"</span>, <span class="st">"EVI"</span>)</span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </div>
 </div>
@@ -1138,13 +1189,13 @@ div.csl-indent {
 <div class="cell-output-display">
 <div id="fig-ml-ltaeplot" class="quarto-figure quarto-figure-center anchored">
 <figure class="figure"><p><img src="./images/mlltaeplot.png" class="img-fluid figure-img" style="width:90.0%"></p>
-<figcaption class="figure-caption">Figure&nbsp;16.16: Classification of time series using LightTAE.</figcaption></figure>
+<figcaption class="figure-caption">Figure&nbsp;16.19: Classification of time series using LightTAE.</figcaption></figure>
 </div>
 </div>
 </div>
 <p>The behaviour of both <code><a href="https://rdrr.io/pkg/sits/man/sits_tae.html">sits_tae()</a></code> and <code><a href="https://rdrr.io/pkg/sits/man/sits_lighttae.html">sits_lighttae()</a></code> is similar to that of <code><a href="https://rdrr.io/pkg/sits/man/sits_tempcnn.html">sits_tempcnn()</a></code>. It points out the possible need for more classes and training data to better represent the transition period between 2004 and 2010. One possibility is that the training data associated with the Pasture class is only consistent with the time series between the years 2005 to 2008. However, the transition from Forest to Pasture in 2004 and from Pasture to Agriculture in 2009-2010 is subject to uncertainty since the classifiers do not agree on the resulting classes. In general, deep learning temporal-aware models are more sensitive to class variability than Random Forest and extreme gradient boosters.</p>
-</section><section id="summary" class="level2" data-number="16.9"><h2 data-number="16.9" class="anchored" data-anchor-id="summary">
-<span class="header-section-number">16.9</span> Summary</h2>
+</section><section id="summary" class="level2" data-number="16.10"><h2 data-number="16.10" class="anchored" data-anchor-id="summary">
+<span class="header-section-number">16.10</span> Summary</h2>
 <p>In this chapter, we present a basic description of the machine learning algorithms available in <code>sits</code>. The basic distinction is between time-sensitive algorithms such as LightTAE and TempCNN and those who do not consider temporal order of values, such as Random Forest. In practice, we suggest that users take Random Forest as their baseline and then use LightTAE or TempCNN to try to improve classification accuracy.</p>
 </section><section id="references" class="level2 unnumbered"><h2 class="unnumbered anchored" data-anchor-id="references">References</h2>
 
@@ -1234,24 +1285,36 @@ div.csl-indent {
 <div class="csl-left-margin">[21] </div>
 <div class="csl-right-inline">M. Rußwurm, C. Pelletier, M. Zollner, S. Lefèvre, and M. Körner, <span>“<span>BreizhCrops</span>: <span>A Time Series Dataset</span> for <span>Crop Type Mapping</span>,”</span> 2020, [Online]. Available: <a href="http://arxiv.org/abs/1905.11893">http://arxiv.org/abs/1905.11893</a>.</div>
 </div>
-<div id="ref-Vaswani2017" class="csl-entry" role="listitem">
+<div id="ref-He2016" class="csl-entry" role="listitem">
 <div class="csl-left-margin">[22] </div>
+<div class="csl-right-inline">K. He, X. Zhang, S. Ren, and J. Sun, <span>“Deep <span>Residual Learning</span> for <span>Image Recognition</span>,”</span> in <em>2016 <span>IEEE Conference</span> on <span>Computer Vision</span> and <span>Pattern Recognition</span> (<span>CVPR</span>)</em>, 2016, pp. 770–778, doi: <a href="https://doi.org/10.1109/CVPR.2016.90">10.1109/CVPR.2016.90</a>.</div>
+</div>
+<div id="ref-Hochreiter1998" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[23] </div>
+<div class="csl-right-inline">S. Hochreiter, <span>“The vanishing gradient problem during learning recurrent neural nets and problem solutions,”</span> <em>International Journal of Uncertainty, Fuzziness and Knowledge-Based Systems</em>, vol. 6, no. 2, pp. 107–116, 1998, doi: <a href="https://doi.org/10.1142/S0218488598000094">10.1142/S0218488598000094</a>.</div>
+</div>
+<div id="ref-Fawaz2019" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[24] </div>
+<div class="csl-right-inline">H. I. Fawaz, G. Forestier, J. Weber, L. Idoumghar, and P.-A. Muller, <span>“Deep learning for time series classification: A review,”</span> <em>Data Mining and Knowledge Discovery</em>, vol. 33, no. 4, pp. 917–963, 2019.</div>
+</div>
+<div id="ref-Vaswani2017" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[25] </div>
 <div class="csl-right-inline">A. Vaswani <em>et al.</em>, <span>“Attention is <span>All</span> you <span>Need</span>,”</span> in <em>Advances in <span>Neural Information Processing Systems</span></em>, 2017, vol. 30, [Online]. Available: <a href="https://papers.nips.cc/paper/2017/hash/3f5ee243547dee91fbd053c1c4a845aa-Abstract.html">https://papers.nips.cc/paper/2017/hash/3f5ee243547dee91fbd053c1c4a845aa-Abstract.html</a>.</div>
 </div>
 <div id="ref-Devlin2019" class="csl-entry" role="listitem">
-<div class="csl-left-margin">[23] </div>
+<div class="csl-left-margin">[26] </div>
 <div class="csl-right-inline">J. Devlin, M.-W. Chang, K. Lee, and K. Toutanova, <span>“<span>BERT</span>: <span class="nocase">Pre-training</span> of <span>Deep Bidirectional Transformers</span> for <span>Language Understanding</span>.”</span> arXiv, 2019, doi: <a href="https://doi.org/10.48550/arXiv.1810.04805">10.48550/arXiv.1810.04805</a>.</div>
 </div>
 <div id="ref-Brown2020" class="csl-entry" role="listitem">
-<div class="csl-left-margin">[24] </div>
+<div class="csl-left-margin">[27] </div>
 <div class="csl-right-inline">T. B. Brown <em>et al.</em>, <span>“Language <span>Models</span> are <span>Few-Shot Learners</span>.”</span> arXiv, 2020, doi: <a href="https://doi.org/10.48550/arXiv.2005.14165">10.48550/arXiv.2005.14165</a>.</div>
 </div>
 <div id="ref-Garnot2020a" class="csl-entry" role="listitem">
-<div class="csl-left-margin">[25] </div>
+<div class="csl-left-margin">[28] </div>
 <div class="csl-right-inline">V. Garnot, L. Landrieu, S. Giordano, and N. Chehata, <span>“Satellite <span>Image Time Series Classification With Pixel-Set Encoders</span> and <span>Temporal Self-Attention</span>,”</span> in <em>2020 <span>IEEE</span>/<span>CVF Conference</span> on <span>Computer Vision</span> and <span>Pattern Recognition</span> (<span>CVPR</span>)</em>, 2020, pp. 12322–12331, doi: <a href="https://doi.org/10.1109/CVPR42600.2020.01234">10.1109/CVPR42600.2020.01234</a>.</div>
 </div>
 <div id="ref-Garnot2020" class="csl-entry" role="listitem">
-<div class="csl-left-margin">[26] </div>
+<div class="csl-left-margin">[29] </div>
 <div class="csl-right-inline">V. S. F. Garnot and L. Landrieu, <span>“Lightweight <span class="nocase">Temporal Self-attention</span> for&nbsp;<span>Classifying Satellite Images Time&nbsp;Series</span>,”</span> in <em>Advanced <span>Analytics</span> and <span>Learning</span> on <span>Temporal Data</span></em>, 2020, pp. 171–181.</div>
 </div>
 </div>

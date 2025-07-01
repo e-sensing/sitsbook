@@ -79,25 +79,37 @@ knitr::include_graphics("images/map_smooth_v2.png")
 ```
 
 
+## A Bayesian approach to post-processing
+
+Our post-processing method is based on the Bayesian approach to data analysis, which interprets probability as a measure of belief in an event. This approach begins with an initial set of beliefs, known as the \textit{prior probability}, derived from previous experiments or expert knowledge. Bayesian statistics then combines this prior knowledge with new data to update and refine these beliefs. This is done using Bayes' theorem, a mathematical framework for revising probabilities as new evidence becomes available.
+
+Unlike classical (frequentist) methods, which treat parameters as fixed but unknown values, the Bayesian approach considers parameters as random variables with associated probability distributions. By integrating prior distributions with observed data through a likelihood function, the Bayesian method generates a posterior distribution. This posterior distribution represents the updated beliefs about the parameters, offering a comprehensive framework for inference and decision-making.
+
+## Converting probabilities to logits 
+
+A machine-learning algorithm outputs a $m$-dimensional vector $\mathbf{p}_i = (p_{i,1}, \ldots, p_{i,m})$ for each pixel with $0 \leq p_{i,k} \leq 1$ and $\sum_k p_{i,k} = 1 \forall i = 1, \ldots, n$. The value $p_{i,k}$ is the empirically estimated probability that the $i$-th pixel belongs to the $k$-th class according to the machine-learning algorithm. The probability $p_{i,k}$ is the classifier's output, subject to noise, outliers, and classification errors. The highest probability among the available options determines the class assigned to the pixel.
+
+The class probability values $p_{i,k}$, which are the outputs of the machine learning classifier,  are converted to log-odds values to make the inference more tractable. The logit function converts probability values between $0$ to $1$ to values from $-\infty$ to $\infty$. The conversion
+from probabilities to logit values is expressed by:
+$$
+    x_{i,k} = \ln \left(\frac{p_{i,k}}{1 - p_{i,k}}\right)
+$$
+
+The conversion from probabilities to logit values helps support our assumption of a normal distribution for our data. Confidence in pixel classification increases with logit. However, there are situations, such as border or mixed pixels, where the logit of different classes is similar in magnitude. These are cases of low confidence in the classification result. The post-classification smoothing method borrows strength from the neighbours to assess and correct these cases.
+
 ## Empirical Bayesian estimation
 
-The Bayesian estimate is based on the probabilities produced by the classifiers. Let $p_{i,k} \geq 0$ be the prior probability of the $i$-th pixel belonging to class $k \in \{1, \ldots, m\}$.  The probabilities $p_{i,k}$ are the classifier's output, being subject to noise, outliers, and classification errors. Our estimation aims to remove these effects and obtain values that approximate the actual class probability better. We convert the class probability values $p_{i,k}$  to log-odds values using the logit function, to transform probability values ranging from $0$ to $1$ to values from negative infinity to infinity. The conversion from probabilities logit values is helpful to support our assumption of normal distribution. 
+We assume that the class probability $p_{i,k}$ estimated by the pixel-based machine learning method is a noisy version of underlying probability $\pi_{i,k} > 0$ that we want to learn. If the machine-learning method had perfect accuracy, we should have  $p_{i,k} = \pi_{i,k}$. In practice, they are not equal due to estimation errors inherent in any machine-learning method. 
 
+Define the corresponding logit for the true and unknown $\pi_{i,k}$ probabilities: $\mu_{i,k} = \ln(\pi_{i,k}/(1-\pi_{i,k}))$. We assume that our noisy data version $x_{i,k}$ is randomly distributed around $\mu_{i,k}$ according to a Gaussian distribution: 
 $$
-    x_{i,k} = \log \left(\frac{p_{i,k}}{1 - p_{i,k}}\right)
+(x_{i,k}|\mu_{i,k}) \sim N(\mu_{i,k}, \sigma^2_k)
 $$
-We assume that the logit of the prior probability of the pixels $i$ associated to class $k$ is described by a Gaussian distribution function
-
-\begin{equation} 
-x_{i,k} = \log\left( \frac{\pi_{i,k}}{1-\pi_{i,k}} \right) \sim N(m_{i,k}, s^2_{i,k}) 
-\end{equation}
-
-where $m_{i,k}$ represents the local mean value and $s^2_{i,k}$ the local class variance. The local mean and variance are computed based on the local neighborhood of the point. We express the likelihood as a conditional Gaussian distribution of the logit $x_{i,k}$ of the observed values $p_{i,k}$ over $\mu_{i,k}$: 
-\begin{equation}
-(x_{i,k} | \mu_{i,k}) = \log(p_{i,k}/(1-p_{i,k})) \sim N(\mu_{i,k}, \sigma^2). 
-\end{equation}
-
-In the above equation, $\mu_{i,k}$ is the posterior expected mean of the logit probability associated to the $i-th$ pixel. The variance $\sigma^2_{k}$ will be estimated based on user expertise and taken as a hyperparameter to control the smoothness of the resulting estimate. The standard Bayesian updating [@Gelman2014] leads to the posterior distribution  which can be expressed as a weighted mean
+where $\sigma^2_k$ is the variance associated with the $k$-th class. This distribution is called the \textit{likelihood} function. The Bayesian approach assumes a \textit{prior probability distribution} to represent the uncertainty around $\mu_{i,k}$, also a Gaussian distribution 
+$$
+\mu_{i,k} \sim N(m_{i,k}, s^2_{i,k}) \: . 
+$$
+The standard Bayesian updating [@Gelman2014] leads to the posterior distribution  which can be expressed as a weighted mean
 
 $$
 {E}[\mu_{i,k} | x_{i,k}] =
@@ -105,7 +117,6 @@ $$
 x_{i,k} +
 \Biggl [ \frac{\sigma^2_{k}}{\sigma^2_{k} +s^2_{i,k}} \Biggr ] \times m_{i,k},
 $$
-where:
 
 - $x_{i,k}$ is the logit value for pixel $i$ and class $k$.
 - $m_{i,k}$ is the average of logit values for pixels of class $k$ 
@@ -114,10 +125,9 @@ in the neighborhood of pixel $i$.
 in the neighborhood of pixel $i$.
 - $\sigma^2_{k}$ is an user-derived hyperparameter which estimates the variance for class $k$, expressed in logits.
 
+This posterior distribution represents the updated uncertainty about the actual probability $\pi_{i,k}$ of the pixel $i$ belonging to class $k$ after we have observed the noisy $p_{i,k}$. The posterior mean is a weighted average between the observed logit value $x_{i,k}$  and the prior logit mean $m_{i,k}$. When the prior variance $s^2_{i,k}$  is high, the algorithm assigns more weight to the observed value $x_{i,k}$. Conversely, as the likelihood variance $\sigma^2_k$ increases, the update assigns more weight to the prior mean $m_{i,k}$.
 
-The above equation is a weighted average between the value $x_{i,k}$ for the pixel and the mean $m_{i,k}$ for the neighboring pixels. When the variance $s^2_{i,k}$ for the neighbors is too high, the algorithm gives more weight to the pixel value $x_{i,k}$. When class variance  $\sigma^2_k$ increases, the results gives more weight to the neighborhood mean $m_{i,k}$. 
-
-Bayesian smoothing for land classification assumes that image patches with similar characteristics have a dominant class. This dominant class has higher average probabilities and lower variance than other classes. A pixel assigned to a different class will likely exhibit high local variance in such regions. As a result, post-processing should adjust the class of this pixel to match the dominant class.
+In the above equation, the value of $x_{i,k}$ is known. To complete the calculation, one needs to work out the values of the likelihood variance $\sigma^2_k$ and the mean $m_{i,k}$ and variance $s^2_{i,k}$ of the prior distribution. The variance $\sigma^2_{k}$ will be estimated based on user expertise and taken as a hyperparameter to control the smoothness of the resulting estimate. 
 
 There is usually no prior information to specify $m_{i,k}$ and $s^2_{i,k}$. Because of that, we adopt an Empirical Bayes (EB) approach to obtain estimates of these prior parameters by considering the pixel neighborhood. However, using a standard symmetrical neighborhood for each pixel, based uniquely on the distance between locations, would not produce reasonable results for border pixels. For this reason, our EB estimates uses non-isotropic neighbourhood, as explained below.
 

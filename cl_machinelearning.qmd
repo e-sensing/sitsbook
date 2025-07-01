@@ -514,6 +514,72 @@ knitr::include_graphics("./images/mltcnnplot.png")
 
 The result has important differences from the previous ones. The TempCNN model indicates the `Soy_Cotton` class as the most likely one in 2004. While this result is possibly wrong, it shows that the time series for 2004 is different from those of Forest and Pasture classes. One possible explanation is that there was forest degradation in 2004, leading to a signature that is a mix of forest and bare soil. In this case, including forest degradation samples could improve the training data. In our experience, TempCNN models are a reliable way of classifying image time series [@Simoes2021]. Recent work which compares different models also provides evidence that TempCNN models have satisfactory behavior, especially in the case of crop classes [@Russwurm2020].
 
+## Residual 1D CNN networks (ResNet)
+
+A residual 1D CNN network, also known as ResNet, is an extension of the standard 1D CNN architecture,  adding residual connections between the layers. Residual connections allow the network to learn residual mappings, which are the difference between the input and output of a layer. By adding these residual connections, the network can learn to bypass specific layers and still capture essential features in the data.
+
+The Residual Network (ResNet) for time series classification was proposed by Wang et al. [@Wang2017], based on the idea of deep residual networks for 2D image recognition [@He2016]. The ResNet architecture comprises 11 layers, with three blocks of three 1D CNN layers each (see @fig-ml-rnet). Each block corresponds to a 1D CNN architecture. The output of each block is combined with a shortcut that links its output to its input, called a skip connection. The purpose of combining the input layer of each block with its output layer (after the convolutions) is to avoid the so-called "vanishing gradient problem". This issue occurs in deep networks as the neural network's weights are updated based on the partial derivative of the error function. If the gradient is too small, the weights will not be updated, stopping the training [@Hochreiter1998]. Skip connections aim to avoid vanishing gradients from occurring, allowing deep networks to be trained.
+
+```{r}
+#| label: fig-ml-rnet
+#| echo: false
+#| out.width: "100%"
+#| fig.align: "center"
+#| fig.cap: |
+#|   Structure of ResNet architecture (source: [@Wang2017]).
+knitr::include_graphics("./images/resnet.png")
+```
+
+
+In `sits`, the Residual Network is implemented using `sits_resnet()`. The default parameters are those proposed by Wang et al. [@Wang2017], as implemented by Fawaz et al. [@Fawaz2019]. The first parameter is `blocks`, which controls the number of blocks and the size of filters in each block. By default, the model implements three blocks, the first with 64 filters and the others with 128. The parameter `kernels` controls the size of the kernels of the three layers inside each block. It is useful to experiment a bit with these kernel sizes in the case of satellite image time series. The default activation is "relu", which is recommended in the literature to reduce the problem of vanishing gradients. The default optimizer is `optim_adamw`, available in package `torchopt`.
+
+```{r}
+#| eval: false
+# Train using ResNet
+resnet_model <- sits_train(samples_matogrosso_mod13q1, 
+                       sits_resnet(
+                          blocks               = c(64, 128, 128),
+                          kernels              = c(7, 5, 3),
+                          epochs               = 100,
+                          batch_size           = 64,
+                          validation_split     = 0.2,
+                          verbose              = FALSE))
+# Show training evolution
+plot(resnet_model)
+```
+
+```{r}
+#| label: fig-ml-resnetmodel
+#| echo: false
+#| out.width: "80%"
+#| fig.align: "center"
+#| fig.cap: |
+#|    Training evolution of ResNet model.
+knitr::include_graphics("./images/mlresnetmodel.png")
+```
+
+Using the TempCNN model, we classify a 16-year time series.
+
+```{r}
+#| eval: false
+# Classify using Resnet model and plot the result
+point_mt_mod13q1 |>  
+    sits_classify(resnet_model) |>  
+    plot(bands = c("NDVI", "EVI"))
+```
+
+```{r}
+#| label: fig-ml-resnetplot
+#| echo: false
+#| out.width: "90%"
+#| fig.align: "center"
+#| fig.cap: |
+#|   Classification of time series using TempCNN
+knitr::include_graphics("./images/mlresnetplot.png")
+```
+
+In this case, the result of the ResNet model is quite similar to that of the TempCNN model. In the same way as TempCNN, the ResNet algorithm tends to be better at detecting agricultural or natural forest classes. When it comes to situation where transitions happen during the classification period, as in the case of the transition from forest to pasture in 2004, random forest models tend to be more efficient than TempCNN or ResNet. 
+
 ## Attention-based models
 
 Attention-based deep learning models are a class of models that use a mechanism inspired by human attention to focus on specific parts of input during processing. These models have been shown to be effective for various tasks such as machine translation, image captioning, and speech recognition.

@@ -444,10 +444,11 @@ div.csl-indent {
    
   <ul>
 <li><a href="#configurations-to-run-this-chapter" id="toc-configurations-to-run-this-chapter" class="nav-link active" data-scroll-target="#configurations-to-run-this-chapter">Configurations to run this chapter</a></li>
-  <li><a href="#image-segmentation-in-sits" id="toc-image-segmentation-in-sits" class="nav-link" data-scroll-target="#image-segmentation-in-sits">Image segmentation in sits</a></li>
-  <li><a href="#simple-linear-iterative-clustering-algorithm" id="toc-simple-linear-iterative-clustering-algorithm" class="nav-link" data-scroll-target="#simple-linear-iterative-clustering-algorithm">Simple linear iterative clustering algorithm</a></li>
-  <li><a href="#example-of-slic-based-segmentation-and-classification" id="toc-example-of-slic-based-segmentation-and-classification" class="nav-link" data-scroll-target="#example-of-slic-based-segmentation-and-classification">Example of SLIC-based segmentation and classification</a></li>
-  <li><a href="#summary" id="toc-summary" class="nav-link" data-scroll-target="#summary"><span class="header-section-number">25.1</span> Summary</a></li>
+  <li><a href="#introduction" id="toc-introduction" class="nav-link" data-scroll-target="#introduction"><span class="header-section-number">25.1</span> Introduction</a></li>
+  <li><a href="#image-segmentation-in-sits" id="toc-image-segmentation-in-sits" class="nav-link" data-scroll-target="#image-segmentation-in-sits"><span class="header-section-number">25.2</span> Image segmentation in sits</a></li>
+  <li><a href="#simple-linear-iterative-clustering-algorithm" id="toc-simple-linear-iterative-clustering-algorithm" class="nav-link" data-scroll-target="#simple-linear-iterative-clustering-algorithm"><span class="header-section-number">25.3</span> Simple linear iterative clustering algorithm</a></li>
+  <li><a href="#example-of-slic-based-segmentation-and-classification" id="toc-example-of-slic-based-segmentation-and-classification" class="nav-link" data-scroll-target="#example-of-slic-based-segmentation-and-classification"><span class="header-section-number">25.4</span> Example of SLIC-based segmentation and classification</a></li>
+  <li><a href="#summary" id="toc-summary" class="nav-link" data-scroll-target="#summary"><span class="header-section-number">25.5</span> Summary</a></li>
   <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references">References</a></li>
   </ul><div class="toc-actions"><div><i class="bi bi-github"></i></div><div class="action-links"><p><a href="https://github.com/e-sensing/sitsbook/edit/quarto/vec_obia.qmd" class="toc-action">Edit this page</a></p><p><a href="https://github.com/e-sensing/sitsbook/issues/new" class="toc-action">Report an issue</a></p></div></div></nav>
     </div>
@@ -500,13 +501,16 @@ div.csl-indent {
 </div>
 </div>
 <p><a href="https://www.kaggle.com/code/esensing/object-based-image-time-series-classification" target="_blank"><img src="https://kaggle.com/static/images/open-in-kaggle.svg"></a></p>
+</section><section id="introduction" class="level2" data-number="25.1"><h2 data-number="25.1" class="anchored" data-anchor-id="introduction">
+<span class="header-section-number">25.1</span> Introduction</h2>
 <p>Object-Based Image Analysis (OBIA) is an approach to remote sensing image analysis that partitions an image into closed segments which are then classified and analyzed. For high-resolution images (1 meter or smaller) the aim of OBIA is to create objects that represent meaningful features in the real world, like buildings, roads, fields, forests, and water bodies. In case of medium resolution images (such as Sentinel-2 or Landsat) the segments represent groups of the image with similar spectral responses which in general do not correspond directly to individual objects in the ground. These groups of pixels are called super-pixels. In both situations, the aim of OBIA is to obtain a spatial partition of the image which can then be assigned to a single class. When applicable, OBIA reduces processing time and produces labeled maps with greater spatial consistency.</p>
 <p>The general sequence of the processes involved in OBIA in <code>sits</code> is:</p>
 <ol type="1">
 <li><p>Segmentation: The first step is to group together pixels that are similar based a distance metric that considers the values of all bands in all time instances. We build a multitemporal attribute space where each time/band combination is taken as an independent dimension. Thus, distance metrics for segmentation in a data cube with 10 bands and 24 time steps use a 240-dimension space.</p></li>
 <li><p>Probability Estimation: After the image has been partitioned into distinct objects, the next step is to classify each segment. For satellite image time series, a subset of time series inside each segment is classified.</p></li>
 <li><p>Labeling: Once the set of probabilities have been obtained for each time series inside a segment, they can be used for labeling. This is done by considering the median value of the probabilities for the time series inside the segment that have been classified. For each class, we take the median of the probability values. Then, median values for the classes are normalised, and the most likely value is assigned as the class for the segment.</p></li>
-</ol></section><section id="image-segmentation-in-sits" class="level2 unnumbered"><h2 class="unnumbered anchored" data-anchor-id="image-segmentation-in-sits">Image segmentation in sits</h2>
+</ol></section><section id="image-segmentation-in-sits" class="level2" data-number="25.2"><h2 data-number="25.2" class="anchored" data-anchor-id="image-segmentation-in-sits">
+<span class="header-section-number">25.2</span> Image segmentation in sits</h2>
 <p>The first step of the OBIA procedure in <code>sits</code> is to select a data cube to be segmented and function that performs the segmentation. For this purpose, <code>sits</code> provides a generic <code><a href="https://rdrr.io/pkg/sits/man/sits_segment.html">sits_segment()</a></code> function, which allows users to select different segmentation algorithms. The <code><a href="https://rdrr.io/pkg/sits/man/sits_segment.html">sits_segment()</a></code> function has the following parameters:</p>
 <ul>
 <li>
@@ -530,8 +534,9 @@ div.csl-indent {
 <li>
 <code>progress</code>: show progress bar?</li>
 </ul>
-<p>In <code>sits</code> version 1.4.2, there is only one segmentation function available (<code>sits_slic</code>) which implements the extended version of the Simple Linear Iterative Clustering (SLIC) which is described below. In future versions of <code>sits</code>, we expect to include additional functions that support spatio-temporal segmentation.</p>
-</section><section id="simple-linear-iterative-clustering-algorithm" class="level2 unnumbered"><h2 class="unnumbered anchored" data-anchor-id="simple-linear-iterative-clustering-algorithm">Simple linear iterative clustering algorithm</h2>
+<p>Currently, there is only one segmentation function available (<code>sits_slic</code>) which implements the extended version of the Simple Linear Iterative Clustering (SLIC) which is described below. In future versions of <code>sits</code>, we expect to include additional functions that support spatio-temporal segmentation.</p>
+</section><section id="simple-linear-iterative-clustering-algorithm" class="level2" data-number="25.3"><h2 data-number="25.3" class="anchored" data-anchor-id="simple-linear-iterative-clustering-algorithm">
+<span class="header-section-number">25.3</span> Simple linear iterative clustering algorithm</h2>
 <p>After building the multidimensional space, we use the Simple Linear Iterative Clustering (SLIC) algorithm <span class="citation" data-cites="Achanta2012"><a href="#ref-Achanta2012" role="doc-biblioref">[1]</a></span> that clusters pixels to efficiently generate compact, nearly uniform superpixels. This algorithm has been adapted by Nowosad and Stepinski <span class="citation" data-cites="Nowosad2022"><a href="#ref-Nowosad2022" role="doc-biblioref">[2]</a></span> to work with multispectral images. SLIC uses spectral similarity and proximity in the image space to segment the image into superpixels. Superpixels are clusters of pixels with similar spectral responses that are close together, which correspond to coherent object parts in the image. Here’s a high-level view of the extended SLIC algorithm:</p>
 <ol type="1">
 <li><p>The algorithm starts by dividing the image into a grid, where each cell of the grid will become a superpixel.</p></li>
@@ -552,7 +557,8 @@ div.csl-indent {
 <code>compactness</code>: A value that controls superpixels’ density. Larger values cause clusters to be more compact.</li>
 <li>
 <code>minarea</code>: minimal size of the output superpixels (measured in number of cells).</li>
-</ul></section><section id="example-of-slic-based-segmentation-and-classification" class="level2 unnumbered"><h2 class="unnumbered anchored" data-anchor-id="example-of-slic-based-segmentation-and-classification">Example of SLIC-based segmentation and classification</h2>
+</ul></section><section id="example-of-slic-based-segmentation-and-classification" class="level2" data-number="25.4"><h2 data-number="25.4" class="anchored" data-anchor-id="example-of-slic-based-segmentation-and-classification">
+<span class="header-section-number">25.4</span> Example of SLIC-based segmentation and classification</h2>
 <p>To show an example of SLIC-based segmentation, we first build a data cube, using images available in the <code>sitsdata</code> package.</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
 <ul class="nav nav-tabs" role="tablist">
@@ -900,8 +906,8 @@ div.csl-indent {
 </div>
 </div>
 </div>
-</section><section id="summary" class="level2" data-number="25.1"><h2 data-number="25.1" class="anchored" data-anchor-id="summary">
-<span class="header-section-number">25.1</span> Summary</h2>
+</section><section id="summary" class="level2" data-number="25.5"><h2 data-number="25.5" class="anchored" data-anchor-id="summary">
+<span class="header-section-number">25.5</span> Summary</h2>
 <p>OBIA analysis applied to image time series is a worthy and efficient technique for land classification, combining the desirable sharp object boundary properties required by land use and cover maps with the analytical power of image time series.</p>
 </section><section id="references" class="level2 unnumbered"><h2 class="unnumbered anchored" data-anchor-id="references">References</h2>
 
