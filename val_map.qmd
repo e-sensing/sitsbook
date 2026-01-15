@@ -339,9 +339,61 @@ To produce the adjusted area estimates for classified maps, `sits_accuracy()` us
 -   `data`: a classified data cube;
 -   `validation`: a CSV file, SHP file, GPKG file, `sf` object or data frame containing at least three columns: `latitude`, `longitude` and `label`, containing a set of well-selected labeled points obtained from the samples suggested by `sits_stratified_sample()`.
 
-In the example below, we use a validation set produced by the researchers which produced the Rondonia data set, described above. We selected this data set both to serve as an example of `sits_accuracy()` and to illustrate the pitfalls of using visual interpretation of results of image time series classification. In this case, the validation team used an image from a single date late in 2022 to assess the results. This choice is not adequate for assessing results of time series classification. In many cases, including the example used in this chapter, the training set includes transitional classes such as `Clear_Cut_Burned_Area` and `Clear_Cut_Vegetation`. The associated samples refer to events that occur in specific times of the year. An area may start the year as a `Forest` land cover, only to be cut and burned during the peak of the dry season and later be completely clean. The classifier will recognize the signs of burned area and will signal that such event occurred. When using only a single date to evaluate the classification results, this correct estimate by the classifier will be missed by the interpreter. For this reason, the results shown below are merely illustrative and do not reflect a correct accuracy assessment.
+In the example below, we use a validation set produced by the researchers which produced the Rondonia data set, described above.  The validation team used QGIS to produce a CSV file with validation data, which is then used to assess the area accuracy using the best practices recommended by @Olofsson2014. 
 
-The validation team used QGIS to produce a CSV file with validation data, which is then used to assess the area accuracy using the best practices recommended by @Olofsson2014.
+Since the aim of the classification was to create a forest/non-forest map, the map land cover classes were grouped into natural and anthropic ones. All `Clear_Cut` classes were joined, as was done with all `Forest` classes. The rationale for this decision was that the final map was not intended to be a detailed description of different types of forest and clear-cut areas, but rather an assessment of how much deforestation had occurred in the period.
+
+:::{.panel-tabset}
+## R
+```{r}
+#| eval: false
+rondonia_2022_reclass <- sits_reclassify(
+    cube = rondonia_2022_class,
+    mask = rondonia_2022_class,
+    rules = list(
+        "Forest" = mask %in% c(
+            "Mountainside_Forest",
+            "Forest",
+            "Riparian_Forest",
+            "Seasonally_Flooded"
+        ),
+        "Clear_Cut" = mask %in% c(
+            "Clear_Cut_Bare_Soil",
+            "Clear_Cut_Burned_Area",
+            "Clear_Cut_Vegetation"
+        )
+    ),
+    output_dir = tempdir_r,
+    memsize = 16,
+    multicores = 4
+)
+
+```
+## Python
+```{python}
+#| eval: false
+rondonia_2022_reclass <- sits_reclassify(
+    cube = rondonia_2022_class,
+    mask = rondonia_2022_class,
+    rules = dict(
+        "Forest" = MaskValue.in_([
+            "Mountainside_Forest",
+            "Forest",
+            "Riparian_Forest",
+            "Seasonally_Flooded"
+        ]),
+        "Clear_Cut" = MaskValue.in_([
+            "Clear_Cut_Bare_Soil",
+            "Clear_Cut_Burned_Area",
+            "Clear_Cut_Vegetation"
+        ])
+    ),
+    output_dir = tempdir_py,
+    memsize = 16,
+    multicores = 4
+)
+```
+:::
 
 :::{.panel-tabset}
 ## R
@@ -349,7 +401,7 @@ The validation team used QGIS to produce a CSV file with validation data, which 
 #| eval: false
 # Get ground truth points
 valid_csv <- system.file(
-    "extdata/Rondonia-Class-2022-Mosaic/rondonia_samples_validation.csv", package = "sitsdata"
+    "extdata/Rondonia-Class-2022-Mosaic/rondonia_samples_reclass.csv", package = "sitsdata"
 )
 
 # Calculate accuracy according to Olofsson's method
@@ -412,9 +464,7 @@ area_acc$error_matrix
 ```
 :::
 
-These results show the challenges of conducting validation assessments with image time series. While stable classes like `Forest` and `Clear_Cut_Bare_Soil` exhibit high user's accuracy (UA) and producer's accuracy (PA), the transitional classes (`Clear_Cut_Burned_Area` and `Clear_Cut_Vegetation`) have low PA. This discrepancy is not a true reflection of classification accuracy, but rather a result of inadequate visual interpretation practices. As mentioned earlier, the visual interpretation for quality assessment utilised only a single date, a method traditionally used for single images, but ineffective for image time series.
-
-A detailed examination of the confusion matrix reveals a clear distinction between natural areas (e.g., `Forest` and `Riparian_Forest`) and areas associated with deforestation (e.g., `Clear_Cut_Bare_Soil` and `Clear_Cut_Burned_Area`). The low producer's accuracy values for transitional classes `Clear_Cut_Burned_Area` and `Clear_Cut_Vegetation` are artefacts of the validation procedure. Validation relied on only one date near the end of the calendar year, causing transitional classes to be overlooked.
+The results show a clear distinction between forest areas and those associated with deforestation (`Clear_Cut`). It also shows a possible source of confusion between wetlands and clear cuts, which point at improvements in traning samples for those classes to improve performance.
 
 ## Summary
 
