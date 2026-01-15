@@ -110,7 +110,7 @@ div.csl-indent {
     "search-submit-button-title": "Submit",
     "search-label": "Search"
   }
-}</script>
+}</script><script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script><script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
 </head>
 <body class="nav-sidebar floating">
 
@@ -446,9 +446,10 @@ div.csl-indent {
 <li><a href="#configurations-to-run-this-chapter" id="toc-configurations-to-run-this-chapter" class="nav-link active" data-scroll-target="#configurations-to-run-this-chapter">Configurations to run this chapter</a></li>
   <li><a href="#introduction" id="toc-introduction" class="nav-link" data-scroll-target="#introduction"><span class="header-section-number">25.1</span> Introduction</a></li>
   <li><a href="#image-segmentation-in-sits" id="toc-image-segmentation-in-sits" class="nav-link" data-scroll-target="#image-segmentation-in-sits"><span class="header-section-number">25.2</span> Image segmentation in sits</a></li>
-  <li><a href="#simple-linear-iterative-clustering-algorithm" id="toc-simple-linear-iterative-clustering-algorithm" class="nav-link" data-scroll-target="#simple-linear-iterative-clustering-algorithm"><span class="header-section-number">25.3</span> Simple linear iterative clustering algorithm</a></li>
-  <li><a href="#example-of-slic-based-segmentation-and-classification" id="toc-example-of-slic-based-segmentation-and-classification" class="nav-link" data-scroll-target="#example-of-slic-based-segmentation-and-classification"><span class="header-section-number">25.4</span> Example of SLIC-based segmentation and classification</a></li>
-  <li><a href="#summary" id="toc-summary" class="nav-link" data-scroll-target="#summary"><span class="header-section-number">25.5</span> Summary</a></li>
+  <li><a href="#simple-non-iterative-clustering-snic" id="toc-simple-non-iterative-clustering-snic" class="nav-link" data-scroll-target="#simple-non-iterative-clustering-snic"><span class="header-section-number">25.3</span> Simple non-iterative clustering (SNIC)</a></li>
+  <li><a href="#simple-linear-iterative-clustering-algorithm-slic" id="toc-simple-linear-iterative-clustering-algorithm-slic" class="nav-link" data-scroll-target="#simple-linear-iterative-clustering-algorithm-slic"><span class="header-section-number">25.4</span> Simple linear iterative clustering algorithm (SLIC)</a></li>
+  <li><a href="#example-of-snic-based-segmentation-and-classification" id="toc-example-of-snic-based-segmentation-and-classification" class="nav-link" data-scroll-target="#example-of-snic-based-segmentation-and-classification"><span class="header-section-number">25.5</span> Example of SNIC-based segmentation and classification</a></li>
+  <li><a href="#summary" id="toc-summary" class="nav-link" data-scroll-target="#summary"><span class="header-section-number">25.6</span> Summary</a></li>
   <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references">References</a></li>
   </ul><div class="toc-actions"><div><i class="bi bi-github"></i></div><div class="action-links"><p><a href="https://github.com/e-sensing/sitsbook/edit/quarto/vec_obia.qmd" class="toc-action">Edit this page</a></p><p><a href="https://github.com/e-sensing/sitsbook/issues/new" class="toc-action">Report an issue</a></p></div></div></nav>
     </div>
@@ -503,15 +504,17 @@ div.csl-indent {
 <p><a href="https://www.kaggle.com/code/esensing/object-based-image-time-series-classification" target="_blank"><img src="https://kaggle.com/static/images/open-in-kaggle.svg"></a></p>
 </section><section id="introduction" class="level2" data-number="25.1"><h2 data-number="25.1" class="anchored" data-anchor-id="introduction">
 <span class="header-section-number">25.1</span> Introduction</h2>
-<p>Object-Based Image Analysis (OBIA) is an approach to remote sensing image analysis that partitions an image into closed segments which are then classified and analyzed. For high-resolution images (1 meter or smaller) the aim of OBIA is to create objects that represent meaningful features in the real world, like buildings, roads, fields, forests, and water bodies. In case of medium resolution images (such as Sentinel-2 or Landsat) the segments represent groups of the image with similar spectral responses which in general do not correspond directly to individual objects in the ground. These groups of pixels are called super-pixels. In both situations, the aim of OBIA is to obtain a spatial partition of the image which can then be assigned to a single class. When applicable, OBIA reduces processing time and produces labeled maps with greater spatial consistency.</p>
+<p>Object-Based Image Analysis (OBIA) is an approach to remote sensing image analysis that partitions an image into closed segments which are then classified and analyzed. For high-resolution images (1 meter or smaller) the aim of OBIA is to create objects that represent meaningful features in the real world, like buildings, roads, and water bodies. In case of medium resolution images (such as Sentinel-2 or Landsat) the segments represent regions of the image with similar spectral responses which in general do not correspond directly to individual objects in the ground. These groups of pixels are called superpixels. In both situations, the aim of OBIA is to obtain a spatial partition of the image which can then be assigned to a single class. When applicable, OBIA reduces processing time and produces labeled maps with greater spatial consistency.</p>
 <p>The general sequence of the processes involved in OBIA in <code>sits</code> is:</p>
 <ol type="1">
-<li><p>Segmentation: The first step is to group together pixels that are similar based a distance metric that considers the values of all bands in all time instances. We build a multitemporal attribute space where each time/band combination is taken as an independent dimension. Thus, distance metrics for segmentation in a data cube with 10 bands and 24 time steps use a 240-dimension space.</p></li>
-<li><p>Probability Estimation: After the image has been partitioned into distinct objects, the next step is to classify each segment. For satellite image time series, a subset of time series inside each segment is classified.</p></li>
-<li><p>Labeling: Once the set of probabilities have been obtained for each time series inside a segment, they can be used for labeling. This is done by considering the median value of the probabilities for the time series inside the segment that have been classified. For each class, we take the median of the probability values. Then, median values for the classes are normalised, and the most likely value is assigned as the class for the segment.</p></li>
+<li><p>Segmentation: The first step is to group together pixels that are similar based a distance metric that considers the values of all bands in all time instances as well as their spatial location. We build a multitemporal attribute space where each time/band combination is taken as an independent dimension. Thus, distance metrics for segmentation in a data cube with 10 bands and 24 time steps use a 240-dimension spectral space and a 2-dimensional Euclidean space. This distance includes both a spatial component (how far the pixel is from the center of the superpixel in terms of x and y coordinates) and a spectral component (how different the pixel’s spectral values are from the average values of the superpixel). The spectral distance is calculated using all the temporal instances of the bands. The result is a set of superpixels are clusters of pixels with similar spectral responses that are close together, which correspond to coherent object parts in the image.</p></li>
+<li><p>Training set selection: Users should provide a training set, consisting of either labeled points or polygons. We suggest that QGIS is used to label some of the polygons produced by the segmentation algorithm. These labelled polygons can be used to produce a set of consistent labelled points, using <code><a href="https://e-sensing.github.io/sits/reference/sits_get_data.html">sits_get_data()</a></code>. See more at <a href="https://e-sensing.github.io/sitsbook/ts_basics.html#time-series-from-data-cubes">“Time series from data cubes”</a>.</p></li>
+<li><p>Model training: Using the training set produced in the previous step, users produce a classification model using <code><a href="https://e-sensing.github.io/sits/reference/sits_train.html">sits_train()</a></code>. See more at <a href="https://e-sensing.github.io/sitsbook/classification.html">Machine learning for image time series</a>.</p></li>
+<li><p>Classification: After the image has been partitioned into distinct objects, the next step is to classify each segment using the model produced in the previous step, the segments produced in the first step and a data cube. A subset of the pixels inside each segment is classified, producing a set of class probabilities. This uses <code><a href="https://e-sensing.github.io/sits/reference/sits_classify.html">sits_classify()</a></code>, as shown below.</p></li>
+<li><p>Map labelling: Once the set of probabilities have been obtained for selected time series inside a segment, they can be used for labeling. This is done by considering the median value of the probabilities for the time series inside the segment that have been classified. For each class, we take the median of the probability values. Then, median values for the classes are normalised, and the most likely value is assigned as the class for the segment. This step uses <code><a href="https://e-sensing.github.io/sits/reference/sits_label_classification.html">sits_label_classification()</a></code>, as shown below.</p></li>
 </ol></section><section id="image-segmentation-in-sits" class="level2" data-number="25.2"><h2 data-number="25.2" class="anchored" data-anchor-id="image-segmentation-in-sits">
 <span class="header-section-number">25.2</span> Image segmentation in sits</h2>
-<p>The first step of the OBIA procedure in <code>sits</code> is to select a data cube to be segmented and function that performs the segmentation. For this purpose, <code>sits</code> provides a generic <code><a href="https://rdrr.io/pkg/sits/man/sits_segment.html">sits_segment()</a></code> function, which allows users to select different segmentation algorithms. The <code><a href="https://rdrr.io/pkg/sits/man/sits_segment.html">sits_segment()</a></code> function has the following parameters:</p>
+<p>The first step of the OBIA procedure in <code>sits</code> is to select a data cube to be segmented and a function that performs the segmentation. For this purpose, <code>sits</code> provides a generic <code><a href="https://e-sensing.github.io/sits/reference/sits_segment.html">sits_segment()</a></code> function, which allows users to select different algorithms. The <code><a href="https://e-sensing.github.io/sits/reference/sits_segment.html">sits_segment()</a></code> function has the following parameters:</p>
 <ul>
 <li>
 <code>cube</code>: a regular data cube.</li>
@@ -534,32 +537,49 @@ div.csl-indent {
 <li>
 <code>progress</code>: show progress bar?</li>
 </ul>
-<p>Currently, there is only one segmentation function available (<code>sits_slic</code>) which implements the extended version of the Simple Linear Iterative Clustering (SLIC) which is described below. In future versions of <code>sits</code>, we expect to include additional functions that support spatio-temporal segmentation.</p>
-</section><section id="simple-linear-iterative-clustering-algorithm" class="level2" data-number="25.3"><h2 data-number="25.3" class="anchored" data-anchor-id="simple-linear-iterative-clustering-algorithm">
-<span class="header-section-number">25.3</span> Simple linear iterative clustering algorithm</h2>
-<p>After building the multidimensional space, we use the Simple Linear Iterative Clustering (SLIC) algorithm <span class="citation" data-cites="Achanta2012"><a href="#ref-Achanta2012" role="doc-biblioref">[1]</a></span> that clusters pixels to efficiently generate compact, nearly uniform superpixels. This algorithm has been adapted by Nowosad and Stepinski <span class="citation" data-cites="Nowosad2022"><a href="#ref-Nowosad2022" role="doc-biblioref">[2]</a></span> to work with multispectral images. SLIC uses spectral similarity and proximity in the image space to segment the image into superpixels. Superpixels are clusters of pixels with similar spectral responses that are close together, which correspond to coherent object parts in the image. Here’s a high-level view of the extended SLIC algorithm:</p>
+<p>Currently, there are two segmentation function available: (a) <code>sits_snic</code> which implements the Simple non-iterative clustering (SNIC) algorithm; (b) <code>sits_slic</code> which implements an extended version of the Simple Linear Iterative Clustering (SLIC). Both are described below. We suggest using <code>sits_snic</code> since it is much faster than <code>sits_slic</code> and produces good results in general.</p>
+</section><section id="simple-non-iterative-clustering-snic" class="level2" data-number="25.3"><h2 data-number="25.3" class="anchored" data-anchor-id="simple-non-iterative-clustering-snic">
+<span class="header-section-number">25.3</span> Simple non-iterative clustering (SNIC)</h2>
+<p>SNIC (Simple Non-Iterative Clustering) is segmentation algorithm designed to partition an image into compact, uniform regions (superpixels) efficiently <span class="citation" data-cites="Achanta2017"><a href="#ref-Achanta2017" role="doc-biblioref">[1]</a></span>. It is an evolution of the SLIC (Simple Linear Iterative Clustering) algorithm, described below. While SLIC relies on an iterative k-means approach (which requires multiple passes over the pixels), SNIC achieves similar or better results in a single pass using a priority queue, making it significantly faster and non-iterative.</p>
+<p>SNIC treats image segmentation as a region-growing problem starting from a regular grid of seed points. It uses a priority queue to determine which pixel to process next, ensuring that regions grow in the “cheapest” direction first.</p>
+<p>The algorithm can be summarised as follows:</p>
+<ol type="1">
+<li><p>Initialization: After choosing the data cube which will be segmented, users define the seed points (centroids) to be used to grow the superpixels. They can also choose their relative placement. The seeds can be placed on a rectangular, diamond or hexagonal grid, or can be placed randomly. A final parameter is the compactness, which defines how regular are the shapes of the resulting superpixels.</p></li>
+<li><p>Priority Queue: Each pixel is represented in a n-dimensional feature space, defined by its all time instances of the spectral bands and 2-D spatial position (<span class="math inline">\(x, y\)</span>). The algorithm then creates a priority queue. Initially, the 4-connected neighbors of each seed are added to the queue. The “priority” (or cost) is the distance from the pixel to the seed’s centroid in the n-dimensional space.</p></li>
+<li><p>Region Growing Loop, with the following steps:</p></li>
+</ol>
+<ol type="a">
+<li><p>SNIC initializes a label map, which will track to which superpixel a pixel belongs, with the corresponding distance map.</p></li>
+<li><p>While the priority queue is not empty, the algorithm extracts the pixel with the smallest distance (lowest cost) from the queue.</p></li>
+<li><p>If the pixel has already been labeled, it is discarded; otherwise, it is assigned to the superpixel of the seed that generated this queue entry.</p></li>
+<li><p>SNIC updates the centroid of that superpixel immediately after adding the new pixel. The new centroid is the average of all pixels currently in that superpixel.</p></li>
+<li><p>Unlabeled neighbors of the newly added pixel are included to the priority queue. Their cost is calculated based on the current (updated) centroid of the superpixel.</p></li>
+<li><p>Go to step (b) until the priority queue is empty.</p></li>
+</ol></section><section id="simple-linear-iterative-clustering-algorithm-slic" class="level2" data-number="25.4"><h2 data-number="25.4" class="anchored" data-anchor-id="simple-linear-iterative-clustering-algorithm-slic">
+<span class="header-section-number">25.4</span> Simple linear iterative clustering algorithm (SLIC)</h2>
+<p>The Simple Linear Iterative Clustering (SLIC) algorithm <span class="citation" data-cites="Achanta2012"><a href="#ref-Achanta2012" role="doc-biblioref">[2]</a></span> clusters pixels in nearly uniform superpixels. This algorithm has been adapted by Nowosad and Stepinski <span class="citation" data-cites="Nowosad2022"><a href="#ref-Nowosad2022" role="doc-biblioref">[3]</a></span> to work with multispectral images. SLIC uses spectral similarity and proximity in the image space to segment the image into superpixels. Here’s a high-level view of the extended SLIC algorithm:</p>
 <ol type="1">
 <li><p>The algorithm starts by dividing the image into a grid, where each cell of the grid will become a superpixel.</p></li>
 <li><p>For each cell, the pixel in the center becomes the initial “cluster center” for that superpixel.</p></li>
-<li><p>For each pixel, the algorithm calculates a distance to each of the nearby cluster centers. This distance includes both a spatial component (how far the pixel is from the center of the superpixel in terms of x and y coordinates) and a spectral component (how different the pixel’s spectral values are from the average values of the superpixel). The spectral distance is calculated using all the temporal instances of the bands.</p></li>
+<li><p>For each pixel, the algorithm calculates a distance to each of the nearby cluster centers, using the same distance metric as that of the SNIC algorithm.</p></li>
 <li><p>Each pixel is assigned to the closest cluster. After all pixels have been assigned to clusters, the algorithm recalculates the cluster centers by averaging the spatial coordinates and spectral values of all pixels within each cluster.</p></li>
 <li><p>Steps 3-4 are repeated for a set number of iterations, or until the cluster assignments stop changing.</p></li>
 </ol>
-<p>The outcome of the SLIC algorithm is a set of superpixels which try to capture the to boundaries of objects within the image. The SLIC implementation in <code>sits</code> 1.4.1 uses the <code>supercells</code> R package <span class="citation" data-cites="Nowosad2022"><a href="#ref-Nowosad2022" role="doc-biblioref">[2]</a></span>. The parameters for the <code><a href="https://rdrr.io/pkg/sits/man/sits_slic.html">sits_slic()</a></code> function are:</p>
+<p>The outcome of the SLIC algorithm is a set of superpixels which try to capture the to boundaries of objects within the image.</p>
+</section><section id="example-of-snic-based-segmentation-and-classification" class="level2" data-number="25.5"><h2 data-number="25.5" class="anchored" data-anchor-id="example-of-snic-based-segmentation-and-classification">
+<span class="header-section-number">25.5</span> Example of SNIC-based segmentation and classification</h2>
+<p>The SNIC implementation in <code>sits</code> 1.5.4 uses the <code>snic</code> R package. The parameters for the <code><a href="https://e-sensing.github.io/sits/reference/sits_snic.html">sits_snic()</a></code> function are:</p>
 <ul>
 <li>
-<code>dist_fn</code>: metric used to calculate the distance between values. By default, the “euclidean” metric is used. Alternatives include “jsd” (Jensen-Shannon distance), and “dtw” (dynamic time warping) or one of 46 distance and similarity measures implemented in the R package <code>philentropy</code> <span class="citation" data-cites="Drost2018"><a href="#ref-Drost2018" role="doc-biblioref">[3]</a></span>.</li>
+<code>grid_seeding</code>: spatial organization of initial grid seeds (one of <code>rectangular</code>, <code>diamond</code>, <code>hexagonal</code>, <code>random</code>).</li>
 <li>
-<code>avg_fn</code>: function to calculate a value of each superpixel. There are two internal functions implemented in C++ - “mean” and “median”. It is also possible to provide a user-defined R function that returns one value based on an R vector.</li>
+<code>spacing</code>: distance (in number of pixels) between initial superpixels’ centers.</li>
 <li>
-<code>step</code>: distance, measured in the number of cells, between initial superpixels’ centers.</li>
+<code>compactness</code>: numerical value between 0 and 1 that controls superpixels’ density. Larger values cause clusters to be more compact.</li>
 <li>
-<code>compactness</code>: A value that controls superpixels’ density. Larger values cause clusters to be more compact.</li>
-<li>
-<code>minarea</code>: minimal size of the output superpixels (measured in number of cells).</li>
-</ul></section><section id="example-of-slic-based-segmentation-and-classification" class="level2" data-number="25.4"><h2 data-number="25.4" class="anchored" data-anchor-id="example-of-slic-based-segmentation-and-classification">
-<span class="header-section-number">25.4</span> Example of SLIC-based segmentation and classification</h2>
-<p>To show an example of SLIC-based segmentation, we first build a data cube, using images available in the <code>sitsdata</code> package.</p>
+<code>padding</code>: distance (in pixels) from the image borders within which no seeds are placed.</li>
+</ul>
+<p>To show an example of SNIC-based segmentation, we first build a data cube, using images available in the <code>sitsdata</code> package.</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
 <ul class="nav nav-tabs" role="tablist">
 <li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true">R</a></li>
@@ -572,7 +592,7 @@ div.csl-indent {
 <span><span class="va">data_dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html">system.file</a></span><span class="op">(</span><span class="st">"extdata/Rondonia-20LMR"</span>, package <span class="op">=</span> <span class="st">"sitsdata"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># builds a cube based on existing files</span></span>
-<span><span class="va">cube_20LMR</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_cube.html">sits_cube</a></span><span class="op">(</span></span>
+<span><span class="va">cube_20LMR</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_cube.html">sits_cube</a></span><span class="op">(</span></span>
 <span>    source <span class="op">=</span> <span class="st">"AWS"</span>,</span>
 <span>    collection <span class="op">=</span> <span class="st">"SENTINEL-2-L2A"</span>,</span>
 <span>    data_dir <span class="op">=</span> <span class="va">data_dir</span>,</span>
@@ -622,7 +642,7 @@ div.csl-indent {
 </div>
 </div>
 </div>
-<p>The following example produces a segmented image. For the SLIC algorithm, we take the initial separation between cluster centres (<code>step</code>) to be 20 pixels, the <code>compactness</code> to be 1, and the minimum area for each superpixel (<code>min_area</code>) to be 20 pixels.</p>
+<p>The following example produces a segmented image. For the SNIC algorithm, we take the initial separation between cluster centres (<code>step</code>) to be 20 pixels, the <code>compactness</code> to be 0.5, and the minimum distance between the cluster center and the image borders (<code>padding</code>) to be 10 pixels.</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
 <ul class="nav nav-tabs" role="tablist">
 <li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-3-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-1" role="tab" aria-controls="tabset-3-1" aria-selected="true">R</a></li>
@@ -633,15 +653,14 @@ div.csl-indent {
 <div class="cell">
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># segment a cube using SLIC</span></span>
 <span><span class="co"># Files are available in a local directory </span></span>
-<span><span class="va">segments_20LMR</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_segment.html">sits_segment</a></span><span class="op">(</span></span>
+<span><span class="va">segments_20LMR</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_segment.html">sits_segment</a></span><span class="op">(</span></span>
 <span>    cube <span class="op">=</span> <span class="va">cube_20LMR</span>,</span>
 <span>    output_dir <span class="op">=</span> <span class="va">tempdir_r</span>,</span>
-<span>    seg_fn <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_slic.html">sits_slic</a></span><span class="op">(</span></span>
-<span>        step <span class="op">=</span> <span class="fl">20</span>,</span>
-<span>        compactness <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>        dist_fun <span class="op">=</span> <span class="st">"euclidean"</span>,</span>
-<span>        iter <span class="op">=</span> <span class="fl">20</span>,</span>
-<span>        minarea <span class="op">=</span> <span class="fl">20</span></span>
+<span>    seg_fn <span class="op">=</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_snic.html">sits_snic</a></span><span class="op">(</span></span>
+<span>        grid_seeding <span class="op">=</span> <span class="st">"rectangular"</span>,</span>
+<span>        spacing <span class="op">=</span> <span class="fl">20</span>,</span>
+<span>        compactness <span class="op">=</span> <span class="fl">0.5</span>,</span>
+<span>        padding <span class="op">=</span> <span class="fl">10</span></span>
 <span>    <span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
@@ -657,18 +676,16 @@ div.csl-indent {
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>segments_20LMR <span class="op">=</span> sits_segment(</span>
 <span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    cube <span class="op">=</span> cube_20LMR,</span>
 <span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    output_dir <span class="op">=</span> tempdir_py,</span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    seg_fn <span class="op">=</span> sits_slic(</span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>        step <span class="op">=</span> <span class="dv">20</span>,</span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>        compactness <span class="op">=</span> <span class="dv">1</span>,</span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>        dist_fun <span class="op">=</span> <span class="st">"euclidean"</span>,</span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>        <span class="bu">iter</span> <span class="op">=</span> <span class="dv">20</span>,</span>
-<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>        minarea <span class="op">=</span> <span class="dv">20</span></span>
-<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot segments</span></span>
-<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>plot(segments_20LMR, red <span class="op">=</span> <span class="st">"B11"</span>, green <span class="op">=</span> <span class="st">"B8A"</span>, blue <span class="op">=</span> <span class="st">"B02"</span>, </span>
-<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>          date <span class="op">=</span> <span class="st">"2022-07-16"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    seg_fn <span class="op">=</span> sits_snic(</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>        grid_seeding <span class="op">=</span> <span class="st">"rectangular"</span>,</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>        spacing <span class="op">=</span> <span class="dv">20</span>,</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>        compactness <span class="op">=</span> <span class="fl">0.5</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot segments</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>plot(segments_20LMR, red <span class="op">=</span> <span class="st">"B11"</span>, green <span class="op">=</span> <span class="st">"B8A"</span>, blue <span class="op">=</span> <span class="st">"B02"</span>, </span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>          date <span class="op">=</span> <span class="st">"2022-07-16"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </div>
 </div>
@@ -681,7 +698,7 @@ div.csl-indent {
 </div>
 </div>
 </div>
-<p>It is useful to visualize the segments in a leaflet together with the RGB image using <code><a href="https://rdrr.io/pkg/sits/man/sits_view.html">sits_view()</a></code>.</p>
+<p>It is useful to visualize the segments in a leaflet together with the RGB image using <code><a href="https://e-sensing.github.io/sits/reference/sits_view.html">sits_view()</a></code>.</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
 <ul class="nav nav-tabs" role="tablist">
 <li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-4-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-1" role="tab" aria-controls="tabset-4-1" aria-selected="true">R</a></li>
@@ -690,14 +707,16 @@ div.csl-indent {
 <div class="tab-content">
 <div id="tabset-4-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-4-1-tab">
 <div class="cell">
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_view.html">sits_view</a></span><span class="op">(</span><span class="va">segments_20LMR</span>, red <span class="op">=</span> <span class="st">"B11"</span>, green <span class="op">=</span> <span class="st">"B8A"</span>, blue <span class="op">=</span> <span class="st">"B02"</span>, </span>
-<span>          dates <span class="op">=</span> <span class="st">"2022-07-16"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_view.html">sits_view</a></span><span class="op">(</span><span class="va">cube_20LMR</span>, red <span class="op">=</span> <span class="st">"B11"</span>, green <span class="op">=</span> <span class="st">"B8A"</span>, blue <span class="op">=</span> <span class="st">"B02"</span>, </span>
+<span>          dates <span class="op">=</span> <span class="st">"2022-07-16"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_view.html">sits_view</a></span><span class="op">(</span><span class="va">segments_20LMR</span>, add <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </div>
 <div id="tabset-4-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-4-2-tab">
 <div class="cell">
-<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>sits_view(segments_20LMR, red <span class="op">=</span> <span class="st">"B11"</span>, green <span class="op">=</span> <span class="st">"B8A"</span>, blue <span class="op">=</span> <span class="st">"B02"</span>, </span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>          dates <span class="op">=</span> <span class="st">"2022-07-16"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>sits_view(cube_20LMR, red <span class="op">=</span> <span class="st">"B11"</span>, green <span class="op">=</span> <span class="st">"B8A"</span>, blue <span class="op">=</span> <span class="st">"B02"</span>, </span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>          dates <span class="op">=</span> <span class="st">"2022-07-16"</span>)</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>sits_view(segments_20LMR, add <span class="op">=</span> TRUE)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </div>
 </div>
@@ -705,8 +724,8 @@ div.csl-indent {
 <div class="cell" data-layout-align="center">
 <div class="cell-output-display">
 <div id="fig-obia-view" class="quarto-figure quarto-figure-center anchored">
-<figure class="figure"><p><img src="./images/segmentation_2.png" class="img-fluid figure-img" style="width:75.0%"></p>
-<figcaption class="figure-caption">Figure&nbsp;25.3: Detail of segementation of image in Amazonia</figcaption></figure>
+<figure class="figure"><p><img src="./images/segmentation_view.png" class="img-fluid figure-img" style="width:75.0%"></p>
+<figcaption class="figure-caption">Figure&nbsp;25.3: Detail of segmentation of image in Amazonia</figcaption></figure>
 </div>
 </div>
 </div>
@@ -720,17 +739,17 @@ div.csl-indent {
 <div id="tabset-5-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-5-1-tab">
 <div class="cell">
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Select bands</span></span>
-<span><span class="va">samples_deforestation</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_select.html">sits_select</a></span><span class="op">(</span><span class="va">samples_deforestation_rondonia</span>,</span>
+<span><span class="va">samples_deforestation</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_select.html">sits_select</a></span><span class="op">(</span><span class="va">samples_deforestation_rondonia</span>,</span>
 <span>                                     bands <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"B02"</span>, <span class="st">"B8A"</span>, <span class="st">"B11"</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Train TempCNN</span></span>
-<span><span class="va">tcnn_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_train.html">sits_train</a></span><span class="op">(</span><span class="va">samples_deforestation</span>, <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_tempcnn.html">sits_tempcnn</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span><span class="va">tcnn_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_train.html">sits_train</a></span><span class="op">(</span><span class="va">samples_deforestation</span>, <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_tempcnn.html">sits_tempcnn</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </div>
 <div id="tabset-5-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-5-2-tab">
 <div class="cell">
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load data</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>samples_deforestation_rondonia <span class="op">=</span> load_samples_dataset(</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>samples_deforestation_rondonia <span class="op">=</span> load_samples(</span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    name <span class="op">=</span> <span class="st">"samples_deforestation_rondonia"</span>,</span>
 <span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    package <span class="op">=</span> <span class="st">"sitsdata"</span></span>
 <span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>)</span>
@@ -745,7 +764,7 @@ div.csl-indent {
 </div>
 </div>
 </div>
-<p>The segment classification procedure applies the model to a number of user-defined samples inside each segment. Each of these samples is then assigned a set of probability values, one for each class. We then obtain the median value of the probabilities for each class and normalize them. The output of the procedure is a vector data cube containing a set of classified segments. The most relevsnt parameters for the <code><a href="https://rdrr.io/pkg/sits/man/sits_classify.html">sits_classify()</a></code> function are:</p>
+<p>The segment classification procedure applies the model to a number of user-defined samples inside each segment. Each of these samples is then assigned a set of probability values, one for each class. We then obtain the median value of the probabilities for each class and normalize them. The output of the procedure is a vector data cube containing a set of classified segments. The most relevsnt parameters for the <code><a href="https://e-sensing.github.io/sits/reference/sits_classify.html">sits_classify()</a></code> function are:</p>
 <ul>
 <li>
 <code>data</code>: vector cube being classified</li>
@@ -773,12 +792,12 @@ div.csl-indent {
 <div class="tab-content">
 <div id="tabset-6-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-6-1-tab">
 <div class="cell">
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">segments_20LMR_probs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_classify.html">sits_classify</a></span><span class="op">(</span></span>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">segments_20LMR_probs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_classify.html">sits_classify</a></span><span class="op">(</span></span>
 <span>    data <span class="op">=</span> <span class="va">segments_20LMR</span>,</span>
 <span>    ml_model <span class="op">=</span> <span class="va">tcnn_model</span>,</span>
 <span>    output_dir <span class="op">=</span> <span class="va">tempdir_r</span>,</span>
 <span>    n_sam_pol <span class="op">=</span> <span class="fl">10</span>,</span>
-<span>    gpu_memory <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>    gpu_memory <span class="op">=</span> <span class="fl">8</span>,</span>
 <span>    memsize <span class="op">=</span> <span class="fl">24</span>,</span>
 <span>    multicores <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>    version <span class="op">=</span> <span class="st">"tcnn"</span></span>
@@ -837,7 +856,7 @@ div.csl-indent {
 <div class="tab-content">
 <div id="tabset-8-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-8-1-tab">
 <div class="cell">
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">segments_20LMR_class</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_label_classification.html">sits_label_classification</a></span><span class="op">(</span></span>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">segments_20LMR_class</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_label_classification.html">sits_label_classification</a></span><span class="op">(</span></span>
 <span>    <span class="va">segments_20LMR_probs</span>,</span>
 <span>    output_dir <span class="op">=</span> <span class="va">tempdir_r</span>,</span>
 <span>    memsize <span class="op">=</span> <span class="fl">24</span>,</span>
@@ -859,7 +878,7 @@ div.csl-indent {
 </div>
 </div>
 </div>
-<p>To view the classified segments together with the original image, use <code><a href="https://rdrr.io/r/graphics/plot.default.html">plot()</a></code> or <code><a href="https://rdrr.io/pkg/sits/man/sits_view.html">sits_view()</a></code>, as in the following example.</p>
+<p>To view the classified segments together with the original image, use <code><a href="https://rdrr.io/r/graphics/plot.default.html">plot()</a></code> or <code><a href="https://e-sensing.github.io/sits/reference/sits_view.html">sits_view()</a></code>, as in the following example.</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
 <ul class="nav nav-tabs" role="tablist">
 <li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-9-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-9-1" role="tab" aria-controls="tabset-9-1" aria-selected="true">R</a></li>
@@ -868,32 +887,14 @@ div.csl-indent {
 <div class="tab-content">
 <div id="tabset-9-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-9-1-tab">
 <div class="cell">
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># view the classified segments</span></span>
-<span><span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_view.html">sits_view</a></span><span class="op">(</span></span>
-<span>    <span class="va">segments_20LMR_class</span>, </span>
-<span>    red <span class="op">=</span> <span class="st">"B11"</span>, </span>
-<span>    green <span class="op">=</span> <span class="st">"B8A"</span>, </span>
-<span>    blue <span class="op">=</span> <span class="st">"B02"</span>, </span>
-<span>    dates <span class="op">=</span> <span class="st">"2022-07-16"</span>,</span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># put the original segments on top</span></span>
-<span><span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_view.html">sits_view</a></span><span class="op">(</span><span class="va">segments_20LMR</span>, add <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># plot the classified segments</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">segments_20LMR_class</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </div>
 <div id="tabset-9-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-9-2-tab">
 <div class="cell">
-<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># view the classified segments</span></span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>sits_view(</span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>    segments_20LMR_class, </span>
-<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>    red <span class="op">=</span> <span class="st">"B11"</span>, </span>
-<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>    green <span class="op">=</span> <span class="st">"B8A"</span>, </span>
-<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>    blue <span class="op">=</span> <span class="st">"B02"</span>, </span>
-<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>    dates <span class="op">=</span> <span class="st">"2022-07-16"</span>,</span>
-<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a><span class="co"># put the original segments on top</span></span>
-<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>sits_view(segments_20LMR, add <span class="op">=</span> <span class="va">True</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># plot the classified segments</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>plot(segments_20LMR_class)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </div>
 </div>
@@ -902,28 +903,28 @@ div.csl-indent {
 <div class="cell-output-display">
 <div id="fig-vec-obia-class" class="quarto-figure quarto-figure-center anchored">
 <figure class="figure"><p><img src="./images/vec-obia-class.png" class="img-fluid figure-img" style="width:75.0%"></p>
-<figcaption class="figure-caption">Figure&nbsp;25.5: Detail of labeled segments for image in Rondonia, Brazil.</figcaption></figure>
+<figcaption class="figure-caption">Figure&nbsp;25.5: Plot of OBIA classified image.</figcaption></figure>
 </div>
 </div>
 </div>
-</section><section id="summary" class="level2" data-number="25.5"><h2 data-number="25.5" class="anchored" data-anchor-id="summary">
-<span class="header-section-number">25.5</span> Summary</h2>
+</section><section id="summary" class="level2" data-number="25.6"><h2 data-number="25.6" class="anchored" data-anchor-id="summary">
+<span class="header-section-number">25.6</span> Summary</h2>
 <p>OBIA analysis applied to image time series is a worthy and efficient technique for land classification, combining the desirable sharp object boundary properties required by land use and cover maps with the analytical power of image time series.</p>
 </section><section id="references" class="level2 unnumbered"><h2 class="unnumbered anchored" data-anchor-id="references">References</h2>
 
 
 <div id="refs" class="references csl-bib-body" role="list">
-<div id="ref-Achanta2012" class="csl-entry" role="listitem">
+<div id="ref-Achanta2017" class="csl-entry" role="listitem">
 <div class="csl-left-margin">[1] </div>
+<div class="csl-right-inline">R. Achanta and S. Süsstrunk, <span>“Superpixels and <span class="nocase">Polygons Using Simple Non-iterative Clustering</span>,”</span> in <em>2017 <span>IEEE Conference</span> on <span>Computer Vision</span> and <span>Pattern Recognition</span> (<span>CVPR</span>)</em>, 2017, pp. 4895–4904, doi: <a href="https://doi.org/10.1109/CVPR.2017.520">10.1109/CVPR.2017.520</a>.</div>
+</div>
+<div id="ref-Achanta2012" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[2] </div>
 <div class="csl-right-inline">R. Achanta, A. Shaji, K. Smith, A. Lucchi, P. Fua, and S. Süsstrunk, <span>“<span>SLIC Superpixels Compared</span> to <span class="nocase">State-of-the-Art Superpixel Methods</span>,”</span> <em>IEEE Transactions on Pattern Analysis and Machine Intelligence</em>, vol. 34, no. 11, pp. 2274–2282, 2012, doi: <a href="https://doi.org/10.1109/TPAMI.2012.120">10.1109/TPAMI.2012.120</a>.</div>
 </div>
 <div id="ref-Nowosad2022" class="csl-entry" role="listitem">
-<div class="csl-left-margin">[2] </div>
-<div class="csl-right-inline">J. Nowosad and T. F. Stepinski, <span>“Extended <span>SLIC</span> superpixels algorithm for applications to non-imagery geospatial rasters,”</span> <em>International Journal of Applied Earth Observation and Geoinformation</em>, vol. 112, p. 102935, 2022, doi: <a href="https://doi.org/10.1016/j.jag.2022.102935">10.1016/j.jag.2022.102935</a>.</div>
-</div>
-<div id="ref-Drost2018" class="csl-entry" role="listitem">
 <div class="csl-left-margin">[3] </div>
-<div class="csl-right-inline">H.-G. Drost, <span>“Philentropy: <span>Information Theory</span> and <span>Distance Quantification</span> with <span>R</span>,”</span> <em>Journal of Open Source Software</em>, vol. 3, no. 26, p. 765, 2018, doi: <a href="https://doi.org/10.21105/joss.00765">10.21105/joss.00765</a>.</div>
+<div class="csl-right-inline">J. Nowosad and T. F. Stepinski, <span>“Extended <span>SLIC</span> superpixels algorithm for applications to non-imagery geospatial rasters,”</span> <em>International Journal of Applied Earth Observation and Geoinformation</em>, vol. 112, p. 102935, 2022, doi: <a href="https://doi.org/10.1016/j.jag.2022.102935">10.1016/j.jag.2022.102935</a>.</div>
 </div>
 </div>
 </section></main><!-- /main --><script id="quarto-html-after-body" type="application/javascript">

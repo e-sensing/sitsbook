@@ -540,11 +540,12 @@ div.csl-indent {
 <span class="header-section-number">2.1.1</span> Deforestation samples in the Brazilian Amazon</h3>
 <p>We used an event-based sample, where an “event” refers to a specific occurrence associated with changes in land cover. For example, deforestation is a process characterized by multiple sequential events. Initially, portions of the forest are removed through selective logging; subsequently, surface fires—often set by poachers—are used to degrade the remaining forest and facilitate the extraction of large trees <span class="citation" data-cites="Nepstad1999"><a href="#ref-Nepstad1999" role="doc-biblioref">[1]</a></span>. The process continues with the manual or mechanized removal of timber, potentially followed by additional fires to clear the area completely <span class="citation" data-cites="Gerwing2002"><a href="#ref-Gerwing2002" role="doc-biblioref">[2]</a></span>. These events were associated with distinct land cover classes to be detected through time series classification, allowing the model to recognize and differentiate between various stages and types of land cover change.</p>
 <p>The <a href="https://github.com/e-sensing/rondonia20LMR"><code>rondonia20LMR</code></a> repository provides a dataset for testing machine learning algorithms applied to the mapping and monitoring of deforestation in the Brazilian Amazon. The dataset consists of a regular time series of Sentinel-2 satellite images covering the <code>MGRS 20LMR</code> tile, with 23 temporal instances from January 5 to December 23, 2022, at 16-day intervals. Each instance includes the spectral bands <code>B02</code>, <code>B03</code>, <code>B04</code>, <code>B05</code>, <code>B06</code>, <code>B07</code>, <code>B08</code>, <code>B8A</code>, <code>B11</code>, and <code>B12</code>. The samples contain time series for <code>792</code> selected locations, each assigned to one of the following classes: <code>Clear_Cut_Bare_Soil</code> (<code>944</code>), <code>Clear_Cut_Burned_Area</code> (<code>983</code>), <code>Clear_Cut_Vegetation</code> (<code>603</code>), <code>Forest</code> (<code>964</code>), <code>Mountainside_Forest</code> (<code>211</code>), <code>Riparian_Forest</code> (<code>1247</code>), <code>Seasonally_Flooded</code> (<code>731</code>), <code>Water</code> (<code>109</code>) and <code>Wetland</code> (<code>215</code>).</p>
-<p>To access the data, it is needed to clone the <a href="https://github.com/e-sensing/rondonia20LMR"><code>rondonia20LMR</code></a> repository from the e-sensing GitHub repository into a local directory. To do this, open a terminal and execute the following commands:</p>
+<p>To access the data, it is needed to download the <a href="https://github.com/e-sensing/rondonia20LMR"><code>rondonia20LMR</code></a> data into a local directory. To do this, open the following link in your browser:</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone https://github.com/e-sensing/rondonia20LMR.git</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Download the github repository of the data cube using Dropbox</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">https://www.dropbox.com/scl/fo/i59k23t3a3ur42xnxrf0t/AFGlcZVEB1BuWzYrZsP5hlY?rlkey=gvdctc8hmiu1947i2ysmie3st</span><span class="kw">&amp;</span><span class="va">st</span><span class="op">=</span>f02qu4y8<span class="kw">&amp;</span><span class="va">dl</span><span class="op">=</span>0</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>After cloning the repository, the local directory path can be used to proceed with the example. This path will serve as the reference location for accessing the dataset and continuing with the subsequent steps in the analysis workflow.</p>
+<p>After downloading the repository, the local directory path can be used to proceed with the example. This path will serve as the reference location for accessing the dataset and continuing with the subsequent steps in the analysis workflow.</p>
 <p>In the <code>rondonia20LMR</code> directory, the file <code>deforestation_samples_v18.rds</code> contains time series extracted from Sentinel-2 satellite images over tile <code>20LMR</code>. These data are automatically made available when the package is loaded. Each time series includes the following columns: <code>longitude</code>, <code>latitude</code>, <code>start date</code>, <code>end date</code>, <code>label</code>, <code>cube</code>, and <code>time series</code>.</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
 <ul class="nav nav-tabs" role="tablist">
@@ -564,15 +565,16 @@ div.csl-indent {
 <div id="tabset-2-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-2-tab">
 <div class="cell">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Samples path</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>samples_path <span class="op">=</span> <span class="st">"rondonia20LMR/inst/extdata/samples/deforestation_samples_v18.rds"</span></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Read the Cerrado samples</span></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>deforestation_samples_v18 <span class="op">=</span> read_rds(samples_path)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pathlib <span class="im">import</span> Path</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>samples_path <span class="op">=</span> <span class="st">"rondonia20LMR/inst/extdata/samples/deforestation_samples_v18.rds"</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Read the Cerrado samples</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>deforestation_samples_v18 <span class="op">=</span> read_rds(samples_path)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </div>
 </div>
 </div>
-<p>As shown in the previous example, the <code><a href="https://rdrr.io/pkg/sits/man/sits_patterns.html">sits_patterns()</a></code> function from the <code>sits</code> package allows the visualization of the temporal patterns of the classes. In the example below, we show these patterns for each class:</p>
+<p>As shown in the previous example, the <code><a href="https://e-sensing.github.io/sits/reference/sits_patterns.html">sits_patterns()</a></code> function from the <code>sits</code> package allows the visualization of the temporal patterns of the classes. In the example below, we show these patterns for each class:</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
 <ul class="nav nav-tabs" role="tablist">
 <li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-3-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-1" role="tab" aria-controls="tabset-3-1" aria-selected="true">R</a></li>
@@ -583,8 +585,8 @@ div.csl-indent {
 <div class="cell">
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Generate the temporal patterns</span></span>
 <span><span class="va">deforestation_samples_v18</span>  <span class="op">|&gt;</span> </span>
-<span>     <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_select.html">sits_select</a></span><span class="op">(</span>bands <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"B02"</span>, <span class="st">"B8A"</span>, <span class="st">"B11"</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
-<span>     <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_patterns.html">sits_patterns</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
+<span>     <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_select.html">sits_select</a></span><span class="op">(</span>bands <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"B02"</span>, <span class="st">"B8A"</span>, <span class="st">"B11"</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
+<span>     <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_patterns.html">sits_patterns</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
 <span>     <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </div>
@@ -624,7 +626,7 @@ div.csl-indent {
 <span><span class="va">images_path</span> <span class="op">&lt;-</span> <span class="st">"rondonia20LMR/inst/extdata/images/"</span></span>
 <span></span>
 <span><span class="co"># Access local data cube</span></span>
-<span><span class="va">cube_20LMR</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_cube.html">sits_cube</a></span><span class="op">(</span></span>
+<span><span class="va">cube_20LMR</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_cube.html">sits_cube</a></span><span class="op">(</span></span>
 <span>     source <span class="op">=</span> <span class="st">"MPC"</span>,</span>
 <span>     collection <span class="op">=</span> <span class="st">"SENTINEL-2-L2A"</span>,</span>
 <span>     data_dir <span class="op">=</span> <span class="va">images_path</span></span>
@@ -646,7 +648,7 @@ div.csl-indent {
 </div>
 </div>
 </div>
-<p>The <code><a href="https://rdrr.io/pkg/sits/man/sits_cube.html">sits_cube()</a></code> function creates the data cube <code>cube_20LMR</code> with the Sentinel-2 tile <code>20LMR</code> images available in the repository. Each temporal instance includes the spectral bands <code>B02</code>, <code>B03</code>, <code>B04</code>, <code>B05</code>, <code>B06</code>, <code>B07</code>, <code>B08</code>, <code>B8A</code>, <code>B11</code> and <code>B12</code>.</p>
+<p>The <code><a href="https://e-sensing.github.io/sits/reference/sits_cube.html">sits_cube()</a></code> function creates the data cube <code>cube_20LMR</code> with the Sentinel-2 tile <code>20LMR</code> images available in the repository. Each temporal instance includes the spectral bands <code>B02</code>, <code>B03</code>, <code>B04</code>, <code>B05</code>, <code>B06</code>, <code>B07</code>, <code>B08</code>, <code>B8A</code>, <code>B11</code> and <code>B12</code>.</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
 <ul class="nav nav-tabs" role="tablist">
 <li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-5-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-1" role="tab" aria-controls="tabset-5-1" aria-selected="true">R</a></li>
@@ -675,7 +677,7 @@ div.csl-indent {
 </div>
 </div>
 </div>
-<p>SITS provides the <code><a href="https://rdrr.io/pkg/sits/man/sits_select.html">sits_select()</a></code> function, which filters only the selected bands and dates from a set of time series or a data cube. As shown in the code below:</p>
+<p>SITS provides the <code><a href="https://e-sensing.github.io/sits/reference/sits_select.html">sits_select()</a></code> function, which filters only the selected bands and dates from a set of time series or a data cube. As shown in the code below:</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
 <ul class="nav nav-tabs" role="tablist">
 <li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-6-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-6-1" role="tab" aria-controls="tabset-6-1" aria-selected="true">R</a></li>
@@ -685,7 +687,7 @@ div.csl-indent {
 <div id="tabset-6-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-6-1-tab">
 <div class="cell">
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Select only bands B02, B8A and B11</span></span>
-<span><span class="va">samples_3bands</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_select.html">sits_select</a></span><span class="op">(</span></span>
+<span><span class="va">samples_3bands</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_select.html">sits_select</a></span><span class="op">(</span></span>
 <span>        data <span class="op">=</span> <span class="va">deforestation_samples_v18</span>,</span>
 <span>        bands <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"B02"</span>, <span class="st">"B8A"</span>, <span class="st">"B11"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -704,7 +706,7 @@ div.csl-indent {
 </div>
 </section><section id="training-a-machine-learning-model" class="level3" data-number="2.1.3"><h3 data-number="2.1.3" class="anchored" data-anchor-id="training-a-machine-learning-model">
 <span class="header-section-number">2.1.3</span> Training a Machine Learning model</h3>
-<p>The next step in producing a classified map is to train a model. In the code below, we use the <code><a href="https://rdrr.io/pkg/sits/man/sits_train.html">sits_train()</a></code> function to train a Random Forest classifier with the samples containing the <code>B02</code>, <code>B8A</code> and <code>B11</code> bands:</p>
+<p>The next step in producing a classified map is to train a model. In the code below, we use the <code><a href="https://e-sensing.github.io/sits/reference/sits_train.html">sits_train()</a></code> function to train a Random Forest classifier with the samples containing the <code>B02</code>, <code>B8A</code> and <code>B11</code> bands:</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
 <ul class="nav nav-tabs" role="tablist">
 <li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-7-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-7-1" role="tab" aria-controls="tabset-7-1" aria-selected="true">R</a></li>
@@ -714,9 +716,9 @@ div.csl-indent {
 <div id="tabset-7-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-7-1-tab">
 <div class="cell">
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Train the selected samples set using Rfor</span></span>
-<span><span class="va">rfor_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_train.html">sits_train</a></span><span class="op">(</span></span>
+<span><span class="va">rfor_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_train.html">sits_train</a></span><span class="op">(</span></span>
 <span>        samples <span class="op">=</span> <span class="va">samples_3bands</span>,</span>
-<span>        ml_method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_rfor.html">sits_rfor</a></span><span class="op">(</span><span class="op">)</span></span>
+<span>        ml_method <span class="op">=</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_rfor.html">sits_rfor</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </div>
@@ -734,7 +736,7 @@ div.csl-indent {
 <p>Random Forest is a classification algorithm based on multiple decision trees, each trained with random subsets of data and attributes. The final prediction is made by majority voting among the trees. This approach reduces overfitting and improves model accuracy. The method also provides the importance of each attribute, which can assist in feature selection. For more details on the use of Random Forest in time series classification of satellite images, see Pelletier et al., (2016) <span class="citation" data-cites="Pelletier2016"><a href="#ref-Pelletier2016" role="doc-biblioref">[3]</a></span>. For more, refer to <a href="./cl_machinelearning.html#random-forest">Random Forest</a> section.</p>
 </section><section id="data-cube-classification" class="level3" data-number="2.1.4"><h3 data-number="2.1.4" class="anchored" data-anchor-id="data-cube-classification">
 <span class="header-section-number">2.1.4</span> Data cube classification</h3>
-<p>The next step in producing a classified map is to apply the trained model to the data cube. In the example below, we use the <code><a href="https://rdrr.io/pkg/sits/man/sits_classify.html">sits_classify()</a></code> function to classify the <code>cube_20LMR</code> cube using the Random Forest model. The <code><a href="https://rdrr.io/pkg/sits/man/sits_classify.html">sits_classify()</a></code> function creates one raster probability map per class, showing the model’s confidence for each pixel. It requires two main arguments: <code>data</code> (a data cube or time series) and <code>ml_model</code> (the trained model). Optional arguments include <code>multicores</code> (number of processing cores), <code>memsize</code> (available memory) and <code>output_dir</code> (output directory).</p>
+<p>The next step in producing a classified map is to apply the trained model to the data cube. In the example below, we use the <code><a href="https://e-sensing.github.io/sits/reference/sits_classify.html">sits_classify()</a></code> function to classify the <code>cube_20LMR</code> cube using the Random Forest model. The <code><a href="https://e-sensing.github.io/sits/reference/sits_classify.html">sits_classify()</a></code> function creates one raster probability map per class, showing the model’s confidence for each pixel. It requires two main arguments: <code>data</code> (a data cube or time series) and <code>ml_model</code> (the trained model). Optional arguments include <code>multicores</code> (number of processing cores), <code>memsize</code> (available memory) and <code>output_dir</code> (output directory).</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
 <ul class="nav nav-tabs" role="tablist">
 <li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-8-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-8-1" role="tab" aria-controls="tabset-8-1" aria-selected="true">R</a></li>
@@ -744,7 +746,7 @@ div.csl-indent {
 <div id="tabset-8-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-8-1-tab">
 <div class="cell">
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Classify the data cube</span></span>
-<span><span class="va">cube_20LMR_probs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_classify.html">sits_classify</a></span><span class="op">(</span></span>
+<span><span class="va">cube_20LMR_probs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_classify.html">sits_classify</a></span><span class="op">(</span></span>
 <span>        data <span class="op">=</span> <span class="va">cube_20LMR</span>,</span>
 <span>        ml_model <span class="op">=</span> <span class="va">rfor_model</span>,</span>
 <span>        multicores <span class="op">=</span> <span class="fl">5</span>,</span>
@@ -782,7 +784,7 @@ div.csl-indent {
 </div>
 </div>
 <p>After classification, the probability maps can be visualized, such as for the <code>Forest</code> class. These maps help assess classification uncertainty and can support active learning approaches, as discussed in the section on image classification in data cubes.</p>
-<p>We recommend smoothing the results based on the spatial neighborhood of the pixels. This step helps incorporate spatial context and reduce isolated errors, especially in transition areas. The <code><a href="https://rdrr.io/pkg/sits/man/sits_smooth.html">sits_smooth()</a></code> function performs this task by applying a spatial Bayesian model to adjust predictions using neighboring class probabilities. In the code below, we apply smoothing to the classified cube <code>cube_20LMR_probs</code>.</p>
+<p>We recommend smoothing the results based on the spatial neighborhood of the pixels. This step helps incorporate spatial context and reduce isolated errors, especially in transition areas. The <code><a href="https://e-sensing.github.io/sits/reference/sits_smooth.html">sits_smooth()</a></code> function performs this task by applying a spatial Bayesian model to adjust predictions using neighboring class probabilities. In the code below, we apply smoothing to the classified cube <code>cube_20LMR_probs</code>.</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
 <ul class="nav nav-tabs" role="tablist">
 <li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-9-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-9-1" role="tab" aria-controls="tabset-9-1" aria-selected="true">R</a></li>
@@ -792,7 +794,7 @@ div.csl-indent {
 <div id="tabset-9-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-9-1-tab">
 <div class="cell">
 <div class="sourceCode" id="cb18"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Smoothing the probabilities</span></span>
-<span><span class="va">cube_20LMR_bayes</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_smooth.html">sits_smooth</a></span><span class="op">(</span></span>
+<span><span class="va">cube_20LMR_bayes</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_smooth.html">sits_smooth</a></span><span class="op">(</span></span>
 <span>        cube <span class="op">=</span> <span class="va">cube_20LMR_probs</span>,</span>
 <span>        multicores <span class="op">=</span> <span class="fl">5</span>,</span>
 <span>        memsize <span class="op">=</span> <span class="fl">8</span>,</span>
@@ -828,7 +830,7 @@ div.csl-indent {
 </div>
 </div>
 <p>We use the default values for <code>smoothness</code> and <code>window_size</code>, which generally yield good results. However, we recommend tuning these parameters based on the specific needs of your application. Smoothing reduces classification uncertainty by removing isolated low-confidence pixels. In the smoothed map for the <code>Forest</code> class, most outliers are corrected, resulting in a more spatially consistent classification.</p>
-<p>The final step is to assign a class label to each pixel by selecting the one with the highest probability value. After spatial smoothing, we use the <code><a href="https://rdrr.io/pkg/sits/man/sits_label_classification.html">sits_label_classification()</a></code> function to generate the final classification map:</p>
+<p>The final step is to assign a class label to each pixel by selecting the one with the highest probability value. After spatial smoothing, we use the <code><a href="https://e-sensing.github.io/sits/reference/sits_label_classification.html">sits_label_classification()</a></code> function to generate the final classification map:</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
 <ul class="nav nav-tabs" role="tablist">
 <li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-10-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-10-1" role="tab" aria-controls="tabset-10-1" aria-selected="true">R</a></li>
@@ -837,7 +839,7 @@ div.csl-indent {
 <div class="tab-content">
 <div id="tabset-10-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-10-1-tab">
 <div class="cell">
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">cube_20LMR_map</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_label_classification.html">sits_label_classification</a></span><span class="op">(</span></span>
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">cube_20LMR_map</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_label_classification.html">sits_label_classification</a></span><span class="op">(</span></span>
 <span>        cube <span class="op">=</span> <span class="va">cube_20LMR_bayes</span>,</span>
 <span>        multicores <span class="op">=</span> <span class="fl">5</span>,</span>
 <span>        memsize <span class="op">=</span> <span class="fl">8</span>,</span>
@@ -877,7 +879,7 @@ div.csl-indent {
 <p>In this example, we replicated the results presented in the article “Satellite Image Time Series Analysis for Big Earth Observation Data” <span class="citation" data-cites="Simoes2021"><a href="#ref-Simoes2021" role="doc-biblioref">[8]</a></span>, using Landsat imagery accessed through the Microsoft Planetary Computer (MPC) platform. We have selected a small region to illustrate all the steps involved in generating a land use and land cover map. The classification period ranges from September 2017 to August 2018, following the agricultural calendar. A temporal resolution of 16 days was used throughout the analysis.</p>
 <section id="cerrado-samples" class="level3" data-number="2.2.1"><h3 data-number="2.2.1" class="anchored" data-anchor-id="cerrado-samples">
 <span class="header-section-number">2.2.1</span> Cerrado samples</h3>
-<p>Accurate classification requires a high-quality sample set. To obtain reliable training data, we conducted a systematic sampling using a 5 × 5 km grid across the entire Cerrado biome, resulting in the collection of 85,026 samples. The class labels for the training data were derived from three authoritative sources: the 2018 pastureland map provided by Pastagem.org <span class="citation" data-cites="Parente2019"><a href="#ref-Parente2019" role="doc-biblioref">[9]</a></span>, MapBiomas Collection 5 for the year 2018 <span class="citation" data-cites="Souza2020"><a href="#ref-Souza2020" role="doc-biblioref">[10]</a></span>, and land use maps from Brazil’s national mapping agency, IBGE, covering the period from 2016 to 2018 <span class="citation" data-cites="IBGE2020"><a href="#ref-IBGE2020" role="doc-biblioref">[11]</a></span>. From the initial set of 85,026 samples, we retained only those for which all three sources agreed on the assigned label. This filtering process resulted in a final dataset of 48,850 sample points. Time series data for these points were extracted from the Landsat-8 data cube. The distribution of samples by class is as follows: <code>Annual Crop</code> (6,887), <code>Cerradão</code> (4,211), <code>Cerrado</code> (16,251), <code>Natural Non-Vegetated</code> (38), <code>Open Cerrado</code> (5,658), <code>Pasture</code> (12,894), <code>Perennial Crop</code> (68), <code>Silviculture</code> (805), <code>Sugarcane</code> (1,775), and <code>Water</code> (263).</p>
+<p>Accurate classification requires a high-quality sample set. To obtain reliable training data, we conducted a systematic sampling using a 5 × 5 km grid across the entire Cerrado biome, resulting in the collection of 85,026 samples. The class labels for the training data were derived from three authoritative sources: the 2018 pastureland map provided by Pastagem.org <span class="citation" data-cites="Parente2019"><a href="#ref-Parente2019" role="doc-biblioref">[9]</a></span>, MapBiomas Collection 5 for the year 2018 <span class="citation" data-cites="SouzaJr2020"><a href="#ref-SouzaJr2020" role="doc-biblioref">[10]</a></span>, and land use maps from Brazil’s national mapping agency, IBGE, covering the period from 2016 to 2018 <span class="citation" data-cites="IBGE2020"><a href="#ref-IBGE2020" role="doc-biblioref">[11]</a></span>. From the initial set of 85,026 samples, we retained only those for which all three sources agreed on the assigned label. This filtering process resulted in a final dataset of 48,850 sample points. Time series data for these points were extracted from the Landsat-8 data cube. The distribution of samples by class is as follows: <code>Annual Crop</code> (6,887), <code>Cerradão</code> (4,211), <code>Cerrado</code> (16,251), <code>Natural Non-Vegetated</code> (38), <code>Open Cerrado</code> (5,658), <code>Pasture</code> (12,894), <code>Perennial Crop</code> (68), <code>Silviculture</code> (805), <code>Sugarcane</code> (1,775), and <code>Water</code> (263).</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
 <ul class="nav nav-tabs" role="tablist">
 <li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-11-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-11-1" role="tab" aria-controls="tabset-11-1" aria-selected="true">R</a></li>
@@ -893,7 +895,7 @@ div.csl-indent {
 <div id="tabset-11-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-11-2-tab">
 <div class="cell">
 <div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Read the Cerrado samples</span></span>
-<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>samples_cerrado_lc8_examples <span class="op">=</span> load_samples_dataset(</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>samples_cerrado_lc8_examples <span class="op">=</span> load_samples(</span>
 <span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>    name    <span class="op">=</span> <span class="st">"samples_cerrado_lc8_examples"</span>, </span>
 <span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>    package <span class="op">=</span> <span class="st">"sitsdata"</span></span>
 <span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -901,7 +903,7 @@ div.csl-indent {
 </div>
 </div>
 </div>
-<p>SITS package offers a range of functions to support a deeper understanding of the temporal behavior of sample data. One such function is <code><a href="https://rdrr.io/pkg/sits/man/sits_patterns.html">sits_patterns()</a></code>. In the example below, we showed the temporal patterns of each class.</p>
+<p>SITS package offers a range of functions to support a deeper understanding of the temporal behavior of sample data. One such function is <code><a href="https://e-sensing.github.io/sits/reference/sits_patterns.html">sits_patterns()</a></code>. In the example below, we showed the temporal patterns of each class.</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
 <ul class="nav nav-tabs" role="tablist">
 <li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-12-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-12-1" role="tab" aria-controls="tabset-12-1" aria-selected="true">R</a></li>
@@ -911,7 +913,7 @@ div.csl-indent {
 <div id="tabset-12-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-12-1-tab">
 <div class="cell">
 <div class="sourceCode" id="cb24"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Generate the temporal patterns</span></span>
-<span><span class="va">samples_patterns</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_patterns.html">sits_patterns</a></span><span class="op">(</span><span class="va">samples_cerrado_lc8_examples</span><span class="op">)</span></span>
+<span><span class="va">samples_patterns</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_patterns.html">sits_patterns</a></span><span class="op">(</span><span class="va">samples_cerrado_lc8_examples</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Plot samples patterns</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">samples_patterns</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -957,7 +959,7 @@ div.csl-indent {
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Access the Landsat through the MPC</span></span>
-<span><span class="va">mpc_cube</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_cube.html">sits_cube</a></span><span class="op">(</span></span>
+<span><span class="va">mpc_cube</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_cube.html">sits_cube</a></span><span class="op">(</span></span>
 <span>    source <span class="op">=</span> <span class="st">"MPC"</span>,</span>
 <span>    collection  <span class="op">=</span> <span class="st">"LANDSAT-C2-L2"</span>,</span>
 <span>    bands <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"BLUE"</span>, <span class="st">"GREEN"</span>, <span class="st">"RED"</span>, <span class="st">"NIR08"</span>, <span class="st">"SWIR16"</span>, <span class="st">"SWIR22"</span>, <span class="st">"CLOUD"</span><span class="op">)</span>,</span>
@@ -991,7 +993,7 @@ div.csl-indent {
 </div>
 </div>
 <p>The created data cube is not regular (for more details, see <a href="./datacubes.html#regular-earth-observation-data-cubes">Regular Earth observation data cubes</a>), which means that it needs to be regularized before proceeding with the analysis. We recommend copying the images locally before applying the regularization process. Although not mandatory, this is considered a good practice. In cases where the machine does not have sufficient storage space, regularization can be performed directly on the remote data.</p>
-<p>In this experiment, we use the <code><a href="https://rdrr.io/pkg/sits/man/sits_cube_copy.html">sits_cube_copy()</a></code> function to copy the remote images locally. This function supports the <code>roi</code> parameter, allowing the images to be cropped during the download process. It also supports the <code>multicores</code> parameter, which can significantly improve download speed.</p>
+<p>In this experiment, we use the <code><a href="https://e-sensing.github.io/sits/reference/sits_cube_copy.html">sits_cube_copy()</a></code> function to copy the remote images locally. This function supports the <code>roi</code> parameter, allowing the images to be cropped during the download process. It also supports the <code>multicores</code> parameter, which can significantly improve download speed.</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
 <ul class="nav nav-tabs" role="tablist">
 <li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-14-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-14-1" role="tab" aria-controls="tabset-14-1" aria-selected="true">R</a></li>
@@ -1001,7 +1003,7 @@ div.csl-indent {
 <div id="tabset-14-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-14-1-tab">
 <div class="cell">
 <div class="sourceCode" id="cb28"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Copy images locally</span></span>
-<span><span class="va">mpc_cube</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_cube_copy.html">sits_cube_copy</a></span><span class="op">(</span></span>
+<span><span class="va">mpc_cube</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_cube_copy.html">sits_cube_copy</a></span><span class="op">(</span></span>
 <span>  cube <span class="op">=</span> <span class="va">mpc_cube</span>,</span>
 <span>  roi <span class="op">=</span> <span class="va">roi</span>,</span>
 <span>  multicores <span class="op">=</span> <span class="fl">5</span>,</span>
@@ -1032,7 +1034,7 @@ div.csl-indent {
 <div id="tabset-15-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-15-1-tab">
 <div class="cell">
 <div class="sourceCode" id="cb30"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Access local data cube</span></span>
-<span><span class="va">mpc_cube</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_cube.html">sits_cube</a></span><span class="op">(</span></span>
+<span><span class="va">mpc_cube</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_cube.html">sits_cube</a></span><span class="op">(</span></span>
 <span>    source <span class="op">=</span> <span class="st">"MPC"</span>,</span>
 <span>    collection <span class="op">=</span> <span class="st">"LANDSAT-C2-L2"</span>,</span>
 <span>    data_dir <span class="op">=</span> <span class="va">tempdir_cerrado_cube</span></span>
@@ -1051,7 +1053,7 @@ div.csl-indent {
 </div>
 </div>
 </div>
-<p>After creating the local data cube, we can proceed with the regularization step using the <code><a href="https://rdrr.io/pkg/sits/man/sits_regularize.html">sits_regularize()</a></code> function. In this case, we provide the timeline parameter to define a custom timeline, specifically the timeline of the reference samples. This ensures consistency between the data cube and the samples. For more details on the regularization process, please refer to the corresponding chapter in <a href="./dc_regularize.html">Building regular data cubes</a>.</p>
+<p>After creating the local data cube, we can proceed with the regularization step using the <code><a href="https://e-sensing.github.io/sits/reference/sits_regularize.html">sits_regularize()</a></code> function. In this case, we provide the timeline parameter to define a custom timeline, specifically the timeline of the reference samples. This ensures consistency between the data cube and the samples. For more details on the regularization process, please refer to the corresponding chapter in <a href="./dc_regularize.html">Building regular data cubes</a>.</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
 <ul class="nav nav-tabs" role="tablist">
 <li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-16-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-16-1" role="tab" aria-controls="tabset-16-1" aria-selected="true">R</a></li>
@@ -1061,10 +1063,10 @@ div.csl-indent {
 <div id="tabset-16-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-16-1-tab">
 <div class="cell">
 <div class="sourceCode" id="cb32"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Samples timeline</span></span>
-<span><span class="va">timeline</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_timeline.html">sits_timeline</a></span><span class="op">(</span><span class="va">samples_cerrado_lc8_examples</span><span class="op">)</span></span>
+<span><span class="va">timeline</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_timeline.html">sits_timeline</a></span><span class="op">(</span><span class="va">samples_cerrado_lc8_examples</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Regularize the local cube</span></span>
-<span><span class="va">cube_reg</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_regularize.html">sits_regularize</a></span><span class="op">(</span></span>
+<span><span class="va">cube_reg</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_regularize.html">sits_regularize</a></span><span class="op">(</span></span>
 <span>    cube <span class="op">=</span> <span class="va">mpc_cube</span>,</span>
 <span>    period <span class="op">=</span> <span class="st">"P16D"</span>,</span>
 <span>    res <span class="op">=</span> <span class="fl">30</span>,</span>
@@ -1096,7 +1098,7 @@ div.csl-indent {
 </div>
 </section><section id="computing-vegetation-indices" class="level3" data-number="2.2.3"><h3 data-number="2.2.3" class="anchored" data-anchor-id="computing-vegetation-indices">
 <span class="header-section-number">2.2.3</span> Computing vegetation indices</h3>
-<p>SITS provides a range of functions to perform various operations on a data cube, as highlighted in the <a href="./dc_cubeoperations.html">Computing NDVI and other spectral indices</a> chapter. One of these functions is <code><a href="https://rdrr.io/pkg/sits/man/sits_apply.html">sits_apply()</a></code>, which allows users to generate indices using R expressions. In the example below, we compute NDVI and EVI indices to illustrate how this function can be used for generating vegetation indices.</p>
+<p>SITS provides a range of functions to perform various operations on a data cube, as highlighted in the <a href="./dc_cubeoperations.html">Computing NDVI and other spectral indices</a> chapter. One of these functions is <code><a href="https://e-sensing.github.io/sits/reference/sits_apply.html">sits_apply()</a></code>, which allows users to generate indices using R expressions. In the example below, we compute NDVI and EVI indices to illustrate how this function can be used for generating vegetation indices.</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
 <ul class="nav nav-tabs" role="tablist">
 <li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-17-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-17-1" role="tab" aria-controls="tabset-17-1" aria-selected="true">R</a></li>
@@ -1106,7 +1108,7 @@ div.csl-indent {
 <div id="tabset-17-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-17-1-tab">
 <div class="cell">
 <div class="sourceCode" id="cb34"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Calculate NDVI index using bands NIR08 and RED</span></span>
-<span><span class="va">cube_reg</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_apply.html">sits_apply</a></span><span class="op">(</span></span>
+<span><span class="va">cube_reg</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_apply.html">sits_apply</a></span><span class="op">(</span></span>
 <span>    data <span class="op">=</span> <span class="va">cube_reg</span>,</span>
 <span>    NDVI <span class="op">=</span> <span class="op">(</span><span class="va">NIR08</span> <span class="op">-</span> <span class="va">RED</span><span class="op">)</span> <span class="op">/</span> <span class="op">(</span><span class="va">NIR08</span> <span class="op">+</span> <span class="va">RED</span><span class="op">)</span>,</span>
 <span>    output_dir <span class="op">=</span> <span class="va">tempdir_cerrado</span>,</span>
@@ -1115,7 +1117,7 @@ div.csl-indent {
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Calculate EVI index using bands NIR08 and RED</span></span>
-<span><span class="va">cube_reg</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_apply.html">sits_apply</a></span><span class="op">(</span></span>
+<span><span class="va">cube_reg</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_apply.html">sits_apply</a></span><span class="op">(</span></span>
 <span>    data       <span class="op">=</span> <span class="va">cube_reg</span>,</span>
 <span>    EVI        <span class="op">=</span> <span class="fl">2.5</span> <span class="op">*</span> <span class="op">(</span><span class="op">(</span><span class="va">NIR08</span> <span class="op">-</span> <span class="va">RED</span><span class="op">)</span> <span class="op">/</span> <span class="op">(</span><span class="va">NIR08</span> <span class="op">+</span> <span class="fl">6</span> <span class="op">*</span> <span class="va">RED</span> <span class="op">-</span> <span class="fl">7.5</span> <span class="op">*</span> <span class="va">BLUE</span> <span class="op">+</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>    output_dir <span class="op">=</span> <span class="va">tempdir_cerrado</span>,</span>
@@ -1165,7 +1167,7 @@ div.csl-indent {
 <div class="cell-output-display">
 <div id="fig-nvdvi-intro-cerrado" class="quarto-figure quarto-figure-center anchored">
 <figure class="figure"><p><img src="./images/ndvi_intro_cerrado.png" style="width:100.0%;height:100.0%" class="figure-img"></p>
-<figcaption class="figure-caption">Figure&nbsp;2.7: NDVI image generated by <code><a href="https://rdrr.io/pkg/sits/man/sits_apply.html">sits_apply()</a></code>.</figcaption></figure>
+<figcaption class="figure-caption">Figure&nbsp;2.7: NDVI image generated by <code><a href="https://e-sensing.github.io/sits/reference/sits_apply.html">sits_apply()</a></code>.</figcaption></figure>
 </div>
 </div>
 </div>
@@ -1181,7 +1183,7 @@ div.csl-indent {
 <div id="tabset-18-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-18-1-tab">
 <div class="cell">
 <div class="sourceCode" id="cb36"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Extract the time series</span></span>
-<span><span class="va">samples</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_get_data.html">sits_get_data</a></span><span class="op">(</span></span>
+<span><span class="va">samples</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_get_data.html">sits_get_data</a></span><span class="op">(</span></span>
 <span>    cube <span class="op">=</span> <span class="va">cube_reg</span>,</span>
 <span>    samples <span class="op">=</span> <span class="va">samples_cerrado_lc8_examples</span>,</span>
 <span>    multicores <span class="op">=</span> <span class="fl">5</span></span>
@@ -1235,10 +1237,10 @@ div.csl-indent {
 <div class="tab-content">
 <div id="tabset-19-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-19-1-tab">
 <div class="cell">
-<div class="sourceCode" id="cb40"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">tuned_tempcnn</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_tuning.html">sits_tuning</a></span><span class="op">(</span></span>
+<div class="sourceCode" id="cb40"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">tuned_tempcnn</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_tuning.html">sits_tuning</a></span><span class="op">(</span></span>
 <span>    samples <span class="op">=</span> <span class="va">samples_cerrado_lc8_examples</span>,</span>
-<span>    ml_method <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_tempcnn.html">sits_tempcnn</a></span><span class="op">(</span><span class="op">)</span>,</span>
-<span>    params <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_tuning_hparams.html">sits_tuning_hparams</a></span><span class="op">(</span></span>
+<span>    ml_method <span class="op">=</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_tempcnn.html">sits_tempcnn</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>    params <span class="op">=</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_tuning_hparams.html">sits_tuning_hparams</a></span><span class="op">(</span></span>
 <span>        optimizer <span class="op">=</span> <span class="fu">torch</span><span class="fu">::</span><span class="va"><a href="https://torch.mlverse.org/docs/reference/optim_adamw.html">optim_adamw</a></span>,</span>
 <span>        cnn_layers <span class="op">=</span> <span class="fu">choice</span><span class="op">(</span></span>
 <span>            <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">32</span>, <span class="fl">32</span>, <span class="fl">32</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">64</span>, <span class="fl">64</span>, <span class="fl">64</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">128</span>, <span class="fl">128</span>, <span class="fl">128</span><span class="op">)</span></span>
@@ -1353,9 +1355,9 @@ div.csl-indent {
 <div class="cell">
 <div class="sourceCode" id="cb44"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html">set.seed</a></span><span class="op">(</span><span class="fl">03022024</span><span class="op">)</span></span>
 <span><span class="co"># Train using tempCNN</span></span>
-<span><span class="va">tempcnn_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_train.html">sits_train</a></span><span class="op">(</span></span>
+<span><span class="va">tempcnn_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_train.html">sits_train</a></span><span class="op">(</span></span>
 <span>  <span class="va">samples_cerrado_lc8_examples</span>,</span>
-<span>  <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_tempcnn.html">sits_tempcnn</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_tempcnn.html">sits_tempcnn</a></span><span class="op">(</span></span>
 <span>    optimizer         <span class="op">=</span> <span class="fu">torch</span><span class="fu">::</span><span class="va"><a href="https://torch.mlverse.org/docs/reference/optim_adamw.html">optim_adamw</a></span>,</span>
 <span>    cnn_layers        <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">64</span>, <span class="fl">64</span>, <span class="fl">64</span><span class="op">)</span>,</span>
 <span>    cnn_kernels       <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="fl">7</span>, <span class="fl">7</span>, <span class="fl">7</span><span class="op">)</span>,</span>
@@ -1420,7 +1422,7 @@ div.csl-indent {
 <div id="tabset-21-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-21-1-tab">
 <div class="cell">
 <div class="sourceCode" id="cb46"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Classify the raster image</span></span>
-<span><span class="va">cerrado_probs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_classify.html">sits_classify</a></span><span class="op">(</span></span>
+<span><span class="va">cerrado_probs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_classify.html">sits_classify</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="va">cube_reg</span>,</span>
 <span>  ml_model <span class="op">=</span> <span class="va">tempcnn_model</span>,</span>
 <span>  multicores <span class="op">=</span> <span class="fl">5</span>,</span>
@@ -1457,7 +1459,7 @@ div.csl-indent {
 </div>
 </div>
 </div>
-<p>After generating the probability map, we highly recommend applying a smoothing operation based on the spatial neighborhood. This step is essential for incorporating spatial context into the classification results. We used the default values for <code>smoothness</code> and <code>window_size</code>, which serve as a solid starting point. However, we encourage users to adjust these parameters according to the specific needs of their application. For more about the <code><a href="https://rdrr.io/pkg/sits/man/sits_smooth.html">sits_smooth()</a></code> function, please refer to <a href="./cl_smoothing.html">Bayesian smoothing for classification post-processing</a> chapter.</p>
+<p>After generating the probability map, we highly recommend applying a smoothing operation based on the spatial neighborhood. This step is essential for incorporating spatial context into the classification results. We used the default values for <code>smoothness</code> and <code>window_size</code>, which serve as a solid starting point. However, we encourage users to adjust these parameters according to the specific needs of their application. For more about the <code><a href="https://e-sensing.github.io/sits/reference/sits_smooth.html">sits_smooth()</a></code> function, please refer to <a href="./cl_smoothing.html">Bayesian smoothing for classification post-processing</a> chapter.</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
 <ul class="nav nav-tabs" role="tablist">
 <li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-22-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-22-1" role="tab" aria-controls="tabset-22-1" aria-selected="true">R</a></li>
@@ -1467,7 +1469,7 @@ div.csl-indent {
 <div id="tabset-22-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-22-1-tab">
 <div class="cell">
 <div class="sourceCode" id="cb48"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Perform spatial smoothing</span></span>
-<span><span class="va">cerrado_bayes</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_smooth.html">sits_smooth</a></span><span class="op">(</span></span>
+<span><span class="va">cerrado_bayes</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_smooth.html">sits_smooth</a></span><span class="op">(</span></span>
 <span>  cube <span class="op">=</span> <span class="va">cerrado_probs</span>,</span>
 <span>  multicores <span class="op">=</span> <span class="fl">5</span>,</span>
 <span>  memsize <span class="op">=</span> <span class="fl">8</span>,</span>
@@ -1512,7 +1514,7 @@ div.csl-indent {
 <div id="tabset-23-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-23-1-tab">
 <div class="cell">
 <div class="sourceCode" id="cb50"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Label the probability file</span></span>
-<span><span class="va">cerrado_map</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_label_classification.html">sits_label_classification</a></span><span class="op">(</span></span>
+<span><span class="va">cerrado_map</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_label_classification.html">sits_label_classification</a></span><span class="op">(</span></span>
 <span>  cube <span class="op">=</span> <span class="va">cerrado_bayes</span>,</span>
 <span>  output_dir <span class="op">=</span> <span class="va">tempdir_cerrado</span></span>
 <span><span class="op">)</span></span>
@@ -1560,8 +1562,8 @@ div.csl-indent {
 <span>    <span class="st">"/extdata/Cerrado-Class-2017-2018-Mosaic"</span>, package <span class="op">=</span> <span class="st">"sitsdata"</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Read the probability file</span></span>
-<span><span class="va">cerrado_map</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_cube.html">sits_cube</a></span><span class="op">(</span></span>
+<span><span class="co"># Read the classified data cube</span></span>
+<span><span class="va">cerrado_map</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_cube.html">sits_cube</a></span><span class="op">(</span></span>
 <span>    source <span class="op">=</span> <span class="st">"MPC"</span>,</span>
 <span>    collection <span class="op">=</span> <span class="st">"LANDSAT-C2-L2"</span>,</span>
 <span>    bands <span class="op">=</span> <span class="st">"class"</span>,</span>
@@ -1574,7 +1576,7 @@ div.csl-indent {
 <span><span class="co"># Plot Cerrado map</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">cerrado_map</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
-<p><img src="intro_examples_files/figure-html/unnamed-chunk-68-1.png" class="img-fluid" width="672"></p>
+<p><img src="intro_examples_files/figure-html/unnamed-chunk-57-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
 </div>
@@ -1586,7 +1588,7 @@ div.csl-indent {
 <span id="cb53-4"><a href="#cb53-4" aria-hidden="true" tabindex="-1"></a>    package <span class="op">=</span> <span class="st">"sitsdata"</span></span>
 <span id="cb53-5"><a href="#cb53-5" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb53-6"><a href="#cb53-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb53-7"><a href="#cb53-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Read the probability file</span></span>
+<span id="cb53-7"><a href="#cb53-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Read the classified data cube</span></span>
 <span id="cb53-8"><a href="#cb53-8" aria-hidden="true" tabindex="-1"></a>cerrado_map <span class="op">=</span> sits_cube(</span>
 <span id="cb53-9"><a href="#cb53-9" aria-hidden="true" tabindex="-1"></a>    source <span class="op">=</span> <span class="st">"MPC"</span>,</span>
 <span id="cb53-10"><a href="#cb53-10" aria-hidden="true" tabindex="-1"></a>    collection <span class="op">=</span> <span class="st">"LANDSAT-C2-L2"</span>,</span>
@@ -1600,13 +1602,13 @@ div.csl-indent {
 <span id="cb53-18"><a href="#cb53-18" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot Cerrado map</span></span>
 <span id="cb53-19"><a href="#cb53-19" aria-hidden="true" tabindex="-1"></a>plot(cerrado_map)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
-<p><img src="intro_examples_files/figure-html/unnamed-chunk-69-1.png" class="img-fluid" width="672"></p>
+<p><img src="intro_examples_files/figure-html/unnamed-chunk-58-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
 </div>
 </div>
 </div>
-<p>We used the sits implementation of the area-weighted technique <span class="citation" data-cites="Olofsson2013"><a href="#ref-Olofsson2013" role="doc-biblioref">[13]</a></span> to provide an unbiased estimator for the overall accuracy and the total area of each class based on the reference samples (see <a href="./val_map.html">Map accuracy assessment</a>). The classification accuracies are shown below. The overall accuracy of the classification was 0.83.</p>
+<p>We used the sits implementation of the area-weighted technique <span class="citation" data-cites="Olofsson2013"><a href="#ref-Olofsson2013" role="doc-biblioref">[13]</a></span> to provide an unbiased estimator for the overall accuracy and the total area of each class based on the reference samples (see <a href="https://e-sensing.github.io/sitsbook/val_map.html">Map accuracy assessment</a>). The classification accuracies are shown below. The overall accuracy of the classification was 0.83.</p>
 <div class="tabset-margin-container"></div><div class="panel-tabset">
 <ul class="nav nav-tabs" role="tablist">
 <li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-25-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-25-1" role="tab" aria-controls="tabset-25-1" aria-selected="true">R</a></li>
@@ -1621,7 +1623,7 @@ div.csl-indent {
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Calculate accuracy according to Olofsson's method</span></span>
-<span><span class="va">area_acc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/sits/man/sits_accuracy.html">sits_accuracy</a></span><span class="op">(</span></span>
+<span><span class="va">area_acc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_accuracy.html">sits_accuracy</a></span><span class="op">(</span></span>
 <span>  data <span class="op">=</span> <span class="va">cerrado_map</span>,</span>
 <span>  validation <span class="op">=</span> <span class="va">valid_csv</span>,</span>
 <span>  multicores <span class="op">=</span> <span class="fl">4</span></span>
@@ -1636,7 +1638,7 @@ Overall Accuracy = 0.83
 Area-Weighted Users and Producers Accuracy
                User Producer
 Annual_Crop    0.87     0.82
-Cerrado        0.91     0.86
+Cerrado        0.91     0.87
 Nat_NonVeg     0.94     0.27
 Pasture        0.69     0.79
 Perennial_Crop 0.71     0.38
@@ -1646,14 +1648,14 @@ Water          0.94     0.71
 
 Mapped Area x Estimated Area (ha)
                Mapped Area (ha) Error-Adjusted Area (ha) Conf Interval (ha)
-Annual_Crop          22007606.5               23336717.8          1111777.8
-Cerrado             116681183.2              122786133.9          2085647.1
-Nat_NonVeg             261234.6                 911153.3           353704.1
-Pasture              64237851.8               56008536.3          2155334.6
-Perennial_Crop         650393.2                1215456.5           382474.6
-Silviculture          4120936.3                4179525.9           506675.9
-Sugarcane             4660479.4                3738766.0           508507.4
-Water                 1357575.1                1800970.6           320731.0</code></pre>
+Annual_Crop              220000                233378.92           11126.20
+Cerrado                 1200000               1257366.88           21052.19
+Nat_NonVeg                 2600                  9162.38            3565.73
+Pasture                  640000                561056.47           21704.76
+Perennial_Crop             6500                 12216.56            3854.73
+Silviculture              41000                 41727.75            5091.49
+Sugarcane                 47000                 37686.67            5120.41
+Water                     14000                 18504.37            3267.58</code></pre>
 </div>
 </div>
 </div>
@@ -1683,7 +1685,7 @@ Overall Accuracy = 0.83
 Area-Weighted Users and Producers Accuracy
                User Producer
 Annual_Crop    0.87     0.82
-Cerrado        0.91     0.86
+Cerrado        0.91     0.87
 Nat_NonVeg     0.94     0.27
 Pasture        0.69     0.79
 Perennial_Crop 0.71     0.38
@@ -1693,14 +1695,14 @@ Water          0.94     0.71
 
 Mapped Area x Estimated Area (ha)
                Mapped Area (ha) Error-Adjusted Area (ha) Conf Interval (ha)
-Annual_Crop          22007606.5               23336717.8          1111777.8
-Cerrado             116681183.2              122786133.9          2085647.1
-Nat_NonVeg             261234.6                 911153.3           353704.1
-Pasture              64237851.8               56008536.3          2155334.6
-Perennial_Crop         650393.2                1215456.5           382474.6
-Silviculture          4120936.3                4179525.9           506675.9
-Sugarcane             4660479.4                3738766.0           508507.4
-Water                 1357575.1                1800970.6           320731.0</code></pre>
+Annual_Crop              220000                233378.92           11126.20
+Cerrado                 1200000               1257366.88           21052.19
+Nat_NonVeg                 2600                  9162.38            3565.73
+Pasture                  640000                561056.47           21704.76
+Perennial_Crop             6500                 12216.56            3854.73
+Silviculture              41000                 41727.75            5091.49
+Sugarcane                 47000                 37686.67            5120.41
+Water                     14000                 18504.37            3267.58</code></pre>
 </div>
 </div>
 </div>
@@ -1735,11 +1737,11 @@ Water                 1357575.1                1800970.6           320731.0</cod
 </div>
 <div id="ref-Del-Claro2019" class="csl-entry" role="listitem">
 <div class="csl-left-margin">[6] </div>
-<div class="csl-right-inline">K. Del-Claro and H. M. Torezan-Silingardi, <span>“The study of biotic interactions in the <span>Brazilian Cerrado</span> as a path to the conservation of biodiversity,”</span> <em>Anais da Academia Brasileira de Ci<span>ê</span>ncias</em>, vol. 91, no. suppl 3, p. e20180768, 2019, doi: <a href="https://doi.org/10.1590/0001-3765201920180768">10.1590/0001-3765201920180768</a>.</div>
+<div class="csl-right-inline">K. Del-Claro and H. M. Torezan-Silingardi, <span>“The study of biotic interactions in the <span>Brazilian Cerrado</span> as a path to the conservation of biodiversity,”</span> <em>Anais da Academia Brasileira de Ciências</em>, vol. 91, no. suppl 3, p. e20180768, 2019, doi: <a href="https://doi.org/10.1590/0001-3765201920180768">10.1590/0001-3765201920180768</a>.</div>
 </div>
 <div id="ref-Walter2006" class="csl-entry" role="listitem">
 <div class="csl-left-margin">[7] </div>
-<div class="csl-right-inline">B. M. T. Walter, <span>“<span class="nocase">Fitofisionomias do bioma Cerrado: s<span class="nocase">í</span>ntese terminol<span class="nocase">ó</span>gica e rela<span class="nocase">ç</span><span class="nocase">õ</span>es flor<span class="nocase">í</span>sticas.</span>”</span> PhD thesis, Universidade de Brasilia, 2006.</div>
+<div class="csl-right-inline">B. M. T. Walter, <span>“<span class="nocase">Fitofisionomias do bioma Cerrado: síntese terminológica e relações florísticas.</span>”</span> PhD thesis, Universidade de Brasilia, 2006.</div>
 </div>
 <div id="ref-Simoes2021" class="csl-entry" role="listitem">
 <div class="csl-left-margin">[8] </div>
@@ -1749,13 +1751,13 @@ Water                 1357575.1                1800970.6           320731.0</cod
 <div class="csl-left-margin">[9] </div>
 <div class="csl-right-inline">L. Parente, V. Mesquita, F. Miziara, L. Baumann, and L. Ferreira, <span>“Assessing the pasturelands and livestock dynamics in <span>Brazil</span>, from 1985 to 2017: <span>A</span> novel approach based on high spatial resolution imagery and <span>Google Earth Engine</span> cloud computing,”</span> <em>Remote Sensing of Environment</em>, vol. 232, p. 111301, 2019, doi: <a href="https://doi.org/10.1016/j.rse.2019.111301">10.1016/j.rse.2019.111301</a>.</div>
 </div>
-<div id="ref-Souza2020" class="csl-entry" role="listitem">
+<div id="ref-SouzaJr2020" class="csl-entry" role="listitem">
 <div class="csl-left-margin">[10] </div>
-<div class="csl-right-inline">C. M. Souza Jr <em>et al.</em>, <span>“Reconstructing three decades of land use and land cover changes in brazilian biomes with landsat archive and earth engine,”</span> <em>Remote Sensing</em>, vol. 12, no. 17, p. 2735, 2020.</div>
+<div class="csl-right-inline">C. M. Souza Jr <em>et al.</em>, <span>“Reconstructing <span>Three Decades</span> of <span>Land Use</span> and <span>Land Cover Changes</span> in <span>Brazilian Biomes</span> with <span>Landsat Archive</span> and <span>Earth Engine</span>,”</span> <em>Remote Sensing</em>, vol. 12, no. 17, p. 2735, 2020, doi: <a href="https://doi.org/10.3390/rs12172735">10.3390/rs12172735</a>.</div>
 </div>
 <div id="ref-IBGE2020" class="csl-entry" role="listitem">
 <div class="csl-left-margin">[11] </div>
-<div class="csl-right-inline">IBGE, <span>“<span class="nocase">Monitoramento da cobertura e uso da terra do Brasil: 2016–2018</span>,”</span> <span>Brazilian Institute of Geography and Statistics</span>, Rio de Janeiro, {Book} 101703, 2020. [Online]. Available: <a href="https://biblioteca.ibge.gov.br/index.php/biblioteca-catalogo?view=detalhes&amp;id=2101703">https://biblioteca.ibge.gov.br/index.php/biblioteca-catalogo?view=detalhes&amp;id=2101703</a>.</div>
+<div class="csl-right-inline">IBGE, <span>“Monitoramento da cobertura e uso da terra do <span>Brasil</span>: 2016–2018,”</span> <span>Brazilian Institute of Geography and Statistics</span>, Rio de Janeiro, Book 101703, 2020. [Online]. Available: <a href="https://biblioteca.ibge.gov.br/index.php/biblioteca-catalogo?view=detalhes&amp;id=2101703">https://biblioteca.ibge.gov.br/index.php/biblioteca-catalogo?view=detalhes&amp;id=2101703</a>.</div>
 </div>
 <div id="ref-Pelletier2019" class="csl-entry" role="listitem">
 <div class="csl-left-margin">[12] </div>
