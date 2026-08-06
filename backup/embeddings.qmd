@@ -5,11 +5,13 @@ format: html
 
 ## Introduction
 
-The term "foundation model" entered the AI lexicon around 2021, coined by researchers at Stanford to describe large neural networks trained on vast, diverse datasets that can be adapted — through fine-tuning or prompting — to a wide range of downstream tasks. GPT-4, Gemini, and Claude are foundation models for language. Their defining characteristic is not size alone, but the breadth of their pretraining: they learn general representations of their domain that transfer efficiently to specialized problems. Earth observation foundation models (EOFMs) apply this logic to satellite and aerial imagery. Rather than training a separate model from scratch for each task, such as flood detection or crop classification, an EO foundation model attempts to produce general-purpose representations. Their assumption is that such shared backbones can then be adapted to downstream applications with relatively little labeled data.
+The term "foundation model" entered the AI lexicon around 2021, coined by researchers at Stanford to describe large neural networks trained on vast, diverse datasets that can be adapted — through fine-tuning or prompting — to a wide range of downstream tasks. GPT-4, Gemini, and Claude are foundation models for language. Their defining characteristic is not size alone, but the breadth of their pretraining: they learn general representations of their domain that transfer efficiently to specialized problems. 
+
+Earth observation foundation models (EOFMs) apply this logic to satellite and aerial imagery. Rather than training a separate model from scratch for each task, such as flood detection or crop classification, an EO foundation model attempts to produce general-purpose representations. Their assumption is that such shared backbones can then be adapted to downstream applications with relatively little labeled data.
 
 EOFMs share is a common goal: compress high-dimensional satellite data — spectral bands × time steps × spatial extent — into compact vectors that capture the semantically relevant structure. The approaches differ in what they compress, how the network is trained to produce useful compressions, and what counts as a useful representation.
 
-Among the most relevant developments in the area, four models stand out: (a) AlphaEarth Foundations [@Brown2025], developed by Google DeepMind, which generates geospatial representations from multiple data sources; (b) TESSERA (Temporal Embeddings of Surface Spectra for Earth Representation and Analysis), a pixel-by-pixel foundational model for Sentinel-1/2 multimodal time series [@Feng2025]; (c) Prithvi, developed by IBM in partnership with NASA, trained with Harmonized Landsat Sentinel-2 (HLS) data using masked autoencoders [@Szwarcman2026]; and (d) PRESTO (Pretrained Remote Sensing Transformer, trained on Sentinel-1, Sentinel-2, and Landsat imagery time series using time series [@Tseng2024].
+Among recent developments in the area, four models stand out: (a) AlphaEarth Foundations [@Brown2025], developed by Google DeepMind, which generates geospatial representations from multiple data sources; (b) TESSERA (Temporal Embeddings of Surface Spectra for Earth Representation and Analysis), a pixel-by-pixel foundational model for Sentinel-1/2 multimodal time series [@Feng2025]; (c) Prithvi, developed by IBM in partnership with NASA, trained with Harmonized Landsat Sentinel-2 (HLS) data using masked autoencoders [@Szwarcman2026]; and (d) PRESTO (Pretrained Remote Sensing Transformer, trained on Sentinel-1, Sentinel-2, and Landsat imagery time series using time series [@Tseng2024].
 
 ## How are foundational models built?
 
@@ -84,13 +86,13 @@ knitr::include_graphics("./images/emb_embedding.png")
 
 The aim of the embedding functions in `sits` is not to develop yet another global foundation model. Our focus is narrower and, we believe, more achievable: serving users to produce *regional embeddings*. These are representations tailored to specific tasks (primarily LUCC) over large, well-defined regions of interest. Global foundation models necessarily make upfront design choices about input data and temporal representation; these choices will not be optimal for a particular regional application. Our approach instead gives users control. Input data (optical, SAR, climate), learning method, and temporal coverage can all be configured to the problem at hand.
 
-In `sits` we provide five methods for building embeddings. Three are self-supervised:  (a) Masked Autoencoders (MAE); (b) Variance-Invariance-Covariance regularization (VICReg); (c) Lean Joint-Embedding Predictive Architectures (LeJEPA). Two are supervised: (a) Barlow Twins; (b) Supervised Contrastive Learning.
+In `sits` we provide five methods for building embeddings. Three are self-supervised:  (a) Masked Autoencoders (MAE); (b) Variance-Invariance-Correlation regularization (VICReg); (c) Lean Joint-Embedding Predictive Architectures (LeJEPA). Three are supervised: (a) Barlow Twins; (b) Supervised Contrastive Learning.
 
 The target user we have in mind faces a large-scale, multi-year classification problem under concrete constraints of computational time and data availability. In most such cases, users already have a baseline classification from a prior year or adjacent region, which motivates our choice of two supervised methods alongside the unsupervised ones. This is a deliberate design decision: supervised methods can exploit existing reference data that operational monitoring programmes typically hold.
 
 ### Masked autoencoders
 
-Masked Autoencoders (MAEs) are a class of self-supervised learning neural networks that learn to understand data by hiding portions of an input and training the model to reconstruct the missing pieces [@He2022]. In the `sits` package, the MAE model is fed a satellite image time series where a large portion of the values are masked. By default, a fraction `mask_ratio = 0.6` of the time steps are hidden, chosen with `masking_method = "random"` (an alternative `"contiguous"` strategy masks a single continuous block of time steps). The model aims to reconstruct the missing values based on the available ones. To do this successfully, the model must learn what features naturally co-occur in the real world. When processing  time-series data, the MAE learns the temporal signatures of land cover and land use pixels. This is also the strategy used in the PRESTO foundational model [@Tseng2024]. The embedding is the latent representation produced by the encoder before reconstruction. It is never explicitly told what is important — it discovers structure by being forced to predict missing observations.
+Masked Autoencoders (MAEs) are a class of self-supervised learning neural networks that learn to understand data by hiding portions of an input and training the model to reconstruct the missing pieces [@He2022]. In the `sits` package, the MAE model is fed a satellite image time series where a large portion of the values are masked. The model aims to reconstruct the missing values based on the available ones. To do this successfully, the model must learn what features naturally co-occur in the real world. When processing  time-series data, the MAE learns the temporal signatures of land cover and land use pixels. This is also the strategy used in the PRESTO foundational model [@Tseng2024]. The embedding is the latent representation produced by the encoder before reconstruction. It is never explicitly told what is important — it discovers structure by being forced to predict missing observations.
 
 ```{r}
 #| echo: false
@@ -103,30 +105,20 @@ Masked Autoencoders (MAEs) are a class of self-supervised learning neural networ
 knitr::include_graphics("./images/emb_masked_autoencoders.png")
 ```
 
-The MAE loss function is a masked mean squared error, computed only over the
-masked positions. The indices run over the batch of samples $i$, the time steps
-$t$, and the spectral bands $b$. The binary mask $m_{i,t} \in \{0,1\}$ marks
-which time steps are hidden ($1 = $ masked, $0 = $ visible); it carries no band
-index because masking is applied to a whole time step at once, so every band of
-a masked step is hidden together. The target $x_{i,t,b}$ is the *observed* value
-after the same per-band normalization (zero mean, unit variance across the
-training samples) used to feed the encoder, and $\hat{x}_{i,t,b}$ is the value
-the decoder reconstructs for that position:
+The MAE loss function is masked mean squared error, computed only over masked positions.
+With binary mask $m_{i,t} \in \{0,1\}$ (1 = masked), reconstruction $\hat{x}$ and
+normalized target $x$:
 
 $$
 \mathcal{L}_{\text{MAE}} = \frac{\displaystyle\sum_{i,t,b} m_{i,t}\,\bigl(\hat{x}_{i,t,b} - x_{i,t,b}\bigr)^2}{\displaystyle\max\!\Bigl(1,\; \sum_{i,t,b} m_{i,t}\Bigr)}
 $$ {#eq-mae}
 
-The numerator accumulates the squared reconstruction error only where
-$m_{i,t}=1$, and the denominator counts those same masked entries, so the loss
-is the mean squared error over the hidden positions. The denominator is clamped
-to at least 1 to avoid division by zero when a batch happens to mask nothing.
-Visible time steps contribute nothing to the loss: the encoder is rewarded only
-for reconstructing what it could not see.
+The denominator is clamped to at least 1 to avoid division by zero. Visible
+timesteps contribute nothing to the loss.
 
 ### VICReg (Variance-Invariance-Covariance Regularization)
 
-VICReg is a **joint-embedding** method [@Bardes2022]. Its build two views of the same input, push both
+VICReg is a joint-embedding method [@Bardes2022]. Its build two views of the same input, push both
 through a shared encoder and projector, and apply a loss that keeps paired
 embeddings close while preventing collapse. For satellite image time series, we employ the method proposed by [@Saget2025] that generates positive pairs. Each time series is upsampled. From this new time series, we extract disjoint subsequences while preserving temporal coverage.
 
@@ -158,7 +150,7 @@ Covariance stops a subtler failure. Nothing so far prevents all 64 dimensions fr
 knitr::include_graphics("./images/emb_vicreg_sits.png")
 ```
 
-The embeddings produce two resampling-augmented views per sample. Let $Z^A, Z^B \in \mathbb{R}^{N \times D}$ be the projector outputs of the two views over a batch of $N$ samples. Each row $Z_{i,:}$ is the embedding of sample $i$, and $D = d_p$ is the projector *output* dimensionality — not the size of the input time series. We write $Z_{:,j}$ for column $j$, i.e. feature $j$ collected across all $N$ samples in the batch. The VICReg loss sums three terms: 
+The embeddings produce two resampling-augmented views per sample. Let $Z^A, Z^B \in \mathbb{R}^{N \times D}$ be the projector outputs of the two views over a batch of size $N$ ($D = d_p$), where $D$ is the number of dimensions of the input. The VICReg loss sums three terms: 
 
 *Invariance* — mean squared error between paired views:
 
@@ -177,12 +169,6 @@ v(Z) = \frac{1}{D}\sum_{j=1}^{D}\max\!\Bigl(0,\; 1 - \sqrt{\operatorname{Var}(Z_
 \ell_{\text{var}} = \tfrac{1}{2}\bigl(v(Z^A) + v(Z^B)\bigr).
 $$ {#eq-vicreg-var}
 
-Here $\operatorname{Var}(Z_{:,j})$ is the variance of feature $j$ across the $N$
-samples of the batch, so $\sqrt{\operatorname{Var}(Z_{:,j}) + \epsilon}$ is that
-feature's batch standard deviation. The hinge $\max(0,\,1 - \cdot)$ penalizes a
-feature only while its standard deviation stays below the target value of 1;
-once every feature varies enough, the term is zero. $\ell_{\text{var}}$ averages
-this penalty over the two views.
 
 VICReg also relies on batch statistics, so batches need to be large enough for the variance and covariance estimates to mean something.
 
@@ -198,13 +184,6 @@ $$
 \ell_{\text{cov}} = c(Z^A) + c(Z^B).
 $$ {#eq-vicreg-cov2}
 
-Here $\bar Z$ is the row vector of column means (each feature's batch mean),
-broadcast over rows, so $C(Z) \in \mathbb{R}^{D \times D}$ is the empirical
-covariance matrix of the features and $[C(Z)]_{j,k}$ is the covariance between
-features $j$ and $k$. The sum in $c(Z)$ runs over all off-diagonal pairs
-($j \neq k$), so only *between-feature* covariances are penalized while the
-diagonal variances are left to the variance term.
-
 The total loss combines them with fixed coefficients:
 
 $$
@@ -212,11 +191,6 @@ $$
 \;+\; \lambda_{\text{std}}\,\ell_{\text{var}}
 \;+\; \lambda_{\text{cov}}\,\ell_{\text{cov}}
 $$ {#eq-vicreg-loss}
-
-The default weights are $\lambda_{\text{sim}} = 25$, $\lambda_{\text{std}} = 25$,
-and $\lambda_{\text{cov}} = 1$ (arguments `sim_coeff`, `std_coeff`, and
-`cov_coeff`). The covariance term is given a much smaller weight because it sums
-$D(D-1)$ off-diagonal entries and would otherwise dominate.
 
 ### Lean Joint-Embedding Predictive Architectures (LeJEPA)
 
@@ -234,15 +208,12 @@ LeJEPA avoid the embedding collapse by assuming that the embedding distribution 
 knitr::include_graphics("./images/emb_lejepa_isotropy.png")
 ```
 
-One challenge for LeJEPA is that testing whether a cloud of 64-dimensional vectors is Gaussian is inviable in high dimensions. The authors introduce SIGReg (Sketched Isotropic Gaussian Regularization). Draw many random directions, project every embedding onto each one, and run a one-dimensional goodness-of-fit test against a standard normal. If every random slice looks normal, the joint distribution is isotropic Gaussian. Cost is linear in batch size and dimension.
+One challenge for LeJEPA is that testing whether a high-dimensional cloud of vectors is Gaussian is inviable in high dimensions. The authors introduce SIGReg (Sketched Isotropic Gaussian Regularization). Draw many random directions, project every embedding onto each one, and run a one-dimensional goodness-of-fit test against a standard normal. If every random slice looks normal, the joint distribution is isotropic Gaussian. Cost is linear in batch size and dimension.
 
 LeJEPA has useful properties for Earth observation data. Isotropy means all 64 dimensions carry comparable information, which matters when your deliverable is a fixed-length vector to be used for classification. 
 
-The loss function in LeJEPA stacks the two projected views as $z \in \mathbb{R}^{V \times N \times D}$,
-where $V = 2$ is the number of views, $N$ is the number of samples in the batch,
-and $D$ is the projector output dimensionality. The entry $z^{(v)}_{i,j}$ is
-feature $j$ of view $v$ for sample $i$. The loss has two components: an
-invariance loss and the SIGReg term.
+The loss function in LeJEPA stacks the two projected views as $z \in \mathbb{R}^{V \times N \times D}$
+with $V = 2$, where $N$ is the batch size and $D$ the dimension of the projector head. It has two components: the invariance loss and the SIGReg one.
 
 The invariance loss is the MSE of each view from the per-sample view mean
 $\bar z = \tfrac{1}{V}\sum_v z^{(v)}$:
@@ -250,25 +221,22 @@ $\bar z = \tfrac{1}{V}\sum_v z^{(v)}$:
 $$
 \ell_{\text{inv}} = \frac{1}{V N D}\sum_{v,i,j}\bigl(\bar z_{i,j} - z^{(v)}_{i,j}\bigr)^2.
 $$ {#eq-lejepa-inv}
+
 The SIGReg (Sketched Isotropic Gaussian Regularization) pushes the embedding
-distribution toward an isotropic Gaussian. For each of $S$ random unit
-directions $a \in \mathbb{R}^D$ (argument `num_slices`, default 256), it forms
-the scalar projections $u_i = z^{(v)}_i \cdot a$ — the coordinate of sample $i$'s
-embedding along direction $a$ — and compares their empirical characteristic
-function (ECF) to the characteristic function of a standard normal,
-$\phi(t) = e^{-t^2/2}$, using an Epps–Pulley statistic evaluated at $K$
-quadrature knots $t_k \in [0, 3]$ (argument `num_knots`, default 17):
+distribution toward an isotropic Gaussian. It uses two parameters: (a) the number ($D$) of random projection directions (`num_slices`); and (b) the number $K$ of quadrature knots for the characteristic function tests (`num_knots`). 
+
+For each of $S$ random unit
+directions $a \in \mathbb{R}^D$ (`num_slices`),  it forms the scalar projections
+$u_i = z^{(v)}_i \cdot a$ and compares their empirical characteristic function
+(ECF) to the standard-Gaussian characteristic function $\phi(t) = e^{-t^2/2}$,
+using an Epps–Pulley statistic evaluated at $K$ quadrature knots
+$t_k \in [0, 3]$ (`num_knots`):
 
 $$
 \widehat{\phi}(t_k) = \frac{1}{N}\sum_{i=1}^{N} e^{\,\mathrm{i}\,t_k u_i},
 $$ {#eq-lejepa-knots}
 
-where $\mathrm{i} = \sqrt{-1}$ is the imaginary unit (not to be confused with the
-sample index $i$ in the sum), and $\widehat{\phi}(t_k)$ is the empirical
-characteristic function of the projected values $u_1,\dots,u_N$ evaluated at knot
-$t_k$. If the $u_i$ are standard normal, $\widehat{\phi}(t_k)$ should match
-$\phi(t_k)$; SIGReg penalizes the squared gap between them.
-
+By d
 
 $$
 \ell_{\text{SIGReg}} = \mathbb{E}_{a,\,v}\!\left[\; N \sum_{k=1}^{K} \tilde w_k
@@ -277,14 +245,7 @@ $$
 $$ {#eq-lejepa-sigreg}
 
 
-Here $\mathbb{E}_{a,\,v}$ denotes the average over the $S$ random directions $a$
-and the $V$ views, and $\tilde w_k$ are the trapezoidal quadrature weights for
-the knots $t_k$ (multiplied by $\phi(t_k)$) that turn the sum over knots into an
-approximation of the integrated ECF discrepancy. The bracket splits the squared
-error of the complex ECF into its real part (a sum of cosines, compared to
-$\phi(t_k)$) and its imaginary part (a sum of sines, whose target is 0 because
-the standard normal is symmetric). The two terms combine with a single
-trade-off:
+where $\tilde w_k$ are trapezoidal quadrature weights times $\phi(t_k)$. The two terms combine with a single trade-off:
 
 $$
 \mathcal{L}_{\text{LeJEPA}} = (1 - \lambda)\,\ell_{\text{inv}} \;+\; \lambda\,\ell_{\text{SIGReg}}
@@ -320,32 +281,30 @@ knitr::include_graphics("./images/emb_barlow_twins.png")
 ```
 .
 
-The loss function works by taking a batch of $N$ view-pairs. Run both views through encoder + projector to get $Z^A, Z^B \in \mathbb{R}^{N \times D}$, where $N$ is the batch size and $D = d_p$ is the projector output dimensionality. Standardize each feature $j$ across the batch to zero mean and unit variance, giving $\hat{Z}^A_{i,j}$ and $\hat{Z}^B_{i,j}$ (the standardized value of feature $j$ for sample $i$ in views A and B). Then form the empirical cross-correlation matrix:
+The loss function works by taking a batch of $N$ view-pairs. Run both views through encoder + projector to get $Z^A, Z^B \in \mathbb{R}^{N \times D}$, where $D$ is the dimension of the projector. Standardize each feature across the
+batch (mean 0, unit variance), then form the empirical cross-correlation
+matrix:
 
 $$
 C_{jk} = \frac{1}{N}\sum_{i=1}^{N} \hat{Z}^A_{i,j}\,\hat{Z}^B_{i,k}, \qquad C \in \mathbb{R}^{D \times D}, \quad C_{jk} \in [-1, 1].
 $$ {#eq-btwins-cross}
 
-Each entry $C_{jk}$ is the correlation, over the $N$ samples, between feature $j$
-of view A and feature $k$ of view B; the diagonal $C_{jj}$ measures how
-consistently feature $j$ is reproduced across the two views. The objective
-function drives $C$ toward the identity matrix:
+The objective function drives $C$ toward the identity matrix:
 
 $$
 \mathcal{L}_{\text{BT}}
 = \underbrace{\sum_{j=1}^{D}\bigl(C_{jj} - 1\bigr)^{2}}_{\text{invariance}}
 \;+\;
 \lambda\,\underbrace{\sum_{j=1}^{D}\sum_{\substack{k=1\\ k \neq j}}^{D} C_{jk}^{2}}_{\text{redundancy reduction}}
-$$ {#eq-btwins-loss}
+$$ {#eq-btwins-cross}
 
-The invariance term pushes the diagonal to 1, so the same feature computed from the two same-class views should be perfectly correlated. The redundancy-reduction term pushes the off-diagonals to 0: distinct embedding dimensions should be decorrelated, so they carry non-overlapping information.
+The invariance term pushes the diagonal to 1, so the same feature computed from the two same-class views should be perfectly correlated. The redundancy-reduction term pushes the off-diagonals to 0: distinct mbedding dimensions should be decorrelated, so they carry non-overlapping information.
 The parameter $\lambda$ (default $5\times10^{-3}$) balances the two. 
 
 
-### Supervised Contrastive Learning
+### Supervised Contrastive Learning (SupCon)
 
-Supervised Contrastive learning [@Khosla2021] is a algorithm that learns useful representations
-by teaching an encoder to distinguish *similar* pairs from *dissimilar* ones. For each instance, two time series with the same label form a positive pair; time series from other classes act as negatives. Training pulls positives together in the embedding space and pushes negatives apart. 
+Supervised Contrastive learning [@Khosla2021] is a algorithm that learns useful representations by teaching an encoder to distinguish *similar* pairs from *dissimilar* ones. For each instance, two time series with the same label form a positive pair; time series from other classes act as negatives. Training pulls positives together in the embedding space and pushes negatives apart. 
 This provides a rich training signal: the embedding of a Cerrado grassland pixel is pulled toward all other grassland pixels in the batch simultaneously, regardless of which satellite, season, or sensor captured them. The result is tighter class clusters in embedding space and better generalization to new samples. 
 
 ```{r}
@@ -355,15 +314,17 @@ This provides a rich training signal: the embedding of a Cerrado grassland pixel
 #| fig-align: "center"
 #| fig-cap: | 
 #|  Contrastive self-supervised learning applied directly to pairs of time series. 
-#|  A shared encoder f_0 maps each series to an embedding. The InfoNCE loss attracts embeddings
+#|  A shared encoder f_0 maps each series to an embedding. The SupCon loss attracts embeddings
 #|  from similar series (positive pairs) and repels those from dissimilar series (negative pairs).
 
 knitr::include_graphics("./images/emb_contrastive_learning.png")
 ```
 
-Concretely, training works on batches. Take a batch of time series, each with a class label. For every time series in the batch (the *anchor*), all other series sharing its label are its positives, and every series from a different class is a negative. The encoder projects each series to a normalized embedding vector, and the loss compares the anchor to all other embeddings at once via a dot-product similarity scaled by a temperature parameter $\tau$: it rewards the anchor for being closer (in cosine similarity) to its positives than to any of the negatives, summed over every possible anchor in the batch. Because a batch can contain many positives per anchor (e.g., several pixels of "pasture"), the signal is denser than a plain "one positive, many negatives" contrastive setup — the more same-class examples are in a batch, the more comparisons reinforce the same pull, which is why larger, class-balanced batches tend to produce tighter clusters.
+Take a batch of time series, each with a class label. For every time series in the batch (the *anchor*), all other series sharing its label are its positives, and every series from a different class is a negative. The encoder projects each series to a normalized embedding vector, and the loss compares the anchor to all other embeddings at once via a dot-product similarity scaled by a temperature parameter $\tau$: it rewards the anchor for being closer (in cosine similarity) to its positives than to any of the negatives, summed over every possible anchor in the batch. Because a batch can contain many positives per anchor (e.g., several pixels of "pasture"), the signal is denser than a plain "one positive, many negatives" contrastive setup — the more same-class examples are in a batch, the more comparisons reinforce the same pull, which is why larger, class-balanced batches tend to produce tighter clusters.
 
-Let $I$ be the index set of a batch, $z_i$ the L2-normalized embedding of sample $i$ (so a dot product $z_i \cdot z_p$ equals the cosine similarity between the two embeddings), $A(i) = I \setminus \{i\}$ all other samples in the batch, and $P(i) \subset A(i)$ the subset of $A(i)$ sharing sample $i$'s class label, with $|P(i)|$ its number of positives. The supervised contrastive loss is
+Users can define what the model should ignore. This is the underrated advantage for time series. Because positives come from labels rather than augmentations, you can pair a soybean field in Mato Grosso in 2019 with one in Bahia in 2022 — different region, different year, different planting date, different atmospheric conditions. The encoder is forced to abstract away location, season shift, and sensor state while keeping what makes it soybean. Augmentation-based methods can only remove nuisances you know how to simulate; SupCon removes nuisances you can only point at through examples.
+
+Let $I$ be the index set of a batch, $z_i$ the (normalized) embedding of sample $i$, $A(i) = I \setminus \{i\}$ all other samples in the batch, and $P(i) \subset A(i)$ the subset of $A(i)$ sharing sample $i$'s class label. The supervised contrastive loss is
 
 $$
 \mathcal{L}_{\text{SupCon}} = \sum_{i \in I} \frac{-1}{|P(i)|} \sum_{p \in P(i)} \log \frac{\exp\!\left(z_i \cdot z_p / \tau\right)}{\displaystyle\sum_{a \in A(i)} \exp\!\left(z_i \cdot z_a / \tau\right)}
