@@ -531,8 +531,10 @@ knitr::include_graphics("./images/resnet.png")
 ```
 
 
-In `sits`, the Residual Network is implemented using `sits_resnet()`. The default parameters are those proposed by Wang et al. [@Wang2017], as implemented by Fawaz et al. [@Fawaz2019]. The first parameter is `blocks`, which controls the number of blocks and the size of filters in each block. By default, the model implements three blocks, the first with 64 filters and the others with 128. The parameter `kernels` controls the size of the kernels of the three layers inside each block. It is useful to experiment a bit with these kernel sizes in the case of satellite image time series. The default activation is "relu", which is recommended in the literature to reduce the problem of vanishing gradients. The default optimizer is `optim_adamw`, available in package `torchopt`.
+In `sits`, the Residual Network is implemented using `sits_resnet()`. The default parameters are those proposed by Wang et al. [@Wang2017], as implemented by Fawaz et al. [@Fawaz2019]. The first parameter is `blocks`, which controls the number of blocks and the size of filters in each block. By default, the model implements three blocks, the first with 64 filters and the others with 128. The parameter `kernels` controls the size of the kernels of the three layers inside each block. It is useful to experiment a bit with these kernel sizes in the case of satellite image time series. The default activation is "relu", which is recommended in the literature to reduce the problem of vanishing gradients. The default optimizer is `optim_adamw`, available in package `torch`.
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
 # Train using ResNet
@@ -544,9 +546,27 @@ resnet_model <- sits_train(samples_matogrosso_mod13q1,
                           batch_size           = 64,
                           validation_split     = 0.2,
                           verbose              = FALSE))
+
 # Show training evolution
 plot(resnet_model)
 ```
+## Python
+```{python}
+#| eval: false
+# Train using ResNet
+resnet_model = sits_train(samples_matogrosso_mod13q1, 
+                       sits_resnet(
+                          blocks               = (64, 128, 128),
+                          kernels              = (7, 5, 3),
+                          epochs               = 100,
+                          batch_size           = 64,
+                          validation_split     = 0.2,
+                          verbose              = False))
+
+# Show training evolution
+plot(resnet_model)
+```
+:::
 
 ```{r}
 #| label: fig-ml-resnetmodel
@@ -558,8 +578,10 @@ plot(resnet_model)
 knitr::include_graphics("./images/mlresnetmodel.png")
 ```
 
-Using the TempCNN model, we classify a 16-year time series.
+Using the ResNet model, we classify a 16-year time series.
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
 # Classify using Resnet model and plot the result
@@ -567,6 +589,18 @@ point_mt_mod13q1 |>
     sits_classify(resnet_model) |>  
     plot(bands = c("NDVI", "EVI"))
 ```
+## Python
+```{python}
+#| eval: false
+# Classify using Resnet model and plot the result
+point_class = sits_classify(point_mt_mod13q1, resnet_model)
+
+# Plot
+plot(
+    point_class, bands = ("NDVI", "EVI")
+)
+```
+:::
 
 ```{r}
 #| label: fig-ml-resnetplot
