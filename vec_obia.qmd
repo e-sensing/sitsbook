@@ -247,9 +247,8 @@ It is useful to visualize the segments in a leaflet together with the RGB image 
 ## R
 ```{r}
 #| eval: false
-sits_view(cube_20LMR, red = "B11", green = "B8A", blue = "B02", 
+sits_view(segments_20LMR, red = "B11", green = "B8A", blue = "B02", 
           dates = "2022-07-16")
-sits_view(segments_20LMR, add = TRUE)
 ```
 ## Python
 ```{python}
@@ -299,25 +298,11 @@ samples_deforestation = sits_select(samples_deforestation_rondonia,
 tcnn_model = sits_train(samples_deforestation, sits_tempcnn())
 ```
 :::
-
-```{r} 
-#| echo: false
-#| eval: false
-tcnn_model <- readRDS("./etc/tcnn_model_obia.rds")
-```
-
-```{python} 
-#| echo: false
-#| eval: false
-tcnn_model = read_rds("./etc/tcnn_model_obia.rds")
-```
-
-The segment classification procedure applies the model to a number of user-defined samples inside each segment. Each of these samples is then assigned a set of probability values, one for each class. We then obtain the median value of the probabilities for each class and normalize them. The output of the procedure is a vector data cube containing a set of classified segments. The most relevsnt parameters for the `sits_classify()` function are:
+The segment classification procedure applies the model to a number of user-defined samples inside each segment. Each of these samples is then assigned a set of probability values, one for each class. The output of the procedure is a raster data cube containing a set of probabilites for each layer. The most relevant parameters for the `sits_classify()` function are:
 
 - `data`: vector cube being classified
 - `ml_model`: machine learning model 
 - `output_dir`: directory where results are stored
-- `n_sam_pol`: number of samples to choose for each polygon
 - `memsize`: memory available for classification in GB.
 - `multicores`: number of cores to be used for classification
 - `gpu_memory`: GPU memory available (if there is a GPU)	
@@ -331,10 +316,9 @@ segments_20LMR_probs <- sits_classify(
     data = segments_20LMR,
     ml_model = tcnn_model,
     output_dir = tempdir_r,
-    n_sam_pol = 10,
     gpu_memory = 8,
-    memsize = 24,
-    multicores = 1,
+    memsize = 18,
+    multicores = 6,
     version = "tcnn"
 )
 ```
