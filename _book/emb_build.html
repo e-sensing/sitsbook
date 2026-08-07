@@ -1,0 +1,1287 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.361">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<meta name="author" content="Gilberto Camara, Rolf Simoes, Felipe Souza, Felipe Carlos, Pedro Andrade, Karine Ferreira, Lorena Santos and Charlotte Pelletier">
+<title>Satellite Image Time Series Analysis on Earth Observation Data Cubes - 27&nbsp; Building regional embeddings</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./annex.html" rel="next">
+<link href="./embeddings.html" rel="prev">
+<link href="././images/cover_sits_book_quarto.jpg" rel="icon" type="image/jpeg">
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light"><script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+</head>
+<body class="nav-sidebar floating">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top"><nav class="quarto-secondary-nav"><div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+      <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./embeddings.html">Foundational Models and Embeddings</a></li><li class="breadcrumb-item"><a href="./emb_build.html"><span class="chapter-number">27</span>&nbsp; <span class="chapter-title">Building regional embeddings</span></a></li></ol></nav>
+      <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+      </a>
+      <button type="button" class="btn quarto-search-button" aria-label="" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav></header><!-- content --><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal sidebar-navigation floating overflow-auto"><div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">Satellite Image Time Series Analysis on Earth Observation Data Cubes</a> 
+        <div class="sidebar-tools-main">
+    <a href="https://github.com/e-sensing/sitsbook" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
+  <a href="" class="quarto-reader-toggle quarto-navigation-tool px-1" onclick="window.quartoToggleReader(); return false;" title="Toggle reader mode">
+  <div class="quarto-reader-toggle-btn">
+  <i class="bi"></i>
+  </div>
+</a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Greetings</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./setup.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Setup</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./acknowledgements.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Acknowledgements</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./introduction.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">The Basics of SITS</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./intro_quicktour.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">A quick tour of SITS</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./intro_examples.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">How to use SITS with real examples</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./intro_visualisation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Data visualisation in SITS</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./datacubes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Earth observation data cubes</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./dc_ardcollections.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Analysis-ready image collections</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./dc_regularize.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Building regular data cubes</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./dc_merge.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Merging multi-source EO data cubes</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./dc_localcubes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Data cubes from local files</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./dc_cubeoperations.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Computing NDVI and other spectral indices</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./dc_mixture.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Spectral mixture analysis</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./dc_reduce.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Temporal reduction operations</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./dc_texture.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Texture operations in data cubes</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./timeseries.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Satellite image time series</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ts_basics.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Basic operations on image time series</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ts_cluster.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Hierarchical clustering of time series</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ts_som.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Self-organized maps for sample quality control</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ts_balance.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Reducing imbalances in training samples</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./classification.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Machine learning for image time series</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./cl_machinelearning.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Machine learning algorithms for image time series</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./cl_tuning.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Deep learning model tuning</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./cl_rasterclassification.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Classification of raster data cubes</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./cl_smoothing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">Bayesian smoothing for classification post-processing</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./cl_reclassification.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">Map reclassification</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./cl_uncertainty.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">Uncertainty and active learning</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./cl_ensembleprediction.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">Ensemble prediction with multiple models</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./validation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Validation and accuracy measurement</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./val_kfold.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">23</span>&nbsp; <span class="chapter-title">Cross-validation of training data</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./val_map.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">24</span>&nbsp; <span class="chapter-title">Map accuracy assessment</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./vector_datacubes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Vector data cubes</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./vec_obia.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">25</span>&nbsp; <span class="chapter-title">Object-based time series image analysis</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./vec_creating.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">26</span>&nbsp; <span class="chapter-title">Creating vector data cube from local files</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./embeddings.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Foundational Models and Embeddings</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./emb_build.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">27</span>&nbsp; <span class="chapter-title">Building regional embeddings</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./annex.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Advanced Topics</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth1 show">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./annex_export.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">28</span>&nbsp; <span class="chapter-title">Exporting data to other packages</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./annex_gee.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">29</span>&nbsp; <span class="chapter-title">SITS and GEE: side-by-side comparison</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./annex_api.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">30</span>&nbsp; <span class="chapter-title">Developing new functions in SITS</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./annex_ml.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">31</span>&nbsp; <span class="chapter-title">Including new methods for machine learning</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./annex_stac.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">32</span>&nbsp; <span class="chapter-title">Supporting STAC-based ARD catalogs</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./annex_parallel.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">33</span>&nbsp; <span class="chapter-title">How parallel processing works in SITS</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+    </ul>
+</div>
+</nav><div id="quarto-sidebar-glass" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active"><h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+<li><a href="#configurations-to-run-this-chapter" id="toc-configurations-to-run-this-chapter" class="nav-link active" data-scroll-target="#configurations-to-run-this-chapter">Configurations to run this chapter</a></li>
+  <li><a href="#overview" id="toc-overview" class="nav-link" data-scroll-target="#overview"><span class="header-section-number">27.1</span> Overview</a></li>
+  <li>
+<a href="#embedding-pipeline" id="toc-embedding-pipeline" class="nav-link" data-scroll-target="#embedding-pipeline"><span class="header-section-number">27.2</span> Embedding pipeline</a>
+  <ul class="collapse">
+<li><a href="#learning-the-encoder" id="toc-learning-the-encoder" class="nav-link" data-scroll-target="#learning-the-encoder"><span class="header-section-number">27.2.1</span> Learning the encoder</a></li>
+  </ul>
+</li>
+  <li><a href="#parameter-for-representation-learning-function" id="toc-parameter-for-representation-learning-function" class="nav-link" data-scroll-target="#parameter-for-representation-learning-function"><span class="header-section-number">27.3</span> Parameter for representation learning function</a></li>
+  <li>
+<a href="#processing-pipeline" id="toc-processing-pipeline" class="nav-link" data-scroll-target="#processing-pipeline"><span class="header-section-number">27.4</span> Processing pipeline</a>
+  <ul class="collapse">
+<li><a href="#selecting-the-area-of-interest" id="toc-selecting-the-area-of-interest" class="nav-link" data-scroll-target="#selecting-the-area-of-interest"><span class="header-section-number">27.4.1</span> Selecting the area of interest</a></li>
+  <li><a href="#obtaining-samples-for-representation-learning" id="toc-obtaining-samples-for-representation-learning" class="nav-link" data-scroll-target="#obtaining-samples-for-representation-learning"><span class="header-section-number">27.4.2</span> Obtaining samples for representation learning</a></li>
+  <li><a href="#building-the-weights-of-the-encoder" id="toc-building-the-weights-of-the-encoder" class="nav-link" data-scroll-target="#building-the-weights-of-the-encoder"><span class="header-section-number">27.4.3</span> Building the weights of the encoder</a></li>
+  </ul>
+</li>
+  <li>
+<a href="#selecting-the-labelled-data-for-classification" id="toc-selecting-the-labelled-data-for-classification" class="nav-link" data-scroll-target="#selecting-the-labelled-data-for-classification"><span class="header-section-number">27.5</span> Selecting the labelled data for classification</a>
+  <ul class="collapse">
+<li><a href="#classification-of-the-embedding-cube" id="toc-classification-of-the-embedding-cube" class="nav-link" data-scroll-target="#classification-of-the-embedding-cube"><span class="header-section-number">27.5.1</span> Classification of the embedding cube</a></li>
+  </ul>
+</li>
+  <li><a href="#summary" id="toc-summary" class="nav-link" data-scroll-target="#summary"><span class="header-section-number">27.6</span> Summary</a></li>
+  <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references"><span class="header-section-number">27.7</span> References</a></li>
+  </ul><div class="toc-actions"><div><i class="bi bi-github"></i></div><div class="action-links"><p><a href="https://github.com/e-sensing/sitsbook/edit/quarto/emb_build.qmd" class="toc-action">Edit this page</a></p><p><a href="https://github.com/e-sensing/sitsbook/issues/new" class="toc-action">Report an issue</a></p></div></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content"><header id="title-block-header" class="quarto-title-block default"><div class="quarto-title">
+<h1 class="title">
+<span class="chapter-number">27</span>&nbsp; <span class="chapter-title">Building regional embeddings</span>
+</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+</header><section id="configurations-to-run-this-chapter" class="level3 unnumbered"><h3 class="unnumbered anchored" data-anchor-id="configurations-to-run-this-chapter">Configurations to run this chapter</h3>
+<div class="cell">
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># load package "tibble"</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://tibble.tidyverse.org/">tibble</a></span><span class="op">)</span></span>
+<span><span class="co"># load packages "sits" and "sitsdata"</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/e-sensing/sits/">sits</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/e-sensing/sitsdata/">sitsdata</a></span><span class="op">)</span></span>
+<span><span class="co"># set tempdir if it does not exist </span></span>
+<span><span class="va">tempdir_r</span> <span class="op">&lt;-</span> <span class="st">"~/sitsbook/tempdir/R/emb_build"</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/files2.html">dir.create</a></span><span class="op">(</span><span class="va">tempdir_r</span>, showWarnings <span class="op">=</span> <span class="cn">FALSE</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="va">tempdir_r_class</span> <span class="op">&lt;-</span> <span class="st">"~/sitsbook/tempdir/R/emb_build/class"</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/files2.html">dir.create</a></span><span class="op">(</span><span class="va">tempdir_r_class</span>, showWarnings <span class="op">=</span> <span class="cn">FALSE</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section><section id="overview" class="level2" data-number="27.1"><h2 data-number="27.1" class="anchored" data-anchor-id="overview">
+<span class="header-section-number">27.1</span> Overview</h2>
+<p>The <code>sits</code> package allows building of customized embeddings of data cubes using self-supervised learning. Any regular data cube, including multi-year and multi-modal ones, can be used as input. It is also recommended, but not mandatory, that a classified data cube for the same region and timeframe is used as a basis for selecting a stratified training sample. Users can thus design regional foundational models designed for specific cases and thus produce embeddings that are arguably better align with their desired products.</p>
+<p>The embedding workflow takes satellite image time series, learns a compact representation with a deep-learning encoder, and then runs a standard classification pipeline on those embeddings instead of on the raw bands.</p>
+</section><section id="embedding-pipeline" class="level2" data-number="27.2"><h2 data-number="27.2" class="anchored" data-anchor-id="embedding-pipeline">
+<span class="header-section-number">27.2</span> Embedding pipeline</h2>
+<section id="learning-the-encoder" class="level3" data-number="27.2.1"><h3 data-number="27.2.1" class="anchored" data-anchor-id="learning-the-encoder">
+<span class="header-section-number">27.2.1</span> Learning the encoder</h3>
+<p>The function <code><a href="https://e-sensing.github.io/sits/reference/sits_pre_train.html">sits_pre_train()</a></code> trains a deep-learning encoder from time-series samples. It is a thin dispatcher: the real work is done by an <code>encoder_method</code> function.</p>
+<div id="tbl-pre-train" class="anchored">
+<table class="table">
+<caption>Table&nbsp;27.1: Pre-training parameters</caption>
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead><tr class="header">
+<th>Parameter</th>
+<th>Meaning</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code>samples</code></td>
+<td>Time series used for training the encoders (class <code>sits</code>). Labels are optional — SSL methods ignore them; supervised methods use them only to build pairs. The dimensions (bands and time-steps) of the data in <code>samples</code> should match those of data cube to be encoded.</td>
+</tr>
+<tr class="even">
+<td><code>rl_method</code></td>
+<td>A representation learning function that takes <code>samples</code> and returns a <code>sits_encoder</code>. One of <code><a href="https://e-sensing.github.io/sits/reference/sits_ssl_lejepa.html">sits_ssl_lejepa()</a></code>, <code><a href="https://e-sensing.github.io/sits/reference/sits_ssl_vicreg.html">sits_ssl_vicreg()</a></code>, <code><a href="https://e-sensing.github.io/sits/reference/sits_ssl_mae.html">sits_ssl_mae()</a></code>, <code><a href="https://e-sensing.github.io/sits/reference/sits_contrastive_learning.html">sits_contrastive_learning()</a></code>, <code><a href="https://e-sensing.github.io/sits/reference/sits_barlow_twins.html">sits_barlow_twins()</a></code>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section></section><section id="parameter-for-representation-learning-function" class="level2" data-number="27.3"><h2 data-number="27.3" class="anchored" data-anchor-id="parameter-for-representation-learning-function">
+<span class="header-section-number">27.3</span> Parameter for representation learning function</h2>
+<p>Each learning method has its own set of parameters. They also a set of common parameters, shown below.</p>
+<p>** Common parameters for all embedding models **</p>
+<div id="tbl-common-par" class="anchored">
+<table class="table">
+<caption>Table&nbsp;27.2: Parameters shared by all encoders</caption>
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead><tr class="header">
+<th>Parameter</th>
+<th>Meaning</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code>samples</code></td>
+<td>Time series used for training the encoder. Default = <code>NULL</code> when called via <code><a href="https://e-sensing.github.io/sits/reference/sits_pre_train.html">sits_pre_train()</a></code>
+</td>
+</tr>
+<tr class="even">
+<td><code>embedding_dim</code></td>
+<td>Dimension of resulting embeddings (default = 64).</td>
+</tr>
+<tr class="odd">
+<td><code>encoder_model</code></td>
+<td>Deep learning method that takes time series as input and produces latent representations that are used to compute the loss function. Default = <code><a href="https://e-sensing.github.io/sits/reference/sits_tempcnn.html">sits_tempcnn()</a></code>. Alternatives include <code><a href="https://e-sensing.github.io/sits/reference/sits_lighttae.html">sits_lighttae()</a></code>, <code><a href="https://e-sensing.github.io/sits/reference/sits_tae.html">sits_tae()</a></code>, <code><a href="https://e-sensing.github.io/sits/reference/sits_resnet.html">sits_resnet()</a></code> and <code><a href="https://e-sensing.github.io/sits/reference/sits_mlp.html">sits_mlp()</a></code>
+</td>
+</tr>
+<tr class="even">
+<td><code>epochs</code></td>
+<td>Maximum number of training epochs (default = 150).</td>
+</tr>
+<tr class="odd">
+<td><code>batch_size</code></td>
+<td>Batch size for training (default = 512).</td>
+</tr>
+<tr class="even">
+<td><code>validation_split</code></td>
+<td>Fraction of samples held out for validation loss monitoring (default = 0.2)</td>
+</tr>
+<tr class="odd">
+<td><code>optimizer</code></td>
+<td>Gradient descent algorithms. Computes loss and improves model paramenters for better convergence (default = <code>torch::adamw</code>).</td>
+</tr>
+<tr class="even">
+<td><code>opt_hparams</code></td>
+<td>Named list of hyperparameters used by the optimizer. The most relevant parameters are <code>lr</code> (learning rate - default = 5.0e-04), <code>eps</code> (term added to the denominator to improve numerical stability - default = 1.0e-08), and <code>weight_decay</code> (prevents machine learning models from overfitting - default = 1.0e-06).</td>
+</tr>
+<tr class="odd">
+<td><code>lr_decay_epochs</code></td>
+<td>Step size (in epochs) for learning rate decay (default = 1)</td>
+</tr>
+<tr class="even">
+<td><code>lr_decay_rate</code></td>
+<td>Multiplicative decay factor (default = 0.95)</td>
+</tr>
+<tr class="odd">
+<td><code>patience</code></td>
+<td>Number of epochs without improvement for halting training (default = 20).</td>
+</tr>
+<tr class="even">
+<td><code>min_delta</code></td>
+<td>Minimum improvement for early stopping (default = 0.01)</td>
+</tr>
+<tr class="odd">
+<td><code>verbose</code></td>
+<td>Logical value for printing training progress (default = <code>FALSE</code>
+</td>
+</tr>
+<tr class="even">
+<td><code>seed</code></td>
+<td>Random seed for reproducibility (default = 10).</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>** LeJEPA **</p>
+<p>The parameters specific for <code><a href="https://e-sensing.github.io/sits/reference/sits_ssl_lejepa.html">sits_ssl_lejepa()</a></code> are described below. For an explanation of how the methods work, please check the preceeding chapter of the book.</p>
+<div id="tbl-lejepa-par" class="anchored">
+<table class="table">
+<caption>Table&nbsp;27.3: Specific parameters for LeJEPA method</caption>
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead><tr class="header">
+<th>Parameter</th>
+<th>Meaning</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code>proj_dim</code></td>
+<td>Dimension of the projector head used for pre-training (default = 128).</td>
+</tr>
+<tr class="even">
+<td><code>lambda</code></td>
+<td>Trade-off between invariance and SIGReg (default = 0.02).</td>
+</tr>
+<tr class="odd">
+<td><code>num_knots</code></td>
+<td>Number of quadrature knots for the SIGReg characteristic function test. Default = 17.</td>
+</tr>
+<tr class="even">
+<td><code>num_slices</code></td>
+<td>Number of random projection directions for SIGReg (default = 256).</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>** MAE **</p>
+<p>The parameters specific for <code><a href="https://e-sensing.github.io/sits/reference/sits_ssl_mae.html">sits_ssl_mae()</a></code> are described below. For an explanation of how the methods work, please check the preceeding chapter of the book.</p>
+<div id="tbl-mae-par" class="anchored">
+<table class="table">
+<caption>Table&nbsp;27.4: Specific parameters for MAE method</caption>
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead><tr class="header">
+<th>Parameter</th>
+<th>Meaning</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code>decoder_width</code></td>
+<td>Width of the decoder MLP hidden layer used for reconstruction (default = 128).</td>
+</tr>
+<tr class="even">
+<td><code>masking_method</code></td>
+<td>Mask selection strategy. Options are <code>"random"</code> or <code>"contiguous"</code> (default = <code>"random"</code>).</td>
+</tr>
+<tr class="odd">
+<td><code>mask_ratio</code></td>
+<td>Fraction of timesteps to mask (default = 0.6).</td>
+</tr>
+<tr class="even">
+<td><code>mask_value</code></td>
+<td>Fill value used for masked timesteps (default = 0).</td>
+</tr>
+<tr class="odd">
+<td><code>masked_bands</code></td>
+<td>which bands to mask. Default = <code>NULL</code>, when all bands are eligible for masking.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>** VICReg **</p>
+<p>The parameters specific for <code><a href="https://e-sensing.github.io/sits/reference/sits_ssl_vicreg.html">sits_ssl_vicreg()</a></code> are described below. For an explanation of how the methods work, please check the preceeding chapter of the book.</p>
+<div id="tbl-vicreg-par" class="anchored">
+<table class="table">
+<caption>Table&nbsp;27.5: Specific parameters for VICReg method</caption>
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead><tr class="header">
+<th>Parameter</th>
+<th>Meaning</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code>proj_dim</code></td>
+<td>Dimensionality of the projector head used during pre-training (default = 128).</td>
+</tr>
+<tr class="even">
+<td><code>sim_coeff</code></td>
+<td>Weight of the invariance (MSE) term in the VICReg loss. Balances the mean squared distance matching the two augmented views (default = 25.0)</td>
+</tr>
+<tr class="odd">
+<td><code>std_coeff</code></td>
+<td>Weight of the variance (hinge) term in the VICReg loss. Enforces the standard deviation per dimension above the target threshold (default = 25.0)</td>
+</tr>
+<tr class="even">
+<td><code>cov_coeff</code></td>
+<td>Weight of the covariance (off-diagonal) term in the VICReg loss. Decorrelates the variables to eliminate redundancy (default = 1.0)</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>** Barlow Twins **</p>
+<p>The specific parameters for the Barlow Twins method are described below.</p>
+<div id="tbl-btwins-par" class="anchored">
+<table class="table">
+<caption>Table&nbsp;27.6: Specific parameters for Barlow Twins method</caption>
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead><tr class="header">
+<th>Parameter</th>
+<th>Meaning</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code>proj_dim</code></td>
+<td>Dimensionality of the projector head used during pre-training (default = 128).</td>
+</tr>
+<tr class="even">
+<td><code>bt_lambda</code></td>
+<td>Weight of the redundancy-reduction (off-diagonal) term in the Barlow Twins loss. Default = 5e-3.</td>
+</tr>
+<tr class="odd">
+<td><code>num_pairs</code></td>
+<td>Total number of pairs to form per epoch. Default = NULL. In this case, one pair is formed for every sample in the training split.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>** Supervised Contrastive Loss **</p>
+<p>The specific parameters for the SupCon method are described below.</p>
+<table class="table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead><tr class="header">
+<th>Parameter</th>
+<th>Meaning</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code>proj_dim</code></td>
+<td>Dimensionality of the projector head used during pre-training (default = 128).</td>
+</tr>
+<tr class="even">
+<td><code>scaling</code></td>
+<td>Scaling for the contrastive loss. Lower values sharpen the similarity distribution (default = 0.07).</td>
+</tr>
+<tr class="odd">
+<td><code>num_pairs</code></td>
+<td>Total number of pairs to form per epoch. Default = NULL. In this case, one pair is formed for every sample in the training split.</td>
+</tr>
+</tbody>
+</table></section><section id="processing-pipeline" class="level2" data-number="27.4"><h2 data-number="27.4" class="anchored" data-anchor-id="processing-pipeline">
+<span class="header-section-number">27.4</span> Processing pipeline</h2>
+<section id="selecting-the-area-of-interest" class="level3" data-number="27.4.1"><h3 data-number="27.4.1" class="anchored" data-anchor-id="selecting-the-area-of-interest">
+<span class="header-section-number">27.4.1</span> Selecting the area of interest</h3>
+<p>In this chapter, we will use a small data cube to demonstrate the capabilities of the embedding-related functions in <code>sits</code>. In practice, one could use bigger data cubes to conver large regions of interest.</p>
+<p>In this case, we will take the state of Rondonia, Brazil as our area of interest. Rondônia covers 237,765 km² — roughly the size of the United Kingdom. Almost all of it lies within the Amazon biome; original forest cover was on the order of 208,000 km². Rondônia is the most transformed state in the Brazilian Amazon. As of 2026, native vegetation covers 60% of the state — the lowest proportion of any Amazon state — with roughly 7 million hectares (70,000 km²) of native vegetation lost since 1985.</p>
+<p>Pasture expanded from 7% of the state’s territory in 1985 to 37% in 2024 — approximately 88,000 km². Across the Amazon as a whole, over 90% of deforested area had pasture as its first use, and Rondônia is the state that converted the most native vegetation to pasture in absolute terms. The herd stands at roughly 18.2 million head (IBGE, 2023) in a state of 1.8 million people. Soy reached 717,600 hectares in the 2025/26 season. Expansion follows the pattern of converting degraded pasture rather than clearing forest directly, typically in soy-maize double-cropping systems.</p>
+<p>Rondônia is an unusually demanding test case, and a useful one. Within one state you have the full sequence of Amazonian land change, plus the specific classes that make satellite image time series necessary rather than optional: pasture in varying degrees of degradation, secondary forest of differing ages, single-cropped versus double-cropped fields, and pasture-to-cropland transitions that are invisible in a single-date image but obvious in an annual spectrotemporal trajectory.</p>
+<p>In this example, we will create a data cube using images from the Brazil Data Cube (“BDC”). Since the BDC already provides regular data cubes, there is no need for regularization. When using ARD data from other providers (e.g., CDSE or MPC), users need to copy the data to a local repository and obtain a regular data cube. The code for creating the data cubes is shown below.</p>
+<div class="cell">
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Extract the shapefile with the boundaries of the Rondonia state</span></span>
+<span><span class="va">rondonia_shp</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html">system.file</a></span><span class="op">(</span><span class="st">"extdata/shapefiles/rondonia/rondonia.shp"</span>, package <span class="op">=</span> <span class="st">"sitsdata"</span><span class="op">)</span></span>
+<span><span class="co"># Read the shapefile as an sf object</span></span>
+<span><span class="va">rondonia_sf</span> <span class="op">&lt;-</span> <span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_read.html">st_read</a></span><span class="op">(</span><span class="va">rondonia_shp</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Define a Sentinel-2 data cube covering Rondonia in the Brazil Data Cube service</span></span>
+<span><span class="co"># We take 2022 as our study year</span></span>
+<span><span class="va">rondonia_cube</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_cube.html">sits_cube</a></span><span class="op">(</span></span>
+<span>    source <span class="op">=</span> <span class="st">"BDC"</span>,</span>
+<span>    collection <span class="op">=</span> <span class="st">"SENTINEL-2-16D"</span>,</span>
+<span>    roi <span class="op">=</span> <span class="va">rondonia_sf</span>,</span>
+<span>    start_date <span class="op">=</span> <span class="st">"2022-01-05"</span>,</span>
+<span>    end_date   <span class="op">=</span> <span class="st">"2022-12-23"</span></span>
+<span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section><section id="obtaining-samples-for-representation-learning" class="level3" data-number="27.4.2"><h3 data-number="27.4.2" class="anchored" data-anchor-id="obtaining-samples-for-representation-learning">
+<span class="header-section-number">27.4.2</span> Obtaining samples for representation learning</h3>
+<p>We start by selecting a large set of samples from an area of interest. This area should be large enough so as to capture spatial variations of the different classes. Depending on the representation learning method, one can use unlabeled samples; this is the practice for MAE, VICReg and LeJEPA techniques. For the Barlow Twins and Supervised Contrastive Loss method, we need labelled samples.</p>
+<p>The training data for self-supervised learning is a set of unlabeled samples, which can be drawn in two ways: (a) Select a random sample from the chosen data cube; (b) select a stratified sample based on a classified data cube that covers the same region as the original. Although a random selection is simpler, using a classified data cube is recommended, since it enables balancing the samples between the different classes. In the first case, we use <code><a href="https://e-sensing.github.io/sits/reference/sits_random_sampling.html">sits_random_sampling()</a></code> and specify the total number of samples for self-supervised learning, as shown in the example below. When a classified data cube is available as a base layer, one can use <code><a href="https://e-sensing.github.io/sits/reference/sits_stratified_sampling.html">sits_stratified_sampling()</a></code> to aim for a an SSL sample distribution which captures frequent and less frequent classes. We show an example later in the chapter.</p>
+<p>For this example, we take 30,000 samples covering the area of interest. In actual practice, a larger set of samples is recommended. Note that the next lines may take a long time. For this reason, we provide a shortcut in what follows.</p>
+<div class="cell">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># select a random set of locations to be samples</span></span>
+<span><span class="va">random_locations</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_random_sampling.html">sits_random_sampling</a></span><span class="op">(</span></span>
+<span>    cube <span class="op">=</span> <span class="va">rondonia_cube</span>,</span>
+<span>    n_samples <span class="op">=</span> <span class="fl">30000</span>,</span>
+<span>    multicores <span class="op">=</span> <span class="fl">8</span>,</span>
+<span>    memsize <span class="op">=</span> <span class="fl">24</span>,</span>
+<span>    progress <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co"># extract the time series </span></span>
+<span><span class="va">samples_unlabelled</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_get_data.html">sits_get_data</a></span><span class="op">(</span></span>
+<span>    cube <span class="op">=</span> <span class="va">rondonia_cube</span>,</span>
+<span>    samples <span class="op">=</span> <span class="va">random_locations</span>,</span>
+<span>    multicores <span class="op">=</span> <span class="fl">8</span>,</span>
+<span>    progress <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The resulting samples consist of 30,000 time series covering a one-year period. Because of the time required to obtain the samples, we provide a shortcut by pre-archiving the result in the <code>sitsdata</code> package.</p>
+<div class="cell">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># recover the samples </span></span>
+<span><span class="va">samples_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html">system.file</a></span><span class="op">(</span><span class="st">"extdata/samples/rondonia_30k.rds"</span>, package <span class="op">=</span> <span class="st">"sitsdata"</span><span class="op">)</span></span>
+<span><span class="va">samples</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html">readRDS</a></span><span class="op">(</span><span class="va">samples_file</span><span class="op">)</span></span>
+<span><span class="co"># use only optical bands, not indexes</span></span>
+<span><span class="va">samples</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_select.html">sits_select</a></span><span class="op">(</span></span>
+<span>    <span class="va">samples</span>,</span>
+<span>    bands <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"B02"</span>, <span class="st">"B03"</span>, <span class="st">"B04"</span>, <span class="st">"B05"</span>, <span class="st">"B06"</span>, </span>
+<span>              <span class="st">"B07"</span>, <span class="st">"B08"</span>, <span class="st">"B11"</span>, <span class="st">"B12"</span>, <span class="st">"B8A"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section><section id="building-the-weights-of-the-encoder" class="level3" data-number="27.4.3"><h3 data-number="27.4.3" class="anchored" data-anchor-id="building-the-weights-of-the-encoder">
+<span class="header-section-number">27.4.3</span> Building the weights of the encoder</h3>
+<p>To build the encoder, we need to select a representation learning method. For this example, we will use the VICReg (Variance-Invariance-Covariance) regularization method. For a detailed description of VICReg, please see the previous chapter.</p>
+<p>To create the encoder, we use <code><a href="https://e-sensing.github.io/sits/reference/sits_pre_train.html">sits_pre_train()</a></code> which takes two parameters: <code>samples</code>, which are the unlabeled samples to be used by chosen method; and <code>rl_method</code>, the chosen representation learning method. The example uses <code><a href="https://e-sensing.github.io/sits/reference/sits_ssl_vicreg.html">sits_ssl_vicreg()</a></code>, whose parameters are described above. The most relevant choices are <code>embedding_dim</code> (size of the embedding vector) and <code>encoder_model</code> (the deep learning model used to process the inputs). In this case, we use <code><a href="https://e-sensing.github.io/sits/reference/sits_tempcnn.html">sits_tempcnn()</a></code>.</p>
+<div class="cell">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">vicreg_encoder</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_pre_train.html">sits_pre_train</a></span><span class="op">(</span></span>
+<span>    samples <span class="op">=</span> <span class="va">samples</span>,</span>
+<span>    rl_method <span class="op">=</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_ssl_vicreg.html">sits_ssl_vicreg</a></span><span class="op">(</span></span>
+<span>        embedding_dim    <span class="op">=</span> <span class="fl">64L</span>,</span>
+<span>        encoder_model    <span class="op">=</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_tempcnn.html">sits_tempcnn</a></span><span class="op">(</span><span class="op">)</span></span>
+<span>    <span class="op">)</span></span>
+<span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>After obtaining a <code>vicreg_encoder</code>, we use it to produce embeddings from a data cube. In this case, we use the same data cube from the <a href="https://e-sensing.github.io/sitsbook/cl_rasterclassification.html">Classification of raster data cubes</a> chapter. Please refer to that chapter for a description of the data.</p>
+<div class="cell">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># directory where files are located</span></span>
+<span><span class="va">data_dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html">system.file</a></span><span class="op">(</span><span class="st">"extdata/Rondonia-20LMR"</span>, package <span class="op">=</span> <span class="st">"sitsdata"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># builds a cube based on existing files</span></span>
+<span><span class="va">cube_20LMR</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_cube.html">sits_cube</a></span><span class="op">(</span></span>
+<span>    source <span class="op">=</span> <span class="st">"AWS"</span>,</span>
+<span>    collection <span class="op">=</span> <span class="st">"SENTINEL-2-L2A"</span>,</span>
+<span>    data_dir <span class="op">=</span> <span class="va">data_dir</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co"># select only the S2 bands</span></span>
+<span><span class="va">cube_20LMR</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_select.html">sits_select</a></span><span class="op">(</span></span>
+<span>    <span class="va">cube_20LMR</span>,</span>
+<span>    bands <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"B02"</span>, <span class="st">"B03"</span>, <span class="st">"B04"</span>, <span class="st">"B05"</span>, </span>
+<span>    <span class="st">"B06"</span>, <span class="st">"B07"</span>, <span class="st">"B08"</span>, <span class="st">"B11"</span>, <span class="st">"B12"</span>, <span class="st">"B8A"</span><span class="op">)</span></span>
+<span>    </span>
+<span><span class="op">)</span></span>
+<span><span class="co"># Plot one of the dates of the cube</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span></span>
+<span>    <span class="va">cube_20LMR</span>, </span>
+<span>    red <span class="op">=</span> <span class="st">"B11"</span>,</span>
+<span>    green <span class="op">=</span> <span class="st">"B8A"</span>, </span>
+<span>    blue <span class="op">=</span> <span class="st">"B02"</span>, </span>
+<span>    date <span class="op">=</span> <span class="st">"2022-07-16"</span></span>
+<span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-emb-20lmr" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure"><p><img src="./images/emb_20LMR.png" class="img-fluid figure-img" style="width:90.0%"></p>
+<figcaption class="figure-caption">Figure&nbsp;27.1: Color composite of tile 20LMR.</figcaption></figure>
+</div>
+</div>
+</div>
+<p>The next step is to produce embeddings from the data cube. The original data cube has 10 bands and 23 time steps, and the encoding reduces it to 64 dimensions using <code>sits_encode</code>. The main parameters are <code>data</code> (either samples or a regular data cube) and <code>encoder</code>(which is the <code>vicreg_encoder</code> we derived from the samples). Note that the bands and timelines of both data and encoder must match for the function to execute correctly. The other parameters are <code>memsize</code> (RAM available), <code>multicores</code> (number of cores allocated), <code>gpu_memory</code> (if a GPU is available) and <code>batch_size</code>, which is used only when working with a GPU.</p>
+<p>After generating the embeddings cube, we plot some of its dimensions.</p>
+<div class="cell">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="va">cube_emb</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_encode.html">sits_encode</a></span><span class="op">(</span></span>
+<span>    data <span class="op">=</span> <span class="va">cube_20LMR</span>,</span>
+<span>    encoder <span class="op">=</span> <span class="va">vicreg_encoder</span>,</span>
+<span>    memsize <span class="op">=</span> <span class="fl">12</span>,</span>
+<span>    multicores <span class="op">=</span> <span class="fl">6</span>,</span>
+<span>    gpu_memory <span class="op">=</span> <span class="fl">12</span>,</span>
+<span>    batch_size <span class="op">=</span> <span class="fl">12000</span>,</span>
+<span>    output_dir <span class="op">=</span> <span class="va">tempdir_r</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span></span>
+<span>    <span class="va">cube_emb</span>, </span>
+<span>    red <span class="op">=</span> <span class="st">"EMB04"</span>,</span>
+<span>    green <span class="op">=</span> <span class="st">"EMB02"</span>, </span>
+<span>    blue <span class="op">=</span> <span class="st">"EMB03"</span></span>
+<span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-emb-rgb" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure"><p><img src="./images/emb_20LMR_bands.png" class="img-fluid figure-img" style="width:90.0%"></p>
+<figcaption class="figure-caption">Figure&nbsp;27.2: Color composite of three embedding bands.</figcaption></figure>
+</div>
+</div>
+</div>
+</section></section><section id="selecting-the-labelled-data-for-classification" class="level2" data-number="27.5"><h2 data-number="27.5" class="anchored" data-anchor-id="selecting-the-labelled-data-for-classification">
+<span class="header-section-number">27.5</span> Selecting the labelled data for classification</h2>
+<p>The next step is to select the data for classification. In this case, we will use a subset of the <code>samples_deforestation_rondonia</code> sample set, which consists of 6,007 samples for different land use and land cover classes in Rondonia. There are nine classes: <code>Clear_Cut_Bare_Soil</code>, <code>Clear_Cut_Burned_Area</code>, <code>Mountainside_Forest</code>, <code>Forest</code>, <code>Riparian_Forest</code>, <code>Clear_Cut_Vegetation</code>, <code>Water</code>, <code>Wetland</code>, and <code>Seasonally_Flooded</code>. Each time series contains values from Sentinel-2/2A bands B02, B03, B04, B05, B06, B07, B8A, B08, B11 and B12, from 2022-01-05 to 2022-12-23 in 16-day intervals.</p>
+<p>This is the same data set used in the <a href="https://e-sensing.github.io/sitsbook/cl_rasterclassification.html">Classification of raster data cubes</a> chapter. To test the hypothesis that embeddings needs small set fo samples for fine-tuning, we take only 20% of the original samples for classification.</p>
+<p>After selecting the samples subset, we encode the samples to match the embeeding dimensions with the same encoder we used for the data cube</p>
+<div class="cell">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># random selection from tile </span></span>
+<span><span class="co"># selecting a subset of the original training data</span></span>
+<span><span class="va">samples_fine_tuning</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_sample.html">sits_sample</a></span><span class="op">(</span><span class="va">samples_deforestation_rondonia</span>, frac <span class="op">=</span> <span class="fl">0.2</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># transforming the samples to the embedding dimension</span></span>
+<span><span class="va">samples_embedding</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_encode.html">sits_encode</a></span><span class="op">(</span></span>
+<span>    data <span class="op">=</span> <span class="va">samples_fine_tuning</span>,</span>
+<span>    encoder <span class="op">=</span> <span class="va">vicreg_encoder</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co"># plot the embedded samples using t-SNE</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">samples_embedding</span>, mode <span class="op">=</span> <span class="st">"tsne"</span>, perplexity <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-emb-tnse" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure"><p><img src="./images/emb_plot_tsne.png" class="img-fluid figure-img" style="width:90.0%"></p>
+<figcaption class="figure-caption">Figure&nbsp;27.3: t-SNE plot of embedded samples.</figcaption></figure>
+</div>
+</div>
+</div>
+<p>t-SNE (t-distributed Stochastic Neighbor Embedding) is a non-linear machine learning algorithm used for data visualization and dimensionality reduction. It transforms high-dimensional datasets with hundreds or thousands of features into a 2D or 3D map, making clusters and hidden patterns visible to the human eye<span class="citation" data-cites="Maaten2008"><a href="#ref-Maaten2008" role="doc-biblioref">[1]</a></span>. t-SNE turns distances into probabilities, then matches them in 2-D. For each point, it converts distances to its neighbours into a probability distribution — nearby points get high probability, distant ones vanish. It then scatters the points randomly on a plane and moves them by gradient descent until the 2-D neighbour probabilities match the high-dimensional ones as closely as possible (minimizing KL divergence).</p>
+<p>Alternative to visualisation using t-SNE include <code>dimensions</code> (plots the spread of each label in the embedding dimensions) and “PCA” (plot the first two principal components).</p>
+<div class="cell">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># select the wetlands labels</span></span>
+<span><span class="va">samples_emb_wet</span> <span class="op">=</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_select.html">sits_select</a></span><span class="op">(</span><span class="va">samples_embedding</span>, labels <span class="op">=</span> <span class="st">"Wetland"</span><span class="op">)</span></span>
+<span><span class="co"># plots the spread of values in each embedding dimension</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">samples_emb_wet</span>, mode <span class="op">=</span> <span class="st">"dimensions"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-emb-dim" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure"><p><img src="./images/emb_plot_dimensions.png" class="img-fluid figure-img" style="width:80.0%"></p>
+<figcaption class="figure-caption">Figure&nbsp;27.4: Plot of the spread of class Wetland in the embedding dimensions.</figcaption></figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">samples_embedding</span>, mode <span class="op">=</span> <span class="st">"PCA"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-emb-pca" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure"><p><img src="./images/emb_plot_pca.png" class="img-fluid figure-img" style="width:90.0%"></p>
+<figcaption class="figure-caption">Figure&nbsp;27.5: Plot of the two main principal components of the embedding dimensions.</figcaption></figure>
+</div>
+</div>
+</div>
+<section id="classification-of-the-embedding-cube" class="level3" data-number="27.5.1"><h3 data-number="27.5.1" class="anchored" data-anchor-id="classification-of-the-embedding-cube">
+<span class="header-section-number">27.5.1</span> Classification of the embedding cube</h3>
+<p>After obtaining the embedding cube and samples, the next step is to follow the established <code>sits</code> classification pipeline, as shown below. We use an multi-layer perceptron method (<code><a href="https://e-sensing.github.io/sits/reference/sits_mlp.html">sits_mlp()</a></code>) which is well-suited to work with embeddings.</p>
+<div class="cell">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># build MLP model</span></span>
+<span><span class="va">mlp_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_train.html">sits_train</a></span><span class="op">(</span></span>
+<span>    samples <span class="op">=</span> <span class="va">samples_embedding</span>,</span>
+<span>    ml_method <span class="op">=</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_mlp.html">sits_mlp</a></span><span class="op">(</span></span>
+<span>        epochs <span class="op">=</span> <span class="fl">150</span>,</span>
+<span>        batch_size <span class="op">=</span> <span class="fl">32</span></span>
+<span>    <span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">emb_probs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_classify.html">sits_classify</a></span><span class="op">(</span></span>
+<span>    data <span class="op">=</span> <span class="va">cube_emb</span>,</span>
+<span>    ml_model <span class="op">=</span> <span class="va">mlp_model</span>,</span>
+<span>    multicores <span class="op">=</span> <span class="fl">6</span>,</span>
+<span>    memsize <span class="op">=</span> <span class="fl">24</span>,</span>
+<span>    gpu_memory <span class="op">=</span> <span class="fl">16</span>,</span>
+<span>    batch_size <span class="op">=</span> <span class="fl">16000</span>,</span>
+<span>    output_dir <span class="op">=</span> <span class="va">tempdir_r_class</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">emb_smooth</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_smooth.html">sits_smooth</a></span><span class="op">(</span></span>
+<span>    cube <span class="op">=</span> <span class="va">emb_probs</span>,</span>
+<span>    multicores <span class="op">=</span> <span class="fl">6</span>,</span>
+<span>    memsize <span class="op">=</span> <span class="fl">24</span>,</span>
+<span>    output_dir <span class="op">=</span> <span class="va">tempdir_r_class</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">emb_map</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_label_classification.html">sits_label_classification</a></span><span class="op">(</span></span>
+<span>    cube <span class="op">=</span> <span class="va">emb_smooth</span>,</span>
+<span>    multicores <span class="op">=</span> <span class="fl">6</span>,</span>
+<span>    memsize <span class="op">=</span> <span class="fl">24</span>,</span>
+<span>    output_dir <span class="op">=</span> <span class="va">tempdir_r_class</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">emb_map</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-emb-class" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure"><p><img src="./images/emb_cube_class.png" class="img-fluid figure-img" style="width:90.0%"></p>
+<figcaption class="figure-caption">Figure&nbsp;27.6: Classified map for Rondonia data cube.</figcaption></figure>
+</div>
+</div>
+</div>
+<p>The resulting map compares favourably with the reference classification map presented in the <a href="https://e-sensing.github.io/sitsbook/cl_rasterclassification.html">Classification of raster data cubes</a> chapter. Further accuracy evaluation could determine which classification is more accurate.</p>
+</section></section><section id="summary" class="level2" data-number="27.6"><h2 data-number="27.6" class="anchored" data-anchor-id="summary">
+<span class="header-section-number">27.6</span> Summary</h2>
+<p>This chapter presented the functions that support the creation and use of Earth observation embeddings based on satellite image time series. The examples show how to select an initial set of samples for self-supervise learning, and how the resulting encoder is used to generate embeddings. The final part of the chapter shows how use EO embeddings for fine-tuning leading to land use and land cover classification.</p>
+</section><section id="references" class="level2" data-number="27.7"><h2 data-number="27.7" class="anchored" data-anchor-id="references">
+<span class="header-section-number">27.7</span> References</h2>
+
+
+<div id="refs" class="references csl-bib-body" role="list">
+<div id="ref-Maaten2008" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[1] </div>
+<div class="csl-right-inline">L. van der Maaten and G. Hinton, <span>“Visualizing <span>Data</span> using t-<span>SNE</span>,”</span> <em>Journal of Machine Learning Research</em>, vol. 9, no. 86, pp. 2579–2605, 2008, [Online]. Available: <a href="http://jmlr.org/papers/v9/vandermaaten08a.html">http://jmlr.org/papers/v9/vandermaaten08a.html</a>.</div>
+</div>
+</div>
+</section></main><!-- /main --><script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script><nav class="page-navigation"><div class="nav-page nav-page-previous">
+      <a href="./embeddings.html" class="pagination-link">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Foundational Models and Embeddings</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./annex.html" class="pagination-link">
+        <span class="nav-page-text">Advanced Topics</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer"><div class="nav-footer">
+    <div class="nav-footer-left">The SITS book was written by Gilberto Camara, Rolf Simoes, Felipe Souza, Felipe Carlos, Pedro Andrade, Karine Ferreira, Pedro Brito, Alexandre Assunção, and Charlotte Pelletier.</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">This book was built with <a href="https://quarto.org/">Quarto</a>.</div>
+  </div>
+</footer>
+
+
+</body></html>
