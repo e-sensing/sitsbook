@@ -9,9 +9,8 @@ build_data_script(
   output = file.path("tempdir", paste0("generate_book_data_", format(Sys.time(),
     "\%Y\%m\%d_\%H\%M\%S"), ".R")),
   chapters = NULL,
-  skip_existing = TRUE,
-  python_sync = TRUE,
-  chunk_times = TRUE
+  registry = registry_path(),
+  python_sync = TRUE
 )
 }
 \arguments{
@@ -23,16 +22,12 @@ file under \verb{tempdir/} in the current working directory.}
 \item{chapters}{Optional character vector of chapter names (without \code{.qmd})
 to limit the generation. If \code{NULL} (the default), all chapters are included.}
 
-\item{skip_existing}{If \code{TRUE}, chapters whose \verb{~/sitsbook/tempdir/R/<chapter>}
-directory already contains files are skipped.}
+\item{registry}{Path to the YAML chunk-completion registry. Defaults to
+\verb{~/sitsbook/tempdir/.booksetup_registry.yaml}. Set to \code{NULL} to disable
+skipping.}
 
 \item{python_sync}{If \code{TRUE}, the generated script calls
 \verb{rsync -a ~/sitsbook/tempdir/R/ ~/sitsbook/tempdir/Python/} at the end.}
-
-\item{chunk_times}{If \code{TRUE} (the default), the generated script times every
-individual code chunk, reports its line numbers in the source \code{.qmd}, and
-writes a CSV with the results. This makes it easy to identify slow chunks
-that should be marked \code{eval: false}.}
 }
 \value{
 The path to the generated R script, invisibly.
@@ -43,6 +38,10 @@ that can be run to (re)generate the data stored under
 \verb{~/sitsbook/tempdir/R/<chapter>}. The script includes progress messages,
 per-chapter timing/ETA estimates, error logging, and an optional final sync
 of the generated R data to the Python temp directory.
+}
+\details{
+Completed chunks are recorded in a YAML registry so that later runs skip them
+automatically. Failed chunks are never recorded, so they are retried.
 }
 \examples{
 \dontrun{

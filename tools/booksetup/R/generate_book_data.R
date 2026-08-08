@@ -6,7 +6,8 @@
 #' already set up.
 #'
 #' @param book_dir Path to the book project root (must contain `_quarto.yml`).
-#' @param output Path for the generated R script. Defaults to a temporary file.
+#' @param output Path for the generated R script. Defaults to a timestamped
+#'   file under `tempdir/`.
 #' @param ... Additional arguments passed to [build_data_script()].
 #'
 #' @return The path to the generated script, invisibly.

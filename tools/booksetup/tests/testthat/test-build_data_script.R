@@ -1,42 +1,29 @@
 test_that("build_data_script writes a parseable R file", {
-  book_dir <- system.file("extdata", package = "booksetup")
+  book_dir <- system.file("extdata", "integration_book", package = "booksetup")
   out <- tempfile("data_script_", fileext = ".R")
   on.exit(unlink(out), add = TRUE)
 
-  script_path <- build_data_script(book_dir, output = out, skip_existing = FALSE,
-                                   chunk_times = FALSE)
+  script_path <- build_data_script(book_dir, output = out, python_sync = FALSE)
 
   expect_true(file.exists(script_path))
   parsed <- parse(file = script_path)
   expect_type(parsed, "expression")
 })
 
-test_that("generated script contains expected chapter code and progress messages", {
-  book_dir <- system.file("extdata", package = "booksetup")
+test_that("generated script contains runtime helpers and run_* calls", {
+  book_dir <- system.file("extdata", "integration_book", package = "booksetup")
   out <- tempfile("data_script_", fileext = ".R")
   on.exit(unlink(out), add = TRUE)
 
-  build_data_script(book_dir, output = out, skip_existing = FALSE,
-                    python_sync = FALSE, chunk_times = FALSE)
+  build_data_script(book_dir, output = out, python_sync = FALSE)
   script <- paste(readLines(out, warn = FALSE), collapse = "\n")
 
-  expect_true(grepl("sits_regularize", script))
-  expect_true(grepl("Starting book data generation", script))
-  expect_true(grepl("elapsed:", script))
-})
-
-test_that("per-chunk timing block is generated when chunk_times = TRUE", {
-  book_dir <- system.file("extdata", package = "booksetup")
-  out <- tempfile("data_script_", fileext = ".R")
-  on.exit(unlink(out), add = TRUE)
-
-  build_data_script(book_dir, output = out, skip_existing = FALSE,
-                    python_sync = FALSE, chunk_times = TRUE)
-  script <- paste(readLines(out, warn = FALSE), collapse = "\n")
-
-  expect_true(grepl("chunk_start_line", script))
-  expect_true(grepl("chunk_log", script))
-  expect_true(grepl("Top 10 slowest chunks", script))
+  expect_true(grepl("run_chapter", script))
+  expect_true(grepl("run_chunk", script))
+  expect_true(grepl("registry_read", script))
+  expect_true(grepl("registry_write", script))
+  expect_false(grepl("skip_existing", script))
+  expect_false(grepl("make_skip_lines", script))
 })
 
 test_that("build_data_script uses a timestamped default output under tempdir/", {
@@ -44,8 +31,7 @@ test_that("build_data_script uses a timestamped default output under tempdir/", 
   old_wd <- setwd(tempdir())
   on.exit(setwd(old_wd), add = TRUE)
 
-  script_path <- build_data_script(book_dir, skip_existing = FALSE,
-                                   python_sync = FALSE, chunk_times = FALSE)
+  script_path <- build_data_script(book_dir, python_sync = FALSE)
   on.exit(unlink(script_path), add = TRUE)
 
   expect_true(file.exists(script_path))

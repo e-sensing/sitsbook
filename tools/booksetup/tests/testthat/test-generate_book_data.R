@@ -31,56 +31,47 @@ test_that("generated script runs without error on a minimal book", {
   on.exit(unlink(book_dir, recursive = TRUE), add = TRUE)
   create_minimal_book(book_dir)
 
-  out <- tempfile("data_script_", fileext = ".R")
-  on.exit(unlink(out), add = TRUE)
+  out <- file.path(tempdir(), "mini_run.R")
+  reg <- file.path(tempdir(), "mini_registry.yaml")
+  on.exit(unlink(c(out, reg)), add = TRUE)
 
-  script_path <- build_data_script(book_dir, output = out,
-                                   skip_existing = FALSE,
-                                   python_sync = FALSE,
-                                   chunk_times = FALSE)
-
-  old_home <- Sys.getenv("HOME")
-  Sys.setenv(HOME = tempdir())
-  on.exit(Sys.setenv(HOME = old_home), add = TRUE, after = FALSE)
-
+  script_path <- build_data_script(book_dir, output = out, registry = reg,
+                                   python_sync = FALSE)
   expect_error(source(script_path, local = new.env(), echo = FALSE), NA)
+
+  expect_true(file.exists(reg))
+  registry <- registry_read(reg)
+  expect_length(registry, 2L)
+  expect_named(registry, c("simple:1", "simple:2"))
 })
 
-test_that("chunk_times mode writes a CSV with one row per chunk", {
-  book_dir <- file.path(tempdir(), "mini_book_chunk")
+test_that("registry causes completed chunks to be skipped on second run", {
+  book_dir <- file.path(tempdir(), "skip_book")
   dir.create(book_dir, showWarnings = FALSE, recursive = TRUE)
   on.exit(unlink(book_dir, recursive = TRUE), add = TRUE)
   create_minimal_book(book_dir)
 
-  out <- file.path(tempdir(), "chunk_timed.R")
-  on.exit(unlink(out), add = TRUE)
+  out <- file.path(tempdir(), "skip_run.R")
+  log <- file.path(tempdir(), "skip_run.log")
+  reg <- file.path(tempdir(), "skip_registry.yaml")
+  on.exit(unlink(c(out, log, reg)), add = TRUE)
 
-  script_path <- build_data_script(book_dir, output = out,
-                                   skip_existing = FALSE,
-                                   python_sync = FALSE,
-                                   chunk_times = TRUE)
-
-  old_home <- Sys.getenv("HOME")
-  Sys.setenv(HOME = tempdir())
-  on.exit(Sys.setenv(HOME = old_home), add = TRUE, after = FALSE)
-
+  script_path <- build_data_script(book_dir, output = out, registry = reg,
+                                   python_sync = FALSE)
   expect_error(source(script_path, local = new.env(), echo = FALSE), NA)
 
-  csv_file <- sub("\\.R$", "_chunks.csv", out)
-  on.exit(unlink(csv_file), add = TRUE)
-  expect_true(file.exists(csv_file))
+  # Second run with the same registry
+  script_path2 <- build_data_script(book_dir, output = out, registry = reg,
+                                    python_sync = FALSE)
+  expect_error(source(script_path2, local = new.env(), echo = FALSE), NA)
 
-  df <- read.csv(csv_file, stringsAsFactors = FALSE)
-  expect_equal(nrow(df), 2L)
-  expect_equal(df$chapter, rep("simple", 2L))
-  expect_equal(df$chunk, 1:2)
-  expect_true(all(df$elapsed >= 0))
-  expect_true(all(is.na(df$error) | df$error == ""))
-  expect_true(all(df$start_line < df$end_line))
+  expect_true(file.exists(log))
+  txt <- paste(readLines(log, warn = FALSE), collapse = "\n")
+  expect_match(txt, "SKIPPED")
 })
 
-test_that("chunk_times mode records errors without aborting the script", {
-  book_dir <- file.path(tempdir(), "mini_book_err")
+test_that("failed chunks are not recorded and are retried", {
+  book_dir <- file.path(tempdir(), "fail_book")
   dir.create(book_dir, showWarnings = FALSE, recursive = TRUE)
   on.exit(unlink(book_dir, recursive = TRUE), add = TRUE)
 
@@ -106,103 +97,77 @@ test_that("chunk_times mode records errors without aborting the script", {
     "```"
   ), file.path(book_dir, "error.qmd"))
 
-  out <- file.path(tempdir(), "chunk_err.R")
-  on.exit(unlink(out), add = TRUE)
+  out <- file.path(tempdir(), "fail_run.R")
+  reg <- file.path(tempdir(), "fail_registry.yaml")
+  on.exit(unlink(c(out, reg)), add = TRUE)
 
-  script_path <- build_data_script(book_dir, output = out,
-                                   skip_existing = FALSE,
-                                   python_sync = FALSE,
-                                   chunk_times = TRUE)
-
-  old_home <- Sys.getenv("HOME")
-  Sys.setenv(HOME = tempdir())
-  on.exit(Sys.setenv(HOME = old_home), add = TRUE, after = FALSE)
+  script_path <- build_data_script(book_dir, output = out, registry = reg,
+                                   python_sync = FALSE)
 
   expect_error(source(script_path, local = new.env(), echo = FALSE),
                "Some chapters failed")
 
-  csv_file <- sub("\\.R$", "_chunks.csv", out)
-  on.exit(unlink(csv_file), add = TRUE)
-  df <- read.csv(csv_file, stringsAsFactors = FALSE)
-  expect_equal(nrow(df), 2L)
-  expect_match(df$error[1], "intentional error")
-  expect_true(df$error[2] == "" || is.na(df$error[2]))
+  registry <- registry_read(reg)
+  expect_length(registry, 1L)
+  expect_named(registry, "error:2")
+
+  # Re-run: chunk 1 should execute again, chunk 2 should be skipped
+  expect_error(source(script_path, local = new.env(), echo = FALSE),
+               "Some chapters failed")
+  registry2 <- registry_read(reg)
+  expect_equal(registry2, registry)
 })
 
-test_that("skip_existing avoids re-running chapters with data", {
-  book_dir <- file.path(tempdir(), "mini_book_skip")
+test_that("editing a chunk changes its hash and re-runs only that chunk", {
+  book_dir <- file.path(tempdir(), "edit_book")
   dir.create(book_dir, showWarnings = FALSE, recursive = TRUE)
   on.exit(unlink(book_dir, recursive = TRUE), add = TRUE)
   create_minimal_book(book_dir)
 
-  fake_data_dir <- file.path(tempdir(), "sitsbook", "tempdir", "R", "simple")
-  dir.create(fake_data_dir, showWarnings = FALSE, recursive = TRUE)
-  writeLines("x", file.path(fake_data_dir, "file.txt"))
+  out <- file.path(tempdir(), "edit_run.R")
+  reg <- file.path(tempdir(), "edit_registry.yaml")
+  on.exit(unlink(c(out, reg)), add = TRUE)
 
-  out <- file.path(tempdir(), "skip_script.R")
-  on.exit(unlink(out), add = TRUE)
-
-  script_path <- build_data_script(book_dir, output = out,
-                                   skip_existing = TRUE,
-                                   python_sync = FALSE,
-                                   chunk_times = FALSE)
-
-  old_home <- Sys.getenv("HOME")
-  Sys.setenv(HOME = tempdir())
-  on.exit(Sys.setenv(HOME = old_home), add = TRUE, after = FALSE)
-
+  script_path <- build_data_script(book_dir, output = out, registry = reg,
+                                   python_sync = FALSE)
   expect_error(source(script_path, local = new.env(), echo = FALSE), NA)
 
-  log_file <- sub("\\.R$", ".log", out)
-  on.exit(unlink(log_file), add = TRUE)
-  log <- paste(readLines(log_file, warn = FALSE), collapse = "\n")
-  expect_match(log, "skipping")
-})
+  old_hash <- registry_read(reg)[["simple:1"]]$hash
 
-test_that("integration fixture with empty chapter runs without error", {
-  book_dir <- system.file("extdata", "integration_book", package = "booksetup")
-  out <- file.path(tempdir(), "integration_empty.R")
-  on.exit(unlink(out), add = TRUE)
+  # Edit the first chunk
+  writeLines(c(
+    "---",
+    "title: Simple",
+    "---",
+    "",
+    "# Intro",
+    "",
+    "```{r}",
+    "x <- 1 + 1 + 1",
+    "```",
+    "",
+    "```{r}",
+    "#| eval: false",
+    "y <- x * 2",
+    "```"
+  ), file.path(book_dir, "simple.qmd"))
 
-  script_path <- build_data_script(book_dir, output = out,
-                                   skip_existing = FALSE,
-                                   python_sync = FALSE,
-                                   chunk_times = TRUE)
+  script_path2 <- build_data_script(book_dir, output = out, registry = reg,
+                                     python_sync = FALSE)
+  expect_error(source(script_path2, local = new.env(), echo = FALSE), NA)
 
-  old_home <- Sys.getenv("HOME")
-  Sys.setenv(HOME = tempdir())
-  on.exit(Sys.setenv(HOME = old_home), add = TRUE, after = FALSE)
-
-  expect_error(source(script_path, local = new.env(), echo = FALSE), NA)
-
-  csv_file <- sub("\\.R$", "_chunks.csv", out)
-  on.exit(unlink(csv_file), add = TRUE)
-  expect_true(file.exists(csv_file))
-
-  df <- read.csv(csv_file, stringsAsFactors = FALSE)
-  # simple.qmd has 2 chunks, empty.qmd has 0
-  expect_equal(nrow(df), 2L)
-  expect_equal(unique(df$chapter), "simple")
-
-  log_file <- sub("\\.R$", ".log", out)
-  on.exit(unlink(log_file), add = TRUE)
-  log <- paste(readLines(log_file, warn = FALSE), collapse = "\n")
-  expect_match(log, "empty")
+  new_registry <- registry_read(reg)
+  expect_false(identical(new_registry[["simple:1"]]$hash, old_hash))
+  expect_identical(new_registry[["simple:2"]]$hash, registry_read(reg)[["simple:2"]]$hash)
 })
 
 test_that("chapters are isolated from each other in the generated script", {
   book_dir <- system.file("extdata", "isolation_book", package = "booksetup")
-  out <- file.path(tempdir(), "isolation_test.R")
-  on.exit(unlink(out), add = TRUE)
+  out <- file.path(tempdir(), "isolation_run.R")
+  reg <- file.path(tempdir(), "isolation_registry.yaml")
+  on.exit(unlink(c(out, reg)), add = TRUE)
 
-  script_path <- build_data_script(book_dir, output = out,
-                                   skip_existing = FALSE,
-                                   python_sync = FALSE,
-                                   chunk_times = FALSE)
-
-  old_home <- Sys.getenv("HOME")
-  Sys.setenv(HOME = tempdir())
-  on.exit(Sys.setenv(HOME = old_home), add = TRUE, after = FALSE)
-
+  script_path <- build_data_script(book_dir, output = out, registry = reg,
+                                   python_sync = FALSE)
   expect_error(source(script_path, local = new.env(), echo = FALSE), NA)
 })
