@@ -209,7 +209,7 @@ write_chapter_chunk_timed <- function(con, chapter_name, qmd, chunks, i, n_chapt
       "    })",
       "    chunk_elapsed <- proc.time()[\"elapsed\"] - start_chunk",
       "    message(\"      elapsed: \", round(chunk_elapsed, 1), \"s\")",
-      "    chunk_log[[length(chunk_log) + 1L]] <<- list(",
+      "    chunk_log[[length(chunk_log) + 1L]] <- list(",
       "      chapter = chapter_name,",
       "      chunk = chunk_i,",
       "      start_line = chunk_start_line,",
