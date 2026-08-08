@@ -189,3 +189,20 @@ test_that("integration fixture with empty chapter runs without error", {
   log <- paste(readLines(log_file, warn = FALSE), collapse = "\n")
   expect_match(log, "empty")
 })
+
+test_that("chapters are isolated from each other in the generated script", {
+  book_dir <- system.file("extdata", "isolation_book", package = "booksetup")
+  out <- file.path(tempdir(), "isolation_test.R")
+  on.exit(unlink(out), add = TRUE)
+
+  script_path <- build_data_script(book_dir, output = out,
+                                   skip_existing = FALSE,
+                                   python_sync = FALSE,
+                                   chunk_times = FALSE)
+
+  old_home <- Sys.getenv("HOME")
+  Sys.setenv(HOME = tempdir())
+  on.exit(Sys.setenv(HOME = old_home), add = TRUE, after = FALSE)
+
+  expect_error(source(script_path, local = new.env(), echo = FALSE), NA)
+})

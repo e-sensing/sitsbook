@@ -7,8 +7,8 @@
 #' of the generated R data to the Python temp directory.
 #'
 #' @param book_dir Path to the book project root (must contain `_quarto.yml`).
-#' @param output Path for the generated R script. Defaults to
-#'   `"generate_book_data.R"` in the current working directory.
+#' @param output Path for the generated R script. Defaults to a timestamped
+#'   file under `tempdir/` in the current working directory.
 #' @param chapters Optional character vector of chapter names (without `.qmd`)
 #'   to limit the generation. If `NULL` (the default), all chapters are included.
 #' @param skip_existing If `TRUE`, chapters whose `~/sitsbook/tempdir/R/<chapter>`
@@ -126,12 +126,13 @@ write_script_header <- function(con, qmds, log_file, chunk_csv_file,
 
 write_chapter_block <- function(con, chapter_name, qmd, code, i, n_chapters,
                                 skip_existing) {
-  skip_lines <- make_skip_lines(skip_existing)
   body <- if (length(code) > 0L) {
-    paste0("    ", code)
+    paste0("      ", code)
   } else {
-    "    # (no R code in this chapter)"
+    "      # (no R code in this chapter)"
   }
+
+  skip_lines <- make_skip_lines(skip_existing)
 
   block <- c(
     sprintf("chapter_i <- %dL", i),
@@ -139,22 +140,20 @@ write_chapter_block <- function(con, chapter_name, qmd, code, i, n_chapters,
     sprintf("chapter_qmd <- %s", deparse(qmd)),
     sprintf("message(\"[%d/%d] \", chapter_name, \" -- \", format(Sys.time()))", i, n_chapters),
     skip_lines,
-    "    start_chapter <- proc.time()[\"elapsed\"]",
-    "    tryCatch({",
+    "    chapter_elapsed <- (function() {",
+    "      start_chapter <- proc.time()[\"elapsed\"]",
     sprintf("      # === %s ===", chapter_name),
     body,
-    "    }, error = function(e) {",
-    "      msg <- paste0(\"ERROR in \", chapter_name, \": \", conditionMessage(e))",
-    "      message(msg)",
-    "      errors <<- c(errors, msg)",
-    "    })",
-    "    chapter_times[chapter_i] <- proc.time()[\"elapsed\"] - start_chapter",
-    "    avg <- mean(chapter_times[chapter_times > 0])",
-    sprintf("    remaining <- n_chapters - %dL", i),
-    "    eta <- if (is.finite(avg)) Sys.time() + remaining * avg else NA",
-    "    message(\"    elapsed: \", round(chapter_times[chapter_i], 1), \"s; avg: \", round(avg, 1),",
-    "            \"s; remaining: \", remaining, \"; ETA: \", format(eta))",
+    "      proc.time()[\"elapsed\"] - start_chapter",
+    "    })()",
+    "    chapter_times[chapter_i] <- chapter_elapsed",
     "  }",
+    "  avg <- mean(chapter_times[chapter_times > 0])",
+    sprintf("  remaining <- n_chapters - %dL", i),
+    "  eta <- if (is.finite(avg)) Sys.time() + remaining * avg else NA",
+    "  message(\"    chapter elapsed: \", round(chapter_times[chapter_i], 1), \"s; avg: \", round(avg, 1),",
+    "          \"s; remaining: \", remaining, \"; ETA: \", format(eta))",
+    "",
     ""
   )
   writeLines(block, con)
@@ -170,9 +169,10 @@ write_chapter_chunk_timed <- function(con, chapter_name, qmd, chunks, i, n_chapt
     sprintf("chapter_qmd <- %s", deparse(qmd)),
     sprintf("message(\"[%d/%d] \", chapter_name, \" -- \", format(Sys.time()))", i, n_chapters),
     skip_lines,
-    "  {",
-    sprintf("    n_chunks <- %dL", length(chunks)),
-    "    chapter_elapsed <- 0"
+    "    chapter_elapsed <- (function() {",
+    sprintf("      n_chunks <- %dL", length(chunks)),
+    "      chapter_elapsed_inner <- 0",
+    ""
   )
 
   for (j in seq_along(chunks)) {
@@ -188,57 +188,60 @@ write_chapter_chunk_timed <- function(con, chapter_name, qmd, chunks, i, n_chapt
     }
 
     body <- if (length(code) > 0L) {
-      paste0("      ", code)
+      paste0("        ", code)
     } else {
-      "      # (empty or installation chunk)"
+      "        # (empty or installation chunk)"
     }
 
     block <- c(
       block,
-      sprintf("    chunk_i <- %dL", j),
-      sprintf("    chunk_start_line <- %dL", start_line),
-      sprintf("    chunk_end_line <- %dL", end_line),
-      sprintf("    chunk_label <- %s", deparse(as.character(label))),
-      sprintf("    message(\"    [chunk \", chunk_i, \"/\", n_chunks, \"] lines \", chunk_start_line, \"-\", chunk_end_line, \" (\", chunk_label, \")\")"),
-      "    start_chunk <- proc.time()[\"elapsed\"]",
-      "    chunk_err <- NA_character_",
-      "    tryCatch({",
-      sprintf("      # === %s lines %d-%d ===", chapter_name, start_line, end_line),
+      sprintf("      chunk_i <- %dL", j),
+      sprintf("      chunk_start_line <- %dL", start_line),
+      sprintf("      chunk_end_line <- %dL", end_line),
+      sprintf("      chunk_label <- %s", deparse(as.character(label))),
+      sprintf("      message(\"    [chunk \", chunk_i, \"/\", n_chunks, \"] lines \", chunk_start_line, \"-\", chunk_end_line, \" (\", chunk_label, \")\")"),
+      "      start_chunk <- proc.time()[\"elapsed\"]",
+      "      chunk_err <- NA_character_",
+      "      tryCatch({",
+      sprintf("        # === %s lines %d-%d ===", chapter_name, start_line, end_line),
       body,
-      "    }, error = function(e) {",
-      "      chunk_err <<- conditionMessage(e)",
-      "      msg <- paste0(\"ERROR in \", chapter_name, \" chunk \", chunk_i,",
-      "                   \" lines \", chunk_start_line, \"-\", chunk_end_line, \":\")",
-      "      message(msg)",
-      "      message(chunk_err)",
-      "      errors <<- c(errors, paste(msg, chunk_err))",
-      "    })",
-      "    chunk_elapsed <- proc.time()[\"elapsed\"] - start_chunk",
-      "    chapter_elapsed <- chapter_elapsed + chunk_elapsed",
-    "    message(\"      elapsed: \", round(chunk_elapsed, 1), \"s\")",
-      "    chunk_log[[length(chunk_log) + 1L]] <- list(",
-      "      chapter = chapter_name,",
-      "      chunk = chunk_i,",
-      "      start_line = chunk_start_line,",
-      "      end_line = chunk_end_line,",
-      "      label = chunk_label,",
-      "      elapsed = chunk_elapsed,",
-      "      error = chunk_err",
-      "    )",
+      "      }, error = function(e) {",
+      "        chunk_err <<- conditionMessage(e)",
+      "        msg <- paste0(\"ERROR in \", chapter_name, \" chunk \", chunk_i,",
+      "                     \" lines \", chunk_start_line, \"-\", chunk_end_line, \":\")",
+      "        message(msg)",
+      "        message(chunk_err)",
+      "        errors <<- c(errors, paste(msg, chunk_err))",
+      "      })",
+      "      chunk_elapsed <- proc.time()[\"elapsed\"] - start_chunk",
+      "      chapter_elapsed_inner <- chapter_elapsed_inner + chunk_elapsed",
+      "      message(\"      elapsed: \", round(chunk_elapsed, 1), \"s\")",
+      "      chunk_log[[length(chunk_log) + 1L]] <<- list(",
+      "        chapter = chapter_name,",
+      "        chunk = chunk_i,",
+      "        start_line = chunk_start_line,",
+      "        end_line = chunk_end_line,",
+      "        label = chunk_label,",
+      "        elapsed = chunk_elapsed,",
+      "        error = chunk_err",
+      "      )",
       ""
     )
   }
 
   block <- c(
     block,
+    "      chapter_elapsed_inner",
+    "    })()",
     "    chapter_times[chapter_i] <- chapter_elapsed",
-    "    avg <- mean(chapter_times[chapter_times > 0])",
-    sprintf("    remaining <- n_chapters - %dL", i),
-    "    eta <- if (is.finite(avg)) Sys.time() + remaining * avg else NA",
-    "    message(\"    chapter elapsed: \", round(chapter_times[chapter_i], 1), \"s; avg: \", round(avg, 1),",
-    "            \"s; remaining: \", remaining, \"; ETA: \", format(eta))",
     "  }",
-    "}"
+    "  avg <- mean(chapter_times[chapter_times > 0])",
+    sprintf("  remaining <- n_chapters - %dL", i),
+    "  eta <- if (is.finite(avg)) Sys.time() + remaining * avg else NA",
+    "  message(\"    chapter elapsed: \", round(chapter_times[chapter_i], 1), \"s; avg: \", round(avg, 1),",
+    "          \"s; remaining: \", remaining, \"; ETA: \", format(eta))",
+    "",
+    ""
   )
   writeLines(block, con)
 }
@@ -251,6 +254,7 @@ make_skip_lines <- function(skip_existing) {
       "    length(list.files(chapter_data_dir, all.files = TRUE, recursive = TRUE)) > 0L",
       "  if (already_done) {",
       "    message(\"    skipping (data already exists)\")",
+      "    chapter_times[chapter_i] <- 0",
       "  } else {"
     )
   } else {

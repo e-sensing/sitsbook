@@ -17,8 +17,8 @@ build_data_script(
 \arguments{
 \item{book_dir}{Path to the book project root (must contain \verb{_quarto.yml}).}
 
-\item{output}{Path for the generated R script. Defaults to
-\code{"generate_book_data.R"} in the current working directory.}
+\item{output}{Path for the generated R script. Defaults to a timestamped
+file under \verb{tempdir/} in the current working directory.}
 
 \item{chapters}{Optional character vector of chapter names (without \code{.qmd})
 to limit the generation. If \code{NULL} (the default), all chapters are included.}
