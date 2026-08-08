@@ -70,7 +70,7 @@ test_that("registry causes completed chunks to be skipped on second run", {
   expect_match(txt, "SKIPPED")
 })
 
-test_that("failed chunks are not recorded and are retried", {
+test_that("failed chunks stop the chapter and are not recorded", {
   book_dir <- file.path(tempdir(), "fail_book")
   dir.create(book_dir, showWarnings = FALSE, recursive = TRUE)
   on.exit(unlink(book_dir, recursive = TRUE), add = TRUE)
@@ -108,14 +108,62 @@ test_that("failed chunks are not recorded and are retried", {
                "Some chapters failed")
 
   registry <- registry_read(reg)
-  expect_length(registry, 1L)
-  expect_named(registry, "error:2")
+  expect_length(registry, 0L)
 
-  # Re-run: chunk 1 should execute again, chunk 2 should be skipped
+  # Re-run: chunk 1 fails again, chunk 2 is never reached
   expect_error(source(script_path, local = new.env(), echo = FALSE),
                "Some chapters failed")
   registry2 <- registry_read(reg)
-  expect_equal(registry2, registry)
+  expect_length(registry2, 0L)
+})
+
+test_that("an error in one chapter does not stop the next chapter", {
+  book_dir <- file.path(tempdir(), "two_chapter_book")
+  dir.create(book_dir, showWarnings = FALSE, recursive = TRUE)
+  on.exit(unlink(book_dir, recursive = TRUE), add = TRUE)
+
+  writeLines(c(
+    "project:",
+    "  type: book",
+    "book:",
+    "  chapters:",
+    "    - error.qmd",
+    "    - simple.qmd"
+  ), file.path(book_dir, "_quarto.yml"))
+
+  writeLines(c(
+    "---",
+    "title: Error",
+    "---",
+    "",
+    "```{r}",
+    "stop('intentional error')",
+    "```"
+  ), file.path(book_dir, "error.qmd"))
+
+  writeLines(c(
+    "---",
+    "title: Simple",
+    "---",
+    "",
+    "```{r}",
+    "z <- 42",
+    "```"
+  ), file.path(book_dir, "simple.qmd"))
+
+  out <- file.path(tempdir(), "two_chapter_run.R")
+  reg <- file.path(tempdir(), "two_chapter_registry.yaml")
+  on.exit(unlink(c(out, reg)), add = TRUE)
+
+  script_path <- build_data_script(book_dir, output = out, registry = reg,
+                                   python_sync = FALSE)
+
+  expect_error(source(script_path, local = new.env(), echo = FALSE),
+               "Some chapters failed")
+
+  registry <- registry_read(reg)
+  expect_length(registry, 1L)
+  expect_named(registry, "simple:1")
 })
 
 test_that("editing a chunk changes its hash and re-runs only that chunk", {
@@ -194,21 +242,23 @@ test_that("run_chunk always runs eval: true chunks even when in registry", {
   env$chapter_times <- numeric()
   env$errors <- character()
 
-  env$run_chunk(
-    chapter_name = "simple",
-    chunk_i = 1L,
-    n_chunks = 1L,
-    start_line = 1L,
-    end_line = 2L,
-    label = "chunk_1",
-    hash = "abc",
-    eval = TRUE,
-    env = new.env(),
-    expr = quote(stop("must run"))
+  expect_error(
+    env$run_chunk(
+      chapter_name = "simple",
+      chunk_i = 1L,
+      n_chunks = 1L,
+      start_line = 1L,
+      end_line = 2L,
+      label = "chunk_1",
+      hash = "abc",
+      eval = TRUE,
+      env = new.env(),
+      expr = quote(stop("must run"))
+    ),
+    "must run"
   )
 
-  expect_equal(length(env$errors), 1L)
-  expect_match(env$errors, "must run")
+  expect_equal(length(env$errors), 0L)
   updated <- registry_read(reg_path)
   expect_equal(updated[["simple:1"]]$hash, "abc")
 })

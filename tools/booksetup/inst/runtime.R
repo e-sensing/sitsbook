@@ -18,7 +18,14 @@ run_chapter <- function(chapter_name, chapter_i, n_chapters, body) {
   message("[", chapter_i, "/", n_chapters, "] ", chapter_name,
           " -- ", format(Sys.time()))
   start <- proc.time()["elapsed"]
-  body()
+  tryCatch(
+    body(),
+    error = function(e) {
+      msg <- conditionMessage(e)
+      message("    chapter aborted: ", msg)
+      errors <<- c(errors, msg)
+    }
+  )
   elapsed <- proc.time()["elapsed"] - start
   chapter_times[chapter_i] <<- elapsed
   avg <- mean(chapter_times[chapter_times > 0])
@@ -89,10 +96,6 @@ run_chunk <- function(chapter_name, chunk_i, n_chunks, start_line, end_line,
     eval(expr, env),
     error = function(e) {
       err <<- conditionMessage(e)
-      msg <- paste0("ERROR in ", chapter_name, " chunk ", chunk_i,
-                    " lines ", start_line, "-", end_line, ": ", err)
-      message(msg)
-      errors <<- c(errors, msg)
     }
   )
   elapsed <- proc.time()["elapsed"] - start
@@ -106,6 +109,10 @@ run_chunk <- function(chapter_name, chunk_i, n_chunks, start_line, end_line,
     )
     registry_write(registry_file, booksetup_registry)
     message("      elapsed: ", round(elapsed, 1), "s")
+    return(invisible(NULL))
   }
-  invisible(NULL)
+
+  stop("ERROR in ", chapter_name, " chunk ", chunk_i,
+       " lines ", start_line, "-", end_line, ": ", err,
+       call. = FALSE)
 }
