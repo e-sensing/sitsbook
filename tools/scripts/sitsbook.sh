@@ -16,6 +16,7 @@ Rscript -e "
   pkgload::load_all('tools/booksetup', quiet = TRUE)
   booksetup::generate_book_data(
     book_dir    = '$REPO_ROOT',
+    exclude     = 'intro_examples',
     python_sync = TRUE
   )
 "
