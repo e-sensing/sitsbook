@@ -1,0 +1,32 @@
+test_that("extract_r_chunks extracts only R chunks", {
+  qmd <- system.file("extdata", "sample.qmd", package = "booksetup")
+  chunks <- extract_r_chunks(qmd)
+
+  expect_length(chunks, 3L)
+  expect_named(chunks, c("chunk_1", "chunk_2", "chunk_3"))
+})
+
+test_that("chunk option lines are stripped", {
+  qmd <- system.file("extdata", "sample.qmd", package = "booksetup")
+  chunks <- extract_r_chunks(qmd)
+
+  all_code <- unlist(chunks, use.names = FALSE)
+  expect_false(any(grepl("^#\\|", all_code)))
+})
+
+test_that("eval: false code is preserved", {
+  qmd <- system.file("extdata", "sample.qmd", package = "booksetup")
+  chunks <- extract_r_chunks(qmd)
+
+  all_code <- paste(unlist(chunks, use.names = FALSE), collapse = "\n")
+  expect_true(grepl("sits_cube\\(", all_code))
+  expect_true(grepl("sits_regularize\\(", all_code))
+})
+
+test_that("python chunks are ignored", {
+  qmd <- system.file("extdata", "sample.qmd", package = "booksetup")
+  chunks <- extract_r_chunks(qmd)
+
+  all_code <- paste(unlist(chunks, use.names = FALSE), collapse = "\n")
+  expect_false(grepl("pysits", all_code))
+})
