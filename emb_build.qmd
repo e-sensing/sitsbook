@@ -5,6 +5,8 @@ format: html
 
 ### Configurations to run this chapter{-}
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| echo: true
 #| eval: true
@@ -20,6 +22,21 @@ dir.create(tempdir_r, showWarnings = FALSE, recursive = TRUE)
 tempdir_r_class <- "~/sitsbook/tempdir/R/emb_build/class"
 dir.create(tempdir_r_class, showWarnings = FALSE, recursive = TRUE)
 ```
+## Python
+```{python}
+#| echo: true
+#| eval: true
+#| output: false
+# load "pysits" library
+from pysits import *
+from pathlib import Path
+# set tempdir if it does not exist
+tempdir_py = Path.home() / "sitsbook/tempdir/Python/emb_build"
+tempdir_py_class = Path.home() / "sitsbook/tempdir/Python/emb_build/class"
+# Create directory
+tempdir_py_class.mkdir(parents=True, exist_ok=True)
+```
+:::
 
 ## Overview
 
@@ -46,7 +63,7 @@ The function `sits_pre_train()` trains a deep-learning encoder from time-series 
 
 Each learning method has its own set of parameters. They also a set of common parameters, shown below.
 
-** Common parameters for all embedding models **
+**Common parameters for all embedding models**
 
 | Parameter | Meaning |
 |---|---|
@@ -67,8 +84,7 @@ Each learning method has its own set of parameters. They also a set of common pa
 
 : Parameters shared by all encoders {#tbl-common-par}
 
-
-** LeJEPA **
+**LeJEPA**
 
 The parameters specific for `sits_ssl_lejepa()` are described below. For an explanation of how the methods work, please check the preceeding chapter of the book.
 
@@ -81,7 +97,7 @@ The parameters specific for `sits_ssl_lejepa()` are described below. For an expl
 
 : Specific parameters for LeJEPA method {#tbl-lejepa-par}
 
-** MAE **
+**MAE**
 
 The parameters specific for `sits_ssl_mae()` are described below. For an explanation of how the methods work, please check the preceeding chapter of the book.
 
@@ -95,7 +111,7 @@ The parameters specific for `sits_ssl_mae()` are described below. For an explana
 
 : Specific parameters for MAE method {#tbl-mae-par}
 
-** VICReg **
+**VICReg**
 
 The parameters specific for `sits_ssl_vicreg()` are described below. For an explanation of how the methods work, please check the preceeding chapter of the book.
 
@@ -108,7 +124,7 @@ The parameters specific for `sits_ssl_vicreg()` are described below. For an expl
 
 : Specific parameters for VICReg method {#tbl-vicreg-par}
 
-** Barlow Twins **
+**Barlow Twins**
 
 The specific parameters for the Barlow Twins method are described below.
 
@@ -120,7 +136,7 @@ The specific parameters for the Barlow Twins method are described below.
     
 : Specific parameters for Barlow Twins method {#tbl-btwins-par}
 
-** Supervised Contrastive Loss **
+**Supervised Contrastive Loss**
 
 The specific parameters for the SupCon method are described below.
 
@@ -149,10 +165,13 @@ When using ARD data from other providers (e.g., CDSE or MPC), users need to copy
 data to a local repository and obtain a regular data cube. The code for creating 
 the data cubes is shown below.
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
 # Extract the shapefile with the boundaries of the Rondonia state
 rondonia_shp <- system.file("extdata/shapefiles/rondonia/rondonia.shp", package = "sitsdata")
+
 # Read the shapefile as an sf object
 rondonia_sf <- sf::st_read(rondonia_shp)
 
@@ -166,6 +185,29 @@ rondonia_cube <- sits_cube(
     end_date   = "2022-12-23"
 )
 ```
+## Python
+```{python}
+#| eval: false
+# Import GeoPandas
+import geopandas as gpd
+
+# Extract the shapefile with the boundaries of the Rondonia state
+rondonia_shp = r_package_dir("extdata/shapefiles/rondonia/rondonia.shp", package = "sitsdata")
+
+# Read the shapefile as a GeoDataFrame object
+rondonia_sf = gpd.read_file(rondonia_shp)
+
+# Define a Sentinel-2 data cube covering Rondonia in the Brazil Data Cube service
+# We take 2022 as our study year
+rondonia_cube = sits_cube(
+    source = "BDC",
+    collection = "SENTINEL-2-16D",
+    roi = rondonia_sf,
+    start_date = "2022-01-05",
+    end_date   = "2022-12-23"
+)
+```
+:::
 
 ### Obtaining samples for representation learning
 
@@ -179,6 +221,8 @@ The training data for self-supervised learning is a set of unlabeled samples, wh
 
 For this example, we take 30,000 samples covering the area of interest. In actual practice, a larger set of samples is recommended. Note that the next lines may take a long time. For this reason, we provide a shortcut in what follows. 
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
 # select a random set of locations to be samples
@@ -189,22 +233,47 @@ random_locations <- sits_random_sampling(
     memsize = 24,
     progress = TRUE
 )
+
 # extract the time series 
-samples_unlabelled <- sits_get_data(
+samples <- sits_get_data(
     cube = rondonia_cube,
     samples = random_locations,
     multicores = 8,
     progress = TRUE
 )
 ```
+## Python
+```{python}
+#| eval: false
+# select a random set of locations to be samples
+random_locations = sits_random_sampling(
+    cube = rondonia_cube,
+    n_samples = 30000,
+    multicores = 8,
+    memsize = 24,
+    progress = True
+)
+
+# extract the time series
+samples = sits_get_data(
+    cube = rondonia_cube,
+    samples = random_locations,
+    multicores = 8,
+    progress = True
+)
+```
+:::
 
 The resulting samples consist of 30,000 time series covering a one-year period. Because of the time required to obtain the samples, we provide a shortcut by pre-archiving the result in the `sitsdata` package.
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
 # recover the samples 
 samples_file <- system.file("extdata/samples/rondonia_30k.rds", package = "sitsdata")
 samples <- readRDS(samples_file)
+
 # use only optical bands, not indexes
 samples <- sits_select(
     samples,
@@ -213,6 +282,21 @@ samples <- sits_select(
 )
 
 ```
+## Python
+```{python}
+#| eval: false
+# recover the samples
+samples_file = r_package_dir("extdata/samples/rondonia_30k.rds", package = "sitsdata")
+samples = read_rds(samples_file)
+
+# use only optical bands, not indexes
+samples = sits_select(
+    samples,
+    bands = ("B02", "B03", "B04", "B05", "B06",
+             "B07", "B08", "B11", "B12", "B8A")
+)
+```
+:::
 
 ### Building the weights of the encoder 
 
@@ -229,6 +313,8 @@ choices are `embedding_dim` (size of the embedding vector) and
 `encoder_model` (the deep learning model used to process the inputs). In this
 case, we use `sits_tempcnn()`. 
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
 vicreg_encoder <- sits_pre_train(
@@ -239,12 +325,26 @@ vicreg_encoder <- sits_pre_train(
     )
 )
 ```
+## Python
+```{python}
+#| eval: false
+vicreg_encoder = sits_pre_train(
+    samples = samples,
+    rl_method = sits_ssl_vicreg(
+        embedding_dim    = 64,
+        encoder_model    = sits_tempcnn()
+    )
+)
+```
+:::
 
 After obtaining a `vicreg_encoder`, we use it to produce embeddings from
 a data cube. In this case, we use the same data cube from the 
 [Classification of raster data cubes](https://e-sensing.github.io/sitsbook/cl_rasterclassification.html)
 chapter. Please refer to that chapter for a description of the data. 
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
 # directory where files are located
@@ -256,13 +356,14 @@ cube_20LMR <- sits_cube(
     collection = "SENTINEL-2-L2A",
     data_dir = data_dir
 )
+
 # select only the S2 bands
 cube_20LMR <- sits_select(
     cube_20LMR,
     bands = c("B02", "B03", "B04", "B05", 
     "B06", "B07", "B08", "B11", "B12", "B8A")
-    
 )
+
 # Plot one of the dates of the cube
 plot(
     cube_20LMR, 
@@ -272,7 +373,36 @@ plot(
     date = "2022-07-16"
 )
 ```
+## Python
+```{python}
+#| eval: false
+# directory where files are located
+data_dir = r_package_dir("extdata/Rondonia-20LMR", package = "sitsdata")
 
+# builds a cube based on existing files
+cube_20LMR = sits_cube(
+    source = "AWS",
+    collection = "SENTINEL-2-L2A",
+    data_dir = data_dir
+)
+
+# select only the S2 bands
+cube_20LMR = sits_select(
+    cube_20LMR,
+    bands = ("B02", "B03", "B04", "B05",
+    "B06", "B07", "B08", "B11", "B12", "B8A")
+)
+
+# Plot one of the dates of the cube
+plot(
+    cube_20LMR,
+    red = "B11",
+    green = "B8A",
+    blue = "B02",
+    date = "2022-07-16"
+)
+```
+:::
 
 ```{r}
 #| echo: FALSE
@@ -295,6 +425,8 @@ and `batch_size`, which is used only when working with a GPU.
 
 After generating the embeddings cube, we plot some of its dimensions.
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
 cube_emb <- sits_encode(
@@ -306,6 +438,7 @@ cube_emb <- sits_encode(
     batch_size = 12000,
     output_dir = tempdir_r
 )
+
 plot(
     cube_emb, 
     red = "EMB04",
@@ -313,6 +446,27 @@ plot(
     blue = "EMB03"
 )
 ```
+## Python
+```{python}
+#| eval: false
+cube_emb = sits_encode(
+    data = cube_20LMR,
+    encoder = vicreg_encoder,
+    memsize = 12,
+    multicores = 6,
+    gpu_memory = 12,
+    batch_size = 12000,
+    output_dir = tempdir_py
+)
+
+plot(
+    cube_emb,
+    red = "EMB04",
+    green = "EMB02",
+    blue = "EMB03"
+)
+```
+:::
 
 
 ```{r}
@@ -339,7 +493,8 @@ for fine-tuning, we take only 20% of the original samples for classification.
 After selecting the samples subset, we encode the samples to match the 
 embeeding dimensions with the same encoder we used for the data cube
 
-
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
 # random selection from tile 
@@ -351,9 +506,33 @@ samples_embedding <- sits_encode(
     data = samples_fine_tuning,
     encoder = vicreg_encoder
 )
+
 # plot the embedded samples using t-SNE
 plot(samples_embedding, mode = "tsne", perplexity = 30)
 ```
+## Python
+```{python}
+#| eval: false
+# obtain the samples
+samples_deforestation_rondonia = load_samples(
+    name = "samples_deforestation_rondonia",
+    package = "sitsdata"
+)
+
+# random selection from tile
+# selecting a subset of the original training data
+samples_fine_tuning = sits_sample(samples_deforestation_rondonia, frac = 0.2)
+
+# transforming the samples to the embedding dimension
+samples_embedding = sits_encode(
+    data = samples_fine_tuning,
+    encoder = vicreg_encoder
+)
+
+# plot the embedded samples using t-SNE
+plot(samples_embedding, mode = "tsne", perplexity = 30)
+```
+:::
 
 ```{r}
 #| echo: FALSE
@@ -370,13 +549,28 @@ t-SNE turns distances into probabilities, then matches them in 2-D. For each poi
 
 Alternative to visualisation using t-SNE include `dimensions` (plots the spread
 of each label in the embedding dimensions) and "PCA" (plot the first two principal components).
+
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
 # select the wetlands labels
 samples_emb_wet = sits_select(samples_embedding, labels = "Wetland")
+
 # plots the spread of values in each embedding dimension
 plot(samples_emb_wet, mode = "dimensions")
 ```
+## Python
+```{python}
+#| eval: false
+# select the wetlands labels
+samples_emb_wet = sits_select(samples_embedding, labels = "Wetland")
+
+# plots the spread of values in each embedding dimension
+plot(samples_emb_wet, mode = "dimensions")
+```
+:::
+
 ```{r}
 #| echo: FALSE
 #| label: fig-emb-dim
@@ -387,11 +581,18 @@ plot(samples_emb_wet, mode = "dimensions")
 knitr::include_graphics("./images/emb_plot_dimensions.png")
 ```
 
-
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
 plot(samples_embedding, mode = "PCA")
 ```
+## Python
+```{python}
+#| eval: false
+plot(samples_embedding, mode = "PCA")
+```
+:::
 
 ```{r}
 #| echo: FALSE
@@ -403,7 +604,6 @@ plot(samples_embedding, mode = "PCA")
 knitr::include_graphics("./images/emb_plot_pca.png")
 ```
 
-
 ### Classification of the embedding cube
 
 After obtaining the embedding cube and samples, the next step is to 
@@ -411,7 +611,8 @@ follow the established `sits` classification pipeline, as shown below.
 We use an multi-layer perceptron method (`sits_mlp()`) which is 
 well-suited to work with embeddings. 
 
-
+:::{.panel-tabset}
+## R
 ```{r}
 #| eval: false
 # build MLP model
@@ -432,20 +633,62 @@ emb_probs <- sits_classify(
     batch_size = 16000,
     output_dir = tempdir_r_class
 )
+
 emb_smooth <- sits_smooth(
     cube = emb_probs,
     multicores = 6,
     memsize = 24,
     output_dir = tempdir_r_class
 )
+
 emb_map <- sits_label_classification(
     cube = emb_smooth,
     multicores = 6,
     memsize = 24,
     output_dir = tempdir_r_class
 )
+
 plot(emb_map)
 ```
+## Python
+```{python}
+#| eval: false
+# build MLP model
+mlp_model = sits_train(
+    samples = samples_embedding,
+    ml_method = sits_mlp(
+        epochs = 150,
+        batch_size = 32
+    )
+)
+
+emb_probs = sits_classify(
+    data = cube_emb,
+    ml_model = mlp_model,
+    multicores = 6,
+    memsize = 24,
+    gpu_memory = 16,
+    batch_size = 16000,
+    output_dir = tempdir_py_class
+)
+
+emb_smooth = sits_smooth(
+    cube = emb_probs,
+    multicores = 6,
+    memsize = 24,
+    output_dir = tempdir_py_class
+)
+
+emb_map = sits_label_classification(
+    cube = emb_smooth,
+    multicores = 6,
+    memsize = 24,
+    output_dir = tempdir_py_class
+)
+
+plot(emb_map)
+```
+:::
 
 ```{r}
 #| echo: FALSE
