@@ -9,6 +9,7 @@ build_data_script(
   output = file.path("tempdir", paste0("generate_book_data_", format(Sys.time(),
     "\%Y\%m\%d_\%H\%M\%S"), ".R")),
   chapters = NULL,
+  exclude = NULL,
   registry = registry_path(),
   python_sync = TRUE
 )
@@ -21,6 +22,9 @@ file under \verb{tempdir/} in the current working directory.}
 
 \item{chapters}{Optional character vector of chapter names (without \code{.qmd})
 to limit the generation. If \code{NULL} (the default), all chapters are included.}
+
+\item{exclude}{Optional character vector of chapter names to exclude from the
+generated script. Unknown names are ignored with a warning.}
 
 \item{registry}{Path to the YAML chunk-completion registry. Defaults to
 \verb{~/sitsbook/tempdir/.booksetup_registry.yaml}. Set to \code{NULL} to disable

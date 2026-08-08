@@ -39,3 +39,29 @@ test_that("build_data_script uses a timestamped default output under tempdir/", 
   expect_match(basename(script_path),
                "^generate_book_data_[0-9]{8}_[0-9]{6}\\.R$")
 })
+
+test_that("build_data_script excludes chapters", {
+  book_dir <- system.file("extdata", "integration_book", package = "booksetup")
+  out <- tempfile("exclude_", fileext = ".R")
+  on.exit(unlink(out), add = TRUE)
+
+  build_data_script(book_dir, output = out, exclude = "simple",
+                    python_sync = FALSE)
+  script <- paste(readLines(out, warn = FALSE), collapse = "\n")
+
+  expect_false(grepl('run_chapter("simple"', script, fixed = TRUE))
+  expect_true(grepl('run_chapter("empty"', script, fixed = TRUE))
+})
+
+test_that("build_data_script warns on unknown excluded chapters", {
+  book_dir <- system.file("extdata", "integration_book", package = "booksetup")
+  out <- tempfile("exclude_warn_", fileext = ".R")
+  on.exit(unlink(out), add = TRUE)
+
+  expect_warning(
+    build_data_script(book_dir, output = out,
+                      exclude = c("simple", "not_a_chapter"),
+                      python_sync = FALSE),
+    "not_a_chapter"
+  )
+})

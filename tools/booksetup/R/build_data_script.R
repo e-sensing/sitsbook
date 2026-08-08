@@ -14,6 +14,8 @@
 #'   file under `tempdir/` in the current working directory.
 #' @param chapters Optional character vector of chapter names (without `.qmd`)
 #'   to limit the generation. If `NULL` (the default), all chapters are included.
+#' @param exclude Optional character vector of chapter names to exclude from the
+#'   generated script. Unknown names are ignored with a warning.
 #' @param registry Path to the YAML chunk-completion registry. Defaults to
 #'   `~/sitsbook/tempdir/.booksetup_registry.yaml`. Set to `NULL` to disable
 #'   skipping.
@@ -36,6 +38,7 @@ build_data_script <- function(book_dir,
                                        ".R")
                               ),
                               chapters = NULL,
+                              exclude = NULL,
                               registry = registry_path(),
                               python_sync = TRUE) {
   qmds <- chapter_files(book_dir)
@@ -48,6 +51,19 @@ build_data_script <- function(book_dir,
            paste(missing, collapse = ", "))
     }
     qmds <- qmds[chapters]
+  }
+
+  if (!is.null(exclude)) {
+    unknown <- setdiff(exclude, names(qmds))
+    if (length(unknown) > 0L) {
+      warning("Excluded chapters not found: ", paste(unknown, collapse = ", "))
+      exclude <- setdiff(exclude, unknown)
+    }
+    qmds <- qmds[setdiff(names(qmds), exclude)]
+  }
+
+  if (length(qmds) == 0L) {
+    stop("No chapters selected after applying chapters/exclude.")
   }
 
   out_path <- normalizePath(output, winslash = "/", mustWork = FALSE)
