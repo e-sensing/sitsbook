@@ -1,0 +1,62 @@
+---
+title: "Sample chapter"
+format: html
+---
+
+### Configurations
+
+:::{.panel-tabset}
+## R
+```{r}
+#| echo: true
+#| eval: true
+#| output: false
+library(tibble)
+# set tempdir if it does not exist
+tempdir_r <- "~/sitsbook/tempdir/R/sample"
+dir.create(tempdir_r, showWarnings = FALSE, recursive = TRUE)
+```
+## Python
+```{python}
+#| echo: true
+#| eval: true
+#| output: false
+from pysits import *
+from pathlib import Path
+tempdir_py = Path.home() / "sitsbook/tempdir/Python/sample"
+tempdir_py.mkdir(parents=True, exist_ok=True)
+```
+:::
+
+## Building a data cube
+
+```{r}
+#| eval: false
+# Create a non-regular data cube
+cube <- sits_cube(
+  source = "AWS",
+  collection = "SENTINEL-S2-L2A-COGS",
+  tiles = "20LKP",
+  bands = c("B04", "B08", "B8A", "B12"),
+  start_date = as.Date("2018-07-01"),
+  end_date = as.Date("2018-08-31")
+)
+
+# Regularize the cube
+cube_reg <- sits_regularize(
+  cube = cube,
+  output_dir = tempdir_r,
+  res = 60,
+  period = "P15D",
+  multicores = 4
+)
+```
+
+```{r}
+#| echo: false
+cube_reg <- sits_cube(
+  source = "AWS",
+  collection = "SENTINEL-S2-L2A-COGS",
+  data_dir = tempdir_r
+)
+```

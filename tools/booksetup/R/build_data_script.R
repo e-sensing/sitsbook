@@ -1,0 +1,254 @@
+#' Build a standalone R script that generates all book temp data
+#'
+#' Extracts the R code from every chapter `.qmd` and writes a single R script
+#' that can be run to (re)generate the data stored under
+#' `~/sitsbook/tempdir/R/<chapter>`. The console shows a minimal one-line
+#' progress indicator per chapter/chunk; a structured, one-event-per-line YAML
+#' log (parseable in one shot via `yaml::read_yaml()`) is written to the
+#' `.log` file alongside the script, recording chapter/run start and end,
+#' skips, warnings, and errors. A `chunk_summary.csv` snapshot of the full
+#' registry (status, elapsed time, images produced, errors) is written next
+#' to the registry file at the end of every run.
+#'
+#' Completed chunks are recorded in a YAML registry so that later runs skip them
+#' automatically. Failed chunks are recorded with `status: error` (so they can
+#' be queried via [list_failed_chunks()]) but are always retried regardless of
+#' `eval`.
+#'
+#' @param book_dir Path to the book project root (must contain `_quarto.yml`).
+#' @param output Path for the generated R script. Defaults to a timestamped
+#'   file under `tempdir/` in the current working directory.
+#' @param chapters Optional character vector of chapter names (without `.qmd`)
+#'   to limit the generation. If `NULL` (the default), all chapters are included.
+#' @param exclude Optional character vector of chapter names to exclude from the
+#'   generated script. Unknown names are ignored with a warning.
+#' @param registry Path to the YAML chunk-completion registry. Defaults to
+#'   `~/sitsbook/tempdir/.booksetup_registry.yaml`. Set to `NULL` to disable
+#'   skipping.
+#' @param python_sync If `TRUE`, the generated script calls
+#'   `rsync -a ~/sitsbook/tempdir/R/ ~/sitsbook/tempdir/Python/` at the end.
+#' @param image_dir Directory where plots produced while evaluating chunks
+#'   (base graphics, `ggplot2`, `tmap`, etc.) are saved as PNG files, one
+#'   sub-directory per chapter. Defaults to `generated_images/` next to the
+#'   registry file (i.e. `~/sitsbook/tempdir/generated_images`).
+#' @param image_width,image_height,image_res Pixel width/height and resolution
+#'   (dpi) used for `grDevices::png()` when saving chunk plots.
+#'
+#' @return The path to the generated R script, invisibly.
+#'
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' build_data_script("/home/rolf/gh/sitsbook", "generate_book_data.R")
+#' }
+build_data_script <- function(book_dir,
+                              output = file.path(
+                                "tempdir",
+                                paste0("generate_book_data_",
+                                       format(Sys.time(), "%Y%m%d_%H%M%S"),
+                                       ".R")
+                              ),
+                              chapters = NULL,
+                              exclude = NULL,
+                              registry = registry_path(),
+                              python_sync = TRUE,
+                              image_dir = file.path(
+                                dirname(registry %||% registry_path()),
+                                "generated_images"
+                              ),
+                              image_width = 2000L,
+                              image_height = 1500L,
+                              image_res = 150L) {
+  qmds <- chapter_files(book_dir)
+  names(qmds) <- tools::file_path_sans_ext(basename(qmds))
+
+  if (!is.null(chapters)) {
+    missing <- setdiff(chapters, names(qmds))
+    if (length(missing) > 0L) {
+      stop("Requested chapters not found in _quarto.yml: ",
+           paste(missing, collapse = ", "))
+    }
+    qmds <- qmds[chapters]
+  }
+
+  if (!is.null(exclude)) {
+    unknown <- setdiff(exclude, names(qmds))
+    if (length(unknown) > 0L) {
+      warning("Excluded chapters not found: ", paste(unknown, collapse = ", "))
+      exclude <- setdiff(exclude, unknown)
+    }
+    qmds <- qmds[setdiff(names(qmds), exclude)]
+  }
+
+  if (length(qmds) == 0L) {
+    stop("No chapters selected after applying chapters/exclude.")
+  }
+
+  out_path <- normalizePath(output, winslash = "/", mustWork = FALSE)
+  out_dir <- dirname(out_path)
+  if (!dir.exists(out_dir)) {
+    dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
+  }
+
+  log_file <- sub("\\.R$", ".log", out_path)
+
+  con <- file(out_path, "w")
+  on.exit(close(con), add = TRUE)
+
+  write_runtime_helpers(con)
+  write_script_header(con, log_file, registry, length(qmds),
+                      image_dir, image_width, image_height, image_res)
+  for (i in seq_along(qmds)) {
+    write_chapter(con, qmds[i], names(qmds)[i], i, length(qmds))
+  }
+  write_script_footer(con, python_sync)
+
+  invisible(out_path)
+}
+
+write_runtime_helpers <- function(con) {
+  runtime <- system.file("runtime.R", package = "booksetup")
+  if (runtime == "" || !file.exists(runtime)) {
+    stop("runtime.R not found; is booksetup installed/loaded?")
+  }
+  lines <- readLines(runtime, warn = FALSE)
+  writeLines(c("# Runtime helpers (copied from booksetup)", lines, "", "# --- book data generation ---"), con)
+}
+
+write_script_header <- function(con, log_file, registry, n_chapters,
+                                image_dir, image_width, image_height, image_res) {
+  if (is.null(registry)) {
+    registry_file_expr <- deparse(tempfile("registry_", fileext = ".yaml"))
+    read_expr <- "booksetup_registry <- list()"
+  } else {
+    registry_file_expr <- deparse(normalizePath(registry, winslash = "/", mustWork = FALSE))
+    read_expr <- paste0(
+      "dir.create(dirname(registry_file), showWarnings = FALSE, recursive = TRUE)\n",
+      "booksetup_registry <- registry_read(registry_file)"
+    )
+  }
+
+  lines <- c(
+    "# Generated by booksetup::build_data_script()",
+    "# Do not edit by hand.",
+    "",
+    "pdf(file = NULL)",
+    "",
+    paste0("log_file <- ", deparse(log_file)),
+    "if (file.exists(log_file)) file.remove(log_file)",
+    "log_con <- file(log_file, \"w\")",
+    "",
+    paste0("registry_file <- ", registry_file_expr),
+    read_expr,
+    "",
+    paste0("image_dir <- ", deparse(normalizePath(image_dir, winslash = "/", mustWork = FALSE))),
+    "dir.create(image_dir, showWarnings = FALSE, recursive = TRUE)",
+    paste0("image_width <- ", deparse(image_width)),
+    paste0("image_height <- ", deparse(image_height)),
+    paste0("image_res <- ", deparse(image_res)),
+    "",
+    "start_global <- Sys.time()",
+    "message(\"Starting book data generation at \", format(start_global))",
+    sprintf("log_event(log_con, \"run_start\", n_chapters = %dL)", n_chapters),
+    "",
+    sprintf("n_chapters <- %dL", n_chapters),
+    "chapter_times <- numeric(n_chapters)",
+    "errors <- character()",
+    ""
+  )
+  writeLines(lines, con)
+}
+
+write_chapter <- function(con, qmd, chapter_name, i, n_chapters) {
+  chunks <- extract_r_chunks(qmd)
+
+  lines <- c(
+    sprintf("run_chapter(%s, %dL, %dL, function() {", deparse(chapter_name), i, n_chapters),
+    generate_chunk_calls(chunks, chapter_name),
+    "})",
+    ""
+  )
+  writeLines(lines, con)
+}
+
+generate_chunk_calls <- function(chunks, chapter_name) {
+  if (length(chunks) == 0L) {
+    return(character())
+  }
+
+  calls <- character()
+  for (j in seq_along(chunks)) {
+    chunk <- chunks[[j]]
+    code <- chunk
+    code <- code[!grepl("install\\.packages|::install_github|::install|BiocManager::install",
+                        code)]
+
+    start_line <- attr(chunk, "start_line", exact = TRUE) %||% NA_integer_
+    end_line <- attr(chunk, "end_line", exact = TRUE) %||% NA_integer_
+    label <- attr(chunk, "label", exact = TRUE) %||% ""
+    if (!nzchar(label)) {
+      label <- names(chunks)[j]
+    }
+    eval <- attr(chunk, "eval", exact = TRUE) %||% TRUE
+
+    hash <- chunk_hash(code)
+
+    # Pass the chunk's source lines as a character vector (rather than a
+    # quoted `{ ... }` block) so `evaluate::evaluate()` can run it
+    # statement-by-statement, auto-printing visible values (as a real Quarto
+    # chunk would) and capturing any plots produced.
+    code_expr <- if (length(code) > 0L) {
+      paste0("  c(\n", paste0("    ", vapply(code, deparse, character(1L)), collapse = ",\n"), "\n  )")
+    } else {
+      "  character()"
+    }
+
+    call <- c(
+      sprintf("  run_chunk(%s, %dL, %dL, %dL, %dL, %s, %s, %s, environment(),",
+              deparse(chapter_name), j, length(chunks), start_line, end_line,
+              deparse(label), deparse(hash), deparse(eval)),
+      code_expr,
+      "  )"
+    )
+    calls <- c(calls, call)
+  }
+  calls
+}
+
+write_script_footer <- function(con, python_sync) {
+  sync_lines <- if (python_sync) {
+    c(
+      "",
+      "# Sync generated R data to the Python temp directory",
+      "message(\"Syncing R data to Python temp directory...\")",
+      "system(\"rsync -a ~/sitsbook/tempdir/R/ ~/sitsbook/tempdir/Python/\")"
+    )
+  } else {
+    character()
+  }
+
+  lines <- c(
+    sync_lines,
+    "",
+    "summary_csv <- file.path(dirname(registry_file), \"chunk_summary.csv\")",
+    "write_chunk_summary(booksetup_registry, summary_csv)",
+    "message(\"Chunk summary written to: \", summary_csv)",
+    "",
+    "end_global <- Sys.time()",
+    "log_event(log_con, \"run_end\",",
+    "          elapsed_min = as.numeric(difftime(end_global, start_global, units = \"mins\")),",
+    "          errors = length(errors))",
+    "close(log_con)",
+    "",
+    "message(\"Book data generation finished at \", format(end_global))",
+    "message(\"Total time: \", round(difftime(end_global, start_global, units = \"mins\"), 1), \" minutes\")",
+    "if (length(errors) > 0L) {",
+    "  message(\"Errors encountered:\")",
+    "  for (err in errors) message(err)",
+    "  stop(\"Some chapters failed; see \", log_file, \" and \", summary_csv, \".\", call. = FALSE)",
+    "}",
+    ""
+  )
+  writeLines(lines, con)
+}
