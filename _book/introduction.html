@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="generator" content="quarto-1.3.361">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-<meta name="author" content="Gilberto Camara, Rolf Simoes, Felipe Souza, Felipe Carlos, Pedro Andrade, Karine Ferreira, Lorena Santos and Charlotte Pelletier">
+<meta name="author" content="Gilberto Camara, Rolf Simoes, Felipe Souza, Felipe Carlos, Pedro Andrade, Karine Ferreira, Lorena Santos, Charlotte Pelletier, Bianca Zadrosny">
 <title>Satellite Image Time Series Analysis on Earth Observation Data Cubes - The Basics of SITS</title>
 <style>
 code{white-space: pre-wrap;}
@@ -459,19 +459,24 @@ div.csl-indent {
 <p>Satellite imagery provides the most extensive data on our environment. By encompassing vast areas of the Earth’s surface, satellite images enable researchers to analyze local and worldwide transformations. By observing the same location multiple times, satellites provide data on environmental changes and survey areas that are difficult to observe from the ground. Given its unique features, images offer essential information for many applications, including deforestation, crop production, food security, urban footprints, water scarcity, and land degradation. Using time series, experts improve their understanding of ecological patterns and processes. Instead of selecting individual images from specific dates and comparing them, researchers track change continuously <span class="citation" data-cites="Woodcock2020"><a href="#ref-Woodcock2020" role="doc-biblioref">[3]</a></span>.</p>
 </section><section id="time-first-space-later" class="level2"><h2 class="anchored" data-anchor-id="time-first-space-later">Time-first, space-later</h2>
 <p>“Time-first, space-later” is a concept in satellite image classification that takes time series analysis as the first step for analyzing remote sensing data, with spatial information being considered after all time series are classified. The <em>time-first</em> part brings a better understanding of changes in landscapes. Detecting and tracking seasonal and long-term trends becomes feasible, as well as identifying anomalous events or patterns in the data, such as wildfires, floods, or droughts. Each pixel in a data cube is treated as a time series, using information available in the temporal instances of the case. Time series classification is pixel-based, producing a set of labeled pixels. This result is then used as input for the <em>space-later</em> part of the method. In this phase, a smoothing algorithm improves the results of the time-first classification by considering the spatial neighborhood of each pixel. The resulting map thus combines both spatial and temporal information.</p>
+<p>The premise of the “time-first” is the temporal profile carries most of the discriminative information for distinguishing land classes (crop types, pasture vs.&nbsp;natural vegetation, forest vs.&nbsp;degraded forest). Space is used afterwards to capture neighborhood relations. Algorithms are trained on labelled time-series samples, where each time series is treated independently. Time series-based methods benefit from traditional practices in Remote Sensing, which use point-based locations to provide labels for machine learning algorithms.</p>
+<p>The “space-first, time-later” approach inherits practices from Computer Vision used for photo and video classification. Its methods use a small window of pixels (a “patch,” e.g., 16×16, 32×32, or 64×64) as the classification unit. The patch provides the model with spatial context — texture, shape, neighbourhood arrangement — that pure pixel-based methods lack. It’s the input format for convolutional neural networks (CNNs) <span class="citation" data-cites="Song2019a"><a href="#ref-Song2019a" role="doc-biblioref">[4]</a></span> semantic segmentation <span class="citation" data-cites="Garnot2022"><a href="#ref-Garnot2022" role="doc-biblioref">[5]</a></span>, and vision transformers <span class="citation" data-cites="Tarasiou2023"><a href="#ref-Tarasiou2023" role="doc-biblioref">[6]</a></span>. These methods are inherited from Computer Vision, where the main aim of image classification is to describe objects in photographs, based on a ``foreground vs.&nbsp;background” paradigm.</p>
+<p>Time-first is best suited to mapping phenological changes in continuous fields such as agriculture and forests. Space-first is more appropriate for detecting spatial patterns in urban morphology, fine field boundaries, and object-level detail. In time-first, space is a smoothing step decoupled from classification. In space-first, spatial context is part of the learned features.</p>
+<p>Two key differences between these approaches are the availability of training data and the computational demand. Time-first works with point/pixel samples, which are what field campaigns and reference databases naturally produce. Space-first needs spatially contiguous labelled patches, which are costlier to obtain. Furthermore, time-first classifies data in parallel. Each pixel is independent, so algorithms scale to continental data sets, and sometimes don’t need GPUs (Random Forest works well). Space-first methods are computationally demanding and require GPUs, which can limit their practical application in large-scale studies.</p>
+<p>The tradition of Remote Sensing experts is to produce labelled training samples by identifying individual pixels or polygons in images. This approach is easily extendable to image time series labelling. It is much less common for experts to provide labelled patches, which are required by many classification algorithms such as 2D semantic segmentation and convolutional neural networks <span class="citation" data-cites="Ajibola2024"><a href="#ref-Ajibola2024" role="doc-biblioref">[7]</a></span>.</p>
 <div class="cell" data-layout-align="center">
 <div class="cell-output-display">
 <div id="fig-ts-intro" class="quarto-figure quarto-figure-center anchored">
 <figure class="figure"><p><img src="./images/time_series_general_view.png" style="width:100.0%;height:100.0%" class="figure-img"></p>
-<figcaption class="figure-caption">Figure&nbsp;1: Satellite image time series classification (source: <span class="citation" data-cites="Tan2017"><a href="#ref-Tan2017" role="doc-biblioref">[4]</a></span>).</figcaption></figure>
+<figcaption class="figure-caption">Figure&nbsp;1: Satellite image time series classification (source: <span class="citation" data-cites="Tan2017"><a href="#ref-Tan2017" role="doc-biblioref">[8]</a></span>).</figcaption></figure>
 </div>
 </div>
 </div>
 </section><section id="land-use-and-land-cover" class="level2"><h2 class="anchored" data-anchor-id="land-use-and-land-cover">Land use and land cover</h2>
-<p>The UN Food and Agriculture Organization defines land cover as “the observed biophysical cover on the Earth’s surface” <span class="citation" data-cites="DiGregorio2016"><a href="#ref-DiGregorio2016" role="doc-biblioref">[5]</a></span>. Land cover can be observed and mapped directly through remote sensing images. In FAO’s guidelines and reports, land use is described as “the human activities or purposes for which land is managed or exploited.” Although <em>land cover</em> and <em>land use</em> denote different approaches for describing the Earth’s landscape, in practice there is considerable overlap between these concepts <span class="citation" data-cites="Comber2008b"><a href="#ref-Comber2008b" role="doc-biblioref">[6]</a></span>. When classifying remote sensing images, natural areas are classified using land cover types (e.g., forest), while human-modified areas are described with land use classes (e.g., pasture).</p>
+<p>The UN Food and Agriculture Organization defines land cover as “the observed biophysical cover on the Earth’s surface” <span class="citation" data-cites="DiGregorio2016"><a href="#ref-DiGregorio2016" role="doc-biblioref">[9]</a></span>. Land cover can be observed and mapped directly through remote sensing images. In FAO’s guidelines and reports, land use is described as “the human activities or purposes for which land is managed or exploited.” Although <em>land cover</em> and <em>land use</em> denote different approaches for describing the Earth’s landscape, in practice there is considerable overlap between these concepts <span class="citation" data-cites="Comber2008b"><a href="#ref-Comber2008b" role="doc-biblioref">[10]</a></span>. When classifying remote sensing images, natural areas are classified using land cover types (e.g., forest), while human-modified areas are described with land use classes (e.g., pasture).</p>
 <p>One of the advantages of using image time series for land classification is its capacity to measure changes in the landscape related to agricultural practices. For example, the time series of a vegetation index in an area of crop production will show a pattern of minima (planting and sowing stages) and maxima (flowering stage). Thus, classification schemas based on image time series data can be richer and more detailed than those associated only with land cover. In what follows, we use the term “land classification” to refer to image classification representing both land cover and land use classes.</p>
 </section><section id="how-sits-works" class="level2"><h2 class="anchored" data-anchor-id="how-sits-works">How SITS works</h2>
-<p>The <code>sits</code> package uses satellite image time series for land classification, using a <em>time-first, space-later</em> approach. In the data preparation part, collections of big Earth observation images are organized as data cubes. Each spatial location of a data cube is associated with a time series. Locations with known labels are used to train a machine learning algorithm, which classifies all time series of a data cube, as shown in <a href="#fig-gview-intro">Figure&nbsp;<span class="quarto-unresolved-ref">fig-gview-intro</span></a>.</p>
+<p>The <code>sits</code> package uses satellite image time series for land classification, using a <em>time-first, space-later</em> approach. In the data preparation part, collections of big Earth observation images are organized as data cubes. Each spatial location of a data cube is associated with a time series. Locations with known labels are used to train a machine learning algorithm, which classifies all time series of a data cube, as shown in <a href="#fig-gview-intro">Figure&nbsp;<span>2</span></a>.</p>
 <div class="cell" data-layout-align="center">
 <div class="cell-output-display">
 <div id="fig-gview-intro" class="quarto-figure quarto-figure-center anchored">
@@ -480,7 +485,7 @@ div.csl-indent {
 </div>
 </div>
 </div>
-<p>The <code>sits</code> API is a set of functions that can be chained to create a workflow for land classification. At its heart, the <code>sits</code> package has eight functions, as shown in <a href="#fig-api-intro">Figure&nbsp;<span class="quarto-unresolved-ref">fig-api-intro</span></a>:</p>
+<p>The <code>sits</code> API is a set of functions that can be chained to create a workflow for land classification. At its heart, the <code>sits</code> package has eight functions, as shown in <a href="#fig-api-intro">Figure&nbsp;<span>3</span></a>:</p>
 <ol type="1">
 <li>Extract data from an analysis-ready data (ARD) collection using <code>sits_cube()</code>, producing a non-regular data cube object.</li>
 <li>From a non-regular data_cube create a regular one, using <code>sits_regularize()</code>. Regular data cubes are required to train machine learning algorithms.</li>
@@ -580,16 +585,32 @@ div.csl-indent {
 <div class="csl-left-margin">[3] </div>
 <div class="csl-right-inline">C. E. Woodcock, T. R. Loveland, M. Herold, and M. E. Bauer, <span>“Transitioning from change detection to monitoring with remote sensing: <span>A</span> paradigm shift,”</span> <em>Remote Sensing of Environment</em>, vol. 238, p. 111558, 2020, doi: <a href="https://doi.org/10.1016/j.rse.2019.111558">10.1016/j.rse.2019.111558</a>.</div>
 </div>
-<div id="ref-Tan2017" class="csl-entry" role="listitem">
+<div id="ref-Song2019a" class="csl-entry" role="listitem">
 <div class="csl-left-margin">[4] </div>
+<div class="csl-right-inline">J. Song, S. Gao, Y. Zhu, and C. Ma, <span>“A survey of remote sensing image classification based on <span>CNNs</span>,”</span> <em>Big Earth Data</em>, vol. 3, no. 3, pp. 232–254, 2019, doi: <a href="https://doi.org/10.1080/20964471.2019.1657720">10.1080/20964471.2019.1657720</a>.</div>
+</div>
+<div id="ref-Garnot2022" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[5] </div>
+<div class="csl-right-inline">V. S. F. Garnot and L. Landrieu, <span>“Panoptic <span>Segmentation</span> of <span>Satellite Image Time Series</span> with <span>Convolutional Temporal Attention Networks</span>.”</span> arXiv, 2022, doi: <a href="https://doi.org/10.48550/arXiv.2107.07933">10.48550/arXiv.2107.07933</a>.</div>
+</div>
+<div id="ref-Tarasiou2023" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[6] </div>
+<div class="csl-right-inline">M. Tarasiou, E. Chavez, and S. Zafeiriou, <span>“<span>ViTs</span> for <span>SITS</span>: <span>Vision Transformers</span> for <span>Satellite Image Time Series</span>.”</span> arXiv, 2023, doi: <a href="https://doi.org/10.48550/arXiv.2301.04944">10.48550/arXiv.2301.04944</a>.</div>
+</div>
+<div id="ref-Ajibola2024" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[7] </div>
+<div class="csl-right-inline">S. Ajibola and P. Cabral, <span>“A <span>Systematic Literature Review</span> and <span>Bibliometric Analysis</span> of <span>Semantic Segmentation Models</span> in <span>Land Cover Mapping</span>,”</span> <em>Remote Sensing</em>, vol. 16, no. 12, p. 2222, 2024, doi: <a href="https://doi.org/10.3390/rs16122222">10.3390/rs16122222</a>.</div>
+</div>
+<div id="ref-Tan2017" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[8] </div>
 <div class="csl-right-inline">C. W. Tan, G. I. Webb, and F. Petitjean, <span>“<a href="https://doi.org/10.1137/1.9781611974973.32">Indexing and classifying gigabytes of time series under time warping</a>,”</span> in <em>Proceedings of the 2017 <span>SIAM International Conference</span> on <span>Data Mining</span> (<span>SDM</span>)</em>, <span>Society for Industrial and Applied Mathematics</span>, 2017, pp. 282–290.</div>
 </div>
 <div id="ref-DiGregorio2016" class="csl-entry" role="listitem">
-<div class="csl-left-margin">[5] </div>
+<div class="csl-left-margin">[9] </div>
 <div class="csl-right-inline">A. Di Gregorio, <span>“Land <span>Cover Classification System</span> - <span>Classification</span> concepts <span>Software</span> version 3,”</span> FAO, 2016.</div>
 </div>
 <div id="ref-Comber2008b" class="csl-entry" role="listitem">
-<div class="csl-left-margin">[6] </div>
+<div class="csl-left-margin">[10] </div>
 <div class="csl-right-inline">A. J. Comber, P. F. Fisher, and R. A. Wadsworth, <span>“Land cover: To standardise or not to standardise? <span>Comment</span> on <span>‘<span>Evolving</span> standards in land cover characterization’</span> by <span>Herold</span> et al.”</span> <em>Journal of Land Use Science</em>, vol. 2, no. 4, pp. 283–287, 2008, doi: <a href="https://doi.org/10.1080/17474230701786000">10.1080/17474230701786000</a>.</div>
 </div>
 </div>
@@ -838,7 +859,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 </nav>
 </div> <!-- /content -->
 <footer class="footer"><div class="nav-footer">
-    <div class="nav-footer-left">The SITS book was written by Gilberto Camara, Rolf Simoes, Felipe Souza, Felipe Carlos, Pedro Andrade, Karine Ferreira, Pedro Brito, Alexandre Assunção, and Charlotte Pelletier.</div>   
+    <div class="nav-footer-left">The SITS book was written by Gilberto Camara, Rolf Simoes, Felipe Souza, Felipe Carlos, Pedro Andrade, Karine Ferreira, Pedro Brito, Alexandre Assunção, Charlotte Pelletier, and Bianca Zadrosny.</div>   
     <div class="nav-footer-center">
       &nbsp;
     </div>
