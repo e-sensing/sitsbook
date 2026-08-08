@@ -68,10 +68,11 @@ extract_r_chunks <- function(qmd) {
 
 .extract_chunk_label <- function(header) {
   # ```{r}        -> no label
+  # ```{r}       -> no label (trailing whitespace)
   # ```{r foo}    -> label "foo"
   # ```{r foo, x} -> label "foo"
   inner <- sub("^```\\{r\\s*", "", header)
-  inner <- sub("\\}$", "", inner)
+  inner <- sub("\\}\\s*$", "", inner)
   inner <- trimws(inner)
   if (nzchar(inner)) {
     strsplit(inner, "[,\\s]+")[[1L]][1L]

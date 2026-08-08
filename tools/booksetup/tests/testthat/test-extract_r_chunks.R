@@ -50,3 +50,12 @@ test_that("chunk headers with trailing whitespace are recognized", {
   chunks <- extract_r_chunks(qmd)
   expect_length(chunks, 1L)
 })
+
+test_that("trailing whitespace in header does not produce a false label", {
+  qmd <- tempfile(fileext = ".qmd")
+  writeLines(c("```{r} ", "1 + 1", "```"), qmd)
+  on.exit(unlink(qmd), add = TRUE)
+
+  chunks <- extract_r_chunks(qmd)
+  expect_named(chunks, "chunk_1")
+})

@@ -71,6 +71,10 @@ run_chunk <- function(chapter_name, chunk_i, n_chunks, start_line, end_line,
   key <- paste0(chapter_name, ":", chunk_i)
   existing <- booksetup_registry[[key]]
   if (!is.null(existing) && identical(existing$hash, hash)) {
+    if (!identical(existing$label, label)) {
+      booksetup_registry[[key]]$label <<- label
+      registry_write(registry_file, booksetup_registry)
+    }
     message("    [chunk ", chunk_i, "/", n_chunks, "] lines ", start_line,
             "-", end_line, " (", label, ") - SKIPPED (elapsed ",
             round(existing$elapsed, 1), "s)")

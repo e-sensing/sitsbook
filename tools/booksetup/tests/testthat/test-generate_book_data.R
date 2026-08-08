@@ -171,3 +171,46 @@ test_that("chapters are isolated from each other in the generated script", {
                                    python_sync = FALSE)
   expect_error(source(script_path, local = new.env(), echo = FALSE), NA)
 })
+
+test_that("run_chunk fixes a stale registry label on skip", {
+  reg_path <- tempfile("registry_", fileext = ".yaml")
+  on.exit(unlink(reg_path), add = TRUE)
+
+  # Registry as it was left by the bug: wrong label, correct hash.
+  registry <- list(
+    "intro_visualisation:12" = list(
+      hash = "0269badff6c8629e8ea6425f2fa1700e",
+      elapsed = 0.123,
+      lines = "401-404",
+      label = "}"
+    )
+  )
+  yaml::write_yaml(registry, reg_path)
+
+  env <- new.env()
+  source(system.file("runtime.R", package = "booksetup"), local = env)
+  env$booksetup_registry <- registry_read(reg_path)
+  env$registry_file <- reg_path
+  env$chapter_times <- numeric()
+  env$errors <- character()
+
+  expect_message(
+    env$run_chunk(
+      chapter_name = "intro_visualisation",
+      chunk_i = 12L,
+      n_chunks = 16L,
+      start_line = 401L,
+      end_line = 404L,
+      label = "chunk_12",
+      hash = "0269badff6c8629e8ea6425f2fa1700e",
+      env = new.env(),
+      expr = quote(stop("should not run"))
+    ),
+    "SKIPPED"
+  )
+
+  updated <- registry_read(reg_path)
+  expect_equal(updated[["intro_visualisation:12"]]$label, "chunk_12")
+  expect_equal(updated[["intro_visualisation:12"]]$hash,
+               "0269badff6c8629e8ea6425f2fa1700e")
+})
