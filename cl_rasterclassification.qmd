@@ -242,7 +242,36 @@ The figure shows bands and dates represent relevant inflection points in the ima
 
 By default, all classification algorithms in `sits` use CPU-based parallel processing, done internally by the package. The algorithms are adaptable; the only requirement for users is to inform the configuration of their machines. To achieve efficiency, `sits` implements a fault-tolerant multitasking procedure, using a cluster of independent workers linked to a virtual machine. To avoid communication overhead, all large payloads are read and stored independently; direct interaction between the main process and the workers is kept at a minimum. Details of CPU-based parallel processing in `sits` can be found in the Chapter [How parallel processing works in SITS](https://e-sensing.github.io/sitsbook/annex_parallel.html).
 
-To classify both data cubes and sets of time series, use `sits_classify()`, which uses parallel processing to speed up the performance, as described at the end of this Chapter. Its most relevant parameters are: (a) `data`, either a data cube or a set of time series; (b) `ml_model`, a trained model using one of the machine learning methods provided; (c) `multicores`, number of CPU cores that will be used for processing; (d) `memsize`, memory available for classification; (e) `output_dir`, directory where results will be stored; (f) `version`, for version control. To follow the processing steps, turn on the parameters `verbose` to print information and `progress` to get a progress bar. The classification result is a data cube with a set of probability layers, one for each output class. Each probability layer contains the model's assessment of how likely each pixel belongs to the related class. The probability cube can be visualized with `plot()`. In this example, we show only the probabilities associated to label "Forest". 
+To classify both data cubes and sets of time series, use `sits_classify()`, which uses parallel processing to speed up the performance, as described at the end of this Chapter. The parameters used for both data cubes and time series are:
+
+| Parameter | Meaning |
+|---|---|
+| `data` | either a data cube or a set of time series |
+| `ml_model` |  a trained model that uses one of the machine learning methods provided | 
+| `inpute_fn` | imputation function used to interpolate NA values (default = `inpute_linear`) |
+| `multicores` | number of CPU cores that will be used for processing | 
+| `memsize` | RAM memory available for classification | 
+| `gpu_memory` | GPU memory available for classification (if a GPU is available) | 
+| `batch_size` | size of batches used for processing |
+| `progress` | progress bar to track processing steps |
+
+The parameters with are relevant only to raster data cubes are: 
+
+| Parameter | Meaning |
+|---|---|
+| `roi` | Region of interest where pixels will be classified. either an sf object, shapefile, or a numeric vector in WGS 84 with named XY values ("xmin", "xmax", "ymin", "ymax") or named lat/long values ("lon_min", "lat_min", "lon_max", "lat_max").|
+| `exclusion_mask` | Areas to be excluded from the classification process, defined by either an `sf` object or by a shapefile.| 
+| `start_date` | Start date for the classification process. |
+| `end_date` | End date for the classification process. |
+| `block_size` | Size of the processing block for parallel computation. |
+| `output_dir` | Directory where results will be stored | 
+| `version` | For version control | 
+
+Of the above, the only mandatory parameter is `output_dir`. 
+
+To follow the processing steps, turn on the parameters `verbose` to print information and `progress` to get a progress bar. 
+
+The classification result is a data cube with a set of probability layers, one for each output class. Each probability layer contains the model's assessment of how likely each pixel belongs to the related class. The probability cube can be visualized with `plot()`. In this example, we show only the probabilities associated to label "Forest". 
 
 :::{.panel-tabset}
 ## R

@@ -51,9 +51,9 @@ The general sequence of the processes involved in OBIA in `sits` is:
 
 4. Classification: After the image has been partitioned into distinct objects, the next step is to classify the image using the model produced in the previous step. This step uses `sits_classify()`, which performs a pixel-based classification to obtain a set of probabilities. The segments are not used in the classification. They are saved for the next two steps: smoothing and labeling. Pixel-based classification is much faster than polygon-based classification and the results are the same.
 
-5. Smoothing: Smoothing vector cubes use a different definition of neighborhood than  [raster-based probability smoothing](https://e-sensing.github.io/sitsbook/cl_smoothing.html). When dealing with pure raster, neighborhoods are defined based on rectangular windows (e.g., 9 x 9 size). When dealing with vector cube, neighborhoods are defined by the segments. In this case, all pixels inside a segment are used to define 
+5. Smoothing: Smoothing vector cubes use a different definition of neighborhood than  [raster-based probability smoothing](https://e-sensing.github.io/sitsbook/cl_smoothing.html). When dealing with raster cubes, neighborhoods are defined based on rectangular windows (e.g., 9 x 9 size). When dealing with vector cube, neighborhoods are defined by the segments. In this case, all pixels inside a segment are considered part of the same neighborhood. When estimating the spatial effects, the probabilities of all pixels in the segment are used to calculate the smoothed probability of each pixel. 
 
-5. Map labelling: Once the set of probabilities have been obtained for selected time series inside a segment, they can be used for labeling. This is done by considering the median value of the probabilities for the time series inside the segment that have been classified. For each class, we take the median of the probability values. Then, median values for the classes are normalised, and the most likely value is assigned as the class for the segment. This step uses `sits_label_classification()`, as shown below.
+5. Map labelling: Once the set of probabilities have been obtained for selected time series inside a segment, they can be used for labeling. To label the segments, `sits` takes the probabilities assigned to each pixel inside a segment and uses an aggregation function to calculate the estimaed value of class probabilities for each segment. The aggregation functions available include `mean` or `median`. After the aggregation, `sits` selected the label of each segment based on maxium aggregate value for the class probabilities. This step uses `sits_label_classification()`, as shown below.
 
 ## Image segmentation in sits
 
@@ -298,15 +298,27 @@ samples_deforestation = sits_select(samples_deforestation_rondonia,
 tcnn_model = sits_train(samples_deforestation, sits_tempcnn())
 ```
 :::
-The segment classification procedure applies the model to a number of user-defined samples inside each segment. Each of these samples is then assigned a set of probability values, one for each class. The output of the procedure is a raster data cube containing a set of probabilites for each layer. The most relevant parameters for the `sits_classify()` function are:
+The segment classification procedure applies the model to a number of user-defined samples inside each segment. Each of these samples is then assigned a set of probability values, one for each class. The output of the procedure is a raster data cube containing a set of probabilites for each layer. The parameters for the `sits_classify()` function for vector cubes are:
 
-- `data`: vector cube being classified
-- `ml_model`: machine learning model 
-- `output_dir`: directory where results are stored
-- `memsize`: memory available for classification in GB.
-- `multicores`: number of cores to be used for classification
-- `gpu_memory`: GPU memory available (if there is a GPU)	
-- `version`: version name (to control for multiple versions)
+The parameters used for both data cubes and time series are:
+
+| Parameter | Meaning |
+|---|---|
+| `data` | either a data cube or a set of time series |
+| `ml_model` |  a trained model that uses one of the machine learning methods provided | 
+| `inpute_fn` | imputation function used to interpolate NA values (default = `inpute_linear`) |
+| `multicores` | number of CPU cores that will be used for processing (default = 2| 
+| `memsize` | RAM memory available for classification (default = 4) | 
+| `gpu_memory` | GPU memory available for classification if a GPU is available (default = 4)) | 
+| `batch_size` | size of batches used for processing (default = 1000*`gpu_memory`) |
+| `roi` | Region of interest where pixels will be classified. either an sf object, shapefile, or a numeric vector in WGS 84 with named XY values ("xmin", "xmax", "ymin", "ymax") or named lat/long values ("lon_min", "lat_min", "lon_max", "lat_max").|
+| `exclusion_mask` | Areas to be excluded from the classification process, defined by either an `sf` object or by a shapefile.| 
+| `start_date` | Start date for the classification process. |
+| `end_date` | End date for the classification process. |
+| `block_size` | Size of the processing block for parallel computation. |
+| `output_dir` | Directory where results will be stored | 
+| `version` | For version control | 
+| `progress` | progress bar to track processing steps |
 
 :::{.panel-tabset}
 ## R
