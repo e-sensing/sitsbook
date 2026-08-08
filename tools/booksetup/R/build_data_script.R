@@ -166,7 +166,8 @@ write_chapter_chunk_timed <- function(con, chapter_name, qmd, chunks, i, n_chapt
     sprintf("message(\"[%d/%d] \", chapter_name, \" -- \", format(Sys.time()))", i, n_chapters),
     skip_lines,
     "  {",
-    sprintf("    n_chunks <- %dL", length(chunks))
+    sprintf("    n_chunks <- %dL", length(chunks)),
+    "    chapter_elapsed <- 0"
   )
 
   for (j in seq_along(chunks)) {
@@ -208,7 +209,8 @@ write_chapter_chunk_timed <- function(con, chapter_name, qmd, chunks, i, n_chapt
       "      errors <<- c(errors, paste(msg, chunk_err))",
       "    })",
       "    chunk_elapsed <- proc.time()[\"elapsed\"] - start_chunk",
-      "    message(\"      elapsed: \", round(chunk_elapsed, 1), \"s\")",
+      "    chapter_elapsed <- chapter_elapsed + chunk_elapsed",
+    "    message(\"      elapsed: \", round(chunk_elapsed, 1), \"s\")",
       "    chunk_log[[length(chunk_log) + 1L]] <- list(",
       "      chapter = chapter_name,",
       "      chunk = chunk_i,",
@@ -224,7 +226,7 @@ write_chapter_chunk_timed <- function(con, chapter_name, qmd, chunks, i, n_chapt
 
   block <- c(
     block,
-    "    chapter_times[chapter_i] <- sum(sapply(chunk_log[length(chunk_log) - seq_len(n_chunks) + 1L], `[[`, \"elapsed\"))",
+    "    chapter_times[chapter_i] <- chapter_elapsed",
     "    avg <- mean(chapter_times[chapter_times > 0])",
     sprintf("    remaining <- n_chapters - %dL", i),
     "    eta <- if (is.finite(avg)) Sys.time() + remaining * avg else NA",

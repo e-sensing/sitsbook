@@ -158,3 +158,34 @@ test_that("skip_existing avoids re-running chapters with data", {
   log <- paste(readLines(log_file, warn = FALSE), collapse = "\n")
   expect_match(log, "skipping")
 })
+
+test_that("integration fixture with empty chapter runs without error", {
+  book_dir <- system.file("extdata", "integration_book", package = "booksetup")
+  out <- file.path(tempdir(), "integration_empty.R")
+  on.exit(unlink(out), add = TRUE)
+
+  script_path <- build_data_script(book_dir, output = out,
+                                   skip_existing = FALSE,
+                                   python_sync = FALSE,
+                                   chunk_times = TRUE)
+
+  old_home <- Sys.getenv("HOME")
+  Sys.setenv(HOME = tempdir())
+  on.exit(Sys.setenv(HOME = old_home), add = TRUE, after = FALSE)
+
+  expect_error(source(script_path, local = new.env(), echo = FALSE), NA)
+
+  csv_file <- sub("\\.R$", "_chunks.csv", out)
+  on.exit(unlink(csv_file), add = TRUE)
+  expect_true(file.exists(csv_file))
+
+  df <- read.csv(csv_file, stringsAsFactors = FALSE)
+  # simple.qmd has 2 chunks, empty.qmd has 0
+  expect_equal(nrow(df), 2L)
+  expect_equal(unique(df$chapter), "simple")
+
+  log_file <- sub("\\.R$", ".log", out)
+  on.exit(unlink(log_file), add = TRUE)
+  log <- paste(readLines(log_file, warn = FALSE), collapse = "\n")
+  expect_match(log, "empty")
+})
