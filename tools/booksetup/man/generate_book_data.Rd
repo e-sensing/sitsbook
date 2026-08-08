@@ -17,7 +17,10 @@ generate_book_data(
 \item{output}{Path for the generated R script. Defaults to a timestamped
 file under \verb{tempdir/}.}
 
-\item{...}{Additional arguments passed to \code{\link[=build_data_script]{build_data_script()}}.}
+\item{...}{Additional arguments passed to \code{\link[=build_data_script]{build_data_script()}}, including
+\code{image_dir}, \code{image_width}, \code{image_height}, and \code{image_res}, which control
+where plots produced by chunks (base graphics, \code{ggplot2}, \code{tmap}, etc.)
+are saved as PNG files (default \verb{~/sitsbook/tempdir/generated_images/}).}
 }
 \value{
 The path to the generated script, invisibly.

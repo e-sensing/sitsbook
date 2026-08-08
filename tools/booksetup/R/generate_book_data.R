@@ -8,7 +8,10 @@
 #' @param book_dir Path to the book project root (must contain `_quarto.yml`).
 #' @param output Path for the generated R script. Defaults to a timestamped
 #'   file under `tempdir/`.
-#' @param ... Additional arguments passed to [build_data_script()].
+#' @param ... Additional arguments passed to [build_data_script()], including
+#'   `image_dir`, `image_width`, `image_height`, and `image_res`, which control
+#'   where plots produced by chunks (base graphics, `ggplot2`, `tmap`, etc.)
+#'   are saved as PNG files (default `~/sitsbook/tempdir/generated_images/`).
 #'
 #' @return The path to the generated script, invisibly.
 #'

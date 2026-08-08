@@ -2,12 +2,18 @@
 #'
 #' Extracts the R code from every chapter `.qmd` and writes a single R script
 #' that can be run to (re)generate the data stored under
-#' `~/sitsbook/tempdir/R/<chapter>`. The script includes progress messages,
-#' per-chapter timing/ETA estimates, error logging, and an optional final sync
-#' of the generated R data to the Python temp directory.
+#' `~/sitsbook/tempdir/R/<chapter>`. The console shows a minimal one-line
+#' progress indicator per chapter/chunk; a structured, one-event-per-line YAML
+#' log (parseable in one shot via `yaml::read_yaml()`) is written to the
+#' `.log` file alongside the script, recording chapter/run start and end,
+#' skips, warnings, and errors. A `chunk_summary.csv` snapshot of the full
+#' registry (status, elapsed time, images produced, errors) is written next
+#' to the registry file at the end of every run.
 #'
 #' Completed chunks are recorded in a YAML registry so that later runs skip them
-#' automatically. Failed chunks are never recorded, so they are retried.
+#' automatically. Failed chunks are recorded with `status: error` (so they can
+#' be queried via [list_failed_chunks()]) but are always retried regardless of
+#' `eval`.
 #'
 #' @param book_dir Path to the book project root (must contain `_quarto.yml`).
 #' @param output Path for the generated R script. Defaults to a timestamped
@@ -21,6 +27,12 @@
 #'   skipping.
 #' @param python_sync If `TRUE`, the generated script calls
 #'   `rsync -a ~/sitsbook/tempdir/R/ ~/sitsbook/tempdir/Python/` at the end.
+#' @param image_dir Directory where plots produced while evaluating chunks
+#'   (base graphics, `ggplot2`, `tmap`, etc.) are saved as PNG files, one
+#'   sub-directory per chapter. Defaults to `generated_images/` next to the
+#'   registry file (i.e. `~/sitsbook/tempdir/generated_images`).
+#' @param image_width,image_height,image_res Pixel width/height and resolution
+#'   (dpi) used for `grDevices::png()` when saving chunk plots.
 #'
 #' @return The path to the generated R script, invisibly.
 #'
@@ -40,7 +52,14 @@ build_data_script <- function(book_dir,
                               chapters = NULL,
                               exclude = NULL,
                               registry = registry_path(),
-                              python_sync = TRUE) {
+                              python_sync = TRUE,
+                              image_dir = file.path(
+                                dirname(registry %||% registry_path()),
+                                "generated_images"
+                              ),
+                              image_width = 2000L,
+                              image_height = 1500L,
+                              image_res = 150L) {
   qmds <- chapter_files(book_dir)
   names(qmds) <- tools::file_path_sans_ext(basename(qmds))
 
@@ -78,7 +97,8 @@ build_data_script <- function(book_dir,
   on.exit(close(con), add = TRUE)
 
   write_runtime_helpers(con)
-  write_script_header(con, log_file, registry, length(qmds))
+  write_script_header(con, log_file, registry, length(qmds),
+                      image_dir, image_width, image_height, image_res)
   for (i in seq_along(qmds)) {
     write_chapter(con, qmds[i], names(qmds)[i], i, length(qmds))
   }
@@ -96,7 +116,8 @@ write_runtime_helpers <- function(con) {
   writeLines(c("# Runtime helpers (copied from booksetup)", lines, "", "# --- book data generation ---"), con)
 }
 
-write_script_header <- function(con, log_file, registry, n_chapters) {
+write_script_header <- function(con, log_file, registry, n_chapters,
+                                image_dir, image_width, image_height, image_res) {
   if (is.null(registry)) {
     registry_file_expr <- deparse(tempfile("registry_", fileext = ".yaml"))
     read_expr <- "booksetup_registry <- list()"
@@ -117,14 +138,19 @@ write_script_header <- function(con, log_file, registry, n_chapters) {
     paste0("log_file <- ", deparse(log_file)),
     "if (file.exists(log_file)) file.remove(log_file)",
     "log_con <- file(log_file, \"w\")",
-    "sink(log_con, split = TRUE)",
-    "sink(log_con, type = \"message\")",
     "",
     paste0("registry_file <- ", registry_file_expr),
     read_expr,
     "",
+    paste0("image_dir <- ", deparse(normalizePath(image_dir, winslash = "/", mustWork = FALSE))),
+    "dir.create(image_dir, showWarnings = FALSE, recursive = TRUE)",
+    paste0("image_width <- ", deparse(image_width)),
+    paste0("image_height <- ", deparse(image_height)),
+    paste0("image_res <- ", deparse(image_res)),
+    "",
     "start_global <- Sys.time()",
     "message(\"Starting book data generation at \", format(start_global))",
+    sprintf("log_event(log_con, \"run_start\", n_chapters = %dL)", n_chapters),
     "",
     sprintf("n_chapters <- %dL", n_chapters),
     "chapter_times <- numeric(n_chapters)",
@@ -168,18 +194,22 @@ generate_chunk_calls <- function(chunks, chapter_name) {
 
     hash <- chunk_hash(code)
 
-    body <- if (length(code) > 0L) {
-      paste0("    ", code)
+    # Pass the chunk's source lines as a character vector (rather than a
+    # quoted `{ ... }` block) so `evaluate::evaluate()` can run it
+    # statement-by-statement, auto-printing visible values (as a real Quarto
+    # chunk would) and capturing any plots produced.
+    code_expr <- if (length(code) > 0L) {
+      paste0("  c(\n", paste0("    ", vapply(code, deparse, character(1L)), collapse = ",\n"), "\n  )")
     } else {
-      "    # (empty chunk)"
+      "  character()"
     }
 
     call <- c(
-      sprintf("  run_chunk(%s, %dL, %dL, %dL, %dL, %s, %s, %s, environment(), quote({",
+      sprintf("  run_chunk(%s, %dL, %dL, %dL, %dL, %s, %s, %s, environment(),",
               deparse(chapter_name), j, length(chunks), start_line, end_line,
               deparse(label), deparse(hash), deparse(eval)),
-      body,
-      "  }))"
+      code_expr,
+      "  )"
     )
     calls <- c(calls, call)
   }
@@ -201,23 +231,22 @@ write_script_footer <- function(con, python_sync) {
   lines <- c(
     sync_lines,
     "",
-    "df <- chunk_report(booksetup_registry, n = 10L)",
-    "if (nrow(df) > 0L) {",
-    "  message(\"Top 10 slowest chunks:\")",
-    "  print(df)",
-    "}",
-    "",
-    "sink(type = \"message\")",
-    "sink()",
-    "close(log_con)",
+    "summary_csv <- file.path(dirname(registry_file), \"chunk_summary.csv\")",
+    "write_chunk_summary(booksetup_registry, summary_csv)",
+    "message(\"Chunk summary written to: \", summary_csv)",
     "",
     "end_global <- Sys.time()",
+    "log_event(log_con, \"run_end\",",
+    "          elapsed_min = as.numeric(difftime(end_global, start_global, units = \"mins\")),",
+    "          errors = length(errors))",
+    "close(log_con)",
+    "",
     "message(\"Book data generation finished at \", format(end_global))",
     "message(\"Total time: \", round(difftime(end_global, start_global, units = \"mins\"), 1), \" minutes\")",
     "if (length(errors) > 0L) {",
     "  message(\"Errors encountered:\")",
     "  for (err in errors) message(err)",
-    "  stop(\"Some chapters failed; see log and fix them.\", call. = FALSE)",
+    "  stop(\"Some chapters failed; see \", log_file, \" and \", summary_csv, \".\", call. = FALSE)",
     "}",
     ""
   )

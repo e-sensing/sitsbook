@@ -11,7 +11,11 @@ build_data_script(
   chapters = NULL,
   exclude = NULL,
   registry = registry_path(),
-  python_sync = TRUE
+  python_sync = TRUE,
+  image_dir = file.path(dirname(registry \%||\% registry_path()), "generated_images"),
+  image_width = 2000L,
+  image_height = 1500L,
+  image_res = 150L
 )
 }
 \arguments{
@@ -32,6 +36,14 @@ skipping.}
 
 \item{python_sync}{If \code{TRUE}, the generated script calls
 \verb{rsync -a ~/sitsbook/tempdir/R/ ~/sitsbook/tempdir/Python/} at the end.}
+
+\item{image_dir}{Directory where plots produced while evaluating chunks
+(base graphics, \code{ggplot2}, \code{tmap}, etc.) are saved as PNG files, one
+sub-directory per chapter. Defaults to \verb{generated_images/} next to the
+registry file (i.e. \verb{~/sitsbook/tempdir/generated_images}).}
+
+\item{image_width, image_height, image_res}{Pixel width/height and resolution
+(dpi) used for \code{grDevices::png()} when saving chunk plots.}
 }
 \value{
 The path to the generated R script, invisibly.
@@ -39,13 +51,19 @@ The path to the generated R script, invisibly.
 \description{
 Extracts the R code from every chapter \code{.qmd} and writes a single R script
 that can be run to (re)generate the data stored under
-\verb{~/sitsbook/tempdir/R/<chapter>}. The script includes progress messages,
-per-chapter timing/ETA estimates, error logging, and an optional final sync
-of the generated R data to the Python temp directory.
+\verb{~/sitsbook/tempdir/R/<chapter>}. The console shows a minimal one-line
+progress indicator per chapter/chunk; a structured, one-event-per-line YAML
+log (parseable in one shot via \code{yaml::read_yaml()}) is written to the
+\code{.log} file alongside the script, recording chapter/run start and end,
+skips, warnings, and errors. A \code{chunk_summary.csv} snapshot of the full
+registry (status, elapsed time, images produced, errors) is written next
+to the registry file at the end of every run.
 }
 \details{
 Completed chunks are recorded in a YAML registry so that later runs skip them
-automatically. Failed chunks are never recorded, so they are retried.
+automatically. Failed chunks are recorded with \code{status: error} (so they can
+be queried via \code{\link[=list_failed_chunks]{list_failed_chunks()}}) but are always retried regardless of
+\code{eval}.
 }
 \examples{
 \dontrun{
