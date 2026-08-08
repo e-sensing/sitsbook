@@ -38,3 +38,18 @@ test_that("per-chunk timing block is generated when chunk_times = TRUE", {
   expect_true(grepl("chunk_log", script))
   expect_true(grepl("Top 10 slowest chunks", script))
 })
+
+test_that("build_data_script uses a timestamped default output under tempdir/", {
+  book_dir <- system.file("extdata", "integration_book", package = "booksetup")
+  old_wd <- setwd(tempdir())
+  on.exit(setwd(old_wd), add = TRUE)
+
+  script_path <- build_data_script(book_dir, skip_existing = FALSE,
+                                   python_sync = FALSE, chunk_times = FALSE)
+  on.exit(unlink(script_path), add = TRUE)
+
+  expect_true(file.exists(script_path))
+  expect_match(dirname(script_path), "tempdir$")
+  expect_match(basename(script_path),
+               "^generate_book_data_[0-9]{8}_[0-9]{6}\\.R$")
+})

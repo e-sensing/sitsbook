@@ -29,7 +29,12 @@
 #' build_data_script("/home/rolf/gh/sitsbook", "generate_book_data.R")
 #' }
 build_data_script <- function(book_dir,
-                              output = "generate_book_data.R",
+                              output = file.path(
+                                "tempdir",
+                                paste0("generate_book_data_",
+                                       format(Sys.time(), "%Y%m%d_%H%M%S"),
+                                       ".R")
+                              ),
                               chapters = NULL,
                               skip_existing = TRUE,
                               python_sync = TRUE,

@@ -6,7 +6,8 @@
 \usage{
 generate_book_data(
   book_dir,
-  output = tempfile("book_data_", fileext = ".R"),
+  output = file.path("tempdir", paste0("generate_book_data_", format(Sys.time(),
+    "\%Y\%m\%d_\%H\%M\%S"), ".R")),
   ...
 )
 }
