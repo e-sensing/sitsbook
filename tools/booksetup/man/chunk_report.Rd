@@ -16,5 +16,7 @@ A \code{data.frame} with columns \code{chapter}, \code{chunk}, \code{lines}, \co
 \code{elapsed}, \code{hash}.
 }
 \description{
-Useful for identifying the slowest chunks after a run.
+Useful for identifying the slowest chunks after a run. Only chunks that
+completed successfully (\code{status == "ok"}) are included; see
+\code{\link[=list_failed_chunks]{list_failed_chunks()}} for chunks that errored.
 }
