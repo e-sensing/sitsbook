@@ -59,6 +59,71 @@ registry_key <- function(chapter, index) {
   paste0(chapter, ":", as.integer(index))
 }
 
+#' Clear chunk entries from the registry
+#'
+#' Removes one or more chunk entries from the registry file, forcing them
+#' to be re-executed (rather than skipped) on the next data-generation run.
+#' This is the supported way to unblock the well-known situation where an
+#' `eval: false` chunk that *defines* a variable was skipped (already
+#' `status: "ok"` with a matching hash) while a later chunk that *consumes*
+#' that variable needs to re-run in the same session -- clearing the
+#' defining chunk's entry forces the whole dependency chain to re-execute
+#' together.
+#'
+#' @param chapter Chapter name(s) whose registry entries should be cleared.
+#'   If `chunk` is `NULL` (the default), *all* entries for each chapter are
+#'   cleared.
+#' @param chunk Optional integer vector of chunk indices to clear, scoped to
+#'   `chapter` (which must then be a single chapter name). If `NULL`, every
+#'   entry for the given chapter(s) is cleared.
+#' @param registry Path to the YAML registry file. Defaults to
+#'   `registry_path()` (`~/sitsbook/tempdir/.booksetup_registry.yaml`).
+#'
+#' @return A character vector of the registry keys that were actually
+#'   cleared, invisibly.
+#'
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' # Clear a single chunk (e.g. to force it and its dependents to re-run)
+#' registry_clear("dc_merge", chunk = 7)
+#'
+#' # Clear several chunks in one chapter
+#' registry_clear("dc_merge", chunk = c(2, 7, 8))
+#'
+#' # Clear every entry for one or more whole chapters
+#' registry_clear(c("dc_merge", "dc_regularize"))
+#' }
+registry_clear <- function(chapter, chunk = NULL, registry = registry_path()) {
+  reg <- registry_read(registry)
+
+  if (is.null(chunk)) {
+    reg_chapters <- sub(":[^:]*$", "", names(reg))
+    keys <- names(reg)[reg_chapters %in% chapter]
+  } else {
+    if (length(chapter) != 1L) {
+      stop("`chapter` must be a single chapter name when `chunk` is given.")
+    }
+    keys <- registry_key(chapter, chunk)
+  }
+
+  cleared <- intersect(keys, names(reg))
+  if (length(cleared) == 0L) {
+    message("No matching registry entries found to clear.")
+    return(invisible(character()))
+  }
+
+  reg[cleared] <- NULL
+  registry_write(registry, reg)
+  message(
+    "Cleared ", length(cleared), " registry entr",
+    if (length(cleared) == 1L) "y" else "ies", ": ",
+    paste(cleared, collapse = ", ")
+  )
+  invisible(cleared)
+}
+
 #' Convert a chunk registry into a full data frame
 #'
 #' Tolerant of legacy entries that don't yet have the `status`, `images`,

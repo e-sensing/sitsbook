@@ -56,3 +56,76 @@ test_that("chunk_report handles empty registry", {
   expect_equal(nrow(df), 0L)
   expect_named(df, c("chapter", "chunk", "lines", "label", "elapsed", "hash"))
 })
+
+sample_clear_registry <- function() {
+  list(
+    "dc_merge:1" = list(status = "ok", hash = "h1"),
+    "dc_merge:2" = list(status = "ok", hash = "h2"),
+    "dc_merge:7" = list(status = "ok", hash = "h7"),
+    "dc_regularize:1" = list(status = "ok", hash = "h1r")
+  )
+}
+
+test_that("registry_clear removes specific chunks in one chapter", {
+  path <- tempfile(fileext = ".yaml")
+  on.exit(unlink(path), add = TRUE)
+  registry_write(path, sample_clear_registry())
+
+  cleared <- suppressMessages(registry_clear("dc_merge", chunk = c(2, 7), registry = path))
+  expect_setequal(cleared, c("dc_merge:2", "dc_merge:7"))
+
+  reg <- registry_read(path)
+  expect_named(reg, c("dc_merge:1", "dc_regularize:1"))
+})
+
+test_that("registry_clear removes all chunks of a chapter when chunk = NULL", {
+  path <- tempfile(fileext = ".yaml")
+  on.exit(unlink(path), add = TRUE)
+  registry_write(path, sample_clear_registry())
+
+  cleared <- suppressMessages(registry_clear("dc_merge", registry = path))
+  expect_setequal(cleared, c("dc_merge:1", "dc_merge:2", "dc_merge:7"))
+
+  reg <- registry_read(path)
+  expect_named(reg, "dc_regularize:1")
+})
+
+test_that("registry_clear supports clearing multiple whole chapters", {
+  path <- tempfile(fileext = ".yaml")
+  on.exit(unlink(path), add = TRUE)
+  registry_write(path, sample_clear_registry())
+
+  cleared <- suppressMessages(
+    registry_clear(c("dc_merge", "dc_regularize"), registry = path)
+  )
+  expect_length(cleared, 4L)
+
+  reg <- registry_read(path)
+  expect_length(reg, 0L)
+})
+
+test_that("registry_clear errors when chunk is given with multiple chapters", {
+  path <- tempfile(fileext = ".yaml")
+  on.exit(unlink(path), add = TRUE)
+  registry_write(path, sample_clear_registry())
+
+  expect_error(
+    registry_clear(c("dc_merge", "dc_regularize"), chunk = 1),
+    "single chapter name"
+  )
+})
+
+test_that("registry_clear messages and returns character(0) when nothing matches", {
+  path <- tempfile(fileext = ".yaml")
+  on.exit(unlink(path), add = TRUE)
+  registry_write(path, sample_clear_registry())
+
+  expect_message(
+    cleared <- registry_clear("not_a_chapter", registry = path),
+    "No matching registry entries"
+  )
+  expect_identical(cleared, character())
+
+  # registry is untouched
+  expect_length(registry_read(path), 4L)
+})
