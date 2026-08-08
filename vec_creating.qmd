@@ -130,7 +130,6 @@ To do so, they need to run `sits_cube()` with the following minimum parameters:
 - `collection`: ARD collection associated to the images (in the example, `MOD13Q1-6.1").
 - `raster_cube`: raster data cube to associate with the polygons.
 - `vector_dir`: directory where the vectors are stored. 
-- `vector_band`: kind of vector cube. Either `segments` for polygons, `probs` for class probabilities associated to each polygon, or `class` for the classified areas. 
 - `parse_info`: where to find metadata on the file title. The minimum required elements are `tile`, `start_date`, `end_date`, `band` and `version`. The start and end dates must match those of the raster cube.
 - `delim`: delimiter character for breaking down the file into parts ("_" by default.)
 
@@ -146,12 +145,11 @@ local_segs_cube <- sits_cube(
     collection = "MOD13Q1-6.1",
     raster_cube = modis_cube,
     vector_dir = tempdir_r,
-    vector_band = "segments",
     parse_info =  c("X1", "X2", "tile", "start_date", "end_date", "band", "version")
 )
 
 # plot the recover model and compare with previous plot
-plot(local_segs_cube)
+plot(local_segs_cube, line_width = 1.0)
 ```
 ## Python
 ```{python}
@@ -183,7 +181,6 @@ probs_vector_cube <- sits_classify(
     data = segs_cube,
     ml_model = rfor_model,
     output_dir = tempdir_r,
-    n_sam_pol = 10
 )
 
 # plot cube
@@ -216,9 +213,8 @@ In the same way as before, we can recover the probability cube from local files 
 local_probs_vector_cube <- sits_cube(
     source = "BDC",
     collection = "MOD13Q1-6.1",
-    raster_cube = modis_cube,
+    raster_cube = probs_vector_cube,
     vector_dir = tempdir_r,
-    vector_band = "probs",
     parse_info =  c("X1", "X2", "tile", "start_date", "end_date", "band", "version")
 )
 
@@ -232,9 +228,8 @@ plot(local_probs_vector_cube, labels = "Forest")
 local_probs_vector_cube = sits_cube(
     source = "BDC",
     collection = "MOD13Q1-6.1",
-    raster_cube = modis_cube,
+    raster_cube = probs_vector_cube,
     vector_dir = tempdir_py,
-    vector_band = "probs",
     parse_info =  ("X1", "X2", "tile", "start_date", "end_date", "band", "version")
 )
 
@@ -252,22 +247,18 @@ Finally, we produce a classified map.
 # label the segments
 class_vector_cube <- sits_label_classification(
     cube = probs_vector_cube,
-    output_dir = tempdir(),
+    output_dir = tempdir_r,
+    label_method = "mean"
 )
 plot(class_vector_cube)
 ```
 ## Python
 ```{python}
-# Import tempfile module
-import tempfile
-
-# Define tempdir
-tempdir = tempfile.mkdtemp()
-
 # label the segments
 class_vector_cube = sits_label_classification(
     cube = probs_vector_cube,
-    output_dir = tempdir,
+    label_method = "mean",
+    output_dir = tempdir_py,
 )
 
 # plot
@@ -285,9 +276,8 @@ We then recover the map from a local file.
 local_class_vector_cube <- sits_cube(
     source = "BDC",
     collection = "MOD13Q1-6.1",
-    raster_cube = modis_cube,
-    vector_dir = tempdir(),
-    vector_band = "class",
+    raster_cube = class_vector_cube,
+    vector_dir = tempdir_r,
     parse_info =  c("X1", "X2", "tile", "start_date", "end_date", "band", "version")
 )
 
@@ -301,7 +291,7 @@ local_class_vector_cube = sits_cube(
     source = "BDC",
     collection = "MOD13Q1-6.1",
     raster_cube = modis_cube,
-    vector_dir = tempdir,
+    vector_dir = tempdir_py,
     vector_band = "class",
     parse_info =  ("X1", "X2", "tile", "start_date", "end_date", "band", "version")
 )
