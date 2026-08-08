@@ -172,6 +172,47 @@ test_that("chapters are isolated from each other in the generated script", {
   expect_error(source(script_path, local = new.env(), echo = FALSE), NA)
 })
 
+test_that("run_chunk always runs eval: true chunks even when in registry", {
+  reg_path <- tempfile("registry_", fileext = ".yaml")
+  on.exit(unlink(reg_path), add = TRUE)
+
+  registry <- list(
+    "simple:1" = list(
+      hash = "abc",
+      elapsed = 0.1,
+      lines = "1-2",
+      label = "chunk_1",
+      eval = TRUE
+    )
+  )
+  yaml::write_yaml(registry, reg_path)
+
+  env <- new.env()
+  source(system.file("runtime.R", package = "booksetup"), local = env)
+  env$booksetup_registry <- registry_read(reg_path)
+  env$registry_file <- reg_path
+  env$chapter_times <- numeric()
+  env$errors <- character()
+
+  env$run_chunk(
+    chapter_name = "simple",
+    chunk_i = 1L,
+    n_chunks = 1L,
+    start_line = 1L,
+    end_line = 2L,
+    label = "chunk_1",
+    hash = "abc",
+    eval = TRUE,
+    env = new.env(),
+    expr = quote(stop("must run"))
+  )
+
+  expect_equal(length(env$errors), 1L)
+  expect_match(env$errors, "must run")
+  updated <- registry_read(reg_path)
+  expect_equal(updated[["simple:1"]]$hash, "abc")
+})
+
 test_that("run_chunk fixes a stale registry label on skip", {
   reg_path <- tempfile("registry_", fileext = ".yaml")
   on.exit(unlink(reg_path), add = TRUE)
@@ -203,6 +244,7 @@ test_that("run_chunk fixes a stale registry label on skip", {
       end_line = 404L,
       label = "chunk_12",
       hash = "0269badff6c8629e8ea6425f2fa1700e",
+      eval = FALSE,
       env = new.env(),
       expr = quote(stop("should not run"))
     ),

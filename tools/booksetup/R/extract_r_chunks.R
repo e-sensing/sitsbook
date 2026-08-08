@@ -7,8 +7,9 @@
 #'
 #' The returned list preserves the source location of every chunk. Each element
 #' is a character vector with attributes `start_line` and `end_line` giving the
-#' line numbers of the opening and closing fences in the original file, and
-#' optionally a `label` attribute when the chunk header contains one.
+#' line numbers of the opening and closing fences in the original file,
+#' optionally a `label` attribute when the chunk header contains one, and an
+#' `eval` attribute taken from the chunk options (`TRUE` by default).
 #'
 #' @param qmd Path to a Quarto or R Markdown file.
 #'
@@ -34,6 +35,7 @@ extract_r_chunks <- function(qmd) {
   label <- NULL
   start_line <- NA_integer_
   chunk_count <- 0L
+  chunk_eval <- TRUE
 
   for (i in seq_along(lines)) {
     line <- lines[i]
@@ -43,6 +45,7 @@ extract_r_chunks <- function(qmd) {
         current <- character()
         start_line <- i
         label <- .extract_chunk_label(line)
+        chunk_eval <- TRUE
       }
     } else {
       if (grepl("^```[[:space:]]*$", line)) {
@@ -54,10 +57,20 @@ extract_r_chunks <- function(qmd) {
         attr(chunk, "start_line") <- start_line
         attr(chunk, "end_line") <- end_line
         attr(chunk, "label") <- label
+        attr(chunk, "eval") <- chunk_eval
         chunks[[nm]] <- chunk
         label <- NULL
         start_line <- NA_integer_
-      } else if (!grepl("^#\\|", line)) {
+        chunk_eval <- TRUE
+      } else if (grepl("^#\\|", line)) {
+        eval_match <- regmatches(
+          line,
+          regexec("^#\\|\\s*eval\\s*:\\s*(true|false)", line, ignore.case = TRUE)
+        )[[1L]]
+        if (length(eval_match) > 1L) {
+          chunk_eval <- tolower(eval_match[2L]) == "true"
+        }
+      } else {
         current <- c(current, line)
       }
     }

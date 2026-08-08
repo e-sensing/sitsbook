@@ -59,3 +59,30 @@ test_that("trailing whitespace in header does not produce a false label", {
   chunks <- extract_r_chunks(qmd)
   expect_named(chunks, "chunk_1")
 })
+
+test_that("eval attribute defaults to TRUE", {
+  qmd <- tempfile(fileext = ".qmd")
+  writeLines(c("```{r}", "x <- 1", "```"), qmd)
+  on.exit(unlink(qmd), add = TRUE)
+
+  chunks <- extract_r_chunks(qmd)
+  expect_true(attr(chunks[[1]], "eval"))
+})
+
+test_that("eval attribute is captured from #| eval: false", {
+  qmd <- tempfile(fileext = ".qmd")
+  writeLines(c("```{r}", "#| eval: false", "x <- 1", "```"), qmd)
+  on.exit(unlink(qmd), add = TRUE)
+
+  chunks <- extract_r_chunks(qmd)
+  expect_false(attr(chunks[[1]], "eval"))
+})
+
+test_that("eval attribute is captured from #| eval: true", {
+  qmd <- tempfile(fileext = ".qmd")
+  writeLines(c("```{r}", "#| eval: true", "x <- 1", "```"), qmd)
+  on.exit(unlink(qmd), add = TRUE)
+
+  chunks <- extract_r_chunks(qmd)
+  expect_true(attr(chunks[[1]], "eval"))
+})

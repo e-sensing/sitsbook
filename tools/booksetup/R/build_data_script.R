@@ -164,6 +164,7 @@ generate_chunk_calls <- function(chunks, chapter_name) {
     if (!nzchar(label)) {
       label <- names(chunks)[j]
     }
+    eval <- attr(chunk, "eval", exact = TRUE) %||% TRUE
 
     hash <- chunk_hash(code)
 
@@ -174,9 +175,9 @@ generate_chunk_calls <- function(chunks, chapter_name) {
     }
 
     call <- c(
-      sprintf("  run_chunk(%s, %dL, %dL, %dL, %dL, %s, %s, environment(), quote({",
+      sprintf("  run_chunk(%s, %dL, %dL, %dL, %dL, %s, %s, %s, environment(), quote({",
               deparse(chapter_name), j, length(chunks), start_line, end_line,
-              deparse(label), deparse(hash)),
+              deparse(label), deparse(hash), deparse(eval)),
       body,
       "  }))"
     )

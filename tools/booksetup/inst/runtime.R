@@ -67,10 +67,10 @@ chunk_report <- function(registry, n = 10L) {
 }
 
 run_chunk <- function(chapter_name, chunk_i, n_chunks, start_line, end_line,
-                      label, hash, env, expr) {
+                      label, hash, eval, env, expr) {
   key <- paste0(chapter_name, ":", chunk_i)
   existing <- booksetup_registry[[key]]
-  if (!is.null(existing) && identical(existing$hash, hash)) {
+  if (identical(eval, FALSE) && !is.null(existing) && identical(existing$hash, hash)) {
     if (!identical(existing$label, label)) {
       booksetup_registry[[key]]$label <<- label
       registry_write(registry_file, booksetup_registry)
@@ -101,7 +101,8 @@ run_chunk <- function(chapter_name, chunk_i, n_chunks, start_line, end_line,
       hash = hash,
       elapsed = elapsed,
       lines = paste0(start_line, "-", end_line),
-      label = label
+      label = label,
+      eval = eval
     )
     registry_write(registry_file, booksetup_registry)
     message("      elapsed: ", round(elapsed, 1), "s")

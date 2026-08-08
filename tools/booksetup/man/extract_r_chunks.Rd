@@ -23,8 +23,9 @@ stripped, but the actual code is preserved.
 \details{
 The returned list preserves the source location of every chunk. Each element
 is a character vector with attributes \code{start_line} and \code{end_line} giving the
-line numbers of the opening and closing fences in the original file, and
-optionally a \code{label} attribute when the chunk header contains one.
+line numbers of the opening and closing fences in the original file,
+optionally a \code{label} attribute when the chunk header contains one, and an
+\code{eval} attribute taken from the chunk options (\code{TRUE} by default).
 }
 \examples{
 sample <- system.file("extdata", "sample.qmd", package = "booksetup")
