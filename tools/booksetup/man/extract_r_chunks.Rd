@@ -20,8 +20,14 @@ are extracted, including those marked \verb{#| eval: false}, so that the returne
 code can be used for data generation. Chunk option lines (\verb{#| ...}) are
 stripped, but the actual code is preserved.
 }
+\details{
+The returned list preserves the source location of every chunk. Each element
+is a character vector with attributes \code{start_line} and \code{end_line} giving the
+line numbers of the opening and closing fences in the original file, and
+optionally a \code{label} attribute when the chunk header contains one.
+}
 \examples{
 sample <- system.file("extdata", "sample.qmd", package = "booksetup")
 chunks <- extract_r_chunks(sample)
-chunks
+attr(chunks[[1]], "start_line")
 }

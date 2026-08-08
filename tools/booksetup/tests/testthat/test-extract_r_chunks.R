@@ -30,3 +30,14 @@ test_that("python chunks are ignored", {
   all_code <- paste(unlist(chunks, use.names = FALSE), collapse = "\n")
   expect_false(grepl("pysits", all_code))
 })
+
+test_that("chunks carry source line-number attributes", {
+  qmd <- system.file("extdata", "sample.qmd", package = "booksetup")
+  chunks <- extract_r_chunks(qmd)
+
+  for (i in seq_along(chunks)) {
+    expect_type(attr(chunks[[i]], "start_line"), "integer")
+    expect_type(attr(chunks[[i]], "end_line"), "integer")
+    expect_gt(attr(chunks[[i]], "end_line"), attr(chunks[[i]], "start_line"))
+  }
+})

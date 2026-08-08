@@ -9,7 +9,8 @@ build_data_script(
   output = "generate_book_data.R",
   chapters = NULL,
   skip_existing = TRUE,
-  python_sync = TRUE
+  python_sync = TRUE,
+  chunk_times = TRUE
 )
 }
 \arguments{
@@ -26,6 +27,11 @@ directory already contains files are skipped.}
 
 \item{python_sync}{If \code{TRUE}, the generated script calls
 \verb{rsync -a ~/sitsbook/tempdir/R/ ~/sitsbook/tempdir/Python/} at the end.}
+
+\item{chunk_times}{If \code{TRUE} (the default), the generated script times every
+individual code chunk, reports its line numbers in the source \code{.qmd}, and
+writes a CSV with the results. This makes it easy to identify slow chunks
+that should be marked \code{eval: false}.}
 }
 \value{
 The path to the generated R script, invisibly.
