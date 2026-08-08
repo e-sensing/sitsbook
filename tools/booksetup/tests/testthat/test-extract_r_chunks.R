@@ -86,3 +86,22 @@ test_that("eval attribute is captured from #| eval: true", {
   chunks <- extract_r_chunks(qmd)
   expect_true(attr(chunks[[1]], "eval"))
 })
+
+test_that("label is captured from #| label: chunk option", {
+  qmd <- tempfile(fileext = ".qmd")
+  writeLines(c("```{r}", "#| label: fig-example", "plot(1)", "```"), qmd)
+  on.exit(unlink(qmd), add = TRUE)
+
+  chunks <- extract_r_chunks(qmd)
+  expect_named(chunks, "fig-example")
+  expect_equal(attr(chunks[[1]], "label"), "fig-example")
+})
+
+test_that("#| label: takes precedence over the inline ```{r label} form", {
+  qmd <- tempfile(fileext = ".qmd")
+  writeLines(c("```{r inline-label}", "#| label: fig-example", "plot(1)", "```"), qmd)
+  on.exit(unlink(qmd), add = TRUE)
+
+  chunks <- extract_r_chunks(qmd)
+  expect_named(chunks, "fig-example")
+})

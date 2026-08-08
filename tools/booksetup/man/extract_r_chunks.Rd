@@ -25,7 +25,10 @@ The returned list preserves the source location of every chunk. Each element
 is a character vector with attributes \code{start_line} and \code{end_line} giving the
 line numbers of the opening and closing fences in the original file,
 optionally a \code{label} attribute when the chunk header contains one, and an
-\code{eval} attribute taken from the chunk options (\code{TRUE} by default).
+\code{eval} attribute taken from the chunk options (\code{TRUE} by default). The label
+may come either from the legacy inline form (\verb{```\{r my-label\}}) or from
+the Quarto chunk-option form (\verb{#| label: my-label}); the latter takes
+precedence when both are present.
 }
 \examples{
 sample <- system.file("extdata", "sample.qmd", package = "booksetup")

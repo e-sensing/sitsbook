@@ -9,7 +9,10 @@
 #' is a character vector with attributes `start_line` and `end_line` giving the
 #' line numbers of the opening and closing fences in the original file,
 #' optionally a `label` attribute when the chunk header contains one, and an
-#' `eval` attribute taken from the chunk options (`TRUE` by default).
+#' `eval` attribute taken from the chunk options (`TRUE` by default). The label
+#' may come either from the legacy inline form (`` ```{r my-label} ``) or from
+#' the Quarto chunk-option form (`#| label: my-label`); the latter takes
+#' precedence when both are present.
 #'
 #' @param qmd Path to a Quarto or R Markdown file.
 #'
@@ -69,6 +72,13 @@ extract_r_chunks <- function(qmd) {
         )[[1L]]
         if (length(eval_match) > 1L) {
           chunk_eval <- tolower(eval_match[2L]) == "true"
+        }
+        label_match <- regmatches(
+          line,
+          regexec("^#\\|\\s*label\\s*:\\s*(\\S+)", line, ignore.case = TRUE)
+        )[[1L]]
+        if (length(label_match) > 1L) {
+          label <- label_match[2L]
         }
       } else {
         current <- c(current, line)
