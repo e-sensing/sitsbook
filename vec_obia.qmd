@@ -300,8 +300,6 @@ tcnn_model = sits_train(samples_deforestation, sits_tempcnn())
 :::
 The segment classification procedure applies the model to a number of user-defined samples inside each segment. Each of these samples is then assigned a set of probability values, one for each class. The output of the procedure is a raster data cube containing a set of probabilites for each layer. The parameters for the `sits_classify()` function for vector cubes are:
 
-The parameters used for both data cubes and time series are:
-
 | Parameter | Meaning |
 |---|---|
 | `data` | either a data cube or a set of time series |
@@ -374,6 +372,34 @@ plot(segments_20LMR_probs, labels = "Forest")
 knitr::include_graphics("./images/vec-obia-probs-forest.png") 
 ```
 
+Then we can compute the smoothed probability cube. 
+
+:::{.panel-tabset}
+## R
+```{r}
+#| eval: false
+segments_20LMR_smooth <- sits_smooth(
+    segments_20LMR_probs,
+    output_dir = tempdir_r,
+    memsize = 24,
+    multicores = 6,
+    version = "tcnn"
+)
+```
+## Python
+```{python}
+#| eval: false
+segments_20LMR_smooth = sits_smooth(
+    segments_20LMR_probs,
+    output_dir = tempdir_py,
+    memsize = 24,
+    multicores = 6,
+    version = "tcnn"
+)
+```
+:::
+
+
 Finally, we can compute the most likely class for each of the segments.
 
 :::{.panel-tabset}
@@ -381,7 +407,7 @@ Finally, we can compute the most likely class for each of the segments.
 ```{r}
 #| eval: false
 segments_20LMR_class <- sits_label_classification(
-    segments_20LMR_probs,
+    segments_20LMR_smooth,
     output_dir = tempdir_r,
     label_method = "mean",
     memsize = 24,
@@ -393,7 +419,7 @@ segments_20LMR_class <- sits_label_classification(
 ```{python}
 #| eval: false
 segments_20LMR_class = sits_label_classification(
-    segments_20LMR_probs,
+    segments_20LMR_smooth,
     label_method = "mean",
     output_dir = tempdir_py,
     memsize = 24,
