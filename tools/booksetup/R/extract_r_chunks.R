@@ -38,7 +38,7 @@ extract_r_chunks <- function(qmd) {
   for (i in seq_along(lines)) {
     line <- lines[i]
     if (!in_chunk) {
-      if (grepl("^```\\{r(\\}|[[:space:]].*\\})$", line)) {
+      if (grepl("^```\\{r(\\}|[[:space:]].*\\})\\s*$", line)) {
         in_chunk <- TRUE
         current <- character()
         start_line <- i

@@ -41,3 +41,12 @@ test_that("chunks carry source line-number attributes", {
     expect_gt(attr(chunks[[i]], "end_line"), attr(chunks[[i]], "start_line"))
   }
 })
+
+test_that("chunk headers with trailing whitespace are recognized", {
+  qmd <- tempfile(fileext = ".qmd")
+  writeLines(c("```{r} ", "1 + 1", "```"), qmd)
+  on.exit(unlink(qmd), add = TRUE)
+
+  chunks <- extract_r_chunks(qmd)
+  expect_length(chunks, 1L)
+})
