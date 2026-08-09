@@ -1,16 +1,9 @@
-runtime_env <- function() {
-  env <- new.env()
-  source(system.file("runtime.R", package = "booksetup"), local = env)
-  env
-}
-
 test_that("log_event writes a valid flow-style YAML line per event", {
-  env <- runtime_env()
   log_path <- tempfile("log_")
   on.exit(unlink(log_path), add = TRUE)
   con <- file(log_path, "w")
 
-  env$log_event(con, "chunk_ok", chapter = "intro", chunk = 3L, elapsed = 1.5, eval = TRUE)
+  log_event(con, "chunk_ok", chapter = "intro", chunk = 3L, elapsed = 1.5, eval = TRUE)
   close(con)
 
   txt <- readLines(log_path, warn = FALSE)
@@ -26,13 +19,12 @@ test_that("log_event writes a valid flow-style YAML line per event", {
 })
 
 test_that("log_event escapes quotes, backslashes, and newlines in messages", {
-  env <- runtime_env()
   log_path <- tempfile("log_")
   on.exit(unlink(log_path), add = TRUE)
   con <- file(log_path, "w")
 
   tricky <- "line one\nline \"two\" with \\backslash\\ and\ttab"
-  env$log_event(con, "chunk_error", chapter = "x", chunk = 1L, message = tricky)
+  log_event(con, "chunk_error", chapter = "x", chunk = 1L, message = tricky)
   close(con)
 
   events <- yaml::read_yaml(log_path)
@@ -40,15 +32,14 @@ test_that("log_event escapes quotes, backslashes, and newlines in messages", {
 })
 
 test_that("the whole log file is a single parseable YAML sequence", {
-  env <- runtime_env()
   log_path <- tempfile("log_")
   on.exit(unlink(log_path), add = TRUE)
   con <- file(log_path, "w")
 
-  env$log_event(con, "run_start", n_chapters = 2L)
-  env$log_event(con, "chapter_start", chapter = "a", index = 1L, total = 2L)
-  env$log_event(con, "chunk_ok", chapter = "a", chunk = 1L, elapsed = 0.5)
-  env$log_event(con, "chapter_end", chapter = "a", elapsed = 0.5)
+  log_event(con, "run_start", n_chapters = 2L)
+  log_event(con, "chapter_start", chapter = "a", index = 1L, total = 2L)
+  log_event(con, "chunk_ok", chapter = "a", chunk = 1L, elapsed = 0.5)
+  log_event(con, "chapter_end", chapter = "a", elapsed = 0.5)
   close(con)
 
   events <- yaml::read_yaml(log_path)
@@ -64,24 +55,24 @@ test_that("a chunk raising only a warning logs a chunk_warning event and still s
   on.exit(unlink(c(reg_path, log_path)), add = TRUE)
   on.exit(unlink(img_dir, recursive = TRUE), add = TRUE)
 
-  env <- runtime_env()
-  env$booksetup_registry <- list()
-  env$registry_file <- reg_path
-  env$chapter_times <- numeric()
-  env$errors <- character()
-  env$image_dir <- img_dir
-  env$image_width <- 400L
-  env$image_height <- 300L
-  env$image_res <- 72L
-  env$log_con <- file(log_path, "w")
-  on.exit(close(env$log_con), add = TRUE)
+  state <- new_run_state(
+    registry_file = reg_path,
+    log_file = log_path,
+    image_dir = img_dir,
+    image_width = 400L,
+    image_height = 300L,
+    image_res = 72L,
+    n_chapters = 1L
+  )
+  on.exit(close_run_state(state), add = TRUE)
 
   # Use capture_messages() rather than expect_message() so that the second
   # (chunk-ok summary) message emitted by run_chunk() is also captured
   # instead of leaking to the console (expect_message() only intercepts the
   # first matching message).
   msgs <- testthat::capture_messages(
-    env$run_chunk(
+    run_chunk(
+      state = state,
       chapter_name = "warn_chapter",
       chunk_i = 1L,
       n_chunks = 1L,
@@ -113,20 +104,20 @@ test_that("a chunk that errors logs a chunk_error event", {
   on.exit(unlink(c(reg_path, log_path)), add = TRUE)
   on.exit(unlink(img_dir, recursive = TRUE), add = TRUE)
 
-  env <- runtime_env()
-  env$booksetup_registry <- list()
-  env$registry_file <- reg_path
-  env$chapter_times <- numeric()
-  env$errors <- character()
-  env$image_dir <- img_dir
-  env$image_width <- 400L
-  env$image_height <- 300L
-  env$image_res <- 72L
-  env$log_con <- file(log_path, "w")
-  on.exit(close(env$log_con), add = TRUE)
+  state <- new_run_state(
+    registry_file = reg_path,
+    log_file = log_path,
+    image_dir = img_dir,
+    image_width = 400L,
+    image_height = 300L,
+    image_res = 72L,
+    n_chapters = 1L
+  )
+  on.exit(close_run_state(state), add = TRUE)
 
   expect_error(
-    suppressMessages(env$run_chunk(
+    suppressMessages(run_chunk(
+      state = state,
       chapter_name = "err_chapter",
       chunk_i = 1L,
       n_chunks = 1L,

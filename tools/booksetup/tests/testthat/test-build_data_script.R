@@ -10,7 +10,7 @@ test_that("build_data_script writes a parseable R file", {
   expect_type(parsed, "expression")
 })
 
-test_that("generated script contains runtime helpers and run_* calls", {
+test_that("generated script calls generate_book_data", {
   book_dir <- system.file("extdata", "integration_book", package = "booksetup")
   out <- tempfile("data_script_", fileext = ".R")
   on.exit(unlink(out), add = TRUE)
@@ -18,10 +18,10 @@ test_that("generated script contains runtime helpers and run_* calls", {
   build_data_script(book_dir, output = out, python_sync = FALSE)
   script <- paste(readLines(out, warn = FALSE), collapse = "\n")
 
-  expect_true(grepl("run_chapter", script))
-  expect_true(grepl("run_chunk", script))
-  expect_true(grepl("registry_read", script))
-  expect_true(grepl("registry_write", script))
+  expect_true(grepl("generate_book_data", script))
+  expect_true(grepl("book_dir", script))
+  expect_true(grepl("registry", script))
+  # Old code-generation patterns should not appear
   expect_false(grepl("skip_existing", script))
   expect_false(grepl("make_skip_lines", script))
 })
@@ -40,7 +40,7 @@ test_that("build_data_script uses a timestamped default output under tempdir/", 
                "^generate_book_data_[0-9]{8}_[0-9]{6}\\.R$")
 })
 
-test_that("build_data_script excludes chapters", {
+test_that("build_data_script excludes chapters from generated call", {
   book_dir <- system.file("extdata", "integration_book", package = "booksetup")
   out <- tempfile("exclude_", fileext = ".R")
   on.exit(unlink(out), add = TRUE)
@@ -49,8 +49,8 @@ test_that("build_data_script excludes chapters", {
                     python_sync = FALSE)
   script <- paste(readLines(out, warn = FALSE), collapse = "\n")
 
-  expect_false(grepl('run_chapter("simple"', script, fixed = TRUE))
-  expect_true(grepl('run_chapter("empty"', script, fixed = TRUE))
+  expect_true(grepl('"simple"', script))
+  expect_true(grepl("exclude", script))
 })
 
 test_that("build_data_script warns on unknown excluded chapters", {

@@ -25,19 +25,19 @@ create_minimal_book <- function(dir) {
   ), file.path(dir, "simple.qmd"))
 }
 
-test_that("generated script runs without error on a minimal book", {
+test_that("generate_book_data runs without error on a minimal book", {
   book_dir <- file.path(tempdir(), "mini_book")
   dir.create(book_dir, showWarnings = FALSE, recursive = TRUE)
   on.exit(unlink(book_dir, recursive = TRUE), add = TRUE)
   create_minimal_book(book_dir)
 
-  out <- file.path(tempdir(), "mini_run.R")
   reg <- file.path(tempdir(), "mini_registry.yaml")
-  on.exit(unlink(c(out, reg)), add = TRUE)
+  log <- file.path(tempdir(), "mini.log")
+  on.exit(unlink(c(reg, log)), add = TRUE)
 
-  script_path <- build_data_script(book_dir, output = out, registry = reg,
-                                   python_sync = FALSE)
-  expect_error(quiet_source(script_path), NA)
+  suppressMessages(generate_book_data(
+    book_dir, registry = reg, python_sync = FALSE, log_file = log
+  ))
 
   expect_true(file.exists(reg))
   registry <- registry_read(reg)
@@ -51,22 +51,22 @@ test_that("registry causes completed chunks to be skipped on second run", {
   on.exit(unlink(book_dir, recursive = TRUE), add = TRUE)
   create_minimal_book(book_dir)
 
-  out <- file.path(tempdir(), "skip_run.R")
-  log <- file.path(tempdir(), "skip_run.log")
   reg <- file.path(tempdir(), "skip_registry.yaml")
-  on.exit(unlink(c(out, log, reg)), add = TRUE)
+  log1 <- file.path(tempdir(), "skip1.log")
+  log2 <- file.path(tempdir(), "skip2.log")
+  on.exit(unlink(c(reg, log1, log2)), add = TRUE)
 
-  script_path <- build_data_script(book_dir, output = out, registry = reg,
-                                   python_sync = FALSE)
-  expect_error(quiet_source(script_path), NA)
+  suppressMessages(generate_book_data(
+    book_dir, registry = reg, python_sync = FALSE, log_file = log1
+  ))
 
   # Second run with the same registry
-  script_path2 <- build_data_script(book_dir, output = out, registry = reg,
-                                    python_sync = FALSE)
-  expect_error(quiet_source(script_path2), NA)
+  suppressMessages(generate_book_data(
+    book_dir, registry = reg, python_sync = FALSE, log_file = log2
+  ))
 
-  expect_true(file.exists(log))
-  events <- read_event_log(log)
+  expect_true(file.exists(log2))
+  events <- read_event_log(log2)
   event_types <- vapply(events, function(e) e$event %||% "", character(1L))
   expect_true("chunk_skip" %in% event_types)
 })
@@ -98,15 +98,17 @@ test_that("failed chunks are recorded with status = error and always retried", {
     "```"
   ), file.path(book_dir, "error.qmd"))
 
-  out <- file.path(tempdir(), "fail_run.R")
   reg <- file.path(tempdir(), "fail_registry.yaml")
-  on.exit(unlink(c(out, reg)), add = TRUE)
+  log1 <- file.path(tempdir(), "fail1.log")
+  log2 <- file.path(tempdir(), "fail2.log")
+  on.exit(unlink(c(reg, log1, log2)), add = TRUE)
 
-  script_path <- build_data_script(book_dir, output = out, registry = reg,
-                                   python_sync = FALSE)
-
-  expect_error(quiet_source(script_path),
-               "Some chapters failed")
+  expect_error(
+    suppressMessages(generate_book_data(
+      book_dir, registry = reg, python_sync = FALSE, log_file = log1
+    )),
+    "Some chapters failed"
+  )
 
   registry <- registry_read(reg)
   expect_length(registry, 1L)
@@ -115,8 +117,12 @@ test_that("failed chunks are recorded with status = error and always retried", {
 
   # Re-run: chunk 1 fails again (always retried since status is "error"),
   # chunk 2 is never reached
-  expect_error(quiet_source(script_path),
-               "Some chapters failed")
+  expect_error(
+    suppressMessages(generate_book_data(
+      book_dir, registry = reg, python_sync = FALSE, log_file = log2
+    )),
+    "Some chapters failed"
+  )
   registry2 <- registry_read(reg)
   expect_length(registry2, 1L)
   expect_equal(registry2[["error:1"]]$status, "error")
@@ -156,15 +162,16 @@ test_that("an error in one chapter does not stop the next chapter", {
     "```"
   ), file.path(book_dir, "simple.qmd"))
 
-  out <- file.path(tempdir(), "two_chapter_run.R")
   reg <- file.path(tempdir(), "two_chapter_registry.yaml")
-  on.exit(unlink(c(out, reg)), add = TRUE)
+  log <- file.path(tempdir(), "two_chapter.log")
+  on.exit(unlink(c(reg, log)), add = TRUE)
 
-  script_path <- build_data_script(book_dir, output = out, registry = reg,
-                                   python_sync = FALSE)
-
-  expect_error(quiet_source(script_path),
-               "Some chapters failed")
+  expect_error(
+    suppressMessages(generate_book_data(
+      book_dir, registry = reg, python_sync = FALSE, log_file = log
+    )),
+    "Some chapters failed"
+  )
 
   registry <- registry_read(reg)
   expect_length(registry, 2L)
@@ -179,13 +186,14 @@ test_that("editing a chunk changes its hash and re-runs only that chunk", {
   on.exit(unlink(book_dir, recursive = TRUE), add = TRUE)
   create_minimal_book(book_dir)
 
-  out <- file.path(tempdir(), "edit_run.R")
   reg <- file.path(tempdir(), "edit_registry.yaml")
-  on.exit(unlink(c(out, reg)), add = TRUE)
+  log1 <- file.path(tempdir(), "edit1.log")
+  log2 <- file.path(tempdir(), "edit2.log")
+  on.exit(unlink(c(reg, log1, log2)), add = TRUE)
 
-  script_path <- build_data_script(book_dir, output = out, registry = reg,
-                                   python_sync = FALSE)
-  expect_error(quiet_source(script_path), NA)
+  suppressMessages(generate_book_data(
+    book_dir, registry = reg, python_sync = FALSE, log_file = log1
+  ))
 
   old_hash <- registry_read(reg)[["simple:1"]]$hash
 
@@ -207,24 +215,27 @@ test_that("editing a chunk changes its hash and re-runs only that chunk", {
     "```"
   ), file.path(book_dir, "simple.qmd"))
 
-  script_path2 <- build_data_script(book_dir, output = out, registry = reg,
-                                     python_sync = FALSE)
-  expect_error(quiet_source(script_path2), NA)
+  suppressMessages(generate_book_data(
+    book_dir, registry = reg, python_sync = FALSE, log_file = log2
+  ))
 
   new_registry <- registry_read(reg)
   expect_false(identical(new_registry[["simple:1"]]$hash, old_hash))
   expect_identical(new_registry[["simple:2"]]$hash, registry_read(reg)[["simple:2"]]$hash)
 })
 
-test_that("chapters are isolated from each other in the generated script", {
+test_that("chapters are isolated from each other", {
   book_dir <- system.file("extdata", "isolation_book", package = "booksetup")
-  out <- file.path(tempdir(), "isolation_run.R")
   reg <- file.path(tempdir(), "isolation_registry.yaml")
-  on.exit(unlink(c(out, reg)), add = TRUE)
+  log <- file.path(tempdir(), "isolation.log")
+  on.exit(unlink(c(reg, log)), add = TRUE)
 
-  script_path <- build_data_script(book_dir, output = out, registry = reg,
-                                   python_sync = FALSE)
-  expect_error(quiet_source(script_path), NA)
+  expect_error(
+    suppressMessages(generate_book_data(
+      book_dir, registry = reg, python_sync = FALSE, log_file = log
+    )),
+    NA
+  )
 })
 
 test_that("run_chunk always runs eval: true chunks even when in registry", {
@@ -245,17 +256,18 @@ test_that("run_chunk always runs eval: true chunks even when in registry", {
   log_path <- tempfile("log_")
   on.exit(unlink(log_path), add = TRUE)
 
-  env <- new.env()
-  source(system.file("runtime.R", package = "booksetup"), local = env)
-  env$booksetup_registry <- registry_read(reg_path)
-  env$registry_file <- reg_path
-  env$chapter_times <- numeric()
-  env$errors <- character()
-  env$log_con <- file(log_path, "w")
-  on.exit(close(env$log_con), add = TRUE)
+  state <- new_run_state(
+    registry_file = reg_path,
+    log_file = log_path,
+    image_dir = tempfile("images_"),
+    n_chapters = 1L
+  )
+  state$registry <- registry_read(reg_path)
+  on.exit(close_run_state(state), add = TRUE)
 
   expect_error(
-    suppressMessages(env$run_chunk(
+    suppressMessages(run_chunk(
+      state = state,
       chapter_name = "simple",
       chunk_i = 1L,
       n_chunks = 1L,
@@ -270,7 +282,7 @@ test_that("run_chunk always runs eval: true chunks even when in registry", {
     "must run"
   )
 
-  expect_equal(length(env$errors), 0L)
+  expect_equal(length(state$errors), 0L)
   updated <- registry_read(reg_path)
   expect_equal(updated[["simple:1"]]$hash, "abc")
 })
@@ -293,17 +305,18 @@ test_that("run_chunk fixes a stale registry label on skip", {
   log_path <- tempfile("log_")
   on.exit(unlink(log_path), add = TRUE)
 
-  env <- new.env()
-  source(system.file("runtime.R", package = "booksetup"), local = env)
-  env$booksetup_registry <- registry_read(reg_path)
-  env$registry_file <- reg_path
-  env$chapter_times <- numeric()
-  env$errors <- character()
-  env$log_con <- file(log_path, "w")
-  on.exit(close(env$log_con), add = TRUE)
+  state <- new_run_state(
+    registry_file = reg_path,
+    log_file = log_path,
+    image_dir = tempfile("images_"),
+    n_chapters = 1L
+  )
+  state$registry <- registry_read(reg_path)
+  on.exit(close_run_state(state), add = TRUE)
 
   expect_message(
-    env$run_chunk(
+    run_chunk(
+      state = state,
       chapter_name = "intro_visualisation",
       chunk_i = 12L,
       n_chunks = 16L,

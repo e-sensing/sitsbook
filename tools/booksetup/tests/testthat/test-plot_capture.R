@@ -43,15 +43,16 @@ test_that("run_chunk saves base-graphics plots as normalized PNG files", {
   on.exit(unlink(book_dir, recursive = TRUE), add = TRUE)
   create_plot_book(book_dir)
 
-  out <- file.path(tempdir(), "plot_run.R")
   reg <- file.path(tempdir(), "plot_registry.yaml")
   img_dir <- file.path(tempdir(), "plot_images")
-  on.exit(unlink(c(out, reg)), add = TRUE)
+  log <- file.path(tempdir(), "plot.log")
+  on.exit(unlink(c(reg, log)), add = TRUE)
   on.exit(unlink(img_dir, recursive = TRUE), add = TRUE)
 
-  script_path <- build_data_script(book_dir, output = out, registry = reg,
-                                   python_sync = FALSE, image_dir = img_dir)
-  expect_error(quiet_source(script_path), NA)
+  suppressMessages(generate_book_data(
+    book_dir, registry = reg, python_sync = FALSE,
+    image_dir = img_dir, log_file = log
+  ))
 
   saved <- list.files(file.path(img_dir, "plots"), full.names = TRUE)
   expect_true(length(saved) >= 2L)
@@ -78,20 +79,19 @@ test_that("run_chunk with no plots does not create an image directory entry", {
   log_path <- tempfile("log_")
   on.exit(unlink(log_path), add = TRUE)
 
-  env <- new.env()
-  source(system.file("runtime.R", package = "booksetup"), local = env)
-  env$booksetup_registry <- list()
-  env$registry_file <- reg_path
-  env$chapter_times <- numeric()
-  env$errors <- character()
-  env$image_dir <- img_dir
-  env$image_width <- 400L
-  env$image_height <- 300L
-  env$image_res <- 72L
-  env$log_con <- file(log_path, "w")
-  on.exit(close(env$log_con), add = TRUE)
+  state <- new_run_state(
+    registry_file = reg_path,
+    log_file = log_path,
+    image_dir = img_dir,
+    image_width = 400L,
+    image_height = 300L,
+    image_res = 72L,
+    n_chapters = 1L
+  )
+  on.exit(close_run_state(state), add = TRUE)
 
-  suppressMessages(env$run_chunk(
+  suppressMessages(run_chunk(
+    state = state,
     chapter_name = "noplot",
     chunk_i = 1L,
     n_chunks = 1L,
