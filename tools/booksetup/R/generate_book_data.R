@@ -108,6 +108,11 @@ generate_book_data <- function(book_dir,
   write_chunk_summary(state$registry, summary_csv)
   message("Chunk summary written to: ", summary_csv)
 
+  snapshot_summary_csv <- file.path(dirname(state$registry_file),
+                                    "snapshot_summary.csv")
+  write_snapshot_summary(state$registry, state$snapshot_dir, snapshot_summary_csv)
+  message("Snapshot summary written to: ", snapshot_summary_csv)
+
   end_global <- Sys.time()
   log_event(state$log_con, "run_end",
             elapsed_min = as.numeric(difftime(end_global, start_global,

@@ -6,30 +6,49 @@
 \usage{
 generate_book_data(
   book_dir,
-  output = file.path("tempdir", paste0("generate_book_data_", format(Sys.time(),
-    "\%Y\%m\%d_\%H\%M\%S"), ".R")),
-  ...
+  chapters = NULL,
+  exclude = NULL,
+  registry = registry_path(),
+  python_sync = TRUE,
+  image_dir = file.path(dirname(registry), "generated_images"),
+  image_width = 2000L,
+  image_height = 1500L,
+  image_res = 150L,
+  log_file = file.path("tempdir", paste0("generate_book_data_", format(Sys.time(),
+    "\%Y\%m\%d_\%H\%M\%S"), ".log"))
 )
 }
 \arguments{
 \item{book_dir}{Path to the book project root (must contain \verb{_quarto.yml}).}
 
-\item{output}{Path for the generated R script. Defaults to a timestamped
-file under \verb{tempdir/}.}
+\item{chapters}{Optional character vector of chapter names (without \code{.qmd})
+to limit the run. If \code{NULL} (the default), all chapters are included.}
 
-\item{...}{Additional arguments passed to \code{\link[=build_data_script]{build_data_script()}}, including
-\code{image_dir}, \code{image_width}, \code{image_height}, and \code{image_res}, which control
-where plots produced by chunks (base graphics, \code{ggplot2}, \code{tmap}, etc.)
-are saved as PNG files (default \verb{~/sitsbook/tempdir/generated_images/}).}
+\item{exclude}{Optional character vector of chapter names to skip.}
+
+\item{registry}{Path to the YAML chunk-completion registry. Defaults to
+\code{\link[=registry_path]{registry_path()}}.}
+
+\item{python_sync}{If \code{TRUE} (the default), rsync R data to the Python
+temp directory after all chapters have run.}
+
+\item{image_dir}{Directory where chunk plots are saved as PNG files,
+one sub-directory per chapter. Defaults to \verb{generated_images/} next to
+the registry file.}
+
+\item{image_width, image_height, image_res}{Pixel width/height and resolution
+(dpi) for saved chunk plots.}
+
+\item{log_file}{Path for the structured YAML event log. Defaults to
+a timestamped \code{.log} file under \verb{tempdir/} in the current directory.}
 }
 \value{
-The path to the generated script, invisibly.
+The path to the registry file, invisibly.
 }
 \description{
-Convenience wrapper around \code{\link[=build_data_script]{build_data_script()}} that builds the data
-generation script and immediately sources it in a fresh environment. This is
-the fastest way to populate \verb{~/sitsbook/tempdir/} when the book source is
-already set up.
+Runs every chapter's R chunks directly (extract, evaluate, skip/cache via
+registry, capture plots). This is the primary entry point for populating
+\verb{~/sitsbook/tempdir/}.
 }
 \examples{
 \dontrun{

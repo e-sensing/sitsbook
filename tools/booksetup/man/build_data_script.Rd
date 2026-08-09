@@ -2,7 +2,7 @@
 % Please edit documentation in R/build_data_script.R
 \name{build_data_script}
 \alias{build_data_script}
-\title{Build a standalone R script that generates all book temp data}
+\title{Build an R script that generates all book temp data}
 \usage{
 build_data_script(
   book_dir,
@@ -27,43 +27,28 @@ file under \verb{tempdir/} in the current working directory.}
 \item{chapters}{Optional character vector of chapter names (without \code{.qmd})
 to limit the generation. If \code{NULL} (the default), all chapters are included.}
 
-\item{exclude}{Optional character vector of chapter names to exclude from the
-generated script. Unknown names are ignored with a warning.}
+\item{exclude}{Optional character vector of chapter names to exclude.
+Unknown names are ignored with a warning.}
 
 \item{registry}{Path to the YAML chunk-completion registry. Defaults to
-\verb{~/sitsbook/tempdir/.booksetup_registry.yaml}. Set to \code{NULL} to disable
-skipping.}
+\code{\link[=registry_path]{registry_path()}}.}
 
-\item{python_sync}{If \code{TRUE}, the generated script calls
-\verb{rsync -a ~/sitsbook/tempdir/R/ ~/sitsbook/tempdir/Python/} at the end.}
+\item{python_sync}{If \code{TRUE}, rsync R data to the Python temp directory.}
 
-\item{image_dir}{Directory where plots produced while evaluating chunks
-(base graphics, \code{ggplot2}, \code{tmap}, etc.) are saved as PNG files, one
-sub-directory per chapter. Defaults to \verb{generated_images/} next to the
-registry file (i.e. \verb{~/sitsbook/tempdir/generated_images}).}
+\item{image_dir}{Directory where chunk plots are saved as PNG files.
+Defaults to \verb{generated_images/} next to the registry file.}
 
 \item{image_width, image_height, image_res}{Pixel width/height and resolution
-(dpi) used for \code{grDevices::png()} when saving chunk plots.}
+(dpi) for saved chunk plots.}
 }
 \value{
 The path to the generated R script, invisibly.
 }
 \description{
-Extracts the R code from every chapter \code{.qmd} and writes a single R script
-that can be run to (re)generate the data stored under
-\verb{~/sitsbook/tempdir/R/<chapter>}. The console shows a minimal one-line
-progress indicator per chapter/chunk; a structured, one-event-per-line YAML
-log (parseable in one shot via \code{yaml::read_yaml()}) is written to the
-\code{.log} file alongside the script, recording chapter/run start and end,
-skips, warnings, and errors. A \code{chunk_summary.csv} snapshot of the full
-registry (status, elapsed time, images produced, errors) is written next
-to the registry file at the end of every run.
-}
-\details{
-Completed chunks are recorded in a YAML registry so that later runs skip them
-automatically. Failed chunks are recorded with \code{status: error} (so they can
-be queried via \code{\link[=list_failed_chunks]{list_failed_chunks()}}) but are always retried regardless of
-\code{eval}.
+Writes a short R script that, when sourced in a session where booksetup is
+loaded, calls \code{\link[=generate_book_data]{generate_book_data()}} with the specified parameters. This is
+a convenience for workflows that prefer an explicit script file; for direct
+use from R, call \code{\link[=generate_book_data]{generate_book_data()}} instead.
 }
 \examples{
 \dontrun{
