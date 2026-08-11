@@ -12,8 +12,7 @@ format: html
 :::{.panel-tabset}
 ## R
 ```{r}
-#| echo: true
-#| eval: true
+#| label: r-sits-load
 #| output: false
 # load package "tibble"
 library(tibble)
@@ -21,23 +20,22 @@ library(tibble)
 library(sits)
 library(sitsdata)
 # set tempdir if it does not exist 
-tempdir_r <- "~/sitsbook/tempdir/R/dc_merge"
+tempdir_r <- "./tempdir/R/dc_merge"
 dir.create(tempdir_r, showWarnings = FALSE)
 ```
 ## Python
 ```{python}
-#| echo: true
-#| eval: true
+#| label: py-sits-load
 #| output: false
 # load "pysits" library
 from pysits import *
 from pathlib import Path
 # set tempdir if it does not exist 
-tempdir_py = Path.home() / "sitsbook/tempdir/Python/dc_merge"
+tempdir_py = Path("./tempdir/Python/dc_merge")
 tempdir_py.mkdir(parents=True, exist_ok=True)
 ```
 ```{python}
-#| echo: false
+#| include: false
 import pandas as pd
 pd.set_option('display.max_columns', 7)
 pd.set_option('display.width', 600)
@@ -64,31 +62,35 @@ Images from the HLS Landsat and Sentinel-2 collections are accessed separately a
 :::{.panel-tabset}
 ## R
 ```{r}
-#| eval: false
+#| label: merge-cube-hls
+#| results: hide
+#| warning: false
+#| cache: true
 # define a region of interest
-roi <- c(lon_min = -45.6422, lat_min = -24.0335,
-         lon_max = -45.0840, lat_max = -23.6178)
+roi <- c(
+    lon_min = -45.6422, lat_min = -24.0335,
+    lon_max = -45.0840, lat_max = -23.6178
+)
 
 # Retrieve an HLS Sentinel-2 collection
 hls_cube_s2 <- sits_cube(
-  source = "HLS",
-  collection = "HLSS30",
-  roi = roi,
-  bands = c("BLUE", "GREEN", "RED", "CLOUD"),
-  start_date = as.Date("2020-06-01"),
-  end_date = as.Date("2020-09-01"),
-  progress = FALSE
+    source = "HLS",
+    collection = "HLSS30",
+    roi = roi,
+    bands = c("BLUE", "GREEN", "RED", "CLOUD"),
+    start_date = "2020-06-01",
+    end_date = "2020-09-01",
+    progress = FALSE
 )
 
 # create a cube from the HLS Landsat collection
 hls_cube_l8 <- sits_cube(
-  source = "HLS",
-  collection = "HLSL30",
-  roi = roi,
-  bands = c("BLUE", "GREEN", "RED", "CLOUD"),
-  start_date = as.Date("2020-06-01"),
-  end_date = as.Date("2020-09-01"),
-  progress = FALSE
+    source = "HLS",
+    collection = "HLSL30",
+    roi = roi,
+    bands = c("BLUE", "GREEN", "RED", "CLOUD"),
+    start_date = "2020-06-01",
+    end_date = "2020-09-01"
 )
 
 # merge the Sentinel-2 and Landsat-8 cubes
@@ -96,54 +98,40 @@ hls_cube_merged <- sits_merge(hls_cube_s2, hls_cube_l8)
 ```
 ## Python
 ```{python}
-#| eval: false
+#| label: py-merge-cube-hls
+#| results: hide
+#| warning: false
+#| cache: true
 # define a region of interest
-roi = dict(lon_min = -45.6422, lat_min = -24.0335,
-            lon_max = -45.0840, lat_max = -23.6178)
+roi = dict(
+    lon_min=-45.6422, lat_min=-24.0335,
+    lon_max=-45.0840, lat_max=-23.6178
+)
 
 # Retrieve an HLS Sentinel-2 collection
 hls_cube_s2 = sits_cube(
-  source = "HLS",
-  collection = "HLSS30",
-  roi = roi,
-  bands = ("BLUE", "GREEN", "RED", "CLOUD"),
-  start_date = "2020-06-01",
-  end_date = "2020-09-01",
-  progress = False
+    source="HLS",
+    collection="HLSS30",
+    roi=roi,
+    bands=("BLUE", "GREEN", "RED", "CLOUD"),
+    start_date="2020-06-01",
+    end_date="2020-09-01"
 )
 
 # create a cube from the HLS Landsat collection
 hls_cube_l8 = sits_cube(
-  source = "HLS",
-  collection = "HLSL30",
-  roi = roi,
-  bands = ("BLUE", "GREEN", "RED", "CLOUD"),
-  start_date = "2020-06-01",
-  end_date = "2020-09-01",
-  progress = False
+    source="HLS",
+    collection="HLSL30",
+    roi=roi,
+    bands=("BLUE", "GREEN", "RED", "CLOUD"),
+    start_date="2020-06-01",
+    end_date="2020-09-01"
 )
 
 # merge the Sentinel-2 and Landsat-8 cubes
 hls_cube_merged = sits_merge(hls_cube_s2, hls_cube_l8)
 ```
 :::
-
-```{r}
-#| echo: false
-hls_cube_s2 <- readRDS(file = "./etc/hls_cube_s2.rds")
-hls_cube_l8 <- readRDS(file = "./etc/hls_cube_l8.rds")
-hls_cube_merged <- readRDS(file = "./etc/hls_cube_merged.rds")
-```
-
-
-```{python}
-#| echo: false
-# Load just to have it in memory
-hls_cube_s2 = read_rds(file = "./etc/hls_cube_s2.rds")
-hls_cube_l8 = read_rds(file = "./etc/hls_cube_l8.rds")
-hls_cube_merged = read_rds(file = "./etc/hls_cube_merged.rds")
-```
-
 
 Comparing the timelines of the original cubes and the merged one, one can see the benefits of the merged collection for time series data analysis. 
 
@@ -152,11 +140,14 @@ Comparing the timelines of the original cubes and the merged one, one can see th
 :::{.panel-tabset}
 ## R
 ```{r}
+#| label: merge-print-timeline-s2
 # Timeline of the Sentinel-2 cube
 sits_timeline(hls_cube_s2)
 ```
 ## Python
 ```{python}
+#| label: py-merge-print-timeline-s2
+#| cache: true
 # Timeline of the Sentinel-2 cube
 sits_timeline(hls_cube_s2)
 ```
@@ -167,11 +158,14 @@ sits_timeline(hls_cube_s2)
 :::{.panel-tabset}
 ## R
 ```{r}
+#| label: merge-print-timeline-l8
 # Timeline of the Landsat-8 cube
 sits_timeline(hls_cube_l8)
 ```
 ## Python
 ```{python}
+#| label: py-merge-print-timeline-l8
+#| cache: true
 # Timeline of the Landsat-8 cube
 sits_timeline(hls_cube_l8)
 ```
@@ -182,12 +176,15 @@ sits_timeline(hls_cube_l8)
 :::{.panel-tabset}
 ## R
 ```{r}
+#| label: merge-print-timeline-merged
 # Timeline of the merged cube
 sits_timeline(hls_cube_merged)
 ```
 
 ## Python
 ```{python}
+#| label: py-merge-print-timeline-merged
+#| cache: true
 # Timeline of the merged cube
 sits_timeline(hls_cube_merged)
 ```
@@ -335,10 +332,8 @@ The next step is to create a regular data cube for tile "20LBL" and Sentinel-2 d
 ## R
 ```{r}
 #| eval: false
-if (!file.exists("./tempdir/R/dc_merge/s2_opt"))
-    dir.create("./tempdir/R/dc_merge/s2_opt")
-
-tempdir_r_s2_opt <- "./tempdir/R/dc_merge/s2_opt"
+tempdir_r_s2_opt <- "~/sitsbook/tempdir/R/dc_merge/s2_opt"
+dir.create(tempdir_r_s2_opt, showWarnings = FALSE, recursive = TRUE)
 
 # define the output directory
 cube_s2_reg <-  sits_regularize(
@@ -584,6 +579,7 @@ s2_cube_19HBA_reg = sits_regularize(
 :::
 
 ```{r}
+#| eval: false
 #| echo: false
 s2_cube_19HBA_reg <- sits_cube(
   source = "MPC",
@@ -593,6 +589,7 @@ s2_cube_19HBA_reg <- sits_cube(
 ```
 
 ```{python}
+#| eval: false
 #| echo: false
 s2_cube_19HBA_reg = sits_cube(
   source = "MPC",
@@ -674,6 +671,7 @@ plot(dem_cube_19HBA_reg, band = "ELEVATION", palette = "Spectral", rev = True)
 :::
 
 ```{r}
+#| eval: false
 #| echo: false
 dem_cube_19HBA_reg <- sits_cube(
     source = "MPC",
@@ -683,6 +681,7 @@ dem_cube_19HBA_reg <- sits_cube(
 ```
 
 ```{python}
+#| eval: false
 #| echo: false
 dem_cube_19HBA_reg = sits_cube(
     source = "MPC",
@@ -707,15 +706,37 @@ There are two ways to combine multitemporal data cubes with DEM data. The first 
 :::{.panel-tabset}
 ## R
 ```{r}
+#| eval: false
 merged_cube_base <- sits_add_base_cube(s2_cube_19HBA_reg, dem_cube_19HBA_reg)
 merged_cube_base$base_info[[1]]
 ```
 ## Python
 ```{python}
+#| eval: false
 merged_cube_base = sits_add_base_cube(s2_cube_19HBA_reg, dem_cube_19HBA_reg)
 merged_cube_base["base_info"][0]
 ```
 :::
+
+```{r}
+#| eval: false
+#| echo: false
+saveRDS(merged_cube_base$base_info[[1]], file.path(tempdir_r, "merged_cube_base_info.rds"))
+```
+
+```{r}
+#| eval: false
+#| echo: false
+merged_cube_base_info <- readRDS(file.path(tempdir_r, "merged_cube_base_info.rds"))
+merged_cube_base_info
+```
+
+```{python}
+#| eval: false
+#| echo: false
+merged_cube_base_info = read_rds(file = tempdir_py / "merged_cube_base_info.rds")
+merged_cube_base_info
+```
 
 Although this combination is conceptually simple, it has drawbacks. Since the attribute space now mixes times series with fixed-time information, the only applicable classification method is Random Forest. Because of the way Random Forest works, not all attributes are used by every decision tree. During the training of each tree, at each node, a random subset of features is selected, and the best split is chosen based on this subset rather than all features. Thus, there may be a significant number of decision trees that do use the DEM attribute. As a result, the effect of the DEM information may be underestimated. 
 
@@ -724,16 +745,38 @@ The alternative is to combine the image data cube and the DEM using `sits_merge`
 :::{.panel-tabset}
 ## R
 ```{r}
+#| eval: false
 merged_cube <- sits_merge(s2_cube_19HBA_reg, dem_cube_19HBA_reg)
 merged_cube$file_info[[1]]
 ```
 
 ## Python
 ```{python}
+#| eval: false
 merged_cube = sits_merge(s2_cube_19HBA_reg, dem_cube_19HBA_reg)
 merged_cube["file_info"][0]
 ```
 :::
+
+```{r}
+#| eval: false
+#| echo: false
+saveRDS(merged_cube$file_info[[1]], file.path(tempdir_r, "merged_cube_file_info.rds"))
+```
+
+```{r}
+#| eval: false
+#| echo: false
+merged_cube_file_info <- readRDS(file.path(tempdir_r, "merged_cube_file_info.rds"))
+merged_cube_file_info
+```
+
+```{python}
+#| eval: false
+#| echo: false
+merged_cube_file_info = read_rds(file = tempdir_py / "merged_cube_file_info.rds")
+merged_cube_file_info
+```
 
 ## Summary
 

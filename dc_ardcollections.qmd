@@ -12,28 +12,28 @@ format: html
 :::{.panel-tabset}
 ## R
 ```{r}
-#| echo: true
-#| eval: true
+#| label: r-sits-load
 #| output: false
+#| warning: false
 # load package "tibble"
 library(tibble)
 # load packages "sits" and "sitsdata"
 library(sits)
 library(sitsdata)
 # set tempdir if it does not exist 
-tempdir_r <- "~/sitsbook/tempdir/R/dc_ardcollections"
-dir.create(tempdir_r, showWarnings = FALSE)
+tempdir_r <- "./tempdir/R/dc_ardcollections"
+dir.create(tempdir_r)
 ```
 ## Python
 ```{python}
-#| echo: true
-#| eval: true
+#| label: py-sits-load
 #| output: false
+#| warning: false
 # load "pysits" library
 from pysits import *
 from pathlib import Path
 # set tempdir if it does not exist 
-tempdir_py = Path.home() / "sitsbook/tempdir/Python/dc_ardcollections"
+tempdir_py = Path("./tempdir/Python/dc_ardcollections")
 tempdir_py.mkdir(parents=True, exist_ok=True)
 ```
 :::
@@ -43,8 +43,8 @@ tempdir_py.mkdir(parents=True, exist_ok=True)
 ARD (analysis-ready) image collections are organized into spatial partitions. Sentinel-2/2A images follow the Military Grid Reference System (MGRS) tiling system, which divides the world into 60 UTM zones of 8 degrees of longitude. Each zone contains blocks of 6 degrees of latitude. Blocks are split into tiles of 110 $\times$ 110 km$^2$ with a 10 km overlap. @fig-mgrs-datacubes shows the MGRS tiling system for a part of the northeastern coast of Brazil, contained in UTM zone 24, block M. 
 
 ```{r}
-#| echo: FALSE
 #| label: fig-mgrs-datacubes
+#| echo: false
 #| out-width: 80%
 #| fig-cap: |
 #|   MGRS tiling system used by Sentinel-2 images (source: US Army).
@@ -55,8 +55,8 @@ knitr::include_graphics("./images/s2_mgrs_grid.png")
 The Landsat-4/5/7/8/9 satellites use the Worldwide Reference System (WRS-2), which divides the coverage of Landsat satellites into images identified by path and row (@fig-wrs-datacubes). The path is the descending orbit of the satellite; the WRS-2 system has 233 paths per orbit, and each path has 119 rows, where each row refers to a latitudinal center line of a frame of imagery. Images in WRS-2 are geometrically corrected to the UTM projection.
 
 ```{r}
-#| echo: FALSE
 #| label: fig-wrs-datacubes
+#| echo: false
 #| out-width: 80%
 #| fig-cap: |
 #|   MGRS tiling system used by Sentinel-2 images (source: US Army).
@@ -114,8 +114,16 @@ Amazon Web Services (AWS) holds two kinds of collections: *open-data* and *reque
 ::: {.panel-tabset}
 ## R
 ```{r}
-#| eval: false
-#| echo: true
+#| label: fig-cube-aws-s2
+#| results: hide
+#| cache: true
+#| fig-width: 5
+#| fig-height: 5
+#| fig-dpi: 300
+#| fig-cap: |
+#|   Sentinel-2 image in an area of the Northeastern coast of Brazil.
+#| fig-align: center
+#| out-width: 80%
 # Create a data cube covering an area in Brazil
 s2_23MMU_cube <- sits_cube(
     source = "AWS",
@@ -127,47 +135,47 @@ s2_23MMU_cube <- sits_cube(
 )
 
 # Plot
-plot(s2_23MMU_cube, 
-     red = "B11", 
-     blue = "B02", 
-     green = "B8A", 
-     date = "2018-10-05"
-)
-```
-## Python
-```{python}
-#| eval: false
-#| echo: true
-# Create a data cube covering an area in Brazil
-s2_23MMU_cube = sits_cube(
-    source = "AWS",
-    collection = "SENTINEL-2-L2A",
-    tiles = "23MMU",
-    bands = ("B02", "B8A", "B11", "CLOUD"),
-    start_date = "2018-07-12",
-    end_date = "2019-07-28"
-)
-
-# Plot
-plot(s2_23MMU_cube, 
+plot(
+    s2_23MMU_cube, 
     red = "B11", 
     blue = "B02", 
     green = "B8A", 
     date = "2018-10-05"
 )
 ```
-:::
-
-```{r}
-#| echo: FALSE
-#| label: fig-aws-datacubes
-#| out-width: 100%
+## Python
+```{python}
+#| label: py-fig-cube-aws-s2
+#| results: hide
+#| warning: false
+#| cache: true
+#| fig-width: 5
+#| fig-height: 5
+#| fig-dpi: 300
 #| fig-cap: |
 #|   Sentinel-2 image in an area of the Northeastern coast of Brazil.
 #| fig-align: center
+#| out-width: 80%
+# Create a data cube covering an area in Brazil
+s2_23MMU_cube = sits_cube(
+    source="AWS",
+    collection="SENTINEL-2-L2A",
+    tiles="23MMU",
+    bands=("B02", "B8A", "B11", "CLOUD"),
+    start_date="2018-07-12",
+    end_date="2019-07-28"
+)
 
-knitr::include_graphics("./images/aws_s2.png")
+# Plot
+plot(
+    s2_23MMU_cube, 
+    red="B11", 
+    blue="B02", 
+    green="B8A", 
+    date="2018-10-05"
+)
 ```
+:::
 
 
 ## Microsoft Planetary Computer
@@ -181,52 +189,70 @@ The SENTINEL-2/2A ARD images available in MPC have the same bands and resolution
 ::: {.panel-tabset}
 ## R
 ```{r}
-#| eval: false
+#| label: fig-cube-mpc-s2
+#| results: hide
+#| warning: false
+#| cache: true
+#| fig-width: 5
+#| fig-height: 5
+#| fig-dpi: 300
+#| fig-cap: |
+#|   Sentinel-2 image in an area of the state of Rondonia, Brazil.
+#| fig-align: center
+#| out-width: 80%
 # Create a data cube covering an area in the Brazilian Amazon
 s2_20LKP_cube_MPC <- sits_cube(
-      source = "MPC",
-      collection = "SENTINEL-2-L2A",
-      tiles = "20LKP",
-      bands = c("B02", "B8A", "B11", "CLOUD"),
-      start_date = "2019-07-01",
-      end_date = "2019-07-28"
+    source = "MPC",
+    collection = "SENTINEL-2-L2A",
+    tiles = "20LKP",
+    bands = c("B02", "B8A", "B11", "CLOUD"),
+    start_date = "2019-07-01",
+    end_date = "2019-07-28"
 )
 
 # Plot a color composite of one date of the cube
-plot(s2_20LKP_cube_MPC, red = "B11", blue = "B02", green = "B8A", 
-     date = "2019-07-18"
+plot(
+    s2_20LKP_cube_MPC, 
+    red = "B11", 
+    blue = "B02", 
+    green = "B8A", 
+    date = "2019-07-18"
 )
 ```
 ## Python
 ```{python}
-#| eval: false
+#| label: py-fig-cube-mpc-s2
+#| results: hide
+#| warning: false
+#| cache: true
+#| fig-width: 5
+#| fig-height: 5
+#| fig-dpi: 300
+#| fig-cap: |
+#|   Sentinel-2 image in an area of the state of Rondonia, Brazil.
+#| fig-align: center
+#| out-width: 80%
 # Create a data cube covering an area in the Brazilian Amazon
 s2_20LKP_cube_MPC = sits_cube(
-      source = "MPC",
-      collection = "SENTINEL-2-L2A",
-      tiles = "20LKP",
-      bands = ("B02", "B8A", "B11", "CLOUD"),
-      start_date = "2019-07-01",
-      end_date = "2019-07-28"
+    source="MPC",
+    collection="SENTINEL-2-L2A",
+    tiles="20LKP",
+    bands=("B02", "B8A", "B11", "CLOUD"),
+    start_date="2019-07-01",
+    end_date="2019-07-28"
 )
 
 # Plot a color composite of one date of the cube
-plot(s2_20LKP_cube_MPC, red = "B11", blue = "B02", green = "B8A", 
-     date = "2019-07-18"
+plot(
+    s2_20LKP_cube_MPC,
+    red="B11",
+    blue="B02",
+    green="B8A", 
+    date="2019-07-18"
 )
 ```
 :::
 
-```{r}
-#| echo: FALSE
-#| label: fig-s2mpc-datacubes
-#| out-width: 100%
-#| fig-cap: |
-#|   Sentinel-2 image in an area of the state of Rondonia, Brazil.
-#| fig-align: center
-
-knitr::include_graphics("./images/mpc_s2.png")
-```
 
 ### LANDSAT-C2-L2 images in MPC
 
@@ -235,55 +261,73 @@ The `LANDSAT-C2-L2` collection provides access to data from the Landsat-5/7/8/9 
 ::: {.panel-tabset}
 ## R
 ```{r}
-#| eval: false
-# Read a ROI that covers part of the Northeastern coast of Brazil
-roi <- c(lon_min = -43.5526, lat_min = -2.9644, 
-         lon_max = -42.5124, lat_max = -2.1671)
-
-# Select the cube
-s2_L8_cube_MPC <- sits_cube(
-        source = "MPC",
-        collection = "LANDSAT-C2-L2",
-        bands = c("BLUE", "RED", "GREEN", "NIR08", "SWIR16", "CLOUD"),
-        roi = roi,
-        start_date = "2019-06-01",
-        end_date = "2019-09-01"
-)
-
-# Plot the tile that covers the Lencois Maranhenses
-plot(s2_L8_cube_MPC)
-```
-## Python
-```{python}
-#| eval: false
-# Read a ROI that covers part of the Northeastern coast of Brazil
-roi = dict(lon_min = -43.5526, lat_min = -2.9644, 
-         lon_max = -42.5124, lat_max = -2.1671)
-
-# Select the cube
-s2_L8_cube_MPC = sits_cube(
-        source = "MPC",
-        collection = "LANDSAT-C2-L2",
-        bands = ("BLUE", "RED", "GREEN", "NIR08", "SWIR16", "CLOUD"),
-        roi = roi,
-        start_date = "2019-06-01",
-        end_date = "2019-09-01"
-)
-
-# Plot the tile that covers the Lencois Maranhenses
-plot(s2_L8_cube_MPC)
-```
-:::
-
-```{r}
-#| echo: false
-#| label: fig-l8mpc-datacubes
-#| out-width: 100%
+#| label: fig-cube-mpc-l8
+#| results: hide
+#| warning: false
+#| cache: true
+#| fig-width: 5
+#| fig-height: 5
+#| fig-dpi: 300
 #| fig-cap: |
 #|   Landsat-8 image in an area in Northeast Brazil.
 #| fig-align: center
-knitr::include_graphics("./images/mpc_l8.png")
+#| out-width: 80%
+# Read a ROI that covers part of the Northeastern coast of Brazil
+roi <- c(
+    lon_min = -43.5526, lat_min = -2.9644,
+    lon_max = -42.5124, lat_max = -2.1671
+)
+
+# Select the cube
+s2_L8_cube_MPC <- sits_cube(
+    source = "MPC",
+    collection = "LANDSAT-C2-L2",
+    bands = c("BLUE", "RED", "GREEN", "NIR08", "SWIR16", "CLOUD"),
+    roi = roi,
+    start_date = "2019-06-01",
+    end_date = "2019-09-01"
+)
+
+# Plot the tile that covers the Lencois Maranhenses
+plot(
+    s2_L8_cube_MPC
+)
 ```
+## Python
+```{python}
+#| label: py-fig-cube-mpc-l8
+#| results: hide
+#| warning: false
+#| cache: true
+#| fig-width: 5
+#| fig-height: 5
+#| fig-dpi: 300
+#| fig-cap: |
+#|   Landsat-8 image in an area in Northeast Brazil.
+#| fig-align: center
+#| out-width: 80%
+# Read a ROI that covers part of the Northeastern coast of Brazil
+roi = dict(
+    lon_min=-43.5526, lat_min=-2.9644, 
+    lon_max=-42.5124, lat_max=-2.1671
+)
+
+# Select the cube
+s2_L8_cube_MPC = sits_cube(
+    source="MPC",
+    collection="LANDSAT-C2-L2",
+    bands=("BLUE", "RED", "GREEN", "NIR08", "SWIR16", "CLOUD"),
+    roi=roi,
+    start_date="2019-06-01",
+    end_date="2019-09-01"
+)
+    
+# Plot the tile that covers the Lencois Maranhenses
+plot(
+    s2_L8_cube_MPC
+)
+```
+:::
 
 ### SENTINEL-1-GRD images in MPC
 
@@ -298,45 +342,66 @@ The following example shows how to create a data cube of S1 GRD images over a re
 ::: {.panel-tabset}
 ## R
 ```{r}
-#| eval: false
-cube_s1_grd <- sits_cube(
-  source = "MPC",
-  collection = "SENTINEL-1-GRD",
-  bands = c("VV"),
-  orbit = "descending",
-  tiles = c("21LUJ","21LVJ"),
-  start_date = "2021-08-01",
-  end_date = "2021-09-30"
-)
-
-plot(cube_s1_grd, band = "VV", palette = "Greys")
-```
-## Python
-```{python}
-#| eval: false
-cube_s1_grd = sits_cube(
-  source = "MPC",
-  collection = "SENTINEL-1-GRD",
-  bands = ("VV"),
-  orbit = "descending",
-  tiles = ("21LUJ","21LVJ"),
-  start_date = "2021-08-01",
-  end_date = "2021-09-30"
-)
-
-plot(cube_s1_grd, band = "VV", palette = "Greys")
-```
-:::
-
-```{r}
-#| echo: false
-#| label: fig-s1grdmpc-datacubes
-#| out-width: 100%
+#| label: fig-cube-mpc-s1
+#| results: hide
+#| warning: false
+#| cache: true
+#| fig-width: 7
+#| fig-height: 5
+#| fig-dpi: 300
 #| fig-cap: |
 #|   Sentinel-1 image in an area in Mato Grosso, Brazil.
 #| fig-align: center
-knitr::include_graphics("./images/mpc3.png")
+#| out-width: 90%
+cube_s1_grd <- sits_cube(
+    source = "MPC",
+    collection = "SENTINEL-1-GRD",
+    bands = c("VV"),
+    orbit = "descending",
+    tiles = c("21LUJ","21LVJ"),
+    start_date = "2021-08-01",
+    end_date = "2021-09-30"
+)
+
+plot(
+    cube_s1_grd, 
+    band = "VV", 
+    palette = "Greys",
+    legend_position = "outside"
+)
 ```
+## Python
+```{python}
+#| label: py-fig-cube-mpc-s1
+#| results: hide
+#| warning: false
+#| cache: true
+#| fig-width: 7
+#| fig-height: 5
+#| fig-dpi: 300
+#| fig-cap: |
+#|   Sentinel-1 image in an area in Mato Grosso, Brazil.
+#| fig-align: center
+#| out-width: 90%
+cube_s1_grd = sits_cube(
+    source="MPC",
+    collection="SENTINEL-1-GRD",
+    bands=("VV"),
+    orbit="descending",
+    tiles=("21LUJ","21LVJ"),
+    start_date="2021-08-01",
+    end_date="2021-09-30"
+)
+
+plot(
+    cube_s1_grd, 
+    band="VV", 
+    palette="Greys",
+    legend_position = "outside"
+)
+```
+:::
+
 
 As explained earlier in this chapter, in areas with large elevation differences, Sentinel-1 GRD images will have geometric distortions. For this reason, whenever possible, we recommend the use of RTC (radiometrically terrain-corrected) images as described in the next section. 
 
@@ -350,45 +415,65 @@ The terrain correction addresses geometric distortions caused by the side-lookin
 ::: {.panel-tabset}
 ## R
 ```{r}
-#| eval: false
-cube_s1_rtc <- sits_cube(
-  source = "MPC",
-  collection = "SENTINEL-1-RTC",
-  bands = c("VV", "VH"),
-  orbit = "descending",
-  tiles = "18NZM",
-  start_date = "2021-08-01",
-  end_date = "2021-09-30"
-)
-
-plot(cube_s1_rtc, band = "VV", palette = "Greys")
-```
-## Python
-```{python}
-#| eval: false
-cube_s1_rtc = sits_cube(
-  source = "MPC",
-  collection = "SENTINEL-1-RTC",
-  bands = ("VV", "VH"),
-  orbit = "descending",
-  tiles = "18NZM",
-  start_date = "2021-08-01",
-  end_date = "2021-09-30"
-)
-
-plot(cube_s1_rtc, band = "VV", palette = "Greys")
-```
-:::
-
-```{r}
-#| echo: false
-#| label: fig-s1rtcmpc-datacubes
-#| out-width: 100%
+#| label: fig-cube-mpc-s1-rtc
+#| results: hide
+#| warning: false
+#| cache: true
+#| fig-width: 7
+#| fig-height: 5
+#| fig-dpi: 300
 #| fig-cap: |
 #|   Sentinel-1-RTC image of an area in Colombia.
 #| fig-align: center
-knitr::include_graphics("./images/mpcrtcol.png")
+#| out-width: 90%
+cube_s1_rtc <- sits_cube(
+    source = "MPC",
+    collection = "SENTINEL-1-RTC",
+    bands = c("VV", "VH"),
+    orbit = "descending",
+    tiles = "18NZM",
+    start_date = "2021-08-01",
+    end_date = "2021-09-30"
+)
+
+plot(
+    cube_s1_rtc,
+    band = "VV",
+    palette = "Greys",
+    legend_position = "outside"
+)
 ```
+## Python
+```{python}
+#| label: py-fig-cube-mpc-s1-rtc
+#| results: hide
+#| warning: false
+#| cache: true
+#| fig-width: 7
+#| fig-height: 5
+#| fig-dpi: 300
+#| fig-cap: |
+#|   Sentinel-1-RTC image of an area in Colombia.
+#| fig-align: center
+#| out-width: 90%
+cube_s1_rtc = sits_cube(
+    source="MPC",
+    collection="SENTINEL-1-RTC",
+    bands=("VV", "VH"),
+    orbit="descending",
+    tiles="18NZM",
+    start_date="2021-08-01",
+    end_date="2021-09-30"
+)
+
+plot(
+    cube_s1_rtc,
+    band="VV",
+    palette="Greys",
+    legend_position = "outside"
+)
+```
+:::
 
 
 The above image is from the central region of Colombia, a country with large variations in altitude due to the Andes Mountains. Users are invited to compare this image with the one from the `SENTINEL-1-GRD` collection and observe the significant geometrical distortions of the GRD image compared with the RTC one.
@@ -402,39 +487,64 @@ The Copernicus DEM 30-meter is organized in a 1$^\circ$ by 1$^\circ$ grid. In `s
 ::: {.panel-tabset}
 ## R
 ```{r}
-#| eval: false
-cube_dem_30 <- sits_cube(
-  source = "MPC",
-  collection = "COP-DEM-GLO-30",
-  tiles = "20LMR",
-  band = "ELEVATION"
-)
-
-plot(cube_dem_30, band = "ELEVATION", palette = "RdYlGn", rev = TRUE)
-```
-## Python
-```{python}
-#| eval: false
-cube_dem_30 = sits_cube(
-  source = "MPC",
-  collection = "COP-DEM-GLO-30",
-  tiles = "20LMR",
-  band = "ELEVATION"
-)
-
-plot(cube_dem_30, band = "ELEVATION", palette = "RdYlGn", rev = True)
-```
-:::
-
-```{r}
-#| echo: false
-#| label: fig-demmpc-datacubes
-#| out-width: 100%
+#| label: fig-cube-mpc-dem
+#| results: hide
+#| warning: false
+#| cache: true
+#| fig-width: 5
+#| fig-height: 5
+#| fig-dpi: 300
 #| fig-cap: |
 #|   Copernicus 30-meter DEM of an area in Brazil.
 #| fig-align: center
-knitr::include_graphics("./images/mpc4.png")
+#| out-width: 90%
+cube_dem_30 <- sits_cube(
+    source = "MPC",
+    collection = "COP-DEM-GLO-30",
+    tiles = "20LMR",
+    band = "ELEVATION"
+)
+
+plot(
+    cube_dem_30, 
+    band = "ELEVATION",
+    tile = "10-S09-00-W063-00",
+    palette = "RdYlGn",
+    rev = TRUE,
+    legend_position = "outside"
+)
 ```
+## Python
+```{python}
+#| label: py-fig-cube-mpc-dem
+#| results: hide
+#| warning: false
+#| cache: true
+#| fig-width: 5
+#| fig-height: 5
+#| fig-dpi: 300
+#| fig-cap: |
+#|   Copernicus 30-meter DEM of an area in Brazil.
+#| fig-align: center
+#| out-width: 90%
+cube_dem_30 = sits_cube(
+    source="MPC",
+    collection="COP-DEM-GLO-30",
+    tiles="20LMR",
+    band="ELEVATION"
+)
+
+plot(
+    cube_dem_30, 
+    band="ELEVATION",
+    tile="10-S09-00-W063-00",
+    palette="RdYlGn",
+    rev=True,
+    legend_position="outside"
+)
+```
+:::
+
 
 ## Brazil Data Cube
 
@@ -463,18 +573,30 @@ Sys.setenv(BDC_ACCESS_KEY = "<your_bdc_access_key>")
 ```
 ## Python
 ```{python}
+#| eval: false
 import os
 
 os.environ["BDC_ACCESS_KEY"] = "<your_bdc_access_key>"
 ```
 :::
 
+
 In the example below, the data cube is defined as one tile ("005004") of `CBERS-WFI-16D` collection, which contains CBERS AWFI images at 16-day resolution.
 
 ::: {.panel-tabset}
 ## R
 ```{r}
-#| eval: false
+#| label: fig-cube-bdc-cbers
+#| results: hide
+#| warning: false
+#| cache: true
+#| fig-width: 5
+#| fig-height: 5
+#| fig-dpi: 300
+#| fig-cap: |
+#|   CBERS-4 WFI image in a Cerrado area in Brazil.
+#| fig-align: center
+#| out-width: 80%
 # Define a tile from the CBERS-4/4A AWFI collection
 cbers_tile <- sits_cube(
     source = "BDC",
@@ -485,42 +607,47 @@ cbers_tile <- sits_cube(
     end_date = "2021-09-01")
 
 # Plot one time instance
-plot(cbers_tile, 
-     red = "B15", 
-     green = "B16", 
-     blue = "B13", 
-     date = "2021-05-09")
+plot(
+    cbers_tile, 
+    red = "B15", 
+    green = "B16", 
+    blue = "B13", 
+    date = "2021-05-09"
+)
 ```
 ## Python
 ```{python}
-#| eval: false
-# Define a tile from the CBERS-4/4A AWFI collection
-cbers_tile = sits_cube(
-    source = "BDC",
-    collection = "CBERS-WFI-16D",
-    tiles = "005004",
-    bands = ("B13", "B14", "B15", "B16", "CLOUD"),
-    start_date = "2021-05-01",
-    end_date = "2021-09-01")
-
-# Plot one time instance
-plot(cbers_tile, 
-     red = "B15", 
-     green = "B16", 
-     blue = "B13", 
-     date = "2021-05-09")
-```
-:::
-
-```{r}
-#| echo: false
-#| label: fig-awfibdc-datacubes
-#| out-width: 100%
+#| label: py-fig-cube-bdc-cbers
+#| results: hide
+#| warning: false
+#| cache: true
+#| fig-width: 5
+#| fig-height: 5
+#| fig-dpi: 300
 #| fig-cap: |
 #|   CBERS-4 WFI image in a Cerrado area in Brazil.
 #| fig-align: center
-knitr::include_graphics("./images/bdc_cbers4.png")
+#| out-width: 80%
+# Define a tile from the CBERS-4/4A AWFI collection
+cbers_tile = sits_cube(
+    source="BDC",
+    collection="CBERS-WFI-16D",
+    tiles="005004",
+    bands=("B13", "B14", "B15", "B16", "CLOUD"),
+    start_date="2021-05-01",
+    end_date="2021-09-01"
+)
+
+# Plot one time instance
+plot(
+    cbers_tile, 
+    red="B15", 
+    green="B16", 
+    blue="B13", 
+    date="2021-05-09"
+)
 ```
+:::
 
 
 ## Copernicus Data Space Ecosystem (CDSE)
@@ -564,7 +691,17 @@ CDSE hosts a global collection of Sentinel-2 Level-2A images, which are processe
 ::: {.panel-tabset}
 ## R
 ```{r}
-#| eval: false
+#| label: fig-cube-cdse-s2
+#| results: hide
+#| warning: false
+#| cache: true
+#| fig-width: 5
+#| fig-height: 5
+#| fig-dpi: 300
+#| fig-cap: |
+#|   Sentinel-2 image of the Lena river delta in summertime.
+#| fig-align: center
+#| out-width: 80%
 # obtain a collection of images of a tile covering part of Lena delta
 lena_cube <- sits_cube(
     source = "CDSE",
@@ -572,52 +709,52 @@ lena_cube <- sits_cube(
     bands = c("B02", "B04", "B8A", "B11", "B12"),
     start_date = "2023-05-01",
     end_date = "2023-09-01",
-    tiles = c("52XDF")
-)
-
-# plot an image from summertime
-plot(
-    lena_cube, 
-    date = "2023-07-06", 
-    red = "B12", 
-    green = "B8A", 
-    blue = "B04"
-)
-```
-## Python
-```{python}
-#| eval: false
-# obtain a collection of images of a tile covering part of Lena delta
-lena_cube = sits_cube(
-    source = "CDSE",
-    collection = "SENTINEL-2-L2A",
-    bands = ("B02", "B04", "B8A", "B11", "B12"),
-    start_date = "2023-05-01",
-    end_date = "2023-09-01",
     tiles = "52XDF"
 )
 
 # plot an image from summertime
 plot(
-    lena_cube, 
-    date = "2023-07-06", 
-    red = "B12", 
-    green = "B8A", 
+    lena_cube,
+    date = "2023-07-06",
+    red = "B12",
+    green = "B8A",
     blue = "B04"
+)
+```
+## Python
+```{python}
+#| label: py-fig-cube-cdse-s2
+#| results: hide
+#| warning: false
+#| cache: true
+#| fig-width: 5
+#| fig-height: 5
+#| fig-dpi: 300
+#| fig-cap: |
+#|   Sentinel-2 image of the Lena river delta in summertime.
+#| fig-align: center
+#| out-width: 80%
+# obtain a collection of images of a tile covering part of Lena delta
+lena_cube = sits_cube(
+    source="CDSE",
+    collection="SENTINEL-2-L2A",
+    bands=("B02", "B04", "B8A", "B11", "B12"),
+    start_date="2023-05-01",
+    end_date="2023-09-01",
+    tiles="52XDF"
+)
+
+# plot an image from summertime
+plot(
+    lena_cube, 
+    date="2023-07-06", 
+    red="B12", 
+    green="B8A", 
+    blue="B04"
 )
 ```
 :::
 
-
-```{r}
-#| echo: false
-#| label: fig-lena-datacubes
-#| out-width: 100%
-#| fig-cap: |
-#|   Sentinel-2 image of the Lena river delta in summertime.
-#| fig-align: center
-knitr::include_graphics("./images/s2_lena_delta.png")
-```
 
 ### SENTINEL-1-RTC images in CDSE
 
@@ -642,23 +779,33 @@ s1_cube <- sits_cube(
     tiles = c("37NCH")
 )
 
-plot(s1_cube, band = "VV", date = c("2023-03-03"), palette = "Greys")
+plot(
+    s1_cube, 
+    band = "VV", 
+    date = c("2023-03-03"), 
+    palette = "Greys"
+)
 ```
 ## Python
 ```{python}
 #| eval: false
 # retrieve a S1-RTC cube and plot
 s1_cube = sits_cube(
-    source = "CDSE-OS",
-    collection = "SENTINEL-1-RTC",
-    bands = ("VV", "VH"),
-    orbit = "descending",
-    start_date = "2023-01-01",
-    end_date = "2023-12-31",
-    tiles = "37NCH"
+    source="CDSE-OS",
+    collection="SENTINEL-1-RTC",
+    bands=("VV", "VH"),
+    orbit="descending",
+    start_date="2023-01-01",
+    end_date="2023-12-31",
+    tiles="37NCH"
 )
 
-plot(s1_cube, band = "VV", date = ("2023-03-03"), palette = "Greys")
+plot(
+    s1_cube, 
+    band="VV", 
+    date="2023-03-03", 
+    palette="Greys"
+)
 ```
 :::
 
@@ -707,24 +854,34 @@ dea_s2_cube <- sits_cube(
     end_date = "2019-05-30"
 )
 
-plot(dea_s2_cube, red = "B04", blue = "B02", green = "B08")
+plot(
+    dea_s2_cube,
+    red = "B04",
+    blue = "B02",
+    green = "B08"
+)
 ```
 ## Python
 ```{python}
 #| eval: false
 dea_s2_cube = sits_cube(
-    source = "DEAFRICA",
-    collection = "SENTINEL-2-L2A",
+    source="DEAFRICA",
+    collection="SENTINEL-2-L2A",
     roi = dict(
-        lon_min = 46.1, lat_min = -15.6,
-        lon_max = 46.6, lat_max = -16.1
+        lon_min=46.1, lat_min=-15.6,
+        lon_max=46.6, lat_max=-16.1
     ),
-    bands = ("B02", "B04", "B08"),
-    start_date = "2019-04-01",
-    end_date = "2019-05-30"
+    bands=("B02", "B04", "B08"),
+    start_date="2019-04-01",
+    end_date="2019-05-30"
 )
 
-plot(dea_s2_cube, red = "B04", blue = "B02", green = "B08")
+plot(
+    dea_s2_cube,
+    red="B04", 
+    blue="B02", 
+    green="B08"
+)
 ```
 :::
 
