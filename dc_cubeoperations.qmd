@@ -27,7 +27,7 @@ dir.create(tempdir_r, showWarnings = FALSE, recursive = TRUE)
 ## Python
 ```{python}
 #| echo: true
-#| eval: true
+#| eval: false
 #| output: false
 # load "pysits" library
 from pysits import *
@@ -61,7 +61,10 @@ First, we define a data cube for a tile in the state of Rondonia, Brazil, includ
 :::{.panel-tabset}
 ## R
 ```{r}
-#| eval: false
+#| label: apply-reg-s2
+#| results: hide
+#| warning: false
+#| cache: true
 # Create an non-regular data cube from AWS
 s2_cube <- sits_cube(
     source = "AWS",
@@ -107,38 +110,6 @@ reg_cube = sits_regularize(
 ```
 :::
 
-```{r}
-#| eval: true
-#| echo: false
-# Regularize the cube to 15 day intervals
-reg_cube <- sits_cube(
-    source = "AWS",
-    collection = "SENTINEL-S2-L2A-COGS",
-    bands = c("B02", "B03", "B04", 
-              "B05", "B06", "B07", 
-              "B08", "B8A", "B11", 
-              "B12"),
-    data_dir = tempdir_r
-)
-```
-
-
-```{python}
-#| eval: true
-#| echo: false
-# Regularize the cube to 15 day intervals
-reg_cube = sits_cube(
-    source = "AWS",
-    collection = "SENTINEL-S2-L2A-COGS",
-    bands = ("B02", "B03", "B04", 
-              "B05", "B06", "B07", 
-              "B08", "B8A", "B11", 
-              "B12"),
-    data_dir = tempdir_py
-)
-```
-
-
 There are many options for calculating vegetation indexes using Sentinel-2 bands. The most widely used method combines band B08 (785-899 nm) and band B04 (650-680 nm). Recent works in the literature propose using the red-edge bands B05 (698-713 nm), B06 (733-748 nm), and B07 (773-793 nm) for capturing subtle variations in chlorophyll absorption producing indexes, which are called Normalized Difference Vegetation Red-edge indexes (NDRE) [@Xie2019].  In a recent review, Chaves et al. argue that red-edge bands are important for distinguishing leaf structure and chlorophyll content of different vegetation species [@Chaves2020]. In the example below, we show how to include indexes in the regular data cube with the Sentinel-2 spectral bands. 
 
 We first calculate the NDVI in the usual way, using bands B08 and B04.
@@ -146,8 +117,14 @@ We first calculate the NDVI in the usual way, using bands B08 and B04.
 :::{.panel-tabset}
 ## R
 ```{r}
-#| label: fig-dcops-ndvi
-#| out-width: 100%
+#| label: fig-ops-ndvi
+#| results: hide
+#| warning: false
+#| cache: true
+#| fig-width: 5
+#| fig-height: 5
+#| fig-dpi: 300
+#| out-width: 80%
 #| fig-cap: | 
 #|   NDVI using bands B08 and B04 of Sentinel-2. 
 #| fig-align: center
@@ -156,23 +133,33 @@ reg_cube <- sits_apply(reg_cube,
     NDVI = (B08 - B04)/(B08 + B04),
     output_dir = tempdir_r
 )
-
 # Plot
 plot(reg_cube, band = "NDVI", palette = "RdYlGn")
 ```
 ## Python
 ```{python}
-#| label: fig-dcops-ndvi-py
-#| out-width: 100%
-#| fig-cap: | 
-#|   NDVI using bands B08 and B04 of Sentinel-2. 
-#| fig-align: center
+#| eval: false 
 # Calculate NDVI index using bands B08 and B04
 reg_cube = sits_apply(reg_cube,
     NDVI = "(B08 - B04)/(B08 + B04)",
     output_dir = tempdir_py
 )
 
+# Plot
+plot(reg_cube, band = "NDVI", palette = "RdYlGn")
+```
+```{r}
+#| label: py-fig-ops-ndvi
+#| results: hide
+#| warning: false
+#| cache: true
+#| fig-width: 5
+#| fig-height: 5
+#| fig-dpi: 300
+#| out-width: 80%
+#| fig-cap: | 
+#|   NDVI using bands B08 and B04 of Sentinel-2. 
+#| fig-align: center
 # Plot
 plot(reg_cube, band = "NDVI", palette = "RdYlGn")
 ```
@@ -183,9 +170,14 @@ We now compare the traditional NDVI with other vegetation index computed using r
 :::{.panel-tabset}
 ## R
 ```{r}
-#| label: fid-dcops-ndre1
-#| out.width: "100%"
-#| fig.align: "center"
+#| label: fig-ops-ndre1
+#| results: hide
+#| warning: false
+#| cache: true
+#| fig-width: 5
+#| fig-height: 5
+#| fig-dpi: 300
+#| out-width: 80%
 #| fig.cap: | 
 #|     NDRE1 using bands B06 and B05 of Sentinel-2.
 # Calculate NDRE1 index using bands B06 and B05
@@ -199,17 +191,27 @@ plot(reg_cube, band = "NDRE1",  palette = "RdYlGn")
 ```
 ## Python
 ```{python}
-#| label: fid-dcops-ndre1-py
-#| out.width: "100%"
-#| fig.align: "center"
-#| fig.cap: | 
-#|     NDRE1 using bands B06 and B05 of Sentinel-2.
+#| eval: false
 # Calculate NDRE1 index using bands B06 and B05
 reg_cube = sits_apply(reg_cube,
     NDRE1 = "(B06 - B05)/(B06 + B05)",
     output_dir = tempdir_py
 )
 
+# Plot NDRE1 index
+plot(reg_cube, band = "NDRE1",  palette = "RdYlGn")
+```
+```{r}
+#| label: py-fig-ops-ndre1
+#| results: hide
+#| warning: false
+#| cache: true
+#| fig-width: 5
+#| fig-height: 5
+#| fig-dpi: 300
+#| out-width: 80%
+#| fig.cap: | 
+#|     NDRE1 using bands B06 and B05 of Sentinel-2.
 # Plot NDRE1 index
 plot(reg_cube, band = "NDRE1",  palette = "RdYlGn")
 ```
@@ -222,8 +224,14 @@ Band combinations can also generate spectral indices for detecting degradation b
 :::{.panel-tabset}
 ## R
 ```{r}
-#| label: fig-docops-nbr
-#| out.width: "100%"
+#| label: fig-ops-nbr
+#| results: hide
+#| warning: false
+#| cache: true
+#| fig-width: 5
+#| fig-height: 5
+#| fig-dpi: 300
+#| out-width: 80%
 #| fig.align: "center"
 #| fig.cap: | 
 #|   NBR ratio using Sentinel-2 B11 and B8A.
@@ -238,17 +246,29 @@ plot(reg_cube, band = "NBR", palette = "Reds")
 ```
 ## Python
 ```{python}
-#| label: fig-docops-nbr-py
-#| out.width: "100%"
-#| fig.align: "center"
-#| fig.cap: | 
-#|   NBR ratio using Sentinel-2 B11 and B8A.
+#| eval: false
 # Calculate the NBR index
 reg_cube = sits_apply(reg_cube,
     NBR = "(B12 - B8A)/(B12 + B8A)",
     output_dir = tempdir_py
 )
 
+# Plot the NBR for the first date
+plot(reg_cube, band = "NBR", palette = "Reds")
+```
+```{r}
+#| echo: false
+#| label: py-fig-ops-nbr
+#| results: hide
+#| warning: false
+#| cache: true
+#| fig-width: 5
+#| fig-height: 5
+#| fig-dpi: 300
+#| out-width: 80%
+#| fig.align: "center"
+#| fig.cap: | 
+#|   NBR ratio using Sentinel-2 B11 and B8A.
 # Plot the NBR for the first date
 plot(reg_cube, band = "NBR", palette = "Reds")
 ```
@@ -261,27 +281,29 @@ All data cube operations discussed so far produce normalized indexes. By default
 :::{.panel-tabset}
 ## R
 ```{r}
-#| label: fig-dcoops-cvi
-#| out.width: 100%
+#| label: fig-ops-cvi
+#| results: hide
+#| warning: false
+#| cache: true
+#| fig-width: 5
+#| fig-height: 5
+#| fig-dpi: 300
+#| out-width: 80%
 #| fig.align: "center"
 #| fig.cap: | 
 #|   CVI index using bands B03, B05, and B8A.
-# Calculate the NBR index
+# Calculate the CVI index
 reg_cube <- sits_apply(reg_cube,
     CVI = (B8A / B03) * (B05 / B03 ),
     normalized = FALSE, 
     output_dir = tempdir_r
 )
-
 # Plot
 plot(reg_cube, band = "CVI", palette = "Greens")
 ```
 ## Python
 ```{python}
-#| label: fig-dcoops-cvi-py
-#| fig.align: "center"
-#| fig.cap: | 
-#|   CVI index using bands B03, B05, and B8A.
+#| eval: false
 # Calculate the NBR index
 reg_cube = sits_apply(reg_cube,
     CVI = "(B8A / B03) * (B05 / B03 )",
@@ -289,6 +311,22 @@ reg_cube = sits_apply(reg_cube,
     output_dir = tempdir_py
 )
 
+# Plot
+plot(reg_cube, band = "CVI", palette = "Greens")
+```
+```{r}
+#| echo: false
+#| label: py-fig-ops-cvi
+#| results: hide
+#| warning: false
+#| cache: true
+#| fig-width: 5
+#| fig-height: 5
+#| fig-dpi: 300
+#| out-width: 80%
+#| fig.align: "center"
+#| fig.cap: | 
+#|   CVI index using bands B03, B05, and B8A.
 # Plot
 plot(reg_cube, band = "CVI", palette = "Greens")
 ```
