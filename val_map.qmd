@@ -27,7 +27,7 @@ dir.create(tempdir_r, showWarnings = FALSE)
 ## Python
 ```{python}
 #| echo: true
-#| eval: true
+#| eval: false
 #| output: false
 # load "pysits" library
 from pysits import *
@@ -48,17 +48,29 @@ Crucially, Olofsson et al. argue that area estimation should be based on the ref
 
 Our study area is the state of Rondonia (RO) in the Brazilian Amazon, which has a total area of $237{,}576\ \text{km}^2$. According to official Brazilian government statistics, as of 2021, there are $125{,}752.41\ \text{km}^2$ of tropical forests in RO, which corresponds to 53% of the state's total area. Significant human occupation started in 1970, led by settlement projects promoted by then Brazil's military government [@Alves2003]. Small and large-scale cattle ranching occupies most deforested areas. Deforestation in Rondonia is highly fragmented, partly due to the original occupation by small settlers. Such fragmentation poses considerable challenges for automated methods to distinguish between clear-cut and highly degraded areas. While visual interpreters rely upon experience and field knowledge, researchers must carefully train automated methods to achieve the same distinction.
 
-We used Sentinel-2 and Sentinel-2A ARD (analysis ready) images from 2022-01-01 to 2022-12-31. Using all 10 spectral bands, we produced a regular data cube with a 16-day interval, with 23 instances per year. The best pixels for each period were selected to obtain as low cloud cover as possible. Persistent cloud cover pixels remaining in each period are then temporally interpolated to obtain estimated values. As a result, each pixel is associated with a valid time series. To fully cover RO, we used 41 MGRS tiles; the final data cube has 1.1 TB.
+We used Sentinel-2A and Sentinel-2B ARD (analysis ready) images from 2022-01-01 to 2022-12-31. Using all 10 spectral bands, we produced a regular data cube with a 16-day interval, with 23 instances per year. The best pixels for each period were selected to obtain as low cloud cover as possible. Persistent cloud cover pixels remaining in each period are then temporally interpolated to obtain estimated values. As a result, each pixel is associated with a valid time series. To fully cover RO, we used 41 MGRS tiles; the final data cube has 1.1 TB.
 
-The work considered nine LUCC classes: (a) stable natural land cover, including `Forest` and `Water`; (b) events associated with clear-cuts, including `Clear_Cut_Vegetation`, `Clear_Cut_Bare_Soil`, and `Clear_Cut_Burned_Area`; (c) natural areas with seasonal variability, `Wetland`, `Seasonally_Flooded_Forest`, and `Riparian_Forest`; (d) stable forest areas subject to topographic effects, including `Mountainside_Forest`.
+The work considered nine LUCC classes: (a) stable natural land cover, including `Forest` and `Water`; (b) events associated with clear-cuts, including `Clear_Cut_Vegetation`, `Clear_Cut_Bare_Soil`, and `Clear_Cut_Burned_Area`; (c) natural areas with seasonal variability, including `Wetland`, `Seasonally_Flooded`, and `Riparian_Forest`; (d) stable forest areas subject to topographic effects, including `Mountainside_Forest`.
 
 In this chapter, we will take the classification map as our starting point for accuracy assessment. This map can be retrieved from the `sitsdata` package as follows.
 
-**Load probabilities cube**
+**Load the classified map**
 
 :::{.panel-tabset}
 ## R
 ```{r}
+#| label: fig-val-rondonia-class
+#| echo: true
+#| eval: true
+#| cache: true
+#| warning: false
+#| fig-width: 5
+#| fig-height: 5
+#| fig-dpi: 300
+#| fig-cap: |
+#|   Classified mosaic for land cover and land use in Rondonia state (Brazil) for 2022.
+#| fig-align: center
+#| out-width: 90%
 # define the classes of the probability cube
 labels <- c("1" = "Clear_Cut_Bare_Soil",
             "2" = "Clear_Cut_Burned_Area", 
@@ -82,9 +94,13 @@ rondonia_2022_class <- sits_cube(
     labels = labels,
     version = "mosaic"
 )
+# plot the classification map
+plot(rondonia_2022_class, legend_position = "inside")
 ```
 ## Python
 ```{python}
+#| echo: true
+#| eval: false
 # define the classes of the probability cube
 labels = {"1"  : "Clear_Cut_Bare_Soil",
             "2" : "Clear_Cut_Burned_Area", 
@@ -108,36 +124,26 @@ rondonia_2022_class = sits_cube(
     labels = labels,
     version = "mosaic"
 )
-```
-:::
-
-**Plot cube**
-
-:::{.panel-tabset}
-## R
-```{r}
-#| eval: false
 # plot the classification map
-plot(rondonia_2022_class)
+plot(rondonia_2022_class, legend_position = "inside")
 ```
-## Python
-```{python}
-#| eval: false
-# plot the classification map
-plot(rondonia_2022_class)
-```
-:::
-
 ```{r}
+#| label: py-fig-val-rondonia-class
 #| echo: false
-#| label: fig-val-mosaic
-#| out-width: 100%
-#| out-height: 100%
+#| eval: true
+#| cache: true
+#| warning: false
+#| fig-width: 8
+#| fig-height: 5
+#| fig-dpi: 300
 #| fig-cap: |
-#|   Classified mosaic for land cover in Rondonia, Brazil for 2022.
+#|   Classified mosaic for land cover and land use in Rondonia state (Brazil) for 2022.
 #| fig-align: center
-knitr::include_graphics("./images/valromosaic.png") 
+#| out-width: 90%
+# plot the classification map
+plot(rondonia_2022_class, legend_position = "inside")
 ```
+:::
 
 ## Sampling design
 
@@ -145,9 +151,9 @@ A key recommendation is the use of probability-based sampling designs—such as 
 
 The reference data used for validation must be collected independently of the classification process and should be carefully labeled according to a set of clear, mutually exclusive, and exhaustive class definitions. These definitions must be consistently applied across both map labels and reference labels to avoid ambiguities during comparison.
 
-Sampling designs use established statistical methods aimed at providing unbiased estimates. Based on a chosen design, `sits` supports a selection of random samples per class. These samples should be evaluated accurately using high-quality reference data, ideally collected through field visits or using high-resolution imagery. In this way, we get a reference classification that is more accurate than the map classification being evaluated.
+Sampling designs rely on established statistical methods to provide unbiased estimates. Based on the chosen design, `sits` supports selecting random samples per class. These samples should be evaluated accurately using high-quality reference data, ideally collected through field visits or using high-resolution imagery. In this way, we get a reference classification that is more accurate than the map classification being evaluated.
 
-Following the recommended best practices for estimating accuracy of LUCC maps [@Olofsson2014], `sits` uses Cochran's method for stratified random sampling [@Cochran1977]. The method divides the population into homogeneous subgroups, or strata, and then applying random sampling within each stratum. In the case of LUCC, we take the classification map as the basis for the stratification. The area occupied by each class is considered as an homogeneous subgroup. Cochran's method for stratified random sampling helps to increase the precision of the estimates by reducing the overall variance, particularly when there is significant variability between strata but relatively less variability within each stratum.
+Following the recommended best practices for estimating accuracy of LUCC maps [@Olofsson2014], `sits` uses Cochran's method for stratified random sampling [@Cochran1977]. The method divides the population into homogeneous subgroups, or strata, and then applies random sampling within each stratum. In the case of LUCC, we take the classification map as the basis for the stratification. The area occupied by each class is considered a homogeneous subgroup. Cochran's method for stratified random sampling helps to increase the precision of the estimates by reducing the overall variance, particularly when there is significant variability between strata but relatively less variability within each stratum.
 
 To determine the overall number of samples to measure accuracy, we use the following formula [@Cochran1977]:
 
@@ -158,7 +164,7 @@ $$ where
 -   $L$ is the number of classes
 -   $S(\hat{O})$ is the expected standard error of the accuracy estimate, expressed as a proportion
 -   $S_i$ is the standard deviation of stratum $i$
--   $W_i$ is is the mapped proportion of area of class $i$
+-   $W_i$ is the mapped proportion of area of class $i$
 
 The standard deviation per class (stratum) is estimated based on the expected user's accuracy $U_i$ for each class as
 
@@ -166,9 +172,9 @@ $$
 S_i = \sqrt{U_i(1 - U_i)}
 $$
 
-Therefore, the total number of samples depends on the assumptions about the user's accuracies $U_i$ and the expected standard error $S(\hat{O})$. Once the sample size is estimated, there are several methods for allocating samples per class [@Olofsson2014]. One option is proportional allocation, when sample size in each stratum is proportional to the stratum’s size in the population. In land use mapping, some classes often have small areas compared to the more frequent ones. Using proportional allocation, rare classes will have small sample sizes decreasing their accuracy. Another option is equal allocation, where all classes will have the same number of samples; however, equal allocation may fail to capture the natural variation of classes with large areas.
+Therefore, the total number of samples depends on the assumptions about the user's accuracies $U_i$ and the expected standard error $S(\hat{O})$. Once the sample size is estimated, there are several methods for allocating samples per class [@Olofsson2014]. One option is proportional allocation, in which the sample size in each stratum is proportional to the stratum’s size in the population. In land use mapping, some classes often have small areas compared to the more frequent ones. Using proportional allocation, rare classes will have small sample sizes, decreasing the accuracy of their estimates. Another option is equal allocation, in which all classes have the same number of samples; however, equal allocation may fail to capture the natural variation of classes with large areas.
 
-As alternatives to proportional and equal allocation, [@Olofsson2014] suggests ad-hoc approaches where each class is assigned a minimum number of samples. He proposes three allocations where 50, 75 and 100 sample units are allocated to the less common classes, and proportional allocation is used for more frequent ones. These allocation methods should be considered as suggestions, and users should be flexible to select alternative sampling designs.
+As alternatives to proportional and equal allocation, Olofsson et al. [@Olofsson2014] suggest ad-hoc approaches where each class is assigned a minimum number of samples. They propose three allocations where 50, 75, and 100 sample units are allocated to the less common classes, with proportional allocation used for the more frequent ones. These allocation methods should be considered as suggestions, and users should be flexible to select alternative sampling designs.
 
 The allocation methods proposed by [@Olofsson2014] are supported by function `sits_sampling_design()`, which has the following parameters:
 
@@ -183,7 +189,11 @@ In the case of Rondonia, the following sampling design was adopted.
 :::{.panel-tabset}
 ## R
 ```{r}
-#| eval: false
+#| label: ro-sampling-design
+#| echo: true
+#| eval: true
+#| cache: true
+#| warning: false
 ro_sampling_design <- sits_sampling_design(
     cube = rondonia_2022_class,
     expected_ua = c(
@@ -203,12 +213,6 @@ ro_sampling_design <- sits_sampling_design(
 )
 
 # show sampling design
-ro_sampling_design
-```
-```{r}
-#| echo: false
-# show sampling desing
-ro_sampling_design <- readRDS("./etc/ro_sampling_design.rds")
 ro_sampling_design
 ```
 ## Python
@@ -235,20 +239,18 @@ ro_sampling_design = sits_sampling_design(
 # show sampling design
 ro_sampling_design
 ```
-```{python}
-#| echo: false
-# loading just to have it in memory
-ro_sampling_design = read_rds("./etc/ro_sampling_design.rds")
-```
 ```{r}
+#| label: py-ro-sampling-design
 #| echo: false
+#| eval: true
+#| cache: true
 ro_sampling_design
 ```
 :::
 
 ## Stratified random sampling
 
-The next step is to chose one of the options for sampling design to generate a set of points for stratified sampling. These points can then be used for accuracy assessment. This is achieved by function `sits_stratified_sampling()` which takes the following parameters:
+The next step is to choose one of the options for sampling design to generate a set of points for stratified sampling. These points can then be used for accuracy assessment. This is achieved by function `sits_stratified_sampling()` which takes the following parameters:
 
 -   `cube`: a classified data cube;
 -   `sampling_design`: the output of function `sits_sampling_design()`;
@@ -258,50 +260,25 @@ The next step is to chose one of the options for sampling design to generate a s
 -   `shp_file`: name of shapefile to save results for later use (optional);
 -   `progress`: show progress bar?
 
-In the example below, we chose the "alloc_120" option from the sampling design to generate a set of stratified samples. The output of the function is an `sf` object with points with location (latitude and longitude) and class assigned in the map. We can also generate a SHP file with the sample information. The script below shows how to use `sits_stratified_sampling()` and also how to convert an `sf` object to a SHP file.
-
-**Generate stratified samples**
+In the example below, we choose the "alloc_120" option from the sampling design to generate a set of stratified samples. The output of the function is an `sf` object with points that include their location (latitude and longitude) and the class assigned in the map. We can also generate a SHP file with the sample information. The script below shows how to use `sits_stratified_sampling()` and also how to convert an `sf` object to a SHP file.
 
 :::{.panel-tabset}
 ## R
 ```{r}
-#| eval: false
+#| label: ro-stratified-sampling
+#| echo: true
+#| eval: true
+#| cache: true
+# Generate a set of stratified samples for measuring area accuracy
 ro_samples_sf <- sits_stratified_sampling(
     cube = rondonia_2022_class,
     sampling_design = ro_sampling_design,
     alloc = "alloc_120",
+    overhead = 1.2, 
     multicores = 4
 )
-```
-## Python
-```{python}
-#| eval: false
-ro_samples_sf = sits_stratified_sampling(
-    cube = rondonia_2022_class,
-    sampling_design = ro_sampling_design,
-    alloc = "alloc_120",
-    multicores = 4
-)
-```
-:::
-
-```{r}
-#| echo: false
-ro_samples_sf <- readRDS("./etc/ro_samples_sf.rds")
-```
-
-```{python}
-#| echo: false
-ro_samples_sf = read_rds("./etc/ro_samples_sf.rds")
-```
-
-**Save samples in a shapefile**
-
-:::{.panel-tabset}
-## R
-```{r}
-#| eval: false
-# save sf object as SHP file
+# The output of sits_stratified_samples is an `sf` object
+# Save sf object as SHP file
 sf::st_write(ro_samples_sf, 
     file.path(tempdir_r, "ro_samples.shp"), 
     append = FALSE
@@ -310,14 +287,22 @@ sf::st_write(ro_samples_sf,
 ## Python
 ```{python}
 #| eval: false
+# Generate a set of stratified samples for measuring area accuracy
+ro_samples_sf = sits_stratified_sampling(
+    cube = rondonia_2022_class,
+    sampling_design = ro_sampling_design,
+    alloc = "alloc_120",
+    multicores = 4
+)
+# The output of sits_stratified_samples is an `sf` object
 # save sf object as SHP file
 ro_samples_sf.to_file(tempdir_py /  "ro_samples.shp")
 ```
 :::
 
-Using the SHP file, users can visualize the points in a standard GIS such as QGIS. For each point, they will indicate what is the correct class. In this way, they will obtain a confusion matrix which will be used for accuracy assessment. The `overhead` parameter is useful for users to discard border or doubtful pixels where the interpreter cannot be confident of her class assignment. By discarding points whose attribution is uncertain, they will improve the quality of the assessment.
+Using the shapefile, users can visualize the points in a standard GIS such as QGIS. For each point, they will indicate the correct class. In this way, they will obtain a confusion matrix which will be used for accuracy assessment. The `overhead` parameter allows users to discard border or doubtful pixels where the interpreter cannot be confident of the class assignment. By discarding points whose attribution is uncertain, users improve the quality of the assessment.
 
-After all sampling points are labelled in QGIS (or similar), users should produce a CSV file, a SHP file, a data frame, or an `sf` object, with at least three columns: `latitude`, `longitude` and `label`. See the next section for an example on how to use this data set for accuracay assessment.
+After all sampling points are labelled in QGIS (or similar), users should produce a CSV file, a SHP file, a data frame, or an `sf` object, with at least three columns: `latitude`, `longitude` and `label`. See the next section for an example on how to use this data set for accuracy assessment.
 
 ## Accuracy assessment of classified images
 
@@ -329,9 +314,9 @@ $$
 \hat{p_{i,j}} = W_i\frac{n_{i,j}}{n_i},
 $$ 
 
-where the total area of the map is $A_{tot}$, the mapping area of class $i$ is $A_{m,i}$ and the proportion of area mapped as class $i$ is $W_i = {A_{m,i}}/{A_{tot}}$. 
+where the total area of the map is $A_{tot}$, the mapping area of class $i$ is $A_{m,i}$, and the proportion of area mapped as class $i$ is $W_i = {A_{m,i}}/{A_{tot}}$. 
 
-Adjusting for area size allows producing an unbiased estimation of the total area of class $j$, defined as a stratified estimator 
+Adjusting for area size allows us to produce an unbiased estimate of the total area of class $j$, defined as a stratified estimator 
 $$
 \hat{A_j} = A_{tot}\sum_{i=1}^KW_i\frac{n_{i,j}}{n_i}.
 $$
@@ -341,16 +326,19 @@ This unbiased area estimator includes the effect of false negatives (omission er
 To produce the adjusted area estimates for classified maps, `sits_accuracy()` uses the following parameters:
 
 -   `data`: a classified data cube;
--   `validation`: a CSV file, SHP file, GPKG file, `sf` object or data frame containing at least three columns: `latitude`, `longitude` and `label`, containing a set of well-selected labeled points obtained from the samples suggested by `sits_stratified_sample()`.
+-   `validation`: a CSV file, SHP file, GPKG file, `sf` object, or data frame containing at least three columns (`latitude`, `longitude`, and `label`), with a set of well-selected labeled points obtained from the samples suggested by `sits_stratified_sampling()`.
 
-In the example below, we use a validation set produced by the researchers which produced the Rondonia data set, described above.  The validation team used QGIS to produce a CSV file with validation data, which is then used to assess the area accuracy using the best practices recommended by @Olofsson2014. 
+In the example below, we use a validation set produced by the researchers who produced the Rondonia data set, described above. The validation team used QGIS to produce a CSV file with validation data, which is then used to assess the area accuracy using the best practices recommended by [@Olofsson2014]. 
 
 Since the aim of the classification was to create a forest/non-forest map, the map land cover classes were grouped into natural and anthropic ones. All `Clear_Cut` classes were joined, as was done with all `Forest` classes. The rationale for this decision was that the final map was not intended to be a detailed description of different types of forest and clear-cut areas, but rather an assessment of how much deforestation had occurred in the period.
 
 :::{.panel-tabset}
 ## R
 ```{r}
-#| eval: false
+#| label: val-reclassify
+#| eval: true
+#| cache: true
+#| warning: false
 rondonia_2022_reclass <- sits_reclassify(
     cube = rondonia_2022_class,
     mask = rondonia_2022_class,
@@ -402,50 +390,40 @@ rondonia_2022_reclass <- sits_reclassify(
 :::{.panel-tabset}
 ## R
 ```{r}
-#| eval: false
+#| label: val-accuracy
+#| eval: true
+#| cache: true
+#| warning: false
 # Get ground truth points
 valid_csv <- system.file(
-    "extdata/Rondonia-Class-2022-Mosaic/rondonia_samples_validation.csv", package = "sitsdata"
+    "extdata/Rondonia-Class-2022-Mosaic/rondonia_samples_reclass.csv", package = "sitsdata"
 )
-
 # Calculate accuracy according to Olofsson's method
-area_acc <- sits_accuracy(rondonia_2022_class, 
-                          validation = valid_csv,
-                          multicores = 4)
-
+area_accuracy <- sits_accuracy(
+    rondonia_2022_reclass, 
+    validation = valid_csv,
+    multicores = 4)
 # Print the area estimated accuracy 
-area_acc
-```
-```{r}
-#| echo: false
-# Recover the map accuracy 
-area_acc <- readRDS("./etc/area_acc_val_map.rds")
-area_acc
+area_accuracy
 ```
 ## Python
 ```{python}
 #| eval: false
 # Get ground truth points
 valid_csv = r_package_dir(
-    "extdata/Rondonia-Class-2022-Mosaic/rondonia_samples_validation.csv", package = "sitsdata"
+    "extdata/Rondonia-Class-2022-Mosaic/rondonia_samples_reclass.csv", package = "sitsdata"
 )
-
 # Calculate accuracy according to Olofsson's method
-area_acc = sits_accuracy(rondonia_2022_class, 
-                          validation = valid_csv,
-                          multicores = 4)
-                          
+area_accuracy = sits_accuracy(
+    rondonia_2022_reclass, 
+    validation = valid_csv,
+    multicores = 4)
 # Print the area estimated accuracy 
-area_acc
-```
-```{python}
-#| echo: false
-# Recover the map accuracy 
-area_acc = read_rds("./etc/area_acc_val_map.rds")
+area_accuracy
 ```
 ```{r}
 #| echo: false
-area_acc
+area_accuracy
 ```
 :::
 
@@ -454,24 +432,29 @@ The confusion matrix is also available, as follows.
 :::{.panel-tabset}
 ## R
 ```{r}
-area_acc$error_matrix
+#| label: val-mt-class-metrics
+#| cache: true
+#| warning: false
+# Show the confusion matrix
+area_accuracy$error_matrix
 ```
 ## Python
 ```{python}
 #| eval: false
-area_acc.error_matrix
+# Show the confusion matrix
+area_accuracy$error_matrix
 ```
 ```{r}
 #| echo: false
-# added as reticulate is messing up with the matrix representation in Python
-area_acc$error_matrix
+# Show the confusion matrix
+area_accuracy$error_matrix
 ```
 :::
 
-The results show a clear distinction between forest areas and those associated with deforestation (`Clear_Cut`). It also shows a possible source of confusion between wetlands and clear cuts, which point at improvements in traning samples for those classes to improve performance.
+The results show a clear distinction between forest areas and those associated with deforestation (`Clear_Cut`). It also shows a possible source of confusion between wetlands and clear-cut areas, suggesting that additional training samples for those classes could improve performance.
 
 ## Summary
 
-This chapter provides an example of the recommended statistical methods for designing stratified samples for accuracy assessment. However, these sampling methods depend on perfect or near-perfect validation by end-users. Ensuring best practices in accuracy assessment involves a well-designed sample set and a sample interpretation that aligns with the classifier's training set.
+This chapter provides an example of the recommended statistical methods for designing stratified samples for accuracy assessment. However, these sampling methods depend on perfect or near-perfect validation by end-users. Ensuring best practices in accuracy assessment requires both a well-designed sample and consistent interpretation of reference labels that align with the classes used to train the classifier.
 
 ## References{-}

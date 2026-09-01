@@ -40,23 +40,25 @@ tempdir_py.mkdir(parents=True, exist_ok=True)
 
 The `plot()` function produces a graphical display of data cubes, time series, models, and SOM maps. For each type of data, there is a dedicated version of the `plot()` function. See `?plot.sits` for details. The plotting of time series, models, and SOM outputs uses the `ggplot2` package; maps are plotted using the `tmap` package. When plotting images and classified maps, users can control the output, with appropriate parameters for each type of image. In this chapter, we provide examples of the options available for plotting different types of maps.
 
-Plotting and visualisation function in `sits` use COG overviews if available. COG overviews are reduced-resolution versions of the main image, stored within the same file. Overviews allow for quick rendering at lower zoom levels, improving performance when dealing with large images. Usually, a single GeoTIFF will have many overviews to match different zoom levels.
+Plotting and visualization function in `sits` use COG overviews if available. COG overviews are reduced-resolution versions of the main image, stored within the same file. Overviews allow for quick rendering at lower zoom levels, improving performance when dealing with large images. Usually, a single GeoTIFF will have many overviews to match different zoom levels.
 
 In the case of maps and images, the parameters discussed in the following sections are optional. Simply using `plot()` with a data cube or classified map as the first parameter works. The function will search for the date with the least cloud cover and will select an RGB product based on the available bands. By default, `plot()` will try to produce a [standard color combination](https://custom-scripts.sentinel-hub.com/custom-scripts/sentinel-2/composites/); otherwise, it produces a false-color plot. 
 
 
-### Plotting false color maps
+### Plotting false color maps 
 
 We refer to false color maps as images that are plotted on a color scale. Usually, these are single bands, indexes such as NDVI or DEMs. For these datasets, the parameters for `plot()` are:
         
 - `x`: data cube containing data to be visualised; 
 - `band`:  band or index to be plotted;
-- `pallete`: color scheme to be used for false color maps, which should be one of the `RColorBrewer` palettes. These palletes were designed to be effective for map display by Prof. Cynthia Brewer as described at the [Brewer website](http://colorbrewer2.org). By default, optical images use the `RdYlGn` scheme, SAR images use `Greys`, and DEM cubes use `Spectral`. 
+- `palette`: color scheme to be used for false color maps, which should be one of the `RColorBrewer` palettes. These palletes were designed to be effective for map display by Prof. Cynthia Brewer as described at the [Brewer website](http://colorbrewer2.org). By default, optical images use the `RdYlGn` scheme, SAR images use `Greys`, and DEM cubes use `Spectral`. 
 - `rev`: whether the color pallete should be reversed; `TRUE` for DEM cubes, and `FALSE` otherwise.
 - `scale`: global scale parameter used by `tmap`. All font sizes, symbol sizes, border widths, and line widths are controlled by this value. Default is 0.75; users should vary this parameter and see the results.
 - `first_quantile`: 1st quantile for stretching images (default = 0.05).
 - `last_quantile`: last quantile for stretching images (default = 0.95).
-- `max_cog_size`: for cloud-oriented GeoTIFF files (COG), sets the maximum number of lines or columns of the COG overview to be used for plotting.   
+- `max_cog_size`: for cloud-oriented GeoTIFF files (COG), sets the maximum number of lines or columns of the COG overview to be used for plotting.
+
+As an alternative to `RColorBrewer` palettes, sits also supports the color schemas available in the `cols4all` package. Please run `cols4all::c4a_gui` for a detailed presentation. 
 
 The following optional parameters are available to allow for detailed control over the plot output:
 
@@ -72,7 +74,16 @@ The following example shows a plot of an NDVI index of a data cube. This data cu
 :::{.panel-tabset}
 ## R
 ```{r}
-#| eval: false
+#| label: fig-view-ndvi
+#| cache: true
+#| warning: false
+#| fig-width: 5
+#| fig-height: 5
+#| fig-dpi: 300
+#| fig-cap: |
+#|   Sentinel-2 NDVI index covering tile 20LMR.
+#| fig-align: center
+#| out-width: 80%
 # set the directory where the data is 
 data_dir <- system.file("extdata/Rondonia-20LMR", package = "sitsdata")
 
@@ -93,7 +104,7 @@ plot(ro_20LMR,
 ```
 ## Python
 ```{python}
-#| eval: false
+
 # set the directory where the data is 
 data_dir = r_package_dir("extdata/Rondonia-20LMR", package = "sitsdata")
 
@@ -112,18 +123,28 @@ plot(ro_20LMR,
      legend_position = "outside",
      scale = 1.0)
 ```
-:::
-
 ```{r}
 #| echo: false
-#| label: fig-vis-ndvi
-#| out-width: 80%
+#| label: py-fig-view-ndvi
+#| cache: true
+#| warning: false
+#| fig-width: 5
+#| fig-height: 5
+#| fig-dpi: 300
 #| fig-cap: |
 #|   Sentinel-2 NDVI index covering tile 20LMR.
 #| fig-align: center
-knitr::include_graphics("./images/vis_ndvi.png")
+#| out-width: 80%
+plot(ro_20LMR, 
+     band = "NDVI", 
+     date = "2022-08-01", 
+     palette = "Greens",
+     legend_position = "outside",
+     scale = 1.0)
 ```
-### Plotting RGB color composite maps
+:::
+
+### Plotting RGB color composite maps 
 
 For RGB color composite maps, the parameters for the `plot` function are:
 
@@ -143,7 +164,16 @@ The optional parameters listed in the previous section are also available. An ex
 :::{.panel-tabset}
 ## R
 ```{r}
-#| eval: false
+#| label: fig-view-rgb
+#| cache: true
+#| warning: false
+#| fig-width: 5
+#| fig-height: 5
+#| fig-dpi: 300
+#| fig-cap: |
+#|   Sentinel-2 color composite covering tile 20LMR.
+#| fig-align: center
+#| out-width: 80%
 # plot a color composite for date 2022-08-01
 plot(ro_20LMR, 
      red = "B11", 
@@ -163,19 +193,29 @@ plot(ro_20LMR,
      date = "2022-08-01", 
      scale = 1.0)
 ```
-:::
-
 ```{r}
 #| echo: false
-#| label: fig-vis-rgb
-#| out-width: 80%
+#| label: py-fig-view-rgb
+#| cache: true
+#| warning: false
+#| fig-width: 5
+#| fig-height: 5
+#| fig-dpi: 300
 #| fig-cap: |
-#|   Sentinel-2 color composite covering tile 20LMR
+#|   Sentinel-2 color composite covering tile 20LMR.
 #| fig-align: center
-knitr::include_graphics("./images/vis_rgb.png")
+#| out-width: 80%
+# plot a color composite for date 2022-08-01
+plot(ro_20LMR, 
+     red = "B11", 
+     green = "B8A",
+     blue = "B02",
+     date = "2022-08-01", 
+     scale = 1.0)
 ```
+:::
 
-### Plotting classified maps{-}
+### Plotting classified maps
 
 Classified maps pose an additional challenge for plotting because of the association between labels and colors. In this case, `sits` allows three alternatives:
 
@@ -195,10 +235,15 @@ The optional parameters listed in the previous section are also available. For a
 :::{.panel-tabset}
 ## R
 ```{r}
-#| label: fig-vis-class
+#| label: fig-view-class
+#| cache: true
+#| warning: false
+#| fig-width: 5
+#| fig-height: 5
+#| fig-dpi: 300
 #| out-width: 80%
 #| fig-cap: |
-#|   Sentinel-2 color composite covering tile 20LMR
+#|   Classified map for an area of tile 20LLP. 
 #| fig-align: center
 # Create a cube based on a classified image 
 data_dir <- system.file("extdata/Rondonia-20LLP", 
@@ -227,11 +272,7 @@ plot(rondonia_class_cube,
 ```
 ## Python
 ```{python}
-#| label: fig-vis-class-py
-#| out-width: 100%
-#| fig-cap: |
-#|   Sentinel-2 color composite covering tile 20LMR
-#| fig-align: center
+#| eval: false
 # Create a cube based on a classified image 
 data_dir = r_package_dir("extdata/Rondonia-20LLP", 
                 package = "sitsdata")
@@ -261,6 +302,28 @@ plot(
     },
     scale = 1.0,
     legend_position = "outside"
+)
+```
+```{r}
+#| label: py-fig-view-class
+#| cache: true
+#| warning: false
+#| fig-width: 5
+#| fig-height: 5
+#| fig-dpi: 300
+#| out-width: 80%
+#| fig-cap: |
+#|   Classified map for an area of tile 20LLP. 
+#| fig-align: center
+# Plot the classified cube
+plot(rondonia_class_cube,
+  legend = c("Burned" = "#a93226",
+             "Cleared" = "#f9e79f",
+             "Degraded" = "#d4efdf",
+             "Natural_Forest" = "#1e8449"
+             ),
+  scale = 1.0,
+  legend_position = "outside"
 )
 ```
 :::
@@ -315,11 +378,15 @@ In the examples provided in the book, the color legend is taken from a predefine
 :::{.panel-tabset}
 ## R
 ```{r}
+#| cache: true
+#| warning: false
 # Point default `sits` colors
 sits_colors()
 ```
 ## Python
 ```{python}
+#| cache: true
+#| warning: false
 # Point default `sits` colors
 sits_colors()
 ```
@@ -327,26 +394,53 @@ sits_colors()
 
 These colors are grouped by typical legends used by the Earth observation community, which include "IGBP", "UMD", "ESA_CCI_LC", "WORLDCOVER", "PRODES", "PRODES_VISUAL", "TERRA_CLASS", and "TERRA_CLASS_PT". The following commands show the colors associated with the IGBP legend [@Herold2009].
 
+:::{.panel-tabset}
+## R
 ```{r}
 #| label: fig-vis-igbp
-#| echo: false
+#| cache: true
+#| warning: false
+#| fig-width: 5
+#| fig-height: 5
+#| fig-dpi: 300
 #| out-width: 80%
 #| fig-cap: |
-#|   Colors used in the sits package to represeny IGBP legend.
+#|   Colors used in sits to represent the IGBP legend.
 #| fig-align: center
 # Display default `sits` colors
 sits_colors_show(legend = "IGBP")
 ```
+## Python
+```{python}
+#| label: py-fig-vis-igbp
+#| cache: true
+#| warning: false
+#| fig-width: 5
+#| fig-height: 5
+#| fig-dpi: 300
+#| out-width: 80%
+#| fig-cap: |
+#|   Colors used in sits to represent the IGBP legend.
+#| fig-align: center
+# Display default `sits` colors
+sits_colors_show(legend = "IGBP")
+```
+:::
 
-The default color table can be extended using `sits_colors_set()`. As an example of a user-defined color table, consider a definition that covers level 1 of the Anderson Classification System used in the U.S. National Land Cover Data, obtained by defining a set of colors associated with a new legend. The colors should be defined by HEX values, and the color names should consist of a single string; multiple names need to be connected with an underscore("_").
+The default color table can be extended using `sits_colors_set()`. As an example of a user-defined color table, consider a definition that covers level 1 of the Anderson Classification System used in the U.S. National Land Cover Data, obtained by defining a set of colors associated with a new legend. The colors should be defined by HEX values, and the color names should consist of a single string; multiple names must be connected with an underscore("_").
 
 :::{.panel-tabset}
 ## R
 ```{r}
 #| label: fig-vis-nlcd
+#| cache: true
+#| warning: false
+#| fig-width: 5
+#| fig-height: 5
+#| fig-dpi: 300
 #| out-width: 80%
 #| fig-cap: |
-#|   Example of defining colors for the Anderson Land Classification Scheme.
+#|   Defining colors for the Anderson Land Classification Scheme.
 #| fig-align: center
 # Define a color table based on the Anderson Land Classification System
 us_nlcd <- tibble::tibble(name = character(), color = character())
@@ -369,10 +463,15 @@ sits_colors_show(legend = "US_NLCD")
 ```
 ## Python
 ```{python}
-#| label: fig-vis-nlcd-py
-#| out-width: 100%
+#| label: py-fig-vis-nlcd
+#| cache: true
+#| warning: false
+#| fig-width: 5
+#| fig-height: 5
+#| fig-dpi: 300
+#| out-width: 80%
 #| fig-cap: |
-#|   Example of defining colors for the Anderson Land Classification Scheme.
+#|   Defining colors for the Anderson Land Classification Scheme.
 #| fig-align: center
 # Import pandas
 import pandas as pd
@@ -400,19 +499,6 @@ sits_colors_show(legend = "US_NLCD")
 
 The original default `sits` color table can be restored using `sits_colors_reset()`. 
 
-:::{.panel-tabset}
-## R
-```{r} 
-# Reset the color table
-sits_colors_reset()
-```
-## Python
-```{python}
-# Reset the color table
-sits_colors_reset()
-```
-:::
-
 ## Exporting colors to QGIS
 
 To simplify the process of importing your data into QGIS, the color palette used to display classified maps in `sits` can be exported as a QGIS style using `sits_colors_qgis`. The function takes two parameters: (a) `cube`, a classified data cube; and (b) `file`, the file where the QGIS style in XML will be written. In this case study, we first retrieve and plot a classified data cube, and then export the colors to a QGIS XML style.
@@ -420,6 +506,16 @@ To simplify the process of importing your data into QGIS, the color palette used
 :::{.panel-tabset}
 ## R
 ```{r}
+#| label: fig-vis-rondonia
+#| cache: true
+#| warning: false
+#| fig-width: 5
+#| fig-height: 5
+#| fig-dpi: 300
+#| out-width: 80%
+#| fig-cap: |
+#|   Classified cube for the state of Rondonia.
+#| fig-align: center
 # Create a cube based on a classified image 
 data_dir <- system.file("extdata/Rondonia-Class-2022-Mosaic", 
                         package = "sitsdata")
@@ -452,6 +548,16 @@ plot(ro_class, scale = 1.0)
 ```
 ## Python
 ```{python}
+#| label: py-fig-vis-rondonia
+#| cache: true
+#| warning: false
+#| fig-width: 5
+#| fig-height: 5
+#| fig-dpi: 300
+#| out-width: 80%
+#| fig-cap: |
+#|   Classified cube for the state of Rondonia.
+#| fig-align: center
 # Create a cube based on a classified image 
 data_dir = r_package_dir("extdata/Rondonia-Class-2022-Mosaic", 
                         package = "sitsdata")
@@ -489,11 +595,17 @@ The file to be read by QGIS is a TIFF file whose location is specified by the da
 :::{.panel-tabset}
 ## R
 ```{r}
+#| label: file-info-path
+#| cache: true
+#| warning: false
 # Show the location of the classified map
 ro_class[["file_info"]][[1]]$path
 ```
 ## Python
 ```{python}
+#| label: py-file-info-path
+#| cache: true
+#| warning: false
 # Show the location of the classified map
 ro_class["file_info"][0]["path"]
 ```
@@ -504,11 +616,17 @@ The color schema can be exported to QGIS as follows.
 :::{.panel-tabset}
 ## R
 ```{r}
+#| label: export-qgis
+#| cache: true
+#| warning: false
 # Export the color schema to QGIS
 sits_colors_qgis(ro_class, file = file.path(tempdir_r, "qgis_style.xml"))
 ```
 ## Python
 ```{python}
+#| label: py-export-qgis
+#| cache: true
+#| warning: false
 # Export the color schema to QGIS
 sits_colors_qgis(ro_class, file = tempdir_py / "qgis_style.xml")
 ```

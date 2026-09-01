@@ -27,7 +27,7 @@ dir.create(tempdir_r, showWarnings = FALSE)
 ## Python
 ```{python}
 #| echo: true
-#| eval: true
+#| eval: false
 #| output: false
 # load "pysits" library
 from pysits import *
@@ -40,19 +40,23 @@ tempdir_py.mkdir(parents=True, exist_ok=True)
 
 ## Introduction 
 
-In many situations, users may want to create vector data cubes from local files. The most common case is when the want to recover a vector file has been previously created. An alternative is when users want to join a vector data file to a raster data cube. Recall that `sits` uses a restricted notion of vector data cubes, which are polygons that cover an entire period of time. One example are farm boundaries for agricultural statistics. 
+In many situations, users may want to create vector data cubes from local files. The most common case is when the want to recover a vector file has been previously created. An alternative is when users want to join a vector data file to a raster data cube. Recall that `sits` uses a specific notion of vector data cubes, which are polygons that cover an entire period of time. One example are farm boundaries for agricultural statistics. 
 
 To be used for classification, vector cubes are associated to a raster cube. In this way, classification is done on a polygon-by-polygon basis. Given a polygon which matches part of a raster cube, `sits` uses pixels inside the polygon to obtain a set of time series that are used for classification, as shown in the example below.
 
-In what follows, we illustrate the procedure of linking vector and raster files by creating segments from a raster data cube and then recovering them later.
+In what follows, we illustrate the procedure of linking vector and raster file.
 
-## Producing a vector data cube
+## Retrieving a local data cube
 
 We take the MODIS data set for a small area in Mato Grosso, Brazil available in the `sits` package. For details on how to retrieve raster data cubes from local files, please see chapter "Data cubes from local files". 
 
 :::{.panel-tabset}
 ## R
 ```{r}
+#| label: vec-modis-cube
+#| eval: true
+#| cache: true
+#| warning: false
 # Retrieve a local cube based with MODIS data
 # data directory
 data_dir <- system.file("extdata/raster/mod13q1", package = "sits")
@@ -67,6 +71,7 @@ modis_cube <- sits_cube(
 ```
 ## Python
 ```{python}
+#| eval: false
 # Retrieve a local cube based with MODIS data
 # data directory
 data_dir = r_package_dir("extdata/raster/mod13q1", package = "sits")
@@ -86,6 +91,18 @@ Then, we produce a vector data cube associated to the raster data cube using `si
 :::{.panel-tabset}
 ## R
 ```{r}
+#| label: fig-vec-modis-segments
+#| echo: true
+#| eval: true
+#| cache: true
+#| warning: false
+#| fig-width: 5
+#| fig-height: 3
+#| fig-dpi: 300
+#| fig-cap: |
+#|   Example of MODIS image segmentation for a small area in Sinop, Brazil.
+#| fig-align: center
+#| out-width: 80%
 # segment the vector cube
 segs_cube <- sits_segment(
     cube = modis_cube,
@@ -97,6 +114,8 @@ plot(segs_cube)
 ```
 ## Python
 ```{python}
+#| echo: true
+#| eval: false
 # segment the vector cube
 segs_cube = sits_segment(
     cube = modis_cube,
@@ -106,20 +125,47 @@ segs_cube = sits_segment(
 # plot the segmented cube
 plot(segs_cube)
 ```
+```{r}
+#| label: py-fig-vec-modis-segments
+#| echo: true
+#| eval: true
+#| cache: true
+#| warning: false
+#| fig-width: 5
+#| fig-height: 3
+#| fig-dpi: 300
+#| fig-cap: |
+#|  Example of MODIS image segmentation for a small area in Sinop, Brazil..
+#| fig-align: center
+#| out-width: 80%
+# plot the segmented cube
+plot(segs_cube)
+```
 :::
 
-The resulting vector file is stored in the `tempdir` directory, following a convention set by `sits` that vector files need to be stored in the `geopackage` format, and should contained closed polygons which are geometrically consistent. Listing the resulting file, one can better understand the convention.
+The resulting vector file is stored in the `tempdir` directory, in the `geopackage` format. The file should contain closed polygons which are geometrically consistent. Listing the resulting file, one can better understand the convention.
 
 :::{.panel-tabset}
 ## R
 ```{r}
+#| echo: true
+#| eval: true
+#| cache: true
 list.files(tempdir_r, pattern = "*segments*")
 ```
 ## Python
 ```{python}
+#| echo: true
+#| eval: false
 list(
     tempdir_py.glob(pattern = "*segments*")
 )
+```
+```{r}
+#| echo: false
+#| eval: true
+#| cache: true
+list.files(tempdir_r, pattern = "*segments*")
 ```
 :::
 
@@ -127,33 +173,43 @@ The segments file is a geopackage whose title contains optional information on s
 
 ## Linking raster and vector data 
 
-Now consider the inverse situation, where a set of a segments is already stored locally and users want to recover them and associate to a raster data cube. In the same way as we 
-
-To do so, they need to run `sits_cube()` with the following minimum parameters:
+Now consider the inverse situation, where a set of a segments is already stored locally and users want to recover them and associate to a raster data cube. In the same way as we do for raster data cubes in [Data cubes from local files](https://e-sensing.github.io/sitsbook/dc_localcubes.html), we use the `sits_cube()` function with the following parameters:
 
 - `source`: data source of the raster data (in this case, the Brazil Data Cube).
 - `collection`: ARD collection associated to the images (in the example, `MOD13Q1-6.1").
 - `raster_cube`: raster data cube to associate with the polygons.
 - `vector_dir`: directory where the vectors are stored. 
-- `parse_info`: where to find metadata on the file title. The minimum required elements are `tile`, `start_date`, `end_date`, `band` and `version`. The start and end dates must match those of the raster cube.
+- `parse_info`: how to extract metadata from the name of the `geopackage` file. The minimum required elements are `tile`, `start_date`, `end_date`, `band` and `version`. The start and end dates must match those of the raster cube.
 - `delim`: delimiter character for breaking down the file into parts ("_" by default.)
 
-In the example below, we recover the file we produced before. We could replace it by any other polygon file in geopackage format that matches the `parse_info` information listed above. As `satellite` and `sensor` are optional, we use place holders from them.
+To import an external `geopackage` file, it must be named according to a convention that is understable by `sits`. The file needs to contain the required information (`tile`, `start_date`, `end_date`, `band` and `version`) separated by underlines. All other parts of the `geopackage` file name can use dummy values (e.g, `X1`). In the example below, we recover the file we produced before. We could replace it by any other polygon file in geopackage format that matches the `parse_info` information listed above. As `satellite` and `sensor` are optional, we use place holders from them.
 
 :::{.panel-tabset}
 ## R
 ```{r}
-#| eval: false
+#| label: fig-vec-local-segments
+#| echo: true
+#| eval: true
+#| cache: true
+#| warning: false
+#| fig-width: 5
+#| fig-height: 3
+#| fig-dpi: 300
+#| fig-cap: |
+#|  Vector data cube which combines segments and raster files.
+#| fig-align: center
+#| out-width: 80%
 # recover the local segmented cube
 local_segs_cube <- sits_cube(
     source = "BDC",
     collection = "MOD13Q1-6.1",
     raster_cube = modis_cube,
     vector_dir = tempdir_r,
-    parse_info =  c("X1", "X2", "tile", "start_date", "end_date", "band", "version")
+    parse_info =  c("X1", "X2", "tile", "start_date", "end_date", "band", "version"),
+    delim = "_"
 )
 
-# plot the recover model and compare with previous plot
+# plot the recovered model and compare with previous plot
 plot(local_segs_cube, line_width = 1.0)
 ```
 ## Python
@@ -172,6 +228,22 @@ local_segs_cube = sits_cube(
 # plot the recover model and compare with previous plot
 plot(local_segs_cube)
 ```
+```{r}
+#| label: py-fig-vec-local-segments
+#| echo: false
+#| eval: true
+#| cache: true
+#| warning: false
+#| fig-width: 5
+#| fig-height: 3
+#| fig-dpi: 300
+#| fig-cap: |
+#|  Vector data cube which combines segments and raster files.
+#| fig-align: center
+#| out-width: 80%
+# plot the recovered model and compare with previous plot
+plot(local_segs_cube, line_width = 1.0)
+```
 :::
 
 The resulting plot should be the same as the original one. We now train a model with the Random Forest algorithm, and use the result to classify the segments. Then we show how to recover the classified data from the local files which was produced by the classifier. 
@@ -179,20 +251,33 @@ The resulting plot should be the same as the original one. We now train a model 
 :::{.panel-tabset}
 ## R
 ```{r}
-# classify the segments
+#| label: fig-vec-probs-cube
+#| echo: true
+#| eval: true
+#| cache: true
+#| warning: false
+#| fig-width: 5
+#| fig-height: 3
+#| fig-dpi: 300
+#| fig-cap: |
+#|  Probabilities of class Forest in the classified vector data cube.
+#| fig-align: center
+#| out-width: 80%
 # create a Random Forest model
 rfor_model <- sits_train(samples_modis_ndvi, sits_rfor())
+# classify the segments
 probs_vector_cube <- sits_classify(
     data = segs_cube,
     ml_model = rfor_model,
     output_dir = tempdir_r,
 )
-
 # plot cube
 plot(probs_vector_cube, labels = "Forest")
 ```
 ## Python
 ```{python}
+#| echo: true
+#| eval: false
 # classify the segments
 # create a Random Forest model
 rfor_model = sits_train(samples_modis_ndvi, sits_rfor())
@@ -206,6 +291,22 @@ probs_vector_cube = sits_classify(
 # plot cube
 plot(probs_vector_cube, labels = "Forest")
 ```
+```{r}
+#| label: py-fig-vec-probs-cube
+#| echo: false
+#| eval: true
+#| cache: true
+#| warning: false
+#| fig-width: 5
+#| fig-height: 3
+#| fig-dpi: 300
+#| fig-cap: |
+#|  Probabilities of class Forest in the classified vector data cube.
+#| fig-align: center
+#| out-width: 80%
+# plot cube
+plot(probs_vector_cube, labels = "Forest")
+```
 :::
 
 In the same way as before, we can recover the probability cube from local files using `sits_cube()`.
@@ -213,7 +314,18 @@ In the same way as before, we can recover the probability cube from local files 
 :::{.panel-tabset}
 ## R
 ```{r}
-#| eval: false
+#| label: fig-vec-probs-recover
+#| echo: true
+#| eval: true
+#| cache: true
+#| warning: false
+#| fig-width: 5
+#| fig-height: 3
+#| fig-dpi: 300
+#| fig-cap: |
+#|  Probability cube recovered from local raster cube and segments files.
+#| fig-align: center
+#| out-width: 80%
 # recover vector cube
 local_probs_vector_cube <- sits_cube(
     source = "BDC",
@@ -241,6 +353,31 @@ local_probs_vector_cube = sits_cube(
 # plot
 plot(local_probs_vector_cube, labels = "Forest")
 ```
+```{r}
+#| label: py-fig-vec-probs-recover
+#| echo: false
+#| eval: true
+#| cache: true
+#| warning: false
+#| fig-width: 5
+#| fig-height: 3
+#| fig-dpi: 300
+#| fig-cap: |
+#|  Probability cube recovered from local raster cube and segments files.
+#| fig-align: center
+#| out-width: 80%
+# recover vector cube
+local_probs_vector_cube <- sits_cube(
+    source = "BDC",
+    collection = "MOD13Q1-6.1",
+    raster_cube = probs_vector_cube,
+    vector_dir = tempdir_r,
+    parse_info =  c("X1", "X2", "tile", "start_date", "end_date", "band", "version")
+)
+
+# plot
+plot(local_probs_vector_cube, labels = "Forest")
+```
 
 :::
 
@@ -249,6 +386,18 @@ Finally, we produce a classified map.
 :::{.panel-tabset}
 ## R
 ```{r}
+#| label: fig-vec-local-class
+#| echo: true
+#| eval: true
+#| cache: true
+#| warning: false
+#| fig-width: 5
+#| fig-height: 3
+#| fig-dpi: 300
+#| fig-cap: |
+#|  Labeled vector data cube based on the probabilities.
+#| fig-align: center
+#| out-width: 80%
 # label the segments
 class_vector_cube <- sits_label_classification(
     cube = probs_vector_cube,
@@ -259,6 +408,7 @@ plot(class_vector_cube)
 ```
 ## Python
 ```{python}
+#| eval: false
 # label the segments
 class_vector_cube = sits_label_classification(
     cube = probs_vector_cube,
@@ -269,10 +419,25 @@ class_vector_cube = sits_label_classification(
 # plot
 plot(class_vector_cube)
 ```
-
+```{r}
+#| label: py-fig-vec-local-class
+#| echo: true
+#| eval: true
+#| cache: true
+#| warning: false
+#| fig-width: 5
+#| fig-height: 3
+#| fig-dpi: 300
+#| fig-cap: |
+#|  Labeled vector data cube based on the probabilities.
+#| fig-align: center
+#| out-width: 80%
+# plot
+plot(class_vector_cube)
+```
 :::
 
-We then recover the map from a local file.
+We then show an example of how to recover a labeled vector data cube from local files. As in the previous examples, the segments file is located in the `vector_dir`, and the parameter `parse_info` tells `sits` how to recover its metadata.
 
 :::{.panel-tabset}
 ## R

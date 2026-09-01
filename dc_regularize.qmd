@@ -40,13 +40,13 @@ tempdir_py.mkdir(parents=True, exist_ok=True)
 
 ## The need for regular EO data cubes
 
-Analysis Ready Data (ARD) collections are often irregular in space and time. Bands may have different resolutions, images may not cover entire tiles, and time intervals are inconsistent. Clouds and sensor artifacts introduce “holes” in the data, corrupting the time series. If time steps differ or values are missing, batch training breaks and the model learns spurious correlations. Additionally, most machine learning and deep learning libraries expect tensors of identical shape (e.g., `k` samples × `m` features × `n` temporal intervals). Regular data cubes guarantee fixed-length feature vectors and CPU and GPU-friendly batches. Regularization turns heterogeneous image archives into clean, structured data ready for machine learning models.
+Analysis Ready Data (ARD) collections are often irregular in space and time. Bands may have different resolutions, images may not cover entire tiles, and time intervals are inconsistent. Clouds and sensor artifacts introduce “holes” in the data, corrupting the time series. If time steps differ or values are missing, batch training breaks and the model learns spurious correlations. Additionally, most machine learning and deep learning libraries expect tensors of identical shape (e.g., `k` samples × `m` features × `n` temporal intervals). Regular data cubes guarantee fixed-length feature vectors and CPU- and GPU-friendly batches. Regularization turns heterogeneous image archives into clean, structured data ready for machine learning models.
 
 Data from ARD collections can be converted into regular data cubes with `sits_regularize()`, which uses the `gdalcubes` package [@Appel2019]. This function has two components:
 
-1. Spatial harmonization: reproject and resample everything onto the same tiling system and spatial resolution. For example, when Sentinel-1 and Sentinel-2 images are merged in `sits`, they are projected onto MGRS grid tiles. 
+1. Spatial harmonization: reproject and resample everything onto the same tiling system and spatial resolution. For example, when Sentinel-1 and Sentinel-2 images are merged in `sits`, they are projected onto MGRS grid tiles.
 
-2. Temporal harmonization: creates equispaced intervals (e.g., 16-day, monthly, or seasonal composites), filling gaps introduced by cloud cover and sensor errors. `sits` stacks every image within a chosen interval to combine them. It sorts images in increasing order of cloud cover percentage. The least cloud-filled image is taken as a reference, and the others are used to try to fill its gaps. Pixels with persistent cloud cover are marked as `NA` and are temporally interpolated during computation.
+2. Temporal harmonization: create equispaced intervals (e.g., 16-day, monthly, or seasonal composites), filling gaps introduced by cloud cover and sensor errors. `sits` stacks every image within a chosen interval to combine them. It sorts images in increasing order of cloud cover percentage. The least cloud-filled image is taken as a reference, and the others are used to try to fill its gaps. Pixels with persistent cloud cover are marked as `NA` and are temporally interpolated during computation.
 
 ## Regularizing Sentinel-2 images
 
@@ -146,7 +146,7 @@ In our example, tile `20LKP` has 12 images within the selected time period, whil
 
 To build a regular data cube, we need to set the period to be used by `sits_regularize()`. The period parameter defines the time interval between observations, using the ISO 8601 time period format. This format specifies intervals as `P[n]Y[n]M[n]D`, where "Y" stands for years, "M" for months, and "D" for days. For example, `P1M` denotes a one-month interval, and `P15D` denotes a fifteen-day interval. For each time step, `sits_regularize()` identifies all available images within the defined window. Then, for each pixel, it sorts these candidate values by increasing cloud cover and selects the first cloud-free value. In this way, the function builds a regular time series for each pixel, even when observations come from different dates or satellites.
 
-In this example, we set the regular cube’s spatial resolution to 40 meters to speed up processing. For real-world applications, however, we recommend using a resolution of 10 meters. To avoid time-outs by cloud providers, copy the ARD data to a local directory using `sits_cube_copy()` before applying regularization. This separates the process of creating a regular data cube into two distinct steps: (a) downloading data from ARD collections and (b) building the data cube from local files. This approach can significantly speed up processing. After sits builds the regular cube, the ARD images can be deleted to save space. Depending on the speed of your Internet connection, `sits_cube_copy()` may take some time to complete.
+In this example, we set the regular cube’s spatial resolution to 40 meters to speed up processing. For real-world applications, however, we recommend using a resolution of 10 meters. To avoid time-outs by cloud providers, copy the ARD data to a local directory using `sits_cube_copy()` before applying regularization. This separates the process of creating a regular data cube into two distinct steps: (a) downloading data from ARD collections and (b) building the data cube from local files. This approach can significantly speed up processing. After `sits` builds the regular cube, the ARD images can be deleted to save space. Depending on the speed of your Internet connection, `sits_cube_copy()` may take some time to complete.
 
 
 :::{.panel-tabset}
@@ -252,13 +252,13 @@ In the case of SAR (Synthetic Aperture Radar) satellites like Sentinel-1, the ac
 - Spatial resolution and coverage area,
 - Whether it collects single or dual polarization (e.g., VV, VH).
 
-SAR images are usually captured at an oblique angle (not straight down), resulting in a slanted geometry known as *slant range*. As a result, raw SAR images do not align well with optical imagery like Sentinel-2, which uses a nadir (straight-down) viewing geometry. To facilitate the integration of Sentinel-1 and Sentinel-2 data, `sits_regularize()` reprojects SAR images to the MGRS grid. Internally, it uses the `gdalwarp()` function (via the gdalcubes backend or an equivalent tool), which supports several interpolation methods:
+SAR images are usually captured at an oblique angle (not straight down), resulting in a slanted geometry known as *slant range*. As a result, raw SAR images do not align well with optical imagery like Sentinel-2, which uses a nadir (straight-down) viewing geometry. To facilitate the integration of Sentinel-1 and Sentinel-2 data, `sits_regularize()` reprojects SAR images to the MGRS grid. Internally, it uses the `gdalwarp()` function (via the `gdalcubes` backend or an equivalent tool), which supports several interpolation methods:
 
 1. Nearest: Assigns the value of the nearest input pixel (fastest, preserves discrete classes).
 2. Bilinear: Performs linear interpolation from 4 nearest input pixels. Smooths intensity values.
 3. Cubic: Uses 16 surrounding pixels. Smoother, more complex but can introduce artifacts.
 
-By default, `sits` applies nearest-neighbor interpolation for categorical or discrete bands (e.g., land cover or polarization labels), and bilinear interpolation for continuous-valued bands (e.g., backscatter intensity). However, the exact interpolation method may vary depending on how the raster cube is created and the backend in use. Advanced users can customize reprojection parameters through sits_config() or environment variables that modify GDAL behavior.
+By default, `sits` applies nearest-neighbor interpolation for categorical or discrete bands (e.g., land cover or polarization labels), and bilinear interpolation for continuous-valued bands (e.g., backscatter intensity). However, the exact interpolation method may vary depending on how the raster cube is created and the backend in use. Advanced users can customize reprojection parameters through `sits_config()` or environment variables that modify GDAL behavior.
 
 We illustrate the spatial harmonization feature of `sits_regularize()` in the following example, which uses the `"SENTINEL-1-RTC"` collection from the Microsoft Planetary Computer (MPC).
 
@@ -395,7 +395,7 @@ plot(cube_s1_reg, band = "VH", palette = "Greys", scale = 0.7,
 ```
 :::
 
-## Summary 
+## Summary
 
 In this chapter, we learned how to produce regular Earth observation (EO) data cubes from non-regular subsets of ARD collections. Regularization is a key operation when working with time series, as it enables the use of machine learning models on temporally aligned data. In the next chapter, we will discuss how to merge sensors from different data sources and, when necessary, how to combine these datasets with regularization operations.
 

@@ -27,7 +27,7 @@ dir.create(tempdir_r, showWarnings = FALSE, recursive = TRUE)
 ## Python
 ```{python}
 #| echo: true
-#| eval: true
+#| eval: false
 #| output: false
 # load "pysits" library
 from pysits import *
@@ -38,6 +38,7 @@ tempdir_py.mkdir(parents=True, exist_ok=True)
 ```
 ```{python}
 #| echo: false
+#| eval: false
 import pandas as pd
 pd.set_option('display.max_columns', 9)
 pd.set_option('display.width', 600)
@@ -56,6 +57,9 @@ In this example, we take the data set for agriculture in the municipality of Lui
 ::: {.panel-tabset}
 ## R
 ```{r}
+#| label: intro-cerrado-samples
+#| results: hide
+#| cache: true
 # Load the samples for LEM from the "sitsdata" package
 # select the directory for the samples 
 samples_dir <- system.file("data", package = "sitsdata")
@@ -66,6 +70,7 @@ df_samples_cerrado_lem
 ```
 ## Python 
 ```{python}
+#| eval: false
 # Load the samples for Mato Grosso from the "sitsdata" package
 # select the directory for the samples 
 samples_file = r_package_dir("data/df_samples_cerrado_lem.rds", package = "sitsdata")
@@ -100,8 +105,9 @@ This example builds a data cube from local images already organized as a regular
 ::: {.panel-tabset}
 ## R
 ```{r}
-#| output: false
-#| eval: false
+#| label: intro-cerrado-lem
+#| results: hide
+#| cache: true
 # Find the the bounding box of the data
 lat_max <- max(df_samples_cerrado_lem[["latitude"]])
 lat_min <- min(df_samples_cerrado_lem[["latitude"]])
@@ -160,7 +166,17 @@ The next step is to copy the data cube to a local directory for further processi
 ::: {.panel-tabset}
 ## R
 ```{r}
-#| eval: false
+#| label: fig-cbers-ndvi
+#| warning: false
+#| results: hide
+#| cache: true
+#| fig-width: 7
+#| fig-height: 5
+#| fig-dpi: 300
+#| fig-cap: |
+#|   False color CBERS image for NDVI band in 2013-09-30.
+#| fig-align: center
+#| out-width: 100%
 # Copy the region of interest to a local directory
 lem_cube <- sits_cube_copy(
     cube = bdc_cube,
@@ -184,54 +200,45 @@ lem_cube = sits_cube_copy(
 # Plot the cube
 plot(lem_cube, palette = "RdYlGn")
 ```
-:::
-
 ```{r}
 #| echo: false
-# Copy the region of interest to a local directory
-lem_cube <- sits_cube(
-    source = "BDC", 
-    collection  = "CBERS-WFI-16D",
-    data_dir = tempdir_r
-)
-
-# Plot the cube 
-# plot(lem_cube, palette = "RdYlGn")
-```
-
-```{r}
-#| echo: false
-#| label: fig-intro-ndvi-r
-#| out-width: 100%
-#| out-height: 100%
+#| label: py-fig-cbers-ndvi
+#| results: hide
+#| warning: false
+#| cache: true
+#| fig-width: 7
+#| fig-height: 5
+#| fig-dpi: 300
 #| fig-cap: |
 #|   False color CBERS image for NDVI band in 2013-09-30.
 #| fig-align: center
-knitr::include_graphics("./images/lem_cube_ndvi.png")
+#| out-width: 100%
+
+# Plot the cube 
+plot(lem_cube, palette = "RdYlGn")
 ```
+:::
 
 The object returned by `sits_cube()` and by `sits_cube_copy()` contains the metadata describing the contents of the data cube. It includes the data source and collection, satellite, sensor, tile in the collection, bounding box, projection, and list of files. Each file refers to one band of an image at one of the temporal instances of the cube. Since data cubes obtained from the BDC are already regularized, there is no need to run `sits_regularize()`. Please refer to chapter "Building regular EO data cubes" for information on dealing with non-regular ARD collections.
-
-```{r}
-#| echo: false
-lem_cube <- readRDS("./etc/lem_cube.rds")
-```
-
-```{python}
-#| echo: false
-lem_cube = read_rds("./etc/lem_cube.rds")
-```
 
 ::: {.panel-tabset}
 ## R
 ```{r}
+#| label: intro-cerrado-lem-cube
+#| cache: true
 # Show the description of the data cube
 lem_cube
 ```
 ## Python
 ```{python}
+#| eval: false
 # Show the description of the data cube
 lem_cube
+```
+```{r}
+#| echo: false
+# Show the description of the data cube
+print(lem_cube)
 ```
 :::
 
@@ -240,13 +247,21 @@ The list of image files that make up the data cube is stored as a data frame in 
 ::: {.panel-tabset}
 ## R
 ```{r}
+#| label: intro-cerrado-lem-file-info
+#| cache: true
 # Show information on the images files which are part of a data cube
 lem_cube$file_info[[1]]
 ```
 ## Python
 ```{python}
+#| eval: false
 # Show information on the images files which are part of a data cube
 lem_cube["file_info"][0].head(5)
+```
+```{r}
+#| echo: false
+# Show information on the images files which are part of a data cube
+lem_cube$file_info[[1]]
 ```
 :::
 
@@ -255,15 +270,24 @@ A key attribute of a data cube is its timeline, as shown below. The command `sit
 ::: {.panel-tabset}
 ## R
 ```{r}
+#| label: intro-cerrado-lem-timeline
+#| cache: true
 # Show the R object that describes the data cube
 sits_timeline(lem_cube)
 ```
 ## Python
 ```{python}
+#| eval: false
+# Show the R object that describes the data cube
+sits_timeline(lem_cube)
+```
+```{r}
+#| echo: false
 # Show the R object that describes the data cube
 sits_timeline(lem_cube)
 ```
 :::
+
 The timeline of `lem_cube` has 24 intervals with a temporal difference of 16 days. The chosen dates capture the agricultural calendar in the west of Bahia in Brazil. The agricultural year starts in September-October with the sowing of the summer crop (usually soybeans), which is harvested in February-March. Then the winter crop (mostly Corn, Cotton, or Millet) is planted in March and harvested in June-July. For LULC classification, the training samples and the data cube should share a timeline with the same number of intervals and similar start and end dates.
 
 ## The time series tibble
@@ -280,7 +304,8 @@ In what follows, we use the data frame with the LEM samples. The data.frame cont
 ::: {.panel-tabset}
 ## R
 ```{r}
-#| eval: false
+#| label: intro-cerrado-lem-getdata
+#| cache: true
 # Retrieve the time series for each samples based on a data.frame
 samples_lem_time_series <- sits_get_data(
     cube = lem_cube,
@@ -300,26 +325,24 @@ samples_lem_time_series = sits_get_data(
 
 The time series tibble contains data and metadata. The first six columns contain the metadata: spatial and temporal information, the label assigned to the sample, and the data cube from where the data has been extracted. The `time_series` column contains the time series data for each spatiotemporal location. This data is also organized as a tibble, with a column with the dates and the other columns with the values for each spectral band. The time series can be displayed by showing the `time_series` nested column.
 
-```{r}
-#| echo: false
-samples_lem_time_series <- readRDS("./etc/samples_lem_time_series.rds")
-```
-
-```{python}
-#| echo: false
-samples_lem_time_series = read_rds("./etc/samples_lem_time_series.rds")
-```
-
 ::: {.panel-tabset}
 ## R
 ```{r}
+#| label: intro-cerrado-lem-ts
+#| cache: true
 # Load the time series for the first MODIS sample for Mato Grosso
 samples_lem_time_series[1,]$time_series[[1]]
 ```
 ## Python
 ```{python}
+#| eval: false
 # Load the time series for the first MODIS sample for Mato Grosso
 samples_lem_time_series["time_series"][0]
+```
+```{r}
+#| echo: false
+# Load the time series for the first MODIS sample for Mato Grosso
+samples_lem_time_series[1,]$time_series[[1]]
 ```
 :::
 
@@ -328,11 +351,19 @@ The distribution of samples per class can be obtained using the `summary()` comm
 ::: {.panel-tabset}
 ## R
 ```{r}
+#| label: intro-cerrado-lem-sum
+#| cache: true
 # Show the summary of the time series sample data
 summary(samples_lem_time_series)
 ```
 ## Python
 ```{python}
+#| eval: false
+# Show the summary of the time series sample data
+summary(samples_lem_time_series)
+```
+```{r}
+#| echo: false
 # Show the summary of the time series sample data
 summary(samples_lem_time_series)
 ```
@@ -343,7 +374,9 @@ The sample dataset is highly imbalanced. To improve performance, we will produce
 ::: {.panel-tabset}
 ## R
 ```{r}
-#| eval: false
+#| label: intro-cerrado-lem-red
+#| results: hide
+#| cache: true
 # Reduce imbalance between the classes
 samples_lem <- sits_reduce_imbalance(
     samples_lem_time_series,
@@ -365,24 +398,22 @@ samples_lem = sits_reduce_imbalance(
 
 The new distribution of samples per class can be obtained using the `summary()` command. It should show a more balanced data set.
 
-```{r}
-#| echo: false
-samples_lem <- readRDS("./etc/samples_lem.rds")
-```
-
-```{python}
-#| echo: false
-samples_lem = read_rds("./etc/samples_lem.rds")
-```
-
 ::: {.panel-tabset}
 ## R
 ```{r}
+#| label: intro-cerrado-lem-red-sum
+#| cache: true
 # Show the summary of the balanced time series sample data
 summary(samples_lem)
 ```
 ## Python
 ```{python}
+#| eval: false
+# Show the summary of the balanced time series sample data
+summary(samples_lem)
+```
+```{r}
+#| echo: false
 # Show the summary of the balanced time series sample data
 summary(samples_lem)
 ```
@@ -393,45 +424,52 @@ It is helpful to plot the dispersion of the time series. In what follows, for br
 ::: {.panel-tabset}
 ## R
 ```{r}
-#| label: fig-ts-forest-r
-#| out-width: 90%
+#| label: fig-ts-crops2-ndvi
+#| results: hide
+#| cache: true
+#| fig-width: 7
+#| fig-height: 5
+#| fig-dpi: 300
 #| fig-cap: |
 #|   Joint plot of all samples in band NDVI for label Cropland_2_cycles.
 #| fig-align: center
-# Select all samples with label "Cropland_2_cycles" using `dplyr::filter`
-# since the label attribute is a column of the samples data.frame
-samples_cropland_2cycles <- dplyr::filter(
+#| out-width: 100%
+# Select all samples with label "Cropland_2_cycles" and band "NDVI"
+samples_cropland_2cycles_ndvi <- sits_select(
     samples_lem, 
-    label == "Cropland_2_cycles"
-)
-
-# Select the NDVI band values using sits_select
-# because band values are in a nested data.frame
-samples_crops_2cycles_ndvi <- sits_select(
-    samples_cropland_2cycles,
+    labels = "Cropland_2_cycles",
     bands = "NDVI"
-) 
-
+)
 # plot the samples for label Cropland_2_cycles and band NDVI
-plot(samples_crops_2cycles_ndvi)
+plot(samples_cropland_2cycles_ndvi)
 ```
 ## Python
 ```{python}
-#| label: fig-ts-forest-py
-#| out-width: 100%
-#| fig-cap: |
-#|   Joint plot of all samples in band NDVI for label Forest.
-#| fig-align: center
-# Select all samples with label "Cropland_2_cycles" using `query` 
-# since the label attribute is a column of the samples data.frame
-samples_crops_2cycles = samples_lem.query('label == "Cropland_2_cycles"')
-
-# Select the NDVI band values using sits_select
-# because band values are in a nested data.frame
-samples_crops_2cycles_ndvi = sits_select(samples_crops_2cycles, bands = "NDVI")
+#| eval: false
+# Select all samples with label "Cropland_2_cycles" and band "NDVI"
+samples_cropland_2cycles_ndvi = sits_select(
+        samples_crops_2cycles, 
+        labels = "Cropland_2_cycles", 
+        bands = "NDVI")
 
 # plot the samples for label Cropland_2_cycles and band NDVI
-plot(samples_crops_2cycles_ndvi)
+plot(samples_cropland_2cycles_ndvi)
+```
+```{r}
+#| label: py-fig-ts-crops2-ndvi
+#| echo: false
+#| warning: false
+#| results: hide
+#| cache: true
+#| fig-width: 7
+#| fig-height: 5
+#| fig-dpi: 300
+#| fig-cap: |
+#|   Joint plot of all samples in band NDVI for label Cropland_2_cycles.
+#| fig-align: center
+#| out-width: 100%
+# plot the samples for label Cropland_2_cycles and band NDVI
+plot(samples_cropland_2cycles_ndvi)
 ```
 :::
 
@@ -446,13 +484,19 @@ To build the classification model, we use a Random Forest model called by `sits_
 ::: {.panel-tabset}
 ## R
 ```{r}
-#| label: fig-rf-intro-r
-#| out-width: 80%
+#| label: fig-rf-intro
+#| results: hide
+#| warning: false
+#| cache: true
+#| fig-width: 7
+#| fig-height: 5
+#| fig-dpi: 300
 #| fig-cap: |
 #|   Most relevant variables of trained Random Forest model.
 #| fig-align: center
-set.seed(03022024)
-
+#| out-width: 90%
+# Set a seed for controlling randomness
+set.seed(3022024)
 # Train a random forest model
 rf_model <- sits_train(
     samples = samples_lem, 
@@ -464,11 +508,7 @@ plot(rf_model)
 ```
 ## Python 
 ```{python}
-#| label: fig-rf-intro-py
-#| out-width: 100%
-#| fig-cap: |
-#|   Most relevant variables of trained Random Forest model.
-#| fig-align: center
+#| eval: false
 r_set_seed(3022024)
 
 # Train a Random Forest model
@@ -477,6 +517,21 @@ rf_model = sits_train(
     ml_method = sits_rfor()
 )
 
+# Plot the most important variables of the model
+plot(rf_model)
+```
+```{r}
+#| label: py-fig-rf-intro
+#| results: hide
+#| warning: false
+#| cache: true
+#| fig-width: 7
+#| fig-height: 5
+#| fig-dpi: 300
+#| fig-cap: |
+#|   Most relevant variables of trained Random Forest model.
+#| fig-align: center
+#| out-width: 90%
 # Plot the most important variables of the model
 plot(rf_model)
 ```
@@ -490,7 +545,17 @@ After training the machine learning model, the next step is to classify the data
 :::{.panel-tabset}
 ## R
 ```{r}
-#| eval: false
+#| label: fig-intro-probs
+#| results: hide
+#| cache: true
+#| warning: false
+#| fig-width: 7
+#| fig-height: 5
+#| fig-dpi: 300
+#| fig-cap: |
+#|   Probability map for class Cropland_2_cycles.
+#| fig-align: center
+#| out-width: 100%
 # Classify the data cube to produce a map of probabilities
 lem_probs <- sits_classify(
     data = lem_cube, 
@@ -518,18 +583,23 @@ lem_probs = sits_classify(
 # Plot the probability cube for class Forest
 plot(lem_probs, labels = "Cropland_2_cycles", palette = "YlOrBr")
 ```
-:::
-
 ```{r}
 #| echo: false
-#| label: fig-prob-intro
-#| out-width: 100%
+#| label: py-fig-intro-probs
+#| results: hide
+#| warning: false
+#| cache: true
+#| fig-width: 7
+#| fig-height: 5
+#| fig-dpi: 300
 #| fig-cap: |
 #|   Probability map for class Cropland_2_cycles.
 #| fig-align: center
-knitr::include_graphics(("./images/lem_probs.png"))
+#| out-width: 100%
+# Plot the probability cube for class Forest
+plot(lem_probs, labels = "Cropland_2_cycles", palette = "YlOrBr")
 ```
-
+:::
 After completing the classification, we plot the probability maps for the class `Cropland_2_cycles`. Probability maps help visualize the degree of confidence the classifier assigns to the labels for each pixel. They can be used to produce uncertainty information and support active learning, as described in Chapter [Uncertainty and active learning](https://e-sensing.github.io/sitsbook/cl_uncertainty.html).
 
 ## Spatial smoothing
@@ -539,7 +609,17 @@ When working with big Earth observation data, there is much variability within e
 :::{.panel-tabset}
 ## R
 ```{r}
-#| eval: false
+#| label: fig-intro-smooth
+#| results: hide
+#| cache: true
+#| warning: false
+#| fig-width: 7
+#| fig-height: 5
+#| fig-dpi: 300
+#| fig-cap: |
+#|   Smoothed probability map for class Cropland_2_cycles.
+#| fig-align: center
+#| out-width: 100%
 # Perform spatial smoothing
 lem_smooth <- sits_smooth(
     cube = lem_probs,
@@ -563,17 +643,22 @@ lem_smooth = sits_smooth(
 
 plot(lem_smooth, labels = "Cropland_2_cycles", palette = "YlOrBr")
 ```
-:::
-
 ```{r}
 #| echo: false
-#| label: fig-smooth-intro
-#| out-width: 100%
+#| label: py-fig-intro-smooth
+#| results: hide
+#| warning: false
+#| cache: true
+#| fig-width: 7
+#| fig-height: 5
+#| fig-dpi: 300
 #| fig-cap: |
-#|   Probability map for class Cropland_2_cycles.
+#|   Smoothed probability map for class Cropland_2_cycles.
 #| fig-align: center
-knitr::include_graphics(("./images/lem_smooth.png"))
+#| out-width: 100%
+plot(lem_smooth, labels = "Cropland_2_cycles", palette = "YlOrBr")
 ```
+:::
 
 ## Labeling a probability data cube
 
@@ -582,7 +667,17 @@ After removing outliers using local smoothing, the final classification map can 
 :::{.panel-tabset}
 ## R
 ```{r}
-#| eval: false
+#| label: fig-intro-label
+#| results: hide
+#| warning: false
+#| cache: true
+#| fig-width: 7
+#| fig-height: 5
+#| fig-dpi: 300
+#| fig-cap: |
+#|   Classified map for Luis Eduardo Magalhaes region.
+#| fig-align: center
+#| out-width: 100%
 # Label the probability file 
 lem_map <- sits_label_classification(
     cube = lem_smooth, 
@@ -602,17 +697,22 @@ lem_map = sits_label_classification(
 
 plot(lem_map)
 ```
-:::
-
 ```{r}
 #| echo: false
-#| label: fig-map-intro
-#| out-width: 100%
+#| label: py-fig-intro-label
+#| results: hide
+#| cache: true
+#| warning: false
+#| fig-width: 7
+#| fig-height: 5
+#| fig-dpi: 300
 #| fig-cap: |
-#|   Probability map for class Cropland_2_cycles.
+#|   Classified map for Luis Eduardo Magalhaes region.
 #| fig-align: center
-knitr::include_graphics(("./images/lem_map.png"))
+#| out-width: 100%
+plot(lem_map)
 ```
+:::
 
 ## Summary
 

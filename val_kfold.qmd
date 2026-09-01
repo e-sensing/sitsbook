@@ -20,14 +20,21 @@ library(tibble)
 # load packages "sits" and "sitsdata"
 library(sits)
 library(sitsdata)
+# set tempdir if it does not exist 
+tempdir_r <- "~/sitsbook/tempdir/R/val_kfold"
+dir.create(tempdir_r, showWarnings = FALSE)
 ```
 ## Python
 ```{python}
 #| echo: true
-#| eval: true
+#| eval: false
 #| output: false
 # load "pysits" library
 from pysits import *
+from pathlib import Path
+# set tempdir if it does not exist 
+tempdir_py = Path.home() / "sitsbook/tempdir/Python/val_kfold"
+tempdir_py.mkdir(parents=True, exist_ok=True)
 ```
 ```{python}
 #| echo: false
@@ -53,11 +60,21 @@ Cross-validation uses part of the available samples to fit the classification mo
 3. `ml_method`: ML/DL method to be used for the validation (default = Random Forest);
 4. `multicores`: number of cores to be used for parallel processing (default = 2).
 
-Below we show an example of cross-validation on the `samples_matogrosso_mod13q1` dataset. 
+Below we show an example of cross-validation on the `samples_matogrosso_mod13q1` dataset. The resulting validation can be exported to an XLSX file, visualized as a confusion matrix, or have its metrics displayed.
 
 :::{.panel-tabset}
 ## R
 ```{r}
+#| label: val-mt-confusion-matrix
+#| cache: true
+#| warning: false
+#| fig-width: 5
+#| fig-height: 5
+#| fig-dpi: 300
+#| fig-cap: |
+#|   Confusion matrix for 5-fold validation resulting from Random Forest classification of Mato Grosso samples.
+#| fig-align: center
+#| out-width: 90%
 rfor_validate_mt <- sits_kfold_validate(
     samples = samples_matogrosso_mod13q1,
     folds = 5,
@@ -69,6 +86,8 @@ plot(rfor_validate_mt, type = "confusion_matrix")
 ```
 ## Python
 ```{python}
+#| echo: true
+#| eval: false
 # Load samples
 samples_matogrosso_mod13q1 = load_samples(
     name = "samples_matogrosso_mod13q1", 
@@ -84,18 +103,86 @@ rfor_validate_mt = sits_kfold_validate(
 # plot the confusion matrix
 plot(rfor_validate_mt, type_ = "confusion_matrix")
 ```
+```{r}
+#| echo: false
+#| eval: true
+#| label: py-val-mt-confusion-matrix
+#| cache: true
+#| warning: false
+#| fig-width: 5
+#| fig-height: 5
+#| fig-dpi: 300
+#| fig-cap: |
+#|   Confusion matrix for 5-fold validation resulting from Random Forest classification of Mato Grosso samples.
+#| fig-align: center
+#| out-width: 90%
+# plot the confusion matrix
+plot(rfor_validate_mt, type = "confusion_matrix")
+```
 :::
 
 :::{.panel-tabset}
 ## R
 ```{r}
+#| label: val-mt-class-metrics
+#| cache: true
+#| warning: false
+#| fig-width: 5
+#| fig-height: 5
+#| fig-dpi: 300
+#| fig-cap: |
+#|   User's and Producer's Accuracy for classes of the Mato Grosso data set obtained by 5-fold validation with Random Forest classification.
+#| fig-align: center
+#| out-width: 90%
 # Plot the metrics by class
 plot(rfor_validate_mt, type = "metrics")
 ```
 ## Python
 ```{python}
+#| eval: false
 # Plot the metrics by class
 plot(rfor_validate_mt, type_ = "metrics")
+```
+```{r}
+#| echo: false
+#| label: py-val-mt-class-metrics
+#| cache: true
+#| warning: false
+#| fig-width: 5
+#| fig-height: 5
+#| fig-dpi: 300
+#| fig-cap: |
+#|   User's and Producer's Accuracy for classes of the Mato Grosso data set obtained by 5-fold validation with Random Forest classification.
+#| fig-align: center
+#| out-width: 90%
+# Plot the metrics by class
+plot(rfor_validate_mt, type = "metrics")
+```
+:::
+
+We now show how to save the results of k-fold validation into a XLSX (Excel) spreadsheet.
+:::{.panel-tabset}
+## R
+```{r}
+#| label: val-mt-xlsx
+#| cache: true
+#| warning: false
+
+# Save accuracy object to XLSX file
+sits_to_xlsx(
+    acc = rfor_validate_mt, 
+    file = file.path(tempdir_r, "validation.xlsx")
+)
+```
+## Python
+```{python}
+#| eval: false
+# Save accuracy object to XLSX file
+file_xlsx = tempdir_py / "validation.xlsx"
+sits_to_xlsx(
+    acc = rfor_validate_mt, 
+    file = file_xlsx 
+)
 ```
 :::
 

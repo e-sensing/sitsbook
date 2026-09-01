@@ -48,17 +48,22 @@ pd.set_option('display.max_rows', 10)
 
 ## Data structure for image time series
 
-In `sits`, time series are stored in a data frame data structure, both in R and Python. The following code shows the first three lines of a time series containing 1,882 labeled samples of land classes in Mato Grosso state of Brazil. The samples have time series extracted from the MODIS MOD13Q1 product from 2000 to 2016, provided every 16 days at 250 m resolution in the Sinusoidal projection. Based on ground surveys and high-resolution imagery, it includes samples of seven classes: `Forest`, `Cerrado`, `Pasture`, `Soy_Fallow`, `Soy_Cotton`, `Soy_Corn`, and `Soy_Millet`. 
+In `sits`, time series are stored in a data frame data structure, both in R and Python. The following code shows the first three lines of a time series containing 1,837 labeled samples of land classes in Mato Grosso state of Brazil. The samples are designated as `samples_matogrosso_mod13q1` and are available from package `sitsdata`. The samples have time series extracted from the MODIS MOD13Q1 product from 2000 to 2016, provided every 16 days at 250 m resolution in the Sinusoidal projection. Based on ground surveys and high-resolution imagery, it includes samples of seven classes: `Forest`, `Cerrado`, `Pasture`, `Soy_Fallow`, `Soy_Cotton`, `Soy_Corn`, and `Soy_Millet`.
 
 :::{.panel-tabset}
 ## R
 ```{r}
+#| label: ts-samples
+#| warning: false
+#| cache: true
 # Samples
-data("samples_matogrosso_mod13q1")
 samples_matogrosso_mod13q1[1:4,]
 ```
 ## Python
 ```{python}
+#| label: py-ts-samples
+#| warning: false
+#| cache: true
 # Samples
 samples_matogrosso_mod13q1 = load_samples(
     name = "samples_matogrosso_mod13q1", 
@@ -69,27 +74,25 @@ samples_matogrosso_mod13q1[0:4]
 ```
 :::
 
-The time series data frame contains data and metadata. The first six columns contain spatial and temporal information, the label assigned to the sample, and the data cube from where the data has been extracted. The first sample has been labeled `Pasture` at location (-58.5631, -13.8844), being valid for the period (2006-09-14, 2007-08-29). Informing the dates where the label is valid is crucial for correct classification. In this case, the researchers labeling the samples used the agricultural calendar in Brazil. The relevant dates for other applications and other countries will likely differ from those used in the example. The `time_series` column contains the time series data for each spatiotemporal location. This data is also organized as a data frame, with a column with the dates and the other columns with the values for each spectral band. 
+The time series data frame contains data and metadata. The first six columns contain spatial and temporal information, the label assigned to the sample, and the data cube from where the data has been extracted. The first sample has been labeled `Pasture` at location (-58.5631, -13.8844), being valid for the period (2006-09-14, 2007-08-29). Informing the dates where the label is valid is crucial for correct classification. In this case, the researchers labeling the samples used the agricultural calendar in Brazil. The relevant dates for other applications and other countries will likely differ from those used in the example. The `time_series` column contains the time series data for each spatiotemporal location. This data is also organized as a data frame, with a column with the dates and the other columns with the values for each spectral band.
 
 ## Utilities for handling time series
 
 The package provides functions for data manipulation and displaying information for time series data frames. For example, `summary()` shows the labels of the sample set and their frequencies.
 
-```{python}
-#| echo: false
-samples_matogrosso_mod13q1 = load_samples(
-    name = "samples_matogrosso_mod13q1", 
-    package = "sitsdata"
-)
-```
-
 :::{.panel-tabset}
 ## R
 ```{r}
+#| label: ts-summary
+#| warning: false
+#| cache: true
 summary(samples_matogrosso_mod13q1)
 ```
 ## Python
 ```{python}
+#| label: py-ts-summary
+#| warning: false
+#| cache: true
 summary(samples_matogrosso_mod13q1)
 ```
 :::
@@ -99,6 +102,9 @@ In many cases, it is helpful to relabel the dataset. For example, there may be s
 :::{.panel-tabset}
 ## R
 ```{r}
+#| label: ts-new-labels
+#| warning: false
+#| cache: true
 # Copy the sample set for Mato Grosso 
 samples_new_labels <- samples_matogrosso_mod13q1
 
@@ -115,6 +121,9 @@ summary(samples_new_labels)
 ```
 ## Python
 ```{python}
+#| label: py-ts-new-labels
+#| warning: false
+#| cache: true
 # Copy the sample set for Mato Grosso 
 samples_new_labels = samples_matogrosso_mod13q1.copy(deep = True)
 
@@ -131,58 +140,83 @@ summary(samples_new_labels)
 ```
 :::
 
-In R, the functions from `dplyr`, `tidyr`, and `purrr` packages of the `tidyverse` [@Wickham2017] can be used to process the data. In Python, time series data frames can be processed using `pandas`. For example, the following code uses `sits_select()` to get a subset of the sample dataset with two bands (NDVI and EVI). In R, it then uses the `dplyr::filter()` to select the samples labeled as `Cerrado`, while in Python the code uses the `query` function from the `pandas` package.
+The following code uses `sits_select()` to get a subset of the sample dataset with two bands (NDVI and EVI), and whose labels is `Cerrado`.
 
 :::{.panel-tabset}
 ## R
 ```{r}
+#| label: ts-select
+#| results: hide
+#| warning: false
+#| cache: true
 #| message: false
 # Select NDVI band
-samples_ndvi <- sits_select(samples_matogrosso_mod13q1, 
-                            bands = "NDVI")
-
-# Select only samples with Cerrado label
-samples_cerrado <- dplyr::filter(samples_ndvi, 
-                                 label == "Cerrado")
+samples_cerrado_ndvi <- sits_select(
+    samples_matogrosso_mod13q1, 
+    bands = "NDVI",
+    labels = "Cerrado")
 ```
 ## Python
 ```{python}
+#| label: py-ts-select
+#| results: hide
+#| warning: false
+#| cache: true
 #| message: false
-# Select NDVI band
-samples_ndvi = sits_select(samples_matogrosso_mod13q1, 
-                            bands = "NDVI")
-
-# Select only samples with Cerrado label
-samples_cerrado = samples_ndvi.query("label == 'Cerrado'")
+# Select NDVI band and Cerrado label
+samples_cerrado_ndvi = sits_select(
+    samples_matogrosso_mod13q1, 
+    bands = "NDVI",
+    labels = "Cerrado")
 ```
 :::
 
-## Time series visualisation
+## Time series visualization
 
-The default time series plot in `sits` aligns all samples onto a single reference time interval (based on the first sample) for display purposes, even when the samples' actual observations span different calendar years. This plot shows the spread of values for the time series of each band. The strong red line in the plot indicates the median of the values, while the two orange lines are the first and third interquartile ranges. See `?sits::plot` for more details on data visualization in  `sits`.
+The default time series plot in `sits` aligns all samples onto a single reference time interval (based on the first sample) for display purposes, even when the samples' actual observations span different calendar years. This plot shows the spread of values for the time series of each band. The strong red line in the plot indicates the median of the values, while the two orange lines are the first and third quartiles. See `?sits::plot` for more details on data visualization in `sits`.
 
 :::{.panel-tabset}
 ## R
 ```{r}
-#| label: fig-ts-cerrado
-#| fig.align: "center"
-#| out.width: "70%"
-#| fig.cap: "Plot of Cerrado samples for NDVI band."
+#| label: fig-samples-cerrado-ndvi
+#| results: hide
+#| warning: false
+#| cache: true
+#| fig-width: 7
+#| fig-height: 5
+#| fig-dpi: 300
+#| out-width: 90%
+#| fig-align: center
+#| fig-cap: | 
+#|    Plot of Cerrado samples for NDVI band.
 # Plot cerrado samples together
-plot(samples_cerrado)
+plot(samples_cerrado_ndvi)
 ```
 ## Python
 ```{python}
-#| label: fig-ts-cerrado-py
-#| fig.align: "center"
-#| out.width: "70%"
-#| fig.cap: "Plot of Cerrado samples for NDVI band."
+#| eval: false
 # Plot cerrado samples together
-plot(samples_cerrado)
+plot(samples_cerrado_ndvi)
+```
+```{r}
+#| echo: false
+#| label: py-fig-samples-cerrado-ndvi
+#| results: hide
+#| warning: false
+#| cache: true
+#| fig-width: 7
+#| fig-height: 5
+#| fig-dpi: 300
+#| out-width: 90%
+#| fig-align: center
+#| fig-cap: | 
+#|    Plot of Cerrado samples for NDVI band.
+# Plot cerrado samples together
+plot(samples_cerrado_ndvi)
 ```
 :::
 
-To see the spatial distribution of the samples, use `sits_view()` to create an interactive plot. The spatial visulisation is useful to show where the data has been collected. 
+To see the spatial distribution of the samples, use `sits_view()` to create an interactive plot. The spatial visualization is useful to show where the data has been collected.
 
 :::{.panel-tabset}
 ## R
@@ -200,29 +234,36 @@ sits_view(samples_matogrosso_mod13q1)
 ```{r}
 #| label: fig-ts-view
 #| echo: false
-#| out.width: "90%"
-#| fig.align: "center"
-#| fig.cap: "View location of training samples"
+#| out-width: "90%"
+#| fig-align: "center"
+#| fig-cap: "View location of training samples"
 knitr::include_graphics("./images/view_samples.png")
 ```
 
 ## Patterns of training samples
 
-When dealing with large time series, it is useful to obtain a single plot that captures the essential temporal variability of each class. Following the work on the `dtwSat` R package [@Maus2019], we use a generalized additive model (GAM) to obtain a single time series based on statistical approximation. In a GAM, the predictor depends linearly on a smooth function of the predictor variables. 
+When dealing with large time series, it is useful to obtain a single plot that captures the essential temporal variability of each class. Following the work on the `dtwSat` R package [@Maus2019], we use a generalized additive model (GAM) to obtain a single time series based on statistical approximation. In a GAM, the predictor depends linearly on a smooth function of the predictor variables.
 
 $$
-y = \beta_{i} + f(x) + \epsilon, \epsilon \sim N(0, \sigma^2).
-$$ 
+y = \beta_{0} + f(x) + \epsilon, \epsilon \sim N(0, \sigma^2).
+$$
 
 The function `sits_patterns()` uses a GAM to predict an idealized approximation to the time series associated with each class for all bands. The resulting patterns can be viewed using `plot()`.
 
 :::{.panel-tabset}
 ## R
 ```{r}
-#| label: fig-ts-pat
-#| out.width: "100%"
-#| fig.align: "center"
-#| fig.cap: "Patterns for Mato Grosso MOD13Q1 samples."
+#| label: fig-ts-patterns
+#| results: hide
+#| warning: false
+#| cache: true
+#| fig-width: 7
+#| fig-height: 5
+#| fig-dpi: 300
+#| out-width: 100%
+#| fig-align: center
+#| fig-cap: | 
+#|     Patterns for Mato Grosso MOD13Q1 samples.
 # Estimate the patterns for each class and plot them
 samples_matogrosso_mod13q1 |>  
     sits_patterns() |> 
@@ -230,10 +271,17 @@ samples_matogrosso_mod13q1 |>
 ```
 ## Python
 ```{python}
-#| label: fig-ts-pat-py
-#| out.width: "100%"
-#| fig.align: "center"
-#| fig.cap: "Patterns for Mato Grosso MOD13Q1 samples."
+#| label: py-fig-ts-patterns
+#| results: hide
+#| warning: false
+#| cache: true
+#| fig-width: 7
+#| fig-height: 5
+#| fig-dpi: 300
+#| out-width: 100%
+#| fig-align: center
+#| fig-cap: | 
+#|     Patterns for Mato Grosso MOD13Q1 samples.
 # Estimate the patterns for each class and plot them
 plot(
     sits_patterns(
@@ -243,15 +291,15 @@ plot(
 ```
 :::
 
-The resulting patterns provide some insights over the time series behaviour of each class. The response of the Forest class is quite distinctive.  They also show that it should be possible to separate between the single and double cropping classes. There are similarities between the double-cropping classes (`Soy_Corn` and `Soy_Millet `) and between the `Cerrado` and `Pasture` classes. The subtle differences between class signatures provide hints at possible ways by which machine learning algorithms might distinguish between classes. One example is the difference between the middle-infrared response during the dry season (May to September) to differentiate between `Cerrado` and `Pasture`. 
+The resulting patterns provide some insights over the time series behaviour of each class. The response of the Forest class is quite distinctive. They also show that it should be possible to separate between the single and double cropping classes. There are similarities between the double-cropping classes (`Soy_Corn` and `Soy_Millet`) and between the `Cerrado` and `Pasture` classes. The subtle differences between class signatures provide hints at possible ways by which machine learning algorithms might distinguish between classes. One example is the difference between the middle-infrared response during the dry season (May to September) to differentiate between `Cerrado` and `Pasture`.
 
 ## Geographical variability of training data
 
-When working with machine learning classification of Earth observation data, it is important to evaluate if the training samples are well distributed in the study area. Training data often comes from ground surveys made at chosen locations. In large areas, ideally representative samples need to capture spatial variability. In practice, however, ground surveys or other means of data collection are limited to selected areas. In many cases, the geographical distribution of the training data does not cover the study area equally. Such mismatch can be a problem for achieving a good quality classification. As stated by Meyer and Pebesma [@Meyer2022]: *"large gaps in geographic space do not always imply large gaps in feature space"*. 
+When working with machine learning classification of Earth observation data, it is important to evaluate if the training samples are well distributed in the study area. Training data often comes from ground surveys made at chosen locations. In large areas, ideally representative samples need to capture spatial variability. In practice, however, ground surveys or other means of data collection are limited to selected areas. In many cases, the geographical distribution of the training data does not cover the study area equally. Such mismatch can be a problem for achieving a good quality classification. As stated by Meyer and Pebesma [@Meyer2022]: *"large gaps in geographic space do not always imply large gaps in feature space"*.
 
-Meyer and Pebesma propose using a spatial distance distribution plot, which displays two distributions of nearest-neighbor distances: sample-to-sample and prediction-location-to-sample [@Meyer2022]. The difference between the two distributions reflects the degree of spatial clustering in the reference data. Ideally, the two distributions should be similar. Cases where the sample-to-sample distance distribution does not match prediction-location-to-sample distribution indicate possible problems in training data collection. 
+Meyer and Pebesma propose using a spatial distance distribution plot, which displays two distributions of nearest-neighbor distances: sample-to-sample and prediction-location-to-sample [@Meyer2022]. The difference between the two distributions reflects the degree of spatial clustering in the reference data. Ideally, the two distributions should be similar. Cases where the sample-to-sample distance distribution does not match prediction-location-to-sample distribution indicate possible problems in training data collection.
 
-`sits` implements spatial distance distribution plots with the `sits_geo_dist()` function. This function gets a training data in the `samples` parameter, and the study area in the `roi` parameter expressed as an `sf` object. Additional parameters are `n` (maximum number of samples for each distribution) and `crs` (coordinate reference system for the samples). By default, `n` is 1000, and `crs` is "EPSG:4326". The example below shows how to use `sits_geo_dist()`. 
+`sits` implements spatial distance distribution plots with the `sits_geo_dist()` function. This function takes the training data in the `samples` parameter, and the study area in the `roi` parameter expressed as an `sf` object. Additional parameters are `n` (maximum number of samples for each distribution) and `crs` (coordinate reference system for the samples). By default, `n` is 1000, and `crs` is "EPSG:4326". The example below shows how to use `sits_geo_dist()`.
 
 :::{.panel-tabset}
 ## R
@@ -261,10 +309,15 @@ set.seed(777)
 ```
 ```{r}
 #| label: fig-ts-geodist
-#| out.width: "100%"
+#| cache: true
 #| message: false
 #| warning: false
-#| fig.cap: | 
+#| fig-width: 7
+#| fig-height: 5
+#| fig-dpi: 300
+#| out-width: 90%
+#| fig-align: center
+#| fig-cap: | 
 #|    Distribution of sample-to-sample and sample-to-prediction distances.
 # Read a shapefile for the state of Mato Grosso, Brazil
 mt_shp <- system.file("extdata/shapefiles/mato_grosso/mt.shp",
@@ -272,6 +325,12 @@ mt_shp <- system.file("extdata/shapefiles/mato_grosso/mt.shp",
 
 # Convert to an sf object
 mt_sf <- sf::read_sf(mt_shp)
+
+# Select only NDVI band
+samples_modis_ndvi = sits_select(
+    samples_matogrosso_mod13q1, 
+    bands = "NDVI"
+)
 
 # Calculate sample-to-sample and sample-to-prediction distances
 distances <- sits_geo_dist(
@@ -287,11 +346,16 @@ plot(distances)
 r_set_seed(777)
 ```
 ```{python}
-#| label: fig-ts-geodist-py
-#| out.width: "100%"
+#| label: py-fig-ts-geodist
+#| cache: true
 #| message: false
 #| warning: false
-#| fig.cap: | 
+#| fig-width: 7
+#| fig-height: 5
+#| fig-dpi: 300
+#| out-width: 90%
+#| fig-align: center
+#| fig-cap: | 
 #|    Distribution of sample-to-sample and sample-to-prediction distances.
 # Import GeoPandas
 import geopandas as gpd
@@ -303,6 +367,12 @@ mt_shp = r_package_dir("extdata/shapefiles/mato_grosso/mt.shp",
 # Convert to an GeoDataFrame object
 mt_sf = gpd.read_file(mt_shp)
 
+# Select only NDVI band
+samples_modis_ndvi = sits_select(
+    samples_matogrosso_mod13q1, 
+    bands = "NDVI"
+)
+
 # Calculate sample-to-sample and sample-to-prediction distances
 distances = sits_geo_dist(
     samples = samples_modis_ndvi,
@@ -313,15 +383,15 @@ plot(distances)
 ```
 :::
 
-The plot shows a mismatch between the sample-to-sample and the sample-to-prediction distributions. Most samples are closer to each other than they are close to the location where values need to be predicted. In this case, there are many areas where few or no samples have been collected and where the prediction uncertainty will be higher. In this and similar cases, improving the distribution of training samples is always welcome. If that is not possible, areas with insufficient samples could have lower accuracy. This information must be reported to potential users of classification results. 
+The plot shows a mismatch between the sample-to-sample and the sample-to-prediction distributions. Most samples are closer to each other than they are close to the location where values need to be predicted. In this case, there are many areas where few or no samples have been collected and where the prediction uncertainty will be higher. In this and similar cases, improving the distribution of training samples is always welcome. If that is not possible, areas with insufficient samples could have lower accuracy. This information must be reported to potential users of classification results.
 
 ## Time series from data cubes
 
-To get a set of time series in `sits`, first create a regular data cube and then request one or more time series from the cube using `sits_get_data()`.  This function uses two mandatory parameters: `cube` and `samples`. The `cube` indicates the data cube from which the time series will be extracted.  The `samples` parameter accepts the following data types: 
+To get a set of time series in `sits`, first create a regular data cube and then request one or more time series from the cube using `sits_get_data()`. This function uses two mandatory parameters: `cube` and `samples`. The `cube` indicates the data cube from which the time series will be extracted. The `samples` parameter accepts the following data types:
 
 - A data.frame with information on `latitude` and `longitude` (mandatory), `start_date`, `end_date`, and `label` for each sample point.
 - A csv file with columns `latitude`, `longitude`, `start_date`, `end_date`, and `label`.
-- A shapefile containing either `POINT`or `POLYGON` geometries. See details below.
+- A shapefile containing either `POINT` or `POLYGON` geometries. See details below.
 - An `sf` object (from the `sf` package in R) with `POINT` or `POLYGON` geometry.
 - A `geopandas` object from the `geopandas` package in Python with `POINT` or `POLYGON` geometry.
 
@@ -331,9 +401,15 @@ In the example below, given a data cube, the user provides the latitude and long
 ## R
 ```{r} 
 #| label: fig-ts-get
-#| fig.align: "center"
-#| out.width: "90%" 
-#| fig.cap: "NDVI and EVI time series fetched from local raster cube."
+#| cache: true
+#| message: false
+#| warning: false
+#| fig-width: 7
+#| fig-height: 5
+#| fig-dpi: 300
+#| out-width: 90%
+#| fig-align: center
+#| fig-cap: "NDVI and EVI time series fetched from local raster cube."
 # Obtain a raster cube based on local files
 data_dir <- system.file("extdata/sinop", package = "sitsdata")
 raster_cube <- sits_cube(
@@ -354,10 +430,16 @@ plot(series)
 ```
 ## Python
 ```{python}
-#| label: fig-ts-get-py
-#| fig.align: "center"
-#| out.width: "90%" 
-#| fig.cap: "NDVI and EVI time series fetched from local raster cube."
+#| label: py-fig-ts-get
+#| cache: true
+#| message: false
+#| warning: false
+#| fig-width: 7
+#| fig-height: 5
+#| fig-dpi: 300
+#| fig-align: "center"
+#| out-width: "90%" 
+#| fig-cap: "NDVI and EVI time series fetched from local raster cube."
 # Import pandas
 import pandas as pd
 
@@ -382,12 +464,15 @@ plot(series)
 ```
 :::
 
-A useful case is when a set of labeled samples can be used as a training dataset. In this case, trusted observations are usually labeled and commonly stored in plain text files in comma-separated values (csv) or using shapefiles (shp). 
+A useful case is when a set of labeled samples can be used as a training dataset. In this case, trusted observations are usually labeled and commonly stored in plain text files in comma-separated values (csv) or using shapefiles (shp).
 
 :::{.panel-tabset}
 ## R
 ```{r}
+#| label: ts-csv-samples-get
+#| cache: true
 #| message: false
+#| warning: false
 # Retrieve a list of samples described by a csv file
 samples_csv_file <- system.file("extdata/samples/samples_sinop_crop.csv",
                                 package = "sits")
@@ -400,7 +485,11 @@ samples_csv[1:3,]
 ```
 ## Python
 ```{python}
+#| eval: false
+#| label: py-ts-csv-samples-get
+#| cache: true
 #| message: false
+#| warning: false
 # Retrieve a list of samples described by a csv file
 samples_csv_file = r_package_dir("extdata/samples/samples_sinop_crop.csv",
                                 package = "sits")
@@ -413,13 +502,32 @@ samples_csv[0:3]
 ```
 :::
 
-To retrieve training samples for time series analysis, users must provide the temporal information (`start_date` and `end_date`). In the simplest case, all samples share the same dates. That is not a strict requirement. It is possible to specify different dates as long as they have a compatible duration. For example, the dataset `samples_matogrosso_mod13q1` provided with the `sitsdata` package contains samples from different years covering the same duration. These samples are from the MOD13Q1 product, which contains the same number of images per year. Thus, all time series in the dataset `samples_matogrosso_mod13q1` have the same number of dates. 
+To retrieve training samples for time series analysis, users must provide the temporal information (`start_date` and `end_date`). In the simplest case, all samples share the same dates. That is not a strict requirement. It is possible to specify different dates as long as they have a compatible duration. For example, the dataset `samples_matogrosso_mod13q1` provided with the `sitsdata` package contains samples from different years covering the same duration. These samples are from the MOD13Q1 product, which contains the same number of images per year. Thus, all time series in the dataset `samples_matogrosso_mod13q1` have the same number of dates.
 
 Given a suitably built csv sample file, `sits_get_data()` requires two parameters: (a) `cube`, the name of the R object that describes the data cube; (b) `samples`, the name of the CSV file.
 
 :::{.panel-tabset}
 ## R
 ```{r}
+#| label: ts-csv-samples-raster
+#| cache: true
+#| message: false
+#| warning: false
+# Obtain a raster cube based on local files
+data_dir <- system.file("extdata/sinop", package = "sitsdata")
+raster_cube <- sits_cube(
+    source     = "BDC",
+    collection = "MOD13Q1-6.1",
+    data_dir   = data_dir,
+    parse_info = c("satellite", "sensor", "tile", "band", "date"))
+
+# Retrieve a list of samples described by a csv file
+samples_csv_file <- system.file("extdata/samples/samples_sinop_crop.csv",
+                                package = "sits")
+
+# Read the csv file into an R object
+samples_csv <- read.csv(samples_csv_file)
+
 # Get the points from a data cube in raster brick format
 points <- sits_get_data(cube = raster_cube, 
                         samples = samples_csv_file)
@@ -429,6 +537,23 @@ points[1:3,]
 ```
 ## Python
 ```{python}
+#| label: py-ts-csv-samples-raster
+#| cache: true
+#| message: false
+#| warning: false
+# Obtain a raster cube based on local files
+data_dir = r_package_dir("extdata/sinop", package = "sitsdata")
+raster_cube = sits_cube(
+    source     = "BDC",
+    collection = "MOD13Q1-6.1",
+    data_dir   = data_dir,
+    parse_info = ("satellite", "sensor", "tile", "band", "date"))
+# Retrieve a list of samples described by a csv file
+samples_csv_file = r_package_dir("extdata/samples/samples_sinop_crop.csv",
+                                package = "sits")
+
+# Read the csv file into an R object
+samples_csv = pd.read_csv(samples_csv_file)
 # Get the points from a data cube in raster brick format
 points = sits_get_data(cube = raster_cube, 
                         samples = samples_csv_file)
@@ -438,7 +563,7 @@ points[1:3]
 ```
 :::
 
-Users can also specify samples by providing shapefiles, `sf` objects (in R), or `geopandas` objects (in Python) containing `POINT` or `POLYGON` geometries. The geographical location is inferred from the geometries associated with the shapefile or `sf` (or `geopandas`) object. For files containing points, the geographical location is obtained directly. For polygon geometries, the parameter `n_sam_pol` (defaults to 20) determines the number of samples to be extracted from each polygon. The temporal information can be provided explicitly by the user; if absent, it is inferred from the data cube. If label information is available in the shapefile or `sf` object, the parameter `label_attr` is indicates which column contains the label associated with each time series.
+Users can also specify samples by providing shapefiles, `sf` objects (in R), or `geopandas` objects (in Python) containing `POINT` or `POLYGON` geometries. The geographical location is inferred from the geometries associated with the shapefile or `sf` (or `geopandas`) object. For files containing points, the geographical location is obtained directly. For polygon geometries, the parameter `n_sam_pol` (defaults to 20) determines the number of samples to be extracted from each polygon. The temporal information can be provided explicitly by the user; if absent, it is inferred from the data cube. If label information is available in the shapefile or `sf` object, the parameter `label_attr` indicates which column contains the label associated with each time series.
 
 In what follows, we provide a shapefile with location of forested areas in the Cerrado biome in Brazil. The shapefile is first used to define the region of interest to retrieve a data cube. Then the point locations are used to retrieve the time series.
 
@@ -473,6 +598,15 @@ samples_cerrado_forested <- sits_get_data(
 # Display the time series for the locations of Woody Savanna
 samples_cerrado_forested
 ```
+```{r}
+#| echo: false
+#| label: ts-get-data-forested
+#| cache: true
+#| message: false
+#| warning: false
+samples_cerrado_forested <- readRDS("./etc/samples_cerrado_forested.rds")
+samples_cerrado_forested
+```
 ## Python
 ```{python}
 #| eval: false
@@ -503,24 +637,19 @@ samples_cerrado_forested = sits_get_data(
 # Display the time series for the locations of Woody Savanna
 samples_cerrado_forested
 ```
-:::
-
-```{r}
-#| echo: false
-samples_cerrado_forested <- readRDS("./etc/samples_cerrado_forested.rds")
-
-# Display the time series for the locations of Woody Savanna
-samples_cerrado_forested
-```
-
 ```{python}
 #| echo: false
-# read it to have it in memory
+#| label: py-ts-get-data-forested
+#| cache: true
+#| message: false
+#| warning: false
 samples_cerrado_forested = read_rds("./etc/samples_cerrado_forested.rds")
+samples_cerrado_forested
 ```
+:::
 
 ## Summary
 
-In this chapter, we presented the data structure used  by `sits` to store pixel-based image time series. The text also shows how to retrieve time series from data cubes, as well as utilities available for visualisation and extracting patterns and geographical distribution. In the next chapters, we discuss how to improve the quality of training samples. 
+In this chapter, we presented the data structure used by `sits` to store pixel-based image time series. The text also shows how to retrieve time series from data cubes, as well as utilities available for visualization and extracting patterns and geographical distribution. In the next chapters, we discuss how to improve the quality of training samples.
 
 ## References{-}

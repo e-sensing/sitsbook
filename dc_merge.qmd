@@ -54,11 +54,11 @@ This section describes the process of merging collections from different sources
 * Combine Landsat and Sentinel HLS (Harmonized Landsat-Sentinel) collections.
 * Combine Sentinel-2 cubes with digital elevation models.
 
-Except in the cases of combining DEMs with Sentinel-2 cubes, and joining Sentinel-1 and Sentinel-2, the other cases require a combination of two operations: `sits_merge()` and `sits_regularize()`. The first function combines the timelines of the data cubes, in most cases producing to a non-regular data cube. For this reason, users have to use `sits_regularize()` to produce a multi-source regular cube.
+Except in the cases of combining DEMs with Sentinel-2 cubes, and joining Sentinel-1 and Sentinel-2, the other cases require a combination of two operations: `sits_merge()` and `sits_regularize()`. The first function combines the timelines of the data cubes, in most cases producing a non-regular data cube. For this reason, users have to use `sits_regularize()` to produce a multi-source regular cube.
 
 ## Merging HLS Landsat and Sentinel-2 collections
 
-Images from the HLS Landsat and Sentinel-2 collections are accessed separately and can be combined with `sits_merge()`. We first create two ARD collections, one for HLS Sentinel-2 and one for HLS Landsat over the same area. The two cubes are then merged. 
+Images from the HLS Landsat and Sentinel-2 collections are accessed separately and can be combined with `sits_merge()`. We first create two ARD collections, one for HLS Sentinel-2 and one for HLS Landsat over the same area. The two cubes are then merged. We use the HLS collection available at Microsoft Planetary Computer ("MPC"), which has the same content as the NASA HLS collection, but provides a faster access.
 
 :::{.panel-tabset}
 ## R
@@ -75,22 +75,22 @@ roi <- c(
 
 # Retrieve an HLS Sentinel-2 collection
 hls_cube_s2 <- sits_cube(
-    source = "HLS",
+    source = "MPC",
     collection = "HLSS30",
     roi = roi,
     bands = c("BLUE", "GREEN", "RED", "CLOUD"),
     start_date = "2020-06-01",
-    end_date = "2020-09-01"
+    end_date = "2020-08-30"
 )
 
 # create a cube from the HLS Landsat collection
 hls_cube_l8 <- sits_cube(
-    source = "HLS",
+    source = "MPC",
     collection = "HLSL30",
     roi = roi,
     bands = c("BLUE", "GREEN", "RED", "CLOUD"),
     start_date = "2020-06-01",
-    end_date = "2020-09-01"
+    end_date = "2020-08-30"
 )
 
 # merge the Sentinel-2 and Landsat-8 cubes
@@ -107,7 +107,7 @@ roi = dict(
 
 # Retrieve an HLS Sentinel-2 collection
 hls_cube_s2 = sits_cube(
-    source="HLS",
+    source="MPC",
     collection="HLSS30",
     roi=roi,
     bands=("BLUE", "GREEN", "RED", "CLOUD"),
@@ -117,7 +117,7 @@ hls_cube_s2 = sits_cube(
 
 # create a cube from the HLS Landsat collection
 hls_cube_l8 = sits_cube(
-    source="HLS",
+    source="MPC",
     collection="HLSL30",
     roi=roi,
     bands=("BLUE", "GREEN", "RED", "CLOUD"),
@@ -130,7 +130,7 @@ hls_cube_merged = sits_merge(hls_cube_s2, hls_cube_l8)
 ```
 :::
 
-Comparing the timelines of the original cubes and the merged one, one can see the benefits of the merged collection for time series data analysis. 
+Comparing the timelines of the original cubes and the merged one, one can see the benefits of the merged collection for time series data analysis.
 
 **HLS Sentinel-2 timeline**
 
@@ -199,12 +199,12 @@ sits_timeline(hls_cube_merged)
 ```
 :::
 
-The merged cube contains a denser timeline. However, for further use in `sits`, we need to create a regularized cube to obtain a composite with less clouds. To make processing easier, we copy the original data to a local directory.
+The merged cube contains a denser timeline. However, for further use in `sits`, we need to create a regularized cube to obtain a composite with fewer clouds. To make processing easier, we copy the original data to a local directory.
 
 :::{.panel-tabset}
 ## R
 ```{r}
-#| label: merge-cube-local
+#| label: merge-cube-copy-local
 #| results: hide
 #| warning: false
 #| cache: true
@@ -237,6 +237,24 @@ cube_hls_local = sits_cube_copy(
 ```
 :::
 
+```{r}
+#| echo: false
+#| label: merge-cube-local-recreate
+#| results: hide
+#| warning: false
+#| cache: true
+# define the output directory
+tempdir_r_hls <- "~/sitsbook/tempdir/R/dc_merge/hls"
+
+# copy the hls cube for a local directory for faster regularization
+cube_hls_local <- sits_cube(
+    source = "MPC",
+    collection = "HLSS30",
+    data_dir = tempdir_r_hls
+)
+```
+
+
 Copying the merged HLS data to a local directory is an optional procedure, which is recommended in the case of optical data because it speeds up regularization. After the regular data cube is built, these files can be removed. In this example, we select a period of 16-days and keep the original 30-meter resolution of the HLS data for the resulting regular cube.
 
 :::{.panel-tabset}
@@ -263,7 +281,8 @@ cube_hls_reg <- sits_regularize(
     cube = cube_hls_local,
     period = "P16D", 
     res = 30,
-    output_dir = tempdir_r_hls_reg
+    output_dir = tempdir_r_hls_reg,
+    multicores = 1
 )
 
 plot(cube_hls_local, date = "2020-07-11")
@@ -361,7 +380,7 @@ plot(cube_s2, red = "B11", green = "B8A", blue = "B02", date = "2021-07-07")
 ```
 :::
 
-The next step is to create a regular data cube for tile "20LBL" and Sentinel-2 data.
+The next step is to create a regular data cube for tile "22LBL" and Sentinel-2 data.
 
 :::{.panel-tabset}
 ## R
@@ -459,7 +478,7 @@ plot(cube_s1_rtc, band = "VH", palette = "Greys", scale = 0.7)
 plot(cube_s1_rtc, band = "VH", palette = "Greys", scale = 0.7)
 ```
 :::
-The next step is to create a regular Sentinel-1 data cube. The plot uses three dates, which are show respectively in red, green and blue. 
+The next step is to create a regular Sentinel-1 data cube. The plot uses three dates, which are shown respectively in red, green and blue.
 
 :::{.panel-tabset}
 ## R
@@ -534,7 +553,7 @@ plot(cube_s1_reg, band = "VH", scale = 0.7,
 ```
 :::
 
-After creating the two regular cubes, we can merge them. Considering that the timelines are close enough so that the cubes can be combined, we can use the `sits_merge` function to produce a combined cube. As an example, we show a plot with both radar and optical bands.
+After creating the two regular cubes, we can merge them. Considering that the timelines are close enough so that the cubes can be combined, we can use the `sits_merge()` function to produce a combined cube. As an example, we show a plot with both radar and optical bands.
 
 :::{.panel-tabset}
 ## R
@@ -582,7 +601,7 @@ plot(cube_s1_s2, red = "B11", green = "B8A", blue = "VH")
 :::
 ## Combining multitemporal data cubes with digital elevation models
 
-In many applications, especially in regions with large topographical, soil or climatic variations, is is useful to merge multitemporal data cubes with base information such as digital elevation models (DEM). Merging multitemporal satellite images with digital elevation models (DEMs) offers several advantages that enhance the analysis and interpretation of geospatial data. Elevation data provides an additional to the two-dimensional satellite images, which help to distinguish land use and land cover classes which are impacted by altitude gradients.  One example is the capacity to distinguish between low-altitude and high-altitude forests. In case where topography changes significantly, DEM information can improve the accuracy of classification algorithms.
+In many applications, especially in regions with large topographical, soil or climatic variations, it is useful to merge multitemporal data cubes with base information such as digital elevation models (DEM). Merging multitemporal satellite images with digital elevation models (DEMs) offers several advantages that enhance the analysis and interpretation of geospatial data. Elevation data provides an additional dimension to the two-dimensional satellite images, which helps to distinguish land use and land cover classes that are impacted by altitude gradients. One example is the capacity to distinguish between low-altitude and high-altitude forests. In cases where topography changes significantly, DEM information can improve the accuracy of classification algorithms.
 
 As an example of DEM integration in a data cube, we will consider an agricultural region of Chile which is located in a narrow area close to the Andes. There is a steep gradient so that the cube benefits from the inclusion of the DEM.
 
@@ -613,7 +632,7 @@ plot(s2_cube_19HCC, red = "B12", green = "B8A", blue = "B04")
 ## Python
 ```{python}
 #| eval: false
-s2_cube_19HBA = sits_cube(
+s2_cube_19HCC = sits_cube(
   source = "MPC",
   collection = "SENTINEL-2-L2A",
   tiles = "19CC",
@@ -693,7 +712,7 @@ dem_cube_19HCC <- sits_cube(
   source = "MPC",
   collection = "COP-DEM-GLO-30",
   bands = "ELEVATION",
-  tiles = "19HBA"
+  tiles = "19HCC"
 )
 ```
 ## Python
@@ -704,12 +723,12 @@ dem_cube_19HCC = sits_cube(
   source = "MPC",
   collection = "COP-DEM-GLO-30",
   bands = "ELEVATION",
-  tiles = "19HBA"
+  tiles = "19HCC"
 )
 ```
 :::
 
-After obtaining the 1$^\circ$ by 1$^\circ$ data cube covering the selected tile, the next step is to regularize it. This is done using the `sits_regularize()` function. This function will produce a DEM which matches exactly the chosen tile. 
+After obtaining the 1$^\circ$ by 1$^\circ$ data cube covering the selected tile, the next step is to regularize it. This is done using the `sits_regularize()` function. This function will produce a DEM that matches exactly the chosen tile.
 
 :::{.panel-tabset}
 ## R
@@ -746,20 +765,20 @@ plot(dem_cube_19HCC_reg, band = "ELEVATION", palette = "Spectral", rev = TRUE)
 ```{python}
 #| eval: false
 # set output dir if it does not exist 
-tempdir_py_dem_19HBA = tempdir_py / "dem_19HBA"
-tempdir_py_dem_19HBA.mkdir(parents=True, exist_ok=True)
+tempdir_py_dem_19HCC = tempdir_py / "dem_19HCC"
+tempdir_py_dem_19HCC.mkdir(parents=True, exist_ok=True)
 
 # regularize DEM cube
-dem_cube_19HBA_reg = sits_regularize(
-  cube = dem_cube_19HBA,
+dem_cube_19HCC_reg = sits_regularize(
+  cube = dem_cube_19HCC,
   res = 30,
   bands = "ELEVATION",
-  tiles = "19HBA",
-  output_dir = tempdir_py_dem_19HBA
+  tiles = "19HCC",
+  output_dir = tempdir_py_dem_19HCC
 )
 
 # plot the DEM reversing the palette 
-plot(dem_cube_19HBA_reg, band = "ELEVATION", palette = "Spectral", rev = True)
+plot(dem_cube_19HCC_reg, band = "ELEVATION", palette = "Spectral", rev = True)
 ```
 ```{r}
 #| echo: false
@@ -778,7 +797,7 @@ plot(dem_cube_19HCC_reg, band = "ELEVATION", palette = "Spectral", rev = TRUE)
 ```
 :::
 
-There are two ways to combine multitemporal data cubes with DEM data. The first method takes the DEM as a base information, which is used in combination with the multispectral time series. For exemple, consider a situation of a data cube with 10 bands and 23 time steps, which has a 230-dimensional space. Adding DEM as a base cube will include one dimension to the attribute space. This combination is supported by function `sits_add_base_cube`. In the resulting cube, the information on the image time series and that of the DEM are stored separately. The data cube metadata will now include a column called `base_info`. 
+There are two ways to combine multitemporal data cubes with DEM data. The first method takes the DEM as a base information, which is used in combination with the multispectral time series. For example, consider a situation of a data cube with 10 bands and 23 time steps, which has a 230-dimensional space. Adding DEM as a base cube will add one dimension to the attribute space. This combination is supported by function `sits_add_base_cube()`. In the resulting cube, the information on the image time series and that of the DEM are stored separately. The data cube metadata will now include a column called `base_info`.
 
 :::{.panel-tabset}
 ## R
@@ -787,13 +806,13 @@ There are two ways to combine multitemporal data cubes with DEM data. The first 
 #| results: hide
 #| warning: false
 #| cache: true
-merged_cube_base <- sits_add_base_cube(s2_cube_19HBA_reg, dem_cube_19HBA_reg)
+merged_cube_base <- sits_add_base_cube(s2_cube_19HCC_reg, dem_cube_19HCC_reg)
 merged_cube_base$base_info[[1]]
 ```
 ## Python
 ```{python}
 #| eval: false
-merged_cube_base = sits_add_base_cube(s2_cube_19HBA_reg, dem_cube_19HBA_reg)
+merged_cube_base = sits_add_base_cube(s2_cube_19HCC_reg, dem_cube_19HCC_reg)
 merged_cube_base["base_info"][0]
 ```
 ```{r}
@@ -806,9 +825,9 @@ merged_cube_base$base_info[[1]]
 ```
 :::
 
-Although this combination is conceptually simple, it has drawbacks. Since the attribute space now mixes times series with fixed-time information, the only applicable classification method is Random Forest. Because of the way Random Forest works, not all attributes are used by every decision tree. During the training of each tree, at each node, a random subset of features is selected, and the best split is chosen based on this subset rather than all features. Thus, there may be a significant number of decision trees that do use the DEM attribute. As a result, the effect of the DEM information may be underestimated. 
+Although this combination is conceptually simple, it has drawbacks. Since the attribute space now mixes times series with fixed-time information, the only applicable classification method is Random Forest. Because of the way Random Forest works, not all attributes are used by every decision tree. During the training of each tree, at each node, a random subset of features is selected, and the best split is chosen based on this subset rather than all features. Thus, there may be a significant number of decision trees that do not use the DEM attribute. As a result, the effect of the DEM information may be underestimated.
 
-The alternative is to combine the image data cube and the DEM using `sits_merge`. In this case, the DEM becomes another band. Although it may look peculiar to replicate the DEM many times to build an artificial time series, there are many advantages in doing so. All classification algorithms available in `sits` (including the deep learning ones) can be used to classify the resulting cube. For cases where the DEM information is particularly important, such organisation places DEM data at a par with other spectral bands. Users are encouraged to compare the results obtained by direct merging of DEM with spectral bands with the method where DEM is taken as a base cube. 
+The alternative is to combine the image data cube and the DEM using `sits_merge()`. In this case, the DEM becomes another band. Although it may look peculiar to replicate the DEM many times to build an artificial time series, there are many advantages in doing so. All classification algorithms available in `sits` (including the deep learning ones) can be used to classify the resulting cube. For cases where the DEM information is particularly important, such organization places DEM data on par with other spectral bands. Users are encouraged to compare the results obtained by direct merging of DEM with spectral bands with the method where DEM is taken as a base cube.
 
 :::{.panel-tabset}
 ## R
@@ -817,7 +836,7 @@ The alternative is to combine the image data cube and the DEM using `sits_merge`
 #| results: hide
 #| warning: false
 #| cache: true
-merged_cube <- sits_merge(s2_cube_19HBA_reg, dem_cube_19HBA_reg)
+merged_cube <- sits_merge(s2_cube_19HCC_reg, dem_cube_19HCC_reg)
 merged_cube$file_info[[1]]
 ```
 
@@ -829,7 +848,9 @@ merged_cube["file_info"][0]
 ```
 ```{r}
 #| echo: false
-merged_cube_file_info
+#| warning: false
+#| cache: true
+merged_cube$file_info[[1]]
 ```
 :::
 

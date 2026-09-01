@@ -1,7 +1,7 @@
 ---
 title: "Analysis-ready image collections"
 format: html
----  
+---
 
 <a href="https://www.kaggle.com/code/esensing/analysis-ready-image-collections" target="_blank">
 <img src="https://kaggle.com/static/images/open-in-kaggle.svg"/>
@@ -27,6 +27,7 @@ dir.create(tempdir_r)
 ## Python
 ```{python}
 #| label: py-sits-load
+#| eval: false
 #| output: false
 #| warning: false
 # load "pysits" library
@@ -40,7 +41,7 @@ tempdir_py.mkdir(parents=True, exist_ok=True)
 
 ## Introduction
 
-ARD (analysis-ready) image collections are organized into spatial partitions. Sentinel-2/2A images follow the Military Grid Reference System (MGRS) tiling system, which divides the world into 60 UTM zones of 8 degrees of longitude. Each zone contains blocks of 6 degrees of latitude. Blocks are split into tiles of 110 $\times$ 110 km$^2$ with a 10 km overlap. @fig-mgrs-datacubes shows the MGRS tiling system for a part of the northeastern coast of Brazil, contained in UTM zone 24, block M. 
+ARD (analysis-ready) image collections are organized into spatial partitions. Sentinel-2 images follow the Military Grid Reference System (MGRS) tiling system, which divides the world into 60 UTM zones of 6 degrees of longitude. Each zone is divided into latitude bands of 8 degrees. Bands are split into tiles of 110 $\times$ 110 km$^2$ with a 10 km overlap. @fig-mgrs-datacubes shows the MGRS tiling system for a part of the northeastern coast of Brazil, contained in UTM zone 24, block M. 
 
 ```{r}
 #| label: fig-mgrs-datacubes
@@ -59,7 +60,7 @@ The Landsat-4/5/7/8/9 satellites use the Worldwide Reference System (WRS-2), whi
 #| echo: false
 #| out-width: 80%
 #| fig-cap: |
-#|   MGRS tiling system used by Sentinel-2 images (source: US Army).
+#|   WRS-2 tiling system used by Landsat images (source: USGS).
 #| fig-align: center
 knitr::include_graphics("./images/landsat_wrs_grid.png")
 ```
@@ -71,7 +72,7 @@ In version 2.0.0, `sits` supports access to the following ARD image cloud provid
 -  Amazon Web Services (AWS): Open data Sentinel-2/2A Level-2A collections for the Earth's land surface. 
 -  Brazil Data Cube (BDC): Open data collections of Sentinel-2/2A, Landsat-8, CBERS-4/4A, and MOD13Q1 products for Brazil. These collections are organized as regular data cubes. 
 - Copernicus Data Space Ecosystem (CDSE): Open data Sentinel-2/2A Level-2A images. 
-- Copernicus Data Space Ecosystem - OpenSearch (CDSE-OS): Open data Sentinel-1 RTC images. 
+- Copernicus Data Space Ecosystem - OData (CDSE-OS): Open data Sentinel-1 GRD images. 
 - Digital Earth Africa (DEAFRICA): Open data collections of Sentinel-1 RTC, Sentinel-2/2A, Landsat-5/7/8/9 for Africa. Additional products include ALOS-PALSAR-MOSAIC mosaics, DEM-COP-30, NDVI-ANOMALY based on Landsat data, and monthly and daily rainfall data from CHIRPS. 
 - Digital Earth Australia (DEAUSTRALIA): Open data ARD collections of Sentinel-2A/2B and Landsat-5/7/8/9 images, yearly geomedians of Landsat 5/7/8 images; yearly fractional land cover from 1986 to 2024. 
 - Google (GOOGLE): Open data AlphaEarth Foundations annual satellite embeddings produced by Google and Google DeepMind.
@@ -109,7 +110,7 @@ The result of `sits_cube()` is a tibble with a description of the selected image
 
 ## Amazon Web Services
 
-Amazon Web Services (AWS) holds two kinds of collections: *open-data* and *requester-pays*. Open-data collections can be accessed without cost. Requester-pays collections require payment from an AWS account. Currently, `sits` supports the `SENTINEL-2-L2A` collection, which is open data.  The bands at 10 m resolution are B02, B03, B04, and B08. The 20 m bands are B05, B06, B07, B8A, B11, and B12. Bands B01 and B09 are available at 60 m resolution. A CLOUD band is also available. The example below shows how to access one tile of the open-data `SENTINEL-2-L2A` collection.  The `tiles` parameter allows selecting the desired area according to the MGRS reference system. 
+Amazon Web Services (AWS) holds two kinds of collections: *open-data* and *requester-pays*. Open-data collections can be accessed without cost. Requester-pays collections require payment from an AWS account. Currently, `sits` supports the `SENTINEL-2-L2A` collection, which is open data. The bands at 10 m resolution are B02, B03, B04, and B08. The 20 m bands are B05, B06, B07, B8A, B11, and B12. Bands B01 and B09 are available at 60 m resolution. A CLOUD band is also available. The example below shows how to access one tile of the open-data `SENTINEL-2-L2A` collection. The `tiles` parameter allows selecting the desired area according to the MGRS reference system.
 
 ::: {.panel-tabset}
 ## R
@@ -145,17 +146,7 @@ plot(
 ```
 ## Python
 ```{python}
-#| label: py-fig-cube-aws-s2
-#| results: hide
-#| warning: false
-#| cache: true
-#| fig-width: 5
-#| fig-height: 5
-#| fig-dpi: 300
-#| fig-cap: |
-#|   Sentinel-2 image in an area of the Northeastern coast of Brazil.
-#| fig-align: center
-#| out-width: 80%
+#| eval: false
 # Create a data cube covering an area in Brazil
 s2_23MMU_cube = sits_cube(
     source="AWS",
@@ -175,12 +166,34 @@ plot(
     date="2018-10-05"
 )
 ```
+```{r}
+#| echo: false
+#| label: py-fig-cube-aws-s2
+#| results: hide
+#| warning: false
+#| cache: true
+#| fig-width: 5
+#| fig-height: 5
+#| fig-dpi: 300
+#| fig-cap: |
+#|   Sentinel-2 image in an area of the Northeastern coast of Brazil.
+#| fig-align: center
+#| out-width: 80%
+# Plot
+plot(
+    s2_23MMU_cube, 
+    red = "B11", 
+    blue = "B02", 
+    green = "B8A", 
+    date = "2018-10-05"
+)
+```
 :::
 
 
 ## Microsoft Planetary Computer
 
-The `sits` package supports access to open-data collection from Microsoft's Planetary Computer (MPC), including `SENTINEL-1-GRD`, `SENTINEL-1-RTC`, `SENTINEL-2-L2A`, `LANDSAT-C2-L2`, `COP-DEM-GLO-30` (Copernicus Global DEM at 30-meter resolution), `MOD13Q1-6.1`, `MOD09A1-6.1`, `MOD10A1-6.1`, (version 6.1 of these MODIS products), `HLSS30` and `HLSL30` (Harmonized Landsat Sentinel images).
+The `sits` package supports access to open-data collection from Microsoft's Planetary Computer (MPC), including `SENTINEL-1-GRD`, `SENTINEL-1-RTC`, `SENTINEL-2-L2A`, `LANDSAT-C2-L2`, `COP-DEM-GLO-30` (Copernicus Global DEM at 30-meter resolution), `MOD13Q1-6.1`, `MOD09A1-6.1`, `MOD10A1-6.1` (version 6.1 of these MODIS products), `HLSS30` and `HLSL30` (Harmonized Landsat Sentinel images).
 
 ### SENTINEL-2/2A images in MPC
 
@@ -221,6 +234,7 @@ plot(
 ```
 ## Python
 ```{python}
+#| eval: false
 #| label: py-fig-cube-mpc-s2
 #| results: hide
 #| warning: false
@@ -251,12 +265,35 @@ plot(
     date="2019-07-18"
 )
 ```
+```{r}
+#| echo: false
+#| label: py-fig-cube-mpc-s2
+#| results: hide
+#| warning: false
+#| cache: true
+#| fig-width: 5
+#| fig-height: 5
+#| fig-dpi: 300
+#| fig-cap: |
+#|   Sentinel-2 image in an area of the state of Rondonia, Brazil.
+#| fig-align: center
+#| out-width: 80%
+
+# Plot a color composite of one date of the cube
+plot(
+    s2_20LKP_cube_MPC, 
+    red = "B11", 
+    blue = "B02", 
+    green = "B8A", 
+    date = "2019-07-18"
+)
+```
 :::
 
 
 ### LANDSAT-C2-L2 images in MPC
 
-The `LANDSAT-C2-L2` collection provides access to data from the Landsat-5/7/8/9 satellites. Images from these satellites have been intercalibrated to ensure data consistency. For compatibility between the different Landsat sensors, the band names are BLUE, GREEN, RED,  NIR08,  SWIR16, and SWIR22. All images have 30 m resolution. For this collection,  tile search is not supported; the `roi` parameter should be used. The example below shows how to retrieve data from a region of interest covering the covers the Lencois Maranhenses in the Northeastern coast of Brazil. 
+The `LANDSAT-C2-L2` collection provides access to data from the Landsat-5/7/8/9 satellites. Images from these satellites have been intercalibrated to ensure data consistency. For compatibility between the different Landsat sensors, the band names are BLUE, GREEN, RED, NIR08, SWIR16, and SWIR22. All images have 30 m resolution. For this collection, tile search is not supported; the `roi` parameter should be used. The example below shows how to retrieve data from a region of interest covering the Lencois Maranhenses in the Northeastern coast of Brazil.
 
 ::: {.panel-tabset}
 ## R
@@ -295,17 +332,7 @@ plot(
 ```
 ## Python
 ```{python}
-#| label: py-fig-cube-mpc-l8
-#| results: hide
-#| warning: false
-#| cache: true
-#| fig-width: 5
-#| fig-height: 5
-#| fig-dpi: 300
-#| fig-cap: |
-#|   Landsat-8 image in an area in Northeast Brazil.
-#| fig-align: center
-#| out-width: 80%
+#| eval: false
 # Read a ROI that covers part of the Northeastern coast of Brazil
 roi = dict(
     lon_min=-43.5526, lat_min=-2.9644, 
@@ -322,6 +349,24 @@ s2_L8_cube_MPC = sits_cube(
     end_date="2019-09-01"
 )
     
+# Plot the tile that covers the Lencois Maranhenses
+plot(
+    s2_L8_cube_MPC
+)
+```
+```{r}
+#| echo: false
+#| label: py-fig-cube-mpc-l8
+#| results: hide
+#| warning: false
+#| cache: true
+#| fig-width: 5
+#| fig-height: 5
+#| fig-dpi: 300
+#| fig-cap: |
+#|   Landsat-8 image in an area in Northeast Brazil.
+#| fig-align: center
+#| out-width: 80%
 # Plot the tile that covers the Lencois Maranhenses
 plot(
     s2_L8_cube_MPC
@@ -372,17 +417,7 @@ plot(
 ```
 ## Python
 ```{python}
-#| label: py-fig-cube-mpc-s1
-#| results: hide
-#| warning: false
-#| cache: true
-#| fig-width: 7
-#| fig-height: 5
-#| fig-dpi: 300
-#| fig-cap: |
-#|   Sentinel-1 image in an area in Mato Grosso, Brazil.
-#| fig-align: center
-#| out-width: 90%
+#| eval: false
 cube_s1_grd = sits_cube(
     source="MPC",
     collection="SENTINEL-1-GRD",
@@ -397,6 +432,26 @@ plot(
     cube_s1_grd, 
     band="VV", 
     palette="Greys",
+    legend_position = "outside"
+)
+```
+```{r}
+#| echo: false
+#| label: py-fig-cube-mpc-s1
+#| results: hide
+#| warning: false
+#| cache: true
+#| fig-width: 7
+#| fig-height: 5
+#| fig-dpi: 300
+#| fig-cap: |
+#|   Sentinel-1 image in an area in Mato Grosso, Brazil.
+#| fig-align: center
+#| out-width: 90%
+plot(
+    cube_s1_grd, 
+    band = "VV", 
+    palette = "Greys",
     legend_position = "outside"
 )
 ```
@@ -445,17 +500,7 @@ plot(
 ```
 ## Python
 ```{python}
-#| label: py-fig-cube-mpc-s1-rtc
-#| results: hide
-#| warning: false
-#| cache: true
-#| fig-width: 7
-#| fig-height: 5
-#| fig-dpi: 300
-#| fig-cap: |
-#|   Sentinel-1-RTC image of an area in Colombia.
-#| fig-align: center
-#| out-width: 90%
+#| eval: false
 cube_s1_rtc = sits_cube(
     source="MPC",
     collection="SENTINEL-1-RTC",
@@ -473,6 +518,26 @@ plot(
     legend_position = "outside"
 )
 ```
+```{r}
+#| echo: false
+#| label: py-fig-cube-mpc-s1-rtc
+#| results: hide
+#| warning: false
+#| cache: true
+#| fig-width: 7
+#| fig-height: 5
+#| fig-dpi: 300
+#| fig-cap: |
+#|   Sentinel-1-RTC image of an area in Colombia.
+#| fig-align: center
+#| out-width: 90%
+plot(
+    cube_s1_rtc,
+    band = "VV",
+    palette = "Greys",
+    legend_position = "outside"
+)
+```
 :::
 
 
@@ -482,7 +547,9 @@ The above image is from the central region of Colombia, a country with large var
 
 The Copernicus Digital Elevation Model 30-meter global dataset (COP-DEM-GLO-30) is a high-resolution topographic data product provided by the European Space Agency (ESA) under the Copernicus Program. The vertical accuracy of the Copernicus DEM 30-meter dataset is typically within a few meters, but this can vary depending on the region and the original data sources. The primary data source for the Copernicus DEM is data from the TanDEM-X mission, developed by the German Aerospace Center (DLR). TanDEM-X provides high-resolution radar data through interferometric synthetic aperture radar (InSAR) techniques.
 
-The Copernicus DEM 30-meter is organized in a 1$^\circ$ by 1$^\circ$ grid. In `sits`, access to COP-DEM-GLO-30 images can be done either by MGRS tiles (`tiles`) or by region of interest (`roi`). In both cases, the cube is retrieved based on the parts of the grid that intersect the region of interest or the chosen tiles.
+The Copernicus DEM 30-meter is organized in a 1$^\circ$ by 1$^\circ$ grid. In `sits`, access to COP-DEM-GLO-30 images can be done either by MGRS tiles (`tiles`) or by region of interest (`roi`). In both cases, the cube is retrieved based on the parts of the grid that intersect the region of interest or the chosen tiles. The resulting DEM cube
+may includes more than one tile. For this reason, users need to state which specific
+tile they want to visualize.
 
 ::: {.panel-tabset}
 ## R
@@ -516,17 +583,7 @@ plot(
 ```
 ## Python
 ```{python}
-#| label: py-fig-cube-mpc-dem
-#| results: hide
-#| warning: false
-#| cache: true
-#| fig-width: 5
-#| fig-height: 5
-#| fig-dpi: 300
-#| fig-cap: |
-#|   Copernicus 30-meter DEM of an area in Brazil.
-#| fig-align: center
-#| out-width: 90%
+#| eval: false
 cube_dem_30 = sits_cube(
     source="MPC",
     collection="COP-DEM-GLO-30",
@@ -543,6 +600,28 @@ plot(
     legend_position="outside"
 )
 ```
+```{r}
+#| echo: false
+#| label: py-fig-cube-mpc-dem
+#| results: hide
+#| warning: false
+#| cache: true
+#| fig-width: 5
+#| fig-height: 5
+#| fig-dpi: 300
+#| fig-cap: |
+#|   Copernicus 30-meter DEM of an area in Brazil.
+#| fig-align: center
+#| out-width: 90%
+plot(
+    cube_dem_30, 
+    band = "ELEVATION",
+    tile = "10-S09-00-W063-00",
+    palette = "RdYlGn",
+    rev = TRUE,
+    legend_position = "outside"
+)
+```
 :::
 
 
@@ -550,7 +629,7 @@ plot(
 
 The [Brazil Data Cube](http://brazildatacube.org/en) (BDC) is built by Brazil’s National Institute for Space Research (INPE) to provide regular EO data cubes from CBERS, LANDSAT, SENTINEL-2, and TERRA/MODIS satellites for environmental applications. The collections available in the BDC are: `LANDSAT-OLI-16D` (Landsat-8 OLI, 30 m resolution, 16-day intervals), `SENTINEL-2-16D` (Sentinel-2A and 2B MSI images at 10 m resolution, 16-day intervals), `CBERS-WFI-16D` (CBERS-4 WFI, 64 m resolution, 16-day intervals), `CBERS-WFI-8D` (CBERS-4 and 4A WFI images, 64 m resolution, 8-day intervals), and `MOD13Q1-6.1` (MODIS MOD13SQ1 product, collection 6, 250 m resolution, 16-day intervals). For more details, use `sits_list_collections(source = "BDC")`.
 
-The BDC uses three hierarchical grids based on the Albers Equal Area projection and SIRGAS 2000 datum. The large grid has tiles of 422.4 $\times4$ 422.4 km^2^ and is used for CBERS-4 AWFI collections at 64 m resolution; each CBERS-4 AWFI tile contains images with 6600 $\times$ 6600 pixels. The medium grid is used for Landsat-8 OLI collections at 30 m resolution; tiles have an extent of 211.2 $\times$ 211.2 km^2^, and each image has 7040 $\times$ 7040 pixels. The small grid covers 105.6 $\times$ 105.6 km^2^ and is used for Sentinel-2 MSI collections at 10 m resolutions; each image has 10560 $\times$ 10560 pixels. The data cubes in the BDC are regularly spaced in time and cloud-corrected [@Ferreira2020a]. 
+The BDC uses three hierarchical grids based on the Albers Equal Area projection and SIRGAS 2000 datum. The large grid has tiles of 422.4 $\times$ 422.4 km^2^ and is used for CBERS-4 AWFI collections at 64 m resolution; each CBERS-4 AWFI tile contains images with 6600 $\times$ 6600 pixels. The medium grid is used for Landsat-8 OLI collections at 30 m resolution; tiles have an extent of 211.2 $\times$ 211.2 km^2^, and each image has 7040 $\times$ 7040 pixels. The small grid covers 105.6 $\times$ 105.6 km^2^ and is used for Sentinel-2 MSI collections at 10 m resolutions; each image has 10560 $\times$ 10560 pixels. The data cubes in the BDC are regularly spaced in time and cloud-corrected [@Ferreira2020a]. 
 
 
 ```{r}
@@ -558,7 +637,7 @@ The BDC uses three hierarchical grids based on the Albers Equal Area projection 
 #| label: fig-bdc-datacubes
 #| out-width: 80%
 #| fig-cap: |
-#|   Hierarchical BDC tiling system showing (a) large BDC grid overlayed on Brazilian biomes, (b) one learge tile from the grid used for CBERS-4 AWFI data, (c) four medium tiles from the grid used for LANDSAT data; and (d) sixteen small tiles from the grid used for SENTINEL-2 data. Tiles in (b), (c), and (d) are nested.
+#|   Hierarchical BDC tiling system showing (a) large BDC grid overlayed on Brazilian biomes, (b) one large tile from the grid used for CBERS-4 AWFI data, (c) four medium tiles from the grid used for LANDSAT data; and (d) sixteen small tiles from the grid used for SENTINEL-2 data. Tiles in (b), (c), and (d) are nested.
 #| fig-align: center
 knitr::include_graphics("./images/bdc_grid.png")
 ```
@@ -599,6 +678,7 @@ plot(
 ```
 ## Python
 ```{python}
+#| eval: false
 #| label: py-fig-cube-bdc-cbers
 #| results: hide
 #| warning: false
@@ -627,6 +707,28 @@ plot(
     green="B16", 
     blue="B13", 
     date="2021-05-09"
+)
+```
+```{r}
+#| echo: false
+#| label: py-fig-cube-bdc-cbers
+#| results: hide
+#| warning: false
+#| cache: true
+#| fig-width: 5
+#| fig-height: 5
+#| fig-dpi: 300
+#| fig-cap: |
+#|   CBERS-4 WFI image in a Cerrado area in Brazil.
+#| fig-align: center
+#| out-width: 80%
+# Plot one time instance
+plot(
+    cbers_tile, 
+    red = "B15", 
+    green = "B16", 
+    blue = "B13", 
+    date = "2021-05-09"
 )
 ```
 :::
@@ -689,7 +791,7 @@ lena_cube <- sits_cube(
     source = "CDSE",
     collection = "SENTINEL-2-L2A",
     bands = c("B02", "B04", "B8A", "B11", "B12"),
-    start_date = "2023-05-01",
+    start_date = "2023-06-01",
     end_date = "2023-09-01",
     tiles = "52XDF"
 )
@@ -705,17 +807,7 @@ plot(
 ```
 ## Python
 ```{python}
-#| label: py-fig-cube-cdse-s2
-#| results: hide
-#| warning: false
-#| cache: true
-#| fig-width: 5
-#| fig-height: 5
-#| fig-dpi: 300
-#| fig-cap: |
-#|   Sentinel-2 image of the Lena river delta in summertime.
-#| fig-align: center
-#| out-width: 80%
+#| eval: false
 # obtain a collection of images of a tile covering part of Lena delta
 lena_cube = sits_cube(
     source="CDSE",
@@ -735,21 +827,45 @@ plot(
     blue="B04"
 )
 ```
+```{r}
+#| echo: false
+#| label: py-fig-cube-cdse-s2
+#| results: hide
+#| warning: false
+#| cache: true
+#| fig-width: 5
+#| fig-height: 5
+#| fig-dpi: 300
+#| fig-cap: |
+#|   Sentinel-2 image of the Lena river delta in summertime.
+#| fig-align: center
+#| out-width: 80%
+# plot an image from summertime
+plot(
+    lena_cube, 
+    date="2023-07-06", 
+    red="B12", 
+    green="B8A", 
+    blue="B04"
+)
+```
 :::
 
 
-### SENTINEL-1-RTC images in CDSE
+### SENTINEL-1-GRD images in CDSE
 
-An important product under development at CDSE is the radiometric terrain corrected (RTC) Sentinel-1 images. In CDSE, this product is referred to as normalized terrain backscatter (NRB). The S1-NRB product contains radiometrically terrain corrected (RTC) gamma nought backscatter (γ⁰) processed from Single Look Complex (SLC) Level-1A data. Each acquired polarization is stored in an individual binary image file. 
+Sentinel-1 Level-1 Ground Range Detected (GRD) data in the Copernicus Data Space Ecosystem (CDSE) consists of focused C-band synthetic aperture radar imagery multi-looked and projected to ground range using the WGS84 ellipsoid. Ground range coordinates are the slant range coordinates projected onto the ellipsoid of the Earth. Pixel values represent detected magnitude. Phase information is lost. The resulting product has approximately square spatial resolution and square pixel spacing with reduced speckle due to the multi-look processing.
 
-All images are projected and gridded into the United States Military Grid Reference System (US-MGRS). The use of the US-MGRS tile grid ensures a very high level of interoperability with Sentinel-2 Level-2A ARD products making it easy to also set up complex analysis systems that exploit both SAR and optical data. While speckle is inherent in SAR acquisitions, speckle filtering is not applied to the S1-NRB product in order to preserve spatial resolution. Some applications (or processing methods) may require spatial or temporal filtering for stationary backscatter estimates. 
+The CDSE Sentinel-1 GRD data is organized in a 1$^\circ$ by 1$^\circ$ grid. In `sits`, access to these images can be done either by MGRS tiles (`tiles`) or by region of interest (`roi`). In both cases, the cube is retrieved based on the parts of the grid that intersect the region of interest or the chosen tiles. The resulting cube
+may includes more than one tile. For this reason, users need to state which specific
+tile they want to visualize. See the example below for more details.
 
-For more details, please refer to the [S1-NRB product website](https://sentinels.copernicus.eu/web/sentinel/sentinel-1-ard-normalised-radar-backscatter-nrb-product). Global coverage is expected to grow as ESA expands the S1-RTC archive. Unlike optical Sentinel-2 data, which is accessed via the STAC protocol using `source = "CDSE"`, Sentinel-1 RTC images are retrieved through the OpenSearch API using `source = "CDSE-OS"`. The following example shows an S1-RTC image for the Rift Valley in Ethiopia.
+Unlike optical Sentinel-2 data, which is accessed via the STAC protocol using `source = "CDSE"`, Sentinel-1 RTC images are retrieved through the OpenSearch API using `source = "CDSE-OS"`. The following example shows an S1-RTC image for the Nile Delta in Egypt.
 
 ::: {.panel-tabset}
 ## R
 ```{r}
-#| label: fig-rtc-cdse-s2
+#| label: fig-s1-grd-cdse
 #| results: hide
 #| warning: false
 #| cache: true
@@ -757,30 +873,53 @@ For more details, please refer to the [S1-NRB product website](https://sentinels
 #| fig-height: 5
 #| fig-dpi: 300
 #| fig-cap: |
-#|   Sentinel-1-RTC image of the Rift Valley in Ethiopia.
+#|   Sentinel-1-GRD image of the Nile Delta in Egypt.
 #| fig-align: center
 #| out-width: 80%
 # retrieve a S1-RTC cube and plot
-s1_cube <- sits_cube(
-    source = "CDSE-OS",
-    collection = "SENTINEL-1-RTC",
-    bands = c("VV", "VH"),
-    orbit = "descending",
-    start_date = "2023-01-01",
-    end_date = "2023-12-31",
-    tiles = c("37NCH")
-)
+roi = c(lon_min = 31.5, lon_max = 32.5, lat_min = 31.0, lat_max = 32.0)
 
+s1_cube <- sits_cube(
+    source = "CDSE",
+    collection = "SENTINEL-1-GRD",
+    bands = c("VV", "VH"),
+    roi = roi, 
+    orbit = "descending",
+    start_date = "2023-11-01",
+    end_date = "2023-12-31"
+)
 plot(
-    s1_cube, 
+    s1_cube[2,], 
+    roi = roi,
     band = "VH", 
-    date = c("2023-03-03"), 
-    palette = "Greys"
+    palette = "BuGn"
 )
 ```
 ## Python
 ```{python}
-#| label: py-fig-rtc-cdse
+#| eval: false
+# retrieve a S1-RTC cube and plot
+s1_cube = sits_cube(
+    source="CDSE-OS",
+    collection="SENTINEL-1-GRD",
+    bands=("VV", "VH"),
+    orbit="descending",
+    start_date="2023-01-01",
+    end_date="2023-12-31",
+    tiles="36RUV"
+)
+
+plot(
+    s1_cube,
+    tile="N31E031",
+    band="VH", 
+    date="2023-03-03", 
+    palette="Greys"
+)
+```
+```{r}
+#| echo: false
+#| label: py-fig-s1-grd-cdse
 #| results: hide
 #| warning: false
 #| cache: true
@@ -788,25 +927,14 @@ plot(
 #| fig-height: 5
 #| fig-dpi: 300
 #| fig-cap: |
-#|   Sentinel-1-RTC image of the Rift Valley in Ethiopia.
+#|   Sentinel-1-GRD image of the Nile Delta in Egypt.
 #| fig-align: center
 #| out-width: 80%
-# retrieve a S1-RTC cube and plot
-s1_cube = sits_cube(
-    source="CDSE-OS",
-    collection="SENTINEL-1-RTC",
-    bands=("VV", "VH"),
-    orbit="descending",
-    start_date="2023-01-01",
-    end_date="2023-12-31",
-    tiles="37NCH"
-)
-
 plot(
-    s1_cube, 
-    band="VV", 
-    date="2023-03-03", 
-    palette="Greys"
+    s1_cube[3,], 
+    band = "VH", 
+    date = "2023-03-03", 
+    palette = "Greys"
 )
 ```
 :::
@@ -820,11 +948,11 @@ Digital Earth Africa (DEAFRICA) is a cloud service that provides open-access Ear
 - Sentinel-2 level-2A (`SENTINEL-2-L2A`), organized as MGRS tiles.
 - Sentinel-1 radiometrically terrain corrected (`SENTINEL-1-RTC`)
 - Landsat-5 (`LS5-SR`), Landsat-7 (`LS7-SR`), Landsat-8 (`LS8-SR`) and Landsat-9 (`LS9-SR`). All Landsat collections are ARD data and are organized as WRS-2 tiles.
-- SAR L-band images produced by PALSAR sensor onboard the Japanese ALOS satellite(`ALOS-PALSAR-MOSAIC`). Data is organized in a 5$^\circ$ by 5$^\circ$ grid with a spatial resolution of 25 meters. Images are available annually from 2007 to 2010 (ALOS/PALSAR) and from 2015 to 2022 (ALOS-2/PALSAR-2).
+- SAR L-band images produced by PALSAR sensor onboard the Japanese ALOS satellite (`ALOS-PALSAR-MOSAIC`). Data is organized in a 5$^\circ$ by 5$^\circ$ grid with a spatial resolution of 25 meters. Images are available annually from 2007 to 2010 (ALOS/PALSAR) and from 2015 to 2022 (ALOS-2/PALSAR-2).
 - Estimates of vegetation condition using NDVI anomalies (`NDVI-ANOMALY`) compared with the long-term baseline condition. The available measurements are "NDVI-MEAN" (mean NDVI for a month) and "NDVI-STD-ANOMALY" (standardized NDVI anomaly for a month).
 - Rainfall information provided by Climate Hazards Group InfraRed Precipitation with Station data (CHIRPS) from University of California, Santa Barbara. There are monthly (`RAINFALL-CHIRPS-MONTHLY`) and daily (`RAINFALL-CHIRPS-DAILY`) products over Africa.
 - Digital elevation model provided by the EC Copernicus program (`COP-DEM-30`) in 30-meter resolution organized in a 1$^\circ$ by 1$^\circ$ grid.
-- Annual geomedian images for Landsat 8 and Landsat 9 (`GM-LS8-LS9-ANNUAL` (LANDSAT/OLI)`) in the WRS-2 grid system.
+- Annual geomedian images for Landsat 8 and Landsat 9 (`GM-LS8-LS9-ANNUAL`, Landsat-8/9 OLI) in the WRS-2 grid system.
 - Annual geomedian images for Sentinel-2 (`GM-S2-ANNUAL`) in MGRS grid.
 - Rolling three-month geomedian images for Sentinel-2 (`GM-S2-ROLLING`) in MGRS grid.
 - Semestral geomedian images for Sentinel-2 (`GM-S2-SEMIANNUAL`) in MGRS grid.
@@ -866,17 +994,7 @@ plot(
 ```
 ## Python
 ```{python}
-#| label: py-fig-dea-s2
-#| results: hide
-#| warning: false
-#| cache: true
-#| fig-width: 5
-#| fig-height: 5
-#| fig-dpi: 300
-#| fig-cap: |
-#|   Sentinel-2 image in an area over Madagascar.
-#| fig-align: center
-#| out-width: 80%
+#| eval: false
 dea_s2_cube = sits_cube(
     source="DEAFRICA",
     collection="SENTINEL-2-L2A",
@@ -894,6 +1012,25 @@ plot(
     red="B04", 
     blue="B02", 
     green="B08"
+)
+```
+```{r}
+#| label: py-fig-dea-s2
+#| results: hide
+#| warning: false
+#| cache: true
+#| fig-width: 5
+#| fig-height: 5
+#| fig-dpi: 300
+#| fig-cap: |
+#|   Sentinel-2 image in an area over Madagascar.
+#| fig-align: center
+#| out-width: 80%
+plot(
+    dea_s2_cube,
+    red = "B04",
+    blue = "B02",
+    green = "B08"
 )
 ```
 :::
@@ -930,16 +1067,7 @@ plot(dea_l9_cube, date = "2023-06-26",
 ```
 ## Python
 ```{python}
-#| label: py-fig-dea-landsat
-#| results: hide
-#| warning: false
-#| cache: true
-#| fig-width: 5
-#| fig-height: 5
-#| fig-dpi: 300
-#| fig-cap: |
-#|   Landsat-9 image in an area over the Serengeti in Tanzania.
-#| out-width: 80%
+#| eval: false
 dea_l9_cube = sits_cube(
     source = "DEAFRICA",
     collection = "LS9-SR",
@@ -952,6 +1080,21 @@ dea_l9_cube = sits_cube(
     end_date = "2023-08-30"
 )
 
+plot(dea_l9_cube, date = "2023-06-26", 
+     red = "B06", green = "B05", blue = "B04")
+```
+```{r}
+#| echo: false
+#| label: py-fig-dea-landsat
+#| results: hide
+#| warning: false
+#| cache: true
+#| fig-width: 5
+#| fig-height: 5
+#| fig-dpi: 300
+#| fig-cap: |
+#|   Landsat-9 image in an area over the Serengeti in Tanzania.
+#| out-width: 80%
 plot(dea_l9_cube, date = "2023-06-26", 
      red = "B06", green = "B05", blue = "B04")
 ```
@@ -989,16 +1132,7 @@ plot(dea_alos_cube, band = "HH", palette = "RdYlGn")
 ```
 ## Python
 ```{python}
-#| label: py-fig-dea-alos
-#| results: hide
-#| warning: false
-#| cache: true
-#| fig-width: 5
-#| fig-height: 5
-#| fig-dpi: 300
-#| fig-cap: |
-#|   ALOS-PALSAR mosaic for the year 2020 near the Congo-Rwanda border.
-#| out-width: 80%
+#| eval: false
 dea_alos_cube = sits_cube(
     source = "DEAFRICA",
     collection = "ALOS-PALSAR-MOSAIC",
@@ -1012,6 +1146,21 @@ dea_alos_cube = sits_cube(
 )
 
 plot(dea_alos_cube, band = "HH")
+```
+```{r}
+#| echo: false
+#| label: py-fig-dea-alos
+#| results: hide
+#| warning: false
+#| cache: true
+#| fig-width: 5
+#| fig-height: 5
+#| fig-dpi: 300
+#| fig-cap: |
+#|   ALOS-PALSAR mosaic for the year 2020 near the Congo-Rwanda border.
+#| out-width: 80%
+
+plot(dea_alos_cube, band = "HH", palette = "RdYlGn")
 ```
 :::
 
@@ -1061,16 +1210,7 @@ plot(s2_56KKV, green = "NIR-2", blue = "BLUE", red = "SWIR-2", date = "2023-10-1
 ```
 ## Python
 ```{python}
-#| label: py-fig-deaustralia
-#| results: hide
-#| warning: false
-#| cache: true
-#| fig-width: 5
-#| fig-height: 5
-#| fig-dpi: 300
-#| fig-cap: |
-#|   Sentinel-2A image from the DEAUSTRALIA collection showing MGRS tile 56KKV.
-#| out-width: 80%
+#| eval: false
 # retrieve images for the chosen roi
 s2_56KKV = sits_cube(
   source = "DEAUSTRALIA",
@@ -1081,6 +1221,21 @@ s2_56KKV = sits_cube(
   end_date = "2023-11-30"
 )
 
+# plot the resulting map
+plot(s2_56KKV, green = "NIR-2", blue = "BLUE", red = "SWIR-2", date = "2023-10-14")
+```
+```{r}
+#| echo: false
+#| label: py-fig-deaustralia
+#| results: hide
+#| warning: false
+#| cache: true
+#| fig-width: 5
+#| fig-height: 5
+#| fig-dpi: 300
+#| fig-cap: |
+#|   Sentinel-2A image from the DEAUSTRALIA collection showing MGRS tile 56KKV.
+#| out-width: 80%
 # plot the resulting map
 plot(s2_56KKV, green = "NIR-2", blue = "BLUE", red = "SWIR-2", date = "2023-10-14")
 ```
@@ -1166,16 +1321,7 @@ plot(hls_cube_s2, red = "RED", green = "GREEN", blue = "BLUE", date = "2020-06-2
 ```
 ## Python
 ```{python}
-#| label: py-fig-hls-s2
-#| results: hide
-#| warning: false
-#| cache: true
-#| fig-width: 5
-#| fig-height: 5
-#| fig-dpi: 300
-#| fig-cap: |
-#|     Sentinel-2 image from NASA HLSS30 collection showing the island of Ilhabela in the coast of Brazil.
-#| out-width: 80%
+#| eval: false
 # define a region of interest
 roi = dict(lon_min = -45.6422, lat_min = -24.0335,
          lon_max = -45.0840, lat_max = -23.6178)
@@ -1193,15 +1339,30 @@ hls_cube_s2 = sits_cube(
 # plot the cube
 plot(hls_cube_s2, red = "RED", green = "GREEN", blue = "BLUE", date = "2020-06-20")
 ```
+```{r}
+#| echo: false
+#| label: py-fig-hls-s2
+#| results: hide
+#| warning: false
+#| cache: true
+#| fig-width: 5
+#| fig-height: 5
+#| fig-dpi: 300
+#| fig-cap: |
+#|     Sentinel-2 image from NASA HLSS30 collection showing the island of Ilhabela in the coast of Brazil.
+#| out-width: 80%
+# plot the cube
+plot(hls_cube_s2, red = "RED", green = "GREEN", blue = "BLUE", date = "2020-06-20")
+```
 :::
 
 ## Landsat collection from Open Geo Hub
 
 OpenGeoHub Foundation (OGH) is a not-for-profit research foundation based in Wageningen, the Netherlands. It promotes open-source software, transparent environmental data science, and open access to global geographical and geoscientific information. OGH provides analysis-ready, cloud-optimized (ARCO) global Landsat bimonthly mosaics at a 30-meter resolution spanning from 1997 to 2024. These public datasets feature 7 spectral bands plus clear-sky masks as Cloud Optimized GeoTIFFs, accessible via STAC catalogs to support environmental monitoring and AI land-cover mapping. 
 
-Due to technology differences among the sensors onboard different LANDSAT satellites, there are significant variations in the values obtained by each satellite for the same area in Earth’s surface, which reduces the applicability of the data for long-term time series analysis and machine learning algorithms.
+Due to technology differences among the sensors onboard different LANDSAT satellites, there are significant variations in the values obtained by each satellite for the same area on Earth’s surface, which reduces the applicability of the data for long-term time series analysis and machine learning algorithms.
 
-Global Land Analysis and Discovery (GLAD) from University of Maryland (UMD) created a harmonized analysis-ready landsat collection (Landsat ARD) for the entire planet covering a multidecadal span of years (1997–2022+). Described in detail in [@Potapov2020], it is a important dataset for long-term monitoring of forests, croplands, snow, population dynamics, and other environmental variables at global scale. OGH adapted the GLAD data and made it available openly. 
+Global Land Analysis and Discovery (GLAD) from University of Maryland (UMD) created a harmonized analysis-ready landsat collection (Landsat ARD) for the entire planet covering a multidecadal span of years (1997–2022+). Described in detail in [@Potapov2020], it is an important dataset for long-term monitoring of forests, croplands, snow, population dynamics, and other environmental variables at global scale. OGH adapted the GLAD data and made it available openly. 
 
 The Landsat dataset available on OGH is global by default. Thus, when users select an area of interest, a global cube is returned. To obtain a regular data cube for selected areas, use `sits_cube_copy` to copy the desired region to a local directory.
 
@@ -1216,7 +1377,7 @@ The Landsat dataset available on OGH is global by default. Thus, when users sele
 #| fig-height: 5
 #| fig-dpi: 300
 #| fig-cap: |
-#|     Global plot of Landsat collection avaible at OGH.
+#|     Global plot of Landsat collection available at OGH.
 #| out-width: 100%
 # define a region of interest
 roi <- sits_tiles_to_roi("36RUV", grid_system = "MGRS")
@@ -1261,7 +1422,7 @@ plot(ogh_cube, date = "2018-03-01")
 #| fig-height: 5
 #| fig-dpi: 300
 #| fig-cap: |
-#|     Global plot of Landsat collection avaible at OGH.
+#|     Global plot of Landsat collection available at OGH.
 #| out-width: 100%
 plot(ogh_cube, date = "2018-03-01")
 ```
@@ -1335,7 +1496,7 @@ plot(roi_cube, date = "2018-03-01")
 
 Terrascope is an online platform for accessing open-source satellite images. This service, operated by VITO, offers a range of free Earth observation data and processing services. Currently, `sits` supports the World Cover 2021 and World Cereal maps, produced by VITO with support from the European Commission and ESA. The following code shows how to access the World Cover 2021 covering tile "22LBL". First, we use `sits_tiles_to_roi()` to get the region of interest expressed as a bounding box, based on an MGRS tile; this box is then entered as the `roi` parameter in the `sits_cube()` function. Since the World Cover data is available as a 3$^\circ$ by 3$^\circ$ grid, it is necessary to use `sits_cube_copy()` to extract the exact MGRS tile.
 
-To access Terrascope, users need to be registered at the [cloud provider](https://terrascope.be/en). After registration, please include the environmental variables `TERRASCOPE_USER` and `TERRASCOPE_PASSWORD` in you `.Rprofile` configuration. 
+To access Terrascope, users need to be registered at the [cloud provider](https://terrascope.be/en). After registration, please include the environmental variables `TERRASCOPE_USER` and `TERRASCOPE_PASSWORD` in your `.Rprofile` configuration.
 
 :::{.panel-tabset}
 ## R
@@ -1373,16 +1534,7 @@ plot(world_cover_2021_20LBL, legend_position = "inside")
 ```
 ## Python
 ```{python}
-#| label: py-fig-terrascope
-#| results: hide
-#| warning: false
-#| cache: true
-#| fig-width: 5
-#| fig-height: 5
-#| fig-dpi: 300
-#| fig-cap: |
-#|     World Cover 2021 map covering MGRS tile 22LBL.
-#| out-width: 80%
+#| eval: false
 # get roi for an MGRS tile
 bbox_22LBL = sits_tiles_to_roi("22LBL", grid_system = "MGRS")
 
@@ -1401,6 +1553,21 @@ world_cover_2021_20LBL = sits_cube_copy(
   output_dir = tempdir_py
 )
 
+# plot the resulting map
+plot(world_cover_2021_20LBL, legend_position = "inside")
+```
+```{r}
+#| echo: false
+#| label: py-fig-terrascope
+#| results: hide
+#| warning: false
+#| cache: true
+#| fig-width: 5
+#| fig-height: 5
+#| fig-dpi: 300
+#| fig-cap: |
+#|     World Cover 2021 map covering MGRS tile 22LBL
+#| out-width: 80%
 # plot the resulting map
 plot(world_cover_2021_20LBL, legend_position = "inside")
 ```
@@ -1448,16 +1615,7 @@ plot(aef_cube, red = "A03", green = "A01", blue = "A02")
 ```
 ## Python
 ```{python}
-#| label: py-fig-alpha-earth
-#| results: hide
-#| warning: false
-#| cache: true
-#| fig-width: 5
-#| fig-height: 5
-#| fig-dpi: 300
-#| fig-cap: |
-#|     AlphaEarth Foundations satellite embedding for a region in the Brazilian Federal District.
-#| out-width: 80%
+#| eval: false
 # Access AlphaEarth Foundations annual satellite embeddings
 aef_cube = sits_cube(
     source = "GOOGLE",
@@ -1471,6 +1629,22 @@ aef_cube = sits_cube(
     start_date = "2021-01-01",
     end_date = "2022-01-01"
 )
+
+# Plot the cube
+plot(aef_cube, red = "A03", green = "A01", blue = "A02")
+```
+```{r}
+#| echo: false
+#| label: py-fig-alpha-earth
+#| results: hide
+#| warning: false
+#| cache: true
+#| fig-width: 5
+#| fig-height: 5
+#| fig-dpi: 300
+#| fig-cap: |
+#|     AlphaEarth Foundations satellite embedding for a region in the Brazilian Federal District.
+#| out-width: 80%
 
 # Plot the cube
 plot(aef_cube, red = "A03", green = "A01", blue = "A02")

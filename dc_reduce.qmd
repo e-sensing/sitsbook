@@ -27,7 +27,7 @@ dir.create(tempdir_r, showWarnings = FALSE)
 ## Python
 ```{python}
 #| echo: true
-#| eval: true
+#| eval: false
 #| output: false
 # load "pysits" library
 from pysits import *
@@ -40,21 +40,21 @@ tempdir_py.mkdir(parents=True, exist_ok=True)
 
 ## Introduction
 
-There are cases when users want to combine the values of a time series associated to each pixel of a data cube using reduction operators. In time series analysis, a reduction operator is a function that combines a sequence of data points into a single value. This process involves summarizing or aggregating the information from the time series in a meaningful way. Reduction operators are often used to extract key statistics or features from the data, making it easier to analyze and interpret.
+There are cases when users want to combine the values of a time series associated with each pixel of a data cube using reduction operators. In time series analysis, a reduction operator is a function that combines a sequence of data points into a single value. This process involves summarizing or aggregating the information from the time series in a meaningful way. Reduction operators are often used to extract key statistics or features from the data, making it easier to analyze and interpret.
 
 ## Methods
 
-To produce temporal combinations, `sits` provides `sits_reduce`, with associated functions: 
+To produce temporal combinations, `sits` provides `sits_reduce()`, with associated functions:
 
 - `t_max()`: maximum value of the series.
-- `t_min()`: minimum value of the series
+- `t_min()`: minimum value of the series.
 - `t_mean()`: mean of the series.
 - `t_median()`: median of the series.
 - `t_std()`: standard deviation of the series.
 - `t_skewness()`: skewness of the series.
 - `t_kurtosis()`: kurtosis of the series.
 - `t_amplitude()`: difference between maximum and minimum values of the cycle. A small amplitude means a stable cycle.
-- `t_fslope()`: maximum value of the first slope of the cycle. Indicates when the cycle presents an abrupt change in the curve. The slope between two values relates the speed of the growth or senescence phases
+- `t_fslope()`: maximum value of the first slope of the cycle. Indicates when the cycle presents an abrupt change in the curve. The slope between two values relates to the speed of the growth or senescence phases.
 - `t_mse()`: average spectral energy density. The energy of the time series is distributed by frequency.
 - `t_fqr()`: value of the first quartile of the series (0.25).
 - `t_tqr()`: value of the third quartile of the series (0.75).
@@ -69,7 +69,10 @@ The following example shows how to execute a temporal reduction operation.
 :::{.panel-tabset}
 ## R
 ```{r}
-#| eval: false
+#| label: reduce-cube-copy
+#| results: hide
+#| warning: false
+#| cache: true
 # Define a region of interest to be enclosed in the data cube
 roi <- c(
     "lon_min" = -55.80259, 
@@ -125,17 +128,27 @@ ndvi_cube_local = sits_cube_copy(
 ```
 :::
 
-After creating a local data cube based on the contents of the MPC MODIS cube with the NDVI band, we can now compute the maximum NDVI values for each pixel for the images during the period from 2018-05-01 to 2018-09-30. 
+After creating a local data cube based on the contents of the MPC MODIS cube with the NDVI band, we can now compute the maximum NDVI values for each pixel for the images during the period from 2018-05-01 to 2018-09-30.
 
 :::{.panel-tabset}
 ## R
 ```{r}
-#| eval: false
+#| label: fig-reduce-ndvi
+#| results: hide
+#| warning: false
+#| cache: true
+#| fig-width: 5
+#| fig-height: 5
+#| fig-dpi: 300
+#| out-width: 80%
+#| fig-align: center
+#| fig-cap: | 
+#|    Maximum NDVI for MPC MODIS cube for period 2018-05-01 to 2018-09-30.
 # create a local directory to store the result of the operation
 tempdir_r_ndvi_max <- file.path(tempdir_r, "ndvi_max")
 dir.create(tempdir_r_ndvi_max, showWarnings = FALSE)
 
-# Calculate the NBR index
+# Calculate the maximum NDVI
 max_ndvi_cube <- sits_reduce(ndvi_cube_local,
     NDVIMAX = t_max(NDVI),
     output_dir = tempdir_r_ndvi_max,
@@ -151,7 +164,7 @@ plot(max_ndvi_cube, band = "NDVIMAX")
 tempdir_py_ndvi_max = tempdir_py / "ndvi_max"
 tempdir_py_ndvi_max.mkdir(parents=True, exist_ok=True)
 
-# Calculate the NBR index
+# Calculate the maximum NDVI
 max_ndvi_cube = sits_reduce(ndvi_cube_local,
     NDVIMAX = "t_max(NDVI)",
     output_dir = tempdir_py_ndvi_max,
@@ -161,14 +174,28 @@ max_ndvi_cube = sits_reduce(ndvi_cube_local,
 
 plot(max_ndvi_cube, band = "NDVIMAX")
 ```
+```{r}
+#| label: py-fig-reduce-ndvi
+#| results: hide
+#| warning: false
+#| cache: true
+#| fig-width: 5
+#| fig-height: 5
+#| fig-dpi: 300
+#| out-width: 80%
+#| fig-align: center
+#| fig-cap: | 
+#|    Maximum NDVI for MPC MODIS cube for period 2018-05-01 to 2018-09-30.
+plot(max_ndvi_cube, band = "NDVIMAX")
+```
 :::
 
 ```{r}
 #| echo: false
 #| label: fig-dc-reduce-ndvimax
-#| out.width: "80%"
-#| fig.align: "center"
-#| fig.cap: | 
+#| out-width: "80%"
+#| fig-align: "center"
+#| fig-cap: | 
 #|    Maximum NDVI for MPC MODIS cube for period 2018-05-01 to 2018-09-30.
 knitr::include_graphics("./images/dc-reduce-ndvimax.png")
 ```

@@ -1,7 +1,7 @@
 ---
 title: "Map reclassification"
 format: html
---- 
+---
 
 <a href="https://www.kaggle.com/code/esensing/map-reclassification" target="_blank">
 <img src="https://kaggle.com/static/images/open-in-kaggle.svg"/>
@@ -29,7 +29,7 @@ dir.create(tempdir_r, showWarnings = FALSE)
 ## Python
 ```{python}
 #| echo: true
-#| eval: true
+#| eval: false
 #| output: false
 # load "pysits" library
 from pysits import *
@@ -46,15 +46,19 @@ Reclassification of a remote sensing map refers to changing the classes assigned
 
 ## Reclassifying a deforestation map
 
-To illustrate the reclassification in `sits`, we take a classified data cube stored in the `sitsdata` package. As discussed in Chapter [Data cubes from local files](https://e-sensing.github.io/sitsbook/dc_localcubes.html), `sits` can create a data cube from a classified image file. Users need to provide the original data source and collection, the directory where data is stored (`data_dir`), the information on how to retrieve data cube parameters from file names (`parse_info`), and the labels used in the classification. 
+To illustrate the reclassification in `sits`, we take a classified data cube stored in the `sitsdata` package. As discussed in Chapter [Data cubes from local files](https://e-sensing.github.io/sitsbook/dc_localcubes.html), `sits` can create a data cube from a classified image file. Users need to provide the original data source and collection, the directory where data is stored (`data_dir`), the information on how to retrieve data cube parameters from file names (`parse_info`), and the labels used in the classification.
 
 :::{.panel-tabset}
 ## R
 ```{r}
 #| label: fig-ml-reclass-orig
-#| out.width: "90%"
-#| fig.align: "center"
-#| fig.cap: |
+#| cache: true
+#| fig-width: 7
+#| fig-height: 5
+#| fig-dpi: 300
+#| fig-align: "center"
+#| out-width: "90%"
+#| fig-cap: |
 #|   Original classification map.
 # Open classification map
 data_dir <- system.file("extdata/Rondonia-Class", package = "sitsdata")
@@ -75,17 +79,11 @@ rondonia_class <- sits_cube(
                "7" = "Wetland")
 )
 
-plot(rondonia_class, 
-     legend_text_size = 0.7)
+plot(rondonia_class, legend_text_size = 0.7)
 ```
 ## Python
 ```{python}
-#| label: fig-ml-reclass-orig-py
-#| output: true
-#| out.width: "90%"
-#| fig.align: "center"
-#| fig.cap: |
-#|   Original classification map.
+#| eval: false
 # Open classification map
 data_dir= r_package_dir("extdata/Rondonia-Class", package = "sitsdata")
 rondonia_class = sits_cube(
@@ -108,18 +106,34 @@ rondonia_class = sits_cube(
     progress = False
 )
 
+plot(rondonia_class, legend_text_size = 0.7)
+```
+```{r}
+#| label: py-fig-ml-reclass-orig
+#| cache: true
+#| fig-width: 7
+#| fig-height: 5
+#| fig-dpi: 300
+#| fig-align: "center"
+#| out-width: "90%"
+#| fig-cap: |
+#|   Original classification map.
 plot(rondonia_class, 
      legend_text_size = 0.7)
 ```
 :::
 
-The above map shows the total extent of deforestation by clear cuts estimated by the `sits` Random Forest model in an area in Rondonia, Brazil, based on a time series of Sentinel-2 images for the period 2020-06-04 to 2021-08-26. Suppose we want to estimate the deforestation that occurred from June 2020 to August 2021. We need a reference map containing information on forest cuts before 2020. 
+The above map shows the total extent of deforestation by clear cuts estimated by the `sits` Random Forest model in an area in Rondonia, Brazil, based on a time series of Sentinel-2 images for the period 2020-06-04 to 2021-08-26. Suppose we want to estimate the deforestation that occurred from June 2020 to August 2021. We need a reference map containing information on forest cuts before 2020.
 
-In this example, we use as a reference the PRODES deforestation map of Amazonia created by Brazil's National Institute for Space Research (INPE). This map is produced by visual interpretation. PRODES measures deforestation every year, starting from August of one year to July of the following year. It contains classes that represent the natural world (Forest, Water, NonForest, and  NonForest2) and classes that capture the yearly deforestation increments. These classes are named "dYYYY" and "rYYYY"; the first refers to deforestation in a given year (e.g., "d2008" for deforestation for August 2007 to July 2008); the second to places where the satellite data is not sufficient to determine the land class (e.g., "r2010" for 2010). This map is available on package `sitsdata`, as shown below.
+In this example, we use as a reference the PRODES deforestation map of Amazonia created by Brazil's National Institute for Space Research (INPE). This map is produced by visual interpretation. PRODES measures deforestation every year, starting from August of one year to July of the following year. It contains classes that represent the natural world (Forest, Water, NonForest, and NonForest2) and classes that capture the yearly deforestation increments. These classes are named "dYYYY" and "rYYYY"; the first refers to deforestation in a given year (e.g., "d2008" for deforestation from August 2007 to July 2008); the second to places where the satellite data is not sufficient to determine the land class (e.g., "r2010" for 2010). This map is available on package `sitsdata`, as shown below.
 
 :::{.panel-tabset}
 ## R
 ```{r}
+#| label: ml-reclass-prodes
+#| cache: true
+#| results: false
+#| warning: false
 # Set the directory for PRODES data 
 data_dir <- system.file("extdata/PRODES", package = "sitsdata")
 
@@ -148,6 +162,7 @@ prodes_2021 <- sits_cube(
 ```
 ## Python
 ```{python}
+#| eval: false
 # Set the directory for PRODES data 
 data_dir = r_package_dir("extdata/PRODES", package = "sitsdata")
 
@@ -179,12 +194,15 @@ prodes_2021 = sits_cube(
 ```
 :::
 
-Since the labels of the deforestation map are specialized and are not part of the default `sits` color table, we define a legend for better visualization of the different deforestation classes. 
+Since the labels of the deforestation map are specialized and are not part of the default `sits` color table, we define a legend for better visualization of the different deforestation classes.
 
 :::{.panel-tabset}
 ## R
 ```{r}
-#| eval: false
+#| label: ml-reclass-colors
+#| cache: true
+#| results: false
+#| warning: false
 # Use the RColorBrewer palette "YlOrBr" for the deforestation years
 colors <- grDevices::hcl.colors(n = 15, palette = "YlOrBr")
 
@@ -258,24 +276,28 @@ sits_view(prodes_2021, legend = def_legend)
 ```{r}
 #| label: fig-ml-reclass-prodes
 #| echo: false
-#| out.width: "90%"
-#| fig.align: "center"
-#| fig.cap: |
+#| out-width: "90%"
+#| fig-align: "center"
+#| fig-cap: |
 #|   Deforestation map produced by PRODES.
 knitr::include_graphics("./images/view_prodes_2021.png")
 ```
 
-Taking the PRODES map as our reference, we can include new labels in the classified map produced by `sits` using `sits_reclassify()`. The new class "Deforestation_Mask" will be applied to all pixels that PRODES considers that have been deforested before July 2020. We also include a Non_Forest class to include all pixels that PRODES takes as not covered by native vegetation, such as wetlands and rocky areas. The PRODES classes will be used as a mask over the `sits` deforestation map.
+Taking the PRODES map as our reference, we can include new labels in the classified map produced by `sits` using `sits_reclassify()`. The new class `Deforestation_Mask` will be applied to all pixels that PRODES considers to have been deforested before July 2020. We also include a `Non_Forest` class to include all pixels that PRODES takes as not covered by native vegetation, such as wetlands and rocky areas. The PRODES classes will be used as a mask over the `sits` deforestation map.
 
-The `sits_reclassify()` operation requires the parameters: (a) `cube`, the classified data cube whose pixels will be reclassified; (b) `mask`, the reference data cube used as a mask; (c) `rules`, a named list. The names of the `rules` list will be the new label. Each new label is associated with a `mask` vector that includes the labels of the reference map that will be joined. `sits_reclassify()` then compares the original and reference map pixel by pixel. For each pixel of the reference map whose labels are in one of the `rules`, the algorithm relabels the original map. The result will be a reclassified map with the original labels plus the new labels that have been masked using the reference map.
+The `sits_reclassify()` operation requires the parameters: (a) `cube`, the classified data cube whose pixels will be reclassified; (b) `mask`, the reference data cube used as a mask; (c) `rules`, a named list. The names of the `rules` list will be the new labels. Each new label is associated with a `mask` vector that includes the labels of the reference map that will be joined. `sits_reclassify()` then compares the original and reference map pixel by pixel. For each pixel of the reference map whose labels are in one of the `rules`, the algorithm relabels the original map. The result will be a reclassified map with the original labels plus the new labels that have been masked using the reference map.
 
 :::{.panel-tabset}
 ## R
 ```{r}
 #| label: fig-ml-reclass-prodesreclass
-#| out.width: "90%"
-#| fig.align: "center"
-#| fig.cap: |
+#| cache: true
+#| fig-width: 7
+#| fig-height: 5
+#| fig-dpi: 300
+#| fig-align: "center"
+#| out-width: "90%"
+#| fig-cap: |
 #|   Deforestation map by sits masked by PRODES map.
 # Reclassify cube
 rondonia_def_2021 <- sits_reclassify(
@@ -300,16 +322,11 @@ rondonia_def_2021 <- sits_reclassify(
     version = "reclass")
 
 # Plot the reclassified map
-plot(rondonia_def_2021,
-     legend_text_size = 0.7)
+plot(rondonia_def_2021, legend_text_size = 0.7)
 ```
 ## Python
 ```{python}
-#| label: fig-ml-reclass-prodesreclass-py
-#| out.width: "100%"
-#| fig.align: "center"
-#| fig.cap: |
-#|   Deforestation map by sits masked by PRODES map.
+#| eval: false
 # Reclassify cube
 rondonia_def_2021 = sits_reclassify(
     cube = rondonia_class,
@@ -338,11 +355,25 @@ rondonia_def_2021 = sits_reclassify(
 plot(rondonia_def_2021,
      legend_text_size = 0.7)
 ```
+```{r}
+#| echo: false
+#| label: py-fig-ml-reclass-prodesreclass
+#| cache: true
+#| fig-width: 7
+#| fig-height: 5
+#| fig-dpi: 300
+#| fig-align: "center"
+#| out-width: "90%"
+#| fig-cap: |
+#|   Deforestation map by sits masked by PRODES map.
+# Plot the reclassified map
+plot(rondonia_def_2021, legend_text_size = 0.7)
+```
 :::
 
 
-The reclassified map has been split into deforestation before mid-2020 (using the PRODES map) and the areas classified by `sits` that are taken as being deforested from mid-2020 to mid-2021. This allows experts to measure how much deforestation occurred in this period according to `sits` and compare the result with the PRODES map. 
+The reclassified map has been split into deforestation before mid-2020 (using the PRODES map) and the areas classified by `sits` that are taken as being deforested from mid-2020 to mid-2021. This allows experts to measure how much deforestation occurred in this period according to `sits` and compare the result with the PRODES map.
 
 ## Summary
 
-In this chapter, we describe a useful operation that can be applied to classified maps. The `sits_reclassify()` function is not restricted to comparing deforestation maps. It can be used in any case that requires masking of a result based on a reference map. 
+In this chapter, we describe a useful operation that can be applied to classified maps. The `sits_reclassify()` function is not restricted to comparing deforestation maps. It can be used in any case that requires masking of a result based on a reference map.

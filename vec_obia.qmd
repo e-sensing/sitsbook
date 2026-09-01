@@ -27,7 +27,7 @@ dir.create(tempdir_r, showWarnings = FALSE)
 ## Python
 ```{python}
 #| echo: true
-#| eval: true
+#| eval: false
 #| output: false
 # load "pysits" library
 from pysits import *
@@ -40,21 +40,21 @@ tempdir_py.mkdir(parents=True, exist_ok=True)
 
 ## Introduction
 
-Object-Based Image Analysis (OBIA) is an approach to remote sensing image analysis that partitions an image into closed segments which are then classified and analyzed. For high-resolution images (1 meter or smaller) the aim of OBIA is to create objects that represent meaningful features in the real world, like buildings, roads, and water bodies. In case of medium resolution images (such as Sentinel-2 or Landsat) the segments represent regions of the image with similar spectral responses which in general do not correspond directly to individual objects in the ground. These groups of pixels are called superpixels. In both situations, the aim of OBIA is to obtain a spatial partition of the image which can then be assigned to a single class. When applicable, OBIA reduces processing time and produces labeled maps with greater spatial consistency.
+Object-Based Image Analysis (OBIA) is an approach to remote sensing image analysis that partitions an image into closed segments which are then classified and analyzed [@Blaschke2010]. For high-resolution images (1 meter or smaller), the aim of OBIA is to create objects that represent meaningful features in the real world, like buildings, roads, and water bodies. In the case of medium-resolution images (such as Sentinel-2 or Landsat), the segments represent regions of the image with similar spectral responses, which in general do not correspond directly to individual objects on the ground. These groups of pixels are called superpixels [@Nowosad2022]. In both situations, the aim of OBIA is to obtain a spatial partition of the image into segments, each of which can then be assigned to a single class. When applicable, OBIA reduces processing time and produces labeled maps with greater spatial consistency.
 
 The general sequence of the processes involved in OBIA in `sits` is:
 
-1.  Segmentation: The first step is to group together pixels that are similar based a distance metric that considers the values of all bands in all time instances as well as their spatial location. We build a multitemporal attribute space where each time/band combination is taken as an independent dimension. Thus, distance metrics for segmentation in a data cube with 10 bands and 24 time steps use a 240-dimension spectral space and a 2-dimensional Euclidean space. This distance includes both a spatial component (how far the pixel is from the center of the superpixel in terms of x and y coordinates) and a spectral component (how different the pixel’s spectral values are from the average values of the superpixel). The spectral distance is calculated using all the temporal instances of the bands. The result is a set of superpixels are clusters of pixels with similar spectral responses that are close together, which correspond to coherent object parts in the image. 
+1.  Segmentation: The first step is to group together pixels that are similar based on a distance metric that considers the values of all bands in all time instances as well as their spatial location. We build a multitemporal attribute space where each time/band combination is taken as an independent dimension. Thus, distance metrics for segmentation in a data cube with 10 bands and 24 time steps use a 240-dimensional spectral space and a 2-dimensional Euclidean space. This distance includes both a spatial component (how far the pixel is from the center of the superpixel in terms of x and y coordinates) and a spectral component (how different the pixel’s spectral values are from the average values of the superpixel). The spectral distance is calculated using all the temporal instances of the bands. The result is a set of superpixels: clusters of spectrally similar, spatially close pixels that correspond to coherent object parts in the image. 
 
-2.  Training set selection: Users should provide a training set, consisting of either labeled points or polygons. We suggest that QGIS is used to label some of the polygons produced by the segmentation algorithm. These labelled polygons can be used to produce a set of consistent labelled points, using `sits_get_data()`. See more at ["Time series from data cubes"](https://e-sensing.github.io/sitsbook/ts_basics.html#time-series-from-data-cubes).
+2.  Training set selection: Users should provide a training set, consisting of either labeled points or polygons. We suggest using QGIS to label some of the polygons produced by the segmentation algorithm. These labeled polygons can be used to produce a set of consistent labeled points, using `sits_get_data()`. See more at ["Time series from data cubes"](https://e-sensing.github.io/sitsbook/ts_basics.html#time-series-from-data-cubes).
 
 3. Model training: Using the training set produced in the previous step, users produce a classification model using `sits_train()`. See more at [Machine learning for image time series](https://e-sensing.github.io/sitsbook/classification.html).
 
-4. Classification: After the image has been partitioned into distinct objects, the next step is to classify the image using the model produced in the previous step. This step uses `sits_classify()`, which performs a pixel-based classification to obtain a set of probabilities. The segments are not used in the classification. They are saved for the next two steps: smoothing and labeling. Pixel-based classification is much faster than polygon-based classification and the results are the same.
+4. Classification: The next step is to classify the image using the model produced in the previous step. This step uses `sits_classify()`, which performs a pixel-based classification to obtain a set of probabilities. The segments are not used in the classification. They are saved for the next two steps: smoothing and labeling. Pixel-based classification is much faster than polygon-based classification and the results are equivalent.
 
-5. Smoothing: Smoothing vector cubes use a different definition of neighborhood than  [raster-based probability smoothing](https://e-sensing.github.io/sitsbook/cl_smoothing.html). When dealing with raster cubes, neighborhoods are defined based on rectangular windows (e.g., 9 x 9 size). When dealing with vector cube, neighborhoods are defined by the segments. In this case, all pixels inside a segment are considered part of the same neighborhood. When estimating the spatial effects, the probabilities of all pixels in the segment are used to calculate the smoothed probability of each pixel. 
+5. Smoothing: Smoothing for vector cubes uses a different definition of neighborhood than [raster-based probability smoothing](https://e-sensing.github.io/sitsbook/cl_smoothing.html). When dealing with raster cubes, neighborhoods are defined based on rectangular windows (e.g., 9 x 9 size). When dealing with a vector cube, neighborhoods are defined by the segments. In this case, all pixels inside a segment are considered part of the same neighborhood. When estimating the spatial effects, the probabilities of all pixels in the segment are used to calculate the smoothed probability of each pixel. 
 
-5. Map labelling: Once the set of probabilities have been obtained for selected time series inside a segment, they can be used for labeling. To label the segments, `sits` takes the probabilities assigned to each pixel inside a segment and uses an aggregation function to calculate the estimaed value of class probabilities for each segment. The aggregation functions available include `mean` or `median`. After the aggregation, `sits` selected the label of each segment based on maxium aggregate value for the class probabilities. This step uses `sits_label_classification()`, as shown below.
+6. Map labeling: Once the set of probabilities has been obtained for selected time series inside a segment, they can be used for labeling. To label the segments, `sits` takes the probabilities assigned to each pixel inside a segment and uses an aggregation function to calculate the estimated value of class probabilities for each segment. The aggregation functions available include `mean`, `median`, and `majority`. After the aggregation, `sits` selects the label of each segment based on the maximum aggregate value for the class probabilities. This step uses `sits_label_classification()`, as shown below.
 
 ## Image segmentation in sits
 
@@ -71,23 +71,23 @@ The first step of the OBIA procedure in `sits` is to select a data cube to be se
 -   `version`: version of the result
 -   `progress`: show progress bar?
 
-Currently, there are two segmentation function available: (a) `sits_snic` which implements the Simple non-iterative clustering (SNIC) algorithm; (b) `sits_slic` which implements an extended version of the Simple Linear Iterative Clustering (SLIC). Both are described below. We suggest using `sits_snic` since it is much faster than `sits_slic` and produces good results in general. 
+Currently, there are two segmentation functions available: (a) `sits_snic`, which implements the Simple Non-Iterative Clustering (SNIC) algorithm; (b) `sits_slic`, which implements an extended version of the Simple Linear Iterative Clustering (SLIC). Both are described below. We suggest using `sits_snic` since it is much faster than `sits_slic` and produces good results in general. 
 
 ## Simple non-iterative clustering (SNIC)
 
-SNIC (Simple Non-Iterative Clustering) is segmentation algorithm designed to partition an image into compact, uniform regions (superpixels) efficiently [@Achanta2017]. It is an evolution of the SLIC (Simple Linear Iterative Clustering) algorithm, described below. While SLIC relies on an iterative k-means approach (which requires multiple passes over the pixels), SNIC achieves similar or better results in a single pass using a priority queue, making it significantly faster and non-iterative.
+SNIC (Simple Non-Iterative Clustering) is a segmentation algorithm designed to partition an image into compact, uniform regions (superpixels) efficiently [@Achanta2017]. It is an evolution of the SLIC (Simple Linear Iterative Clustering) algorithm, described below. While SLIC relies on an iterative k-means approach (which requires multiple passes over the pixels), SNIC achieves similar or better results in a single pass using a priority queue, making it significantly faster and non-iterative.
 
 SNIC treats image segmentation as a region-growing problem starting from a regular grid of seed points. It uses a priority queue to determine which pixel to process next, ensuring that regions grow in the "cheapest" direction first.
 
-The algorithm can be summarised as follows:
+The algorithm can be summarized as follows:
 
-1. Initialization: After choosing the data cube which will be segmented, users define the seed points (centroids) to be used to grow the superpixels. They can also choose their relative placement. The seeds can be placed on a rectangular, diamond or hexagonal grid, or can be placed randomly. A final parameter is the compactness, which defines how regular are the shapes of the resulting superpixels. 
+1. Initialization: After choosing the data cube which will be segmented, users define the seed points (centroids) to be used to grow the superpixels. They can also choose their relative placement. The seeds can be placed on a rectangular, diamond or hexagonal grid, or can be placed randomly. A final parameter is the compactness, which defines how regular the shapes of the resulting superpixels are. 
 
-2. Priority Queue: Each pixel is represented in a n-dimensional feature space, defined by its all time instances of the spectral bands and 2-D spatial position ($x, y$). The algorithm then creates a priority queue. Initially, the 4-connected neighbors of each seed are added to the queue. The "priority" (or cost) is the distance from the pixel to the seed's centroid in the n-dimensional space.
+2. Priority Queue: Each pixel is represented in an n-dimensional feature space, defined by all the time instances of its spectral bands and its 2-D spatial position ($x, y$). The algorithm then creates a priority queue. Initially, the 4-connected neighbors of each seed are added to the queue. The "priority" (or cost) is the distance from the pixel to the seed's centroid in the n-dimensional space.
 
 3. Region Growing Loop, with the following steps:
 
-(a) SNIC initializes a label map, which will track to which superpixel a pixel belongs, with the corresponding distance map. 
+(a) SNIC initializes a label map — which tracks which superpixel each pixel belongs to — along with a corresponding distance map. 
 
 (b) While the priority queue is not empty, the algorithm extracts the pixel with the smallest distance (lowest cost) from the queue. 
 
@@ -95,17 +95,16 @@ The algorithm can be summarised as follows:
 
 (d) SNIC updates the centroid of that superpixel immediately after adding the new pixel. The new centroid is the average of all pixels currently in that superpixel.
 
-(e) Unlabeled neighbors of the newly added pixel are included to the priority queue. Their cost is calculated based on the current (updated) centroid of the superpixel.
+(e) Unlabeled neighbors of the newly added pixel are added to the priority queue. Their cost is calculated based on the current (updated) centroid of the superpixel.
 
 (f) Go to step (b) until the priority queue is empty.
 
 
-
 ## Simple linear iterative clustering algorithm (SLIC)
 
-The Simple Linear Iterative Clustering (SLIC) algorithm [@Achanta2012] clusters pixels in nearly uniform superpixels. This algorithm has been adapted by Nowosad and Stepinski [@Nowosad2022] to work with multispectral images. SLIC uses spectral similarity and proximity in the image space to segment the image into superpixels. Here's a high-level view of the extended SLIC algorithm:
+The Simple Linear Iterative Clustering (SLIC) algorithm [@Achanta2012] clusters pixels into nearly uniform superpixels. This algorithm has been adapted by Nowosad and Stepinski [@Nowosad2022] to work with multispectral images. SLIC uses spectral similarity and proximity in the image space to segment the image into superpixels. Here's a high-level view of the extended SLIC algorithm:
 
-1.  The algorithm starts by dividing the image into a grid, where each cell of the grid will become a superpixel.
+1.  The algorithm starts by dividing the image into a grid, where each cell of the grid becomes a superpixel.
 
 2.  For each cell, the pixel in the center becomes the initial "cluster center" for that superpixel.
 
@@ -115,15 +114,15 @@ The Simple Linear Iterative Clustering (SLIC) algorithm [@Achanta2012] clusters 
 
 5.  Steps 3-4 are repeated for a set number of iterations, or until the cluster assignments stop changing.
 
-The outcome of the SLIC algorithm is a set of superpixels which try to capture the to boundaries of objects within the image. 
+The outcome of the SLIC algorithm is a set of superpixels which try to capture the boundaries of objects within the image. 
 
 ## Example of SNIC-based segmentation and classification
 
-The SNIC implementation in `sits` 1.5.4 uses the `snic` R package. The parameters for the `sits_snic()` function are:
+The SNIC implementation in `sits` uses the `snic` R package. The parameters for the `sits_snic()` function are:
 
 -   `grid_seeding`: spatial organization of initial grid seeds (one of `rectangular`, `diamond`, `hexagonal`, `random`).
--   `spacing`:	distance (in number of pixels) between initial superpixels' centers.
--   `compactness`: numerical  value between 0 and 1 that controls superpixels' density. Larger values cause clusters to be more compact.
+-   `spacing`: distance (in number of pixels) between initial superpixels' centers.
+-   `compactness`: numerical value between 0 and 1 that controls superpixels' density. Larger values cause clusters to be more compact.
 -   `padding`: distance (in pixels) from the image borders within which no seeds are placed.
 
 To show an example of SNIC-based segmentation, we first build a data cube, using images available in the `sitsdata` package.
@@ -131,7 +130,18 @@ To show an example of SNIC-based segmentation, we first build a data cube, using
 :::{.panel-tabset}
 ## R
 ```{r}
-#| eval: false
+#| label: fig-obia-rgb-20LMR
+#| echo: true
+#| eval: true
+#| cache: true
+#| warning: false
+#| fig-width: 5
+#| fig-height: 5
+#| fig-dpi: 300
+#| fig-cap: |
+#|   RGB composite image for part of tile 20LMR in Rondonia, Brasil.
+#| fig-align: center
+#| out-width: 80%
 # directory where files are located
 data_dir <- system.file("extdata/Rondonia-20LMR", package = "sitsdata")
 
@@ -175,40 +185,61 @@ plot(
     date = "2022-07-16"
 )
 ```
-:::
-
 ```{r}
-#| label: fig-vec-obia-rgb
+#| label: py-fig-obia-rgb-20LMR
 #| echo: false
-#| out.width: "70%"
-#| fig.align: "center"
-#| fig.cap: | 
+#| eval: true
+#| cache: true
+#| warning: false
+#| fig-width: 5
+#| fig-height: 5
+#| fig-dpi: 300
+#| fig-cap: |
 #|   RGB composite image for part of tile 20LMR in Rondonia, Brasil.
-knitr::include_graphics("./images/vec-obia-rgb.png") 
+#| fig-align: center
+#| out-width: 80%
+plot(
+    cube_20LMR, 
+    red = "B11",
+    green = "B8A", 
+    blue = "B02", 
+    date = "2022-07-16"
+)
 ```
-
-The following example produces a segmented image. For the SNIC algorithm, we take the initial separation between cluster centres (`step`) to be 20 pixels, the `compactness` to be 0.5, and the minimum distance between the cluster center and the image borders (`padding`) to be 10 pixels.
+:::
+The following example produces a segmented image. For the SNIC algorithm, we take the initial separation between cluster centers (`spacing`) to be 20 pixels, the `compactness` to be 0.5, and the minimum distance between the cluster center and the image borders (`padding`) to be 10 pixels.
 
 :::{.panel-tabset}
 ## R
 ```{r}
-#| eval: false
-# segment a cube using SLIC
+#| label: fig-obia-snic-20LMR
+#| echo: true
+#| eval: true
+#| cache: true
+#| warning: false
+#| fig-width: 5
+#| fig-height: 5
+#| fig-dpi: 300
+#| fig-cap: |
+#|   Image with segments for part of tile 20LMR in Rondonia, Brasil.
+#| fig-align: center
+#| out-width: 80%
+# segment a cube using SNIC
 # Files are available in a local directory 
 segments_20LMR <- sits_segment(
     cube = cube_20LMR,
-    output_dir = tempdir_r,
     seg_fn = sits_snic(
         grid_seeding = "rectangular",
         spacing = 20,
         compactness = 0.5,
         padding = 10
-    )
+    ),
+    output_dir = tempdir_r
 )
 
 # Plot segments
-plot(segments_20LMR, red = "B11", green = "B8A", blue = "B02", 
-          date = "2022-07-16")
+plot(segments_20LMR, red = "B11", green = "B8A", blue = "B02",
+     date = "2022-07-16")
 ```
 ## Python
 ```{python}
@@ -226,21 +257,25 @@ segments_20LMR = sits_segment(
 )
 
 # Plot segments
-plot(segments_20LMR, red = "B11", green = "B8A", blue = "B02", 
-          date = "2022-07-16")
+plot(segments_20LMR, red = "B11", green = "B8A", blue = "B02", date = "2022-07-16")
 ```
-
-:::
-
 ```{r}
-#| label: fig-vec-obia-segments
+#| label: py-fig-obia-snic-20LMR
 #| echo: false
-#| out.width: "75%"
-#| fig.align: "center"
-#| fig.cap: "Image with segments for part of tile 20LMR in Rondonia, Brasil."
-knitr::include_graphics("./images/vec-obia-segments.png") 
+#| eval: true
+#| cache: true
+#| warning: false
+#| fig-width: 5
+#| fig-height: 5
+#| fig-dpi: 300
+#| fig-cap: |
+#|   Image with segments for part of tile 20LMR in Rondonia, Brasil.
+#| fig-align: center
+#| out-width: 80%
+# Plot segments
+plot(segments_20LMR, red = "B11", green = "B8A", blue = "B02", date = "2022-07-16")
 ```
-
+:::
 
 It is useful to visualize the segments in a leaflet together with the RGB image using `sits_view()`.
 
@@ -263,18 +298,22 @@ sits_view(segments_20LMR, add = TRUE)
 ```{r}
 #| label: fig-obia-view
 #| echo: false
-#| out.width: "75%"
-#| fig.align: "center"
-#| fig.cap: "Detail of segmentation of image in Amazonia"
+#| out-width: "75%"
+#| fig-align: "center"
+#| fig-cap: "Detail of segmentation of image in Amazonia"
 knitr::include_graphics("./images/segmentation_view.png")
 ```
 
-After obtaining the segments, the next step is to classify them. This is done by first training a classification model. This case study uses the training dataset `samples_deforestation_rondonia`, available in package `sitsdata`. This dataset consists of 6007 samples collected from Sentinel-2 images covering the state of Rondonia. There are nine classes: `Clear_Cut_Bare_Soil`, `Clear_Cut_Burned_Area`, `Mountainside_Forest`, `Forest`, `Riparian_Forest`, `Clear_Cut_Vegetation`, `Water`, `Wetland`, and `Seasonally_Flooded`. Each time series contains values from Sentinel-2/2A bands B02, B03, B04, B05, B06, B07, B8A, B08, B11 and B12, from 2022-01-05 to 2022-12-23 in 16-day intervals. The samples are intended to detect deforestation events and have used in earlier examples of the book. For the training, we select the same bands as those of the data cube.
+After obtaining the segments, the next step is to classify them. This is done by first training a classification model. This case study uses the training dataset `samples_deforestation_rondonia`, available in package `sitsdata`. This dataset consists of 6007 samples collected from Sentinel-2 images covering the state of Rondonia. There are nine classes: `Clear_Cut_Bare_Soil`, `Clear_Cut_Burned_Area`, `Mountainside_Forest`, `Forest`, `Riparian_Forest`, `Clear_Cut_Vegetation`, `Water`, `Wetland`, and `Seasonally_Flooded`. Each time series contains values from Sentinel-2A/2B bands B02, B03, B04, B05, B06, B07, B8A, B08, B11 and B12, from 2022-01-05 to 2022-12-23 in 16-day intervals. The samples are intended to detect deforestation events and have been used in earlier examples of the book. For the training, we select the same bands as those of the data cube.
 
 :::{.panel-tabset}
 ## R
 ```{r} 
-#| eval: false
+#| label: obia-train-tcnn
+#| echo: true
+#| eval: true
+#| cache: true
+#| warning: false
 # Select bands
 samples_deforestation <- sits_select(samples_deforestation_rondonia,
                                      bands = c("B02", "B8A", "B11"))
@@ -299,30 +338,42 @@ samples_deforestation = sits_select(samples_deforestation_rondonia,
 tcnn_model = sits_train(samples_deforestation, sits_tempcnn())
 ```
 :::
-The segment classification procedure applies the model to a number of user-defined samples inside each segment. Each of these samples is then assigned a set of probability values, one for each class. The output of the procedure is a raster data cube containing a set of probabilites for each layer. The parameters for the `sits_classify()` function for vector cubes are:
+The segment classification procedure applies the model to every pixel inside each segment. Each pixel is then assigned a set of probability values, one for each class. The output of the procedure is a raster data cube containing a probability layer for each class. The parameters for the `sits_classify()` function for vector cubes are: 
 
-| Parameter | Meaning |
-|---|---|
-| `data` | either a data cube or a set of time series |
-| `ml_model` |  a trained model that uses one of the machine learning methods provided | 
-| `inpute_fn` | imputation function used to interpolate NA values (default = `inpute_linear`) |
-| `multicores` | number of CPU cores that will be used for processing (default = 2| 
-| `memsize` | RAM memory available for classification (default = 4) | 
-| `gpu_memory` | GPU memory available for classification if a GPU is available (default = 4)) | 
-| `batch_size` | size of batches used for processing (default = 1000*`gpu_memory`) |
-| `roi` | Region of interest where pixels will be classified. either an sf object, shapefile, or a numeric vector in WGS 84 with named XY values ("xmin", "xmax", "ymin", "ymax") or named lat/long values ("lon_min", "lat_min", "lon_max", "lat_max").|
-| `exclusion_mask` | Areas to be excluded from the classification process, defined by either an `sf` object or by a shapefile.| 
-| `start_date` | Start date for the classification process. |
-| `end_date` | End date for the classification process. |
-| `block_size` | Size of the processing block for parallel computation. |
-| `output_dir` | Directory where results will be stored | 
-| `version` | For version control | 
-| `progress` | progress bar to track processing steps |
+* `data`: either a data cube or a set of time series.
+* `ml_model`: a trained model that uses one of the machine learning methods provided.
+* `impute_fn`: an imputation function used to interpolate NA values (default = `impute_linear`).
+* `multicores`: number of CPU cores that will be used for processing (default = 2).
+* `memsize`: RAM memory available for classification expressed in GB (default = 4).
+* `gpu_memory`: GPU memory available for classification, expressed in GB, if a GPU is available and a torch-based model is used (default = 4).
+* `batch_size`: size of batches used for processing (default = 1000 x `gpu_memory`).
+* `roi`: Region of interest where pixels will be classified: either an sf object, a shapefile, or a numeric vector in WGS 84 with named XY values ("xmin", "xmax", "ymin", "ymax") or named lat/long values ("lon_min", "lat_min", "lon_max", "lat_max"). 
+* `exclusion_mask`:  Areas to be excluded from the classification process, defined by either an `sf` object or by a shapefile.
+* `start_date`: Start date for the classification process.
+* `end_date`: End date for the classification process.
+* `output_dir`: Directory where results will be stored.
+* `version`: For version control.
+* `progress`: Progress bar to track processing steps. 
+
+
+In what follows, we compute the probabilities for the classes and visualize them. Note that the probabilities are computed on a pixel-by-pixel basis. The segments are used only in the subsequent function (`sits_smooth()` and `sits_label_classification()`). 
 
 :::{.panel-tabset}
 ## R
 ```{r}
-#| eval: false
+#| label: fig-obia-probs-20LMR
+#| echo: true
+#| eval: true
+#| cache: true
+#| warning: false
+#| fig-width: 7
+#| fig-height: 5
+#| fig-dpi: 300
+#| fig-cap: |
+#|   Probabilities for class Forest.
+#| fig-align: center
+#| out-width: 80%
+# Classify the vector cube using tempcnn model
 segments_20LMR_probs <- sits_classify(
     data = segments_20LMR,
     ml_model = tcnn_model,
@@ -332,57 +383,67 @@ segments_20LMR_probs <- sits_classify(
     multicores = 6,
     version = "tcnn"
 )
+# Plot the probabilities for label Forest
+plot(segments_20LMR_probs, labels = "Forest")
 ```
 ## Python
 ```{python}
 #| eval: false
+# Classify the vector cube
 segments_20LMR_probs = sits_classify(
     data = segments_20LMR,
     ml_model = tcnn_model,
     output_dir = tempdir_py,
-    n_sam_pol = 10,
     gpu_memory = 8,
     memsize = 18,
     multicores = 6,
     version = "tcnn"
 )
-```
-:::
-
-After computing the probabilities for the segments, we can visualize them.
-
-:::{.panel-tabset}
-## R
-```{r}
-#| eval: false
+# Plot the probabilities for label Forest
 plot(segments_20LMR_probs, labels = "Forest")
 ```
-## Python
-```{python}
-#| eval: false
-plot(segments_20LMR_probs, labels = "Forest")
-```
-:::
-
 ```{r}
-#| label: fig-vec-obia-probs-forest.png
+#| label: py-fig-obia-probs-20LMR
 #| echo: false
-#| out.width: "75%"
-#| fig.align: "center"
-#| fig.cap: "Probability maps for the Forest class inside segments."
-knitr::include_graphics("./images/vec-obia-probs-forest.png") 
+#| eval: true
+#| cache: true
+#| warning: false
+#| fig-width: 7
+#| fig-height: 5
+#| fig-dpi: 300
+#| fig-cap: |
+#|   Probabilities for class Forest.
+#| fig-align: center
+#| out-width: 90%
+# Plot the probabilities for label Forest
+plot(segments_20LMR_probs, labels = "Forest")
 ```
+:::
 
-Then we can compute the smoothed probability cube. 
+Then we can compute the smoothed probability cube. In the case of vector cubes, `sits_smooth()` works differently than the function does for pixel-based raster cubes. In the pixel-based case, users define a neighborhood as a fixed-sized window (e.g., 7x7 or 9x9 pixels). For vector cubes, each segment defines a neighborhood boundary. Inside the segment, `sits_smooth()` uses the `neigh_fraction` parameter to define the pixels that will be used to compute the resulting values. The smoothing method and the parameters are the same as described in the chapter ["Bayesian smoothing for classification post-processing"](https://e-sensing.github.io/sitsbook/cl_smoothing.html); the only difference is the neighborhood definition. The parameters are:
+
+* `cube`: Probability data cube to be smoothed;
+* `neigh_fraction`: Fraction of neighbors with high probabilities used in Bayesian inference (default = 0.5).
+* `smoothness`: Estimated variance of logit of conditional class probabilities (default = 20).
+* `exclusion_mask`:  Areas to be excluded from the classification process, defined by either an `sf` object or by a shapefile.
+* `multicores`: number of CPU cores that will be used for processing (default = 2).
+* `memsize`: RAM memory available for classification expressed in GB (default = 4).
+* `output_dir`: Directory where results will be stored.
+* `version`: For version control.
+* `progress`: Progress bar to track processing steps. 
 
 :::{.panel-tabset}
 ## R
 ```{r}
-#| eval: false
+#| echo: true
+#| eval: true
+#| cache: true
+#| warning: false
 segments_20LMR_smooth <- sits_smooth(
     segments_20LMR_probs,
     output_dir = tempdir_r,
-    memsize = 24,
+    neigh_fraction = 0.5,
+    memsize = 18,
     multicores = 6,
     version = "tcnn"
 )
@@ -401,64 +462,80 @@ segments_20LMR_smooth = sits_smooth(
 :::
 
 
-Finally, we can compute the most likely class for each of the segments.
+Finally, we can compute the most likely class for each of the segments. For vector cubes, there is one additional parameter: `label_method`, which is used to define how the probabilities inside a segment will be combined. The options are `mean` (default), `median`, or `majority`. Based on the chosen option, `sits` will compute the probability for each class inside a segment. Note that all pixels inside a segment will be assigned the same probability value for each class. After this step, the function labels the segment with the class with the highest combined probability. 
+
+The parameters used in `sits_label_classification()` in case of vector cubes are:
+
+* `cube`: Probability data cube to be labeled;
+* `label_method`: Aggregation function for probabilities inside each segment (default = `mean`).
+* `multicores`: number of CPU cores that will be used for processing (default = 2).
+* `memsize`: RAM memory available for classification expressed in GB (default = 4).
+* `output_dir`: Directory where results will be stored.
+* `version`: For version control.
+* `progress`: Progress bar to track processing steps. 
 
 :::{.panel-tabset}
 ## R
 ```{r}
-#| eval: false
+#| label: fig-obia-class-20LMR
+#| echo: true
+#| eval: true
+#| cache: true
+#| warning: false
+#| fig-width: 5
+#| fig-height: 5
+#| fig-dpi: 300
+#| fig-cap: |
+#|   Plot of OBIA classified image.
+#| fig-align: center
+#| out-width: 90%
+# Label the smoothed probability vectors
 segments_20LMR_class <- sits_label_classification(
-    segments_20LMR_smooth,
-    output_dir = tempdir_r,
+    cube = segments_20LMR_smooth,
     label_method = "mean",
     memsize = 24,
     multicores = 6,
+    output_dir = tempdir_r,
     version = "tcnn"
 )
+# plot the classified segments
+plot(segments_20LMR_class, legend_position = "inside")
 ```
 ## Python
 ```{python}
 #| eval: false
+# Label the smoothed probability vectors
 segments_20LMR_class = sits_label_classification(
     segments_20LMR_smooth,
     label_method = "mean",
-    output_dir = tempdir_py,
     memsize = 24,
     multicores = 6,
+    output_dir = tempdir_py,
     version = "tcnn"
 )
+# Plot the classified segments
+plot(segments_20LMR_class, legend_position = "inside")
 ```
-:::
-
-To view the classified segments together with the original image, use `plot()` or `sits_view()`, as in the following example.
-
-:::{.panel-tabset}
-## R
 ```{r}
-#| eval: false
-# plot the classified segments
-plot(segments_20LMR_class)
-```
-## Python
-```{python}
-#| eval: false
-# plot the classified segments
-plot(segments_20LMR_class)
-```
-:::
-
-```{r}
-#| label: fig-vec-obia-class
+#| label: py-fig-obia-class-20LMR
 #| echo: false
-#| out.width: "95%"
-#| fig.cap: |
+#| eval: true
+#| cache: true
+#| warning: false
+#| fig-width: 5
+#| fig-height: 5
+#| fig-dpi: 300
+#| fig-cap: |
 #|   Plot of OBIA classified image.
-#| fig.align: "center"
-knitr::include_graphics("./images/vec-obia-new-class.png")
+#| fig-align: center
+#| out-width: 90%
+# plot the classified segments
+plot(segments_20LMR_class, legend_position = "inside")
 ```
+:::
 
 ## Summary
 
-OBIA analysis applied to image time series is a worthy and efficient technique for land classification, combining the desirable sharp object boundary properties required by land use and cover maps with the analytical power of image time series. 
+OBIA analysis applied to image time series is a worthy and efficient technique for land classification, combining the desirable sharp object boundary properties required by land use and cover maps with the analytic power of image time series. 
 
 ## References{-}
