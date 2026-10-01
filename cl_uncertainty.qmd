@@ -116,7 +116,16 @@ $$
 \theta_{E} = \frac{-\sum_{k=1}^K P_k(i) * \log_2(P_k(i))}{\log_2 n}.
 $$
 
-The parameters for `sits_uncertainty()` are: `cube`, a probability data cube; `type`, the uncertainty measure (default is `least`). As with other processing functions, `multicores` is the number of cores to run the function and `memsize` is the maximum overall memory (in GB) to run the function, `output_dir` is the output directory for image files, and `version` is the result version.
+The parameters for `sits_uncertainty()` are:
+
+| Parameter | Meaning |
+|:----------|:--------|
+| `cube` | a probability data cube. |
+| `type` | the uncertainty measure (default is `least`). |
+| `output_dir` | the output directory for image files. |
+| `multicores` | number of cores to run the function (default = 2). |
+| `memsize` | maximum overall memory (in GB) to run the function (default = 4). |
+| `version` | the result version (default = "v1"). |
 
 ## Using uncertainty measures for active learning
 
@@ -338,6 +347,47 @@ plot(
 
 The next step is to classify this study area using a training set with 480 time series collected over the state of Rondonia (Brazil) for detecting deforestation. The training set uses 4 classes (`Burned_Area`, `Forest`, `Highly_Degraded`, and `Cleared_Area`). The cube is classified using a Random Forest model, post-processed by Bayesian smoothing, and then labeled.
 
+We first recover the training data from Hugging Face. 
+
+:::{.panel-tabset}
+## R
+```{r}
+#| label: samples-deforestation
+#| cache: true
+#| warning: false
+# Get the samples from Hugging Face
+samples_prodes_4classes <- sits_from_hf(
+  repo = "e-sensing/samples_book",
+  file = "samples_prodes_4classes.parquet",
+  type = "dataset"
+)
+
+# Show the contents of the samples
+summary(samples_prodes_4classes)
+```
+## Python
+```{python}
+#| eval: false
+# Obtain the samples 
+samples_prodes_4classes = sits_from_hf(
+  repo = "e-sensing/samples_book",
+  file = "samples_prodes_4classes.parquet",
+  type = "dataset"
+)
+
+# Show the contents of the samples
+summary(samples_prodes_4classes)
+```
+```{r}
+#| echo: false
+#| label: py-samples-deforestation
+#| cache: true
+#| warning: false
+# Show the contents of the samples
+summary(samples_prodes_4classes)
+```
+:::
+
 :::{.panel-tabset}
 ## R
 ```{r}
@@ -352,9 +402,6 @@ The next step is to classify this study area using a training set with 480 time 
 #|   First classified map for area in Rondonia near Samuel dam.
 set.seed(290356)
 library(sitsdata)
-
-# Load the training set
-data("samples_prodes_4classes")
 
 # Select the same three bands used in the data cube
 samples_4classes_3bands <- sits_select(
@@ -394,12 +441,6 @@ plot(s2_cube_label, label_position = "outside")
 ```{python}
 #| eval: false
 r_set_seed(290356)
-
-# Load the training set
-samples_prodes_4classes = load_samples(
-    name = "samples_prodes_4classes",
-    package = "sitsdata"
-)
 
 # Select the same three bands used in the data cube
 samples_4classes_3bands = sits_select(
@@ -503,7 +544,7 @@ plot(s2_cube_uncert)
 ```
 :::
 
-As expected, the places of highest uncertainty are those covered by surface water or associated with wetlands. These places are likely to be misclassified. For this reason, `sits` provides `sits_uncertainty_sampling()`, which takes the uncertainty cube as its input and produces a tibble with locations in WGS84 with high uncertainty. The function has three parameters: `n`, the number of uncertain points to be included; `min_uncert`, the minimum value of uncertainty for pixels to be included in the list; and `sampling_window`, which defines a window where only one sample will be selected. The aim of `sampling_window` is to improve the spatial distribution of the new samples by avoiding the inclusion of points in the same neighborhood. After running the function, we can use `sits_view()` to visualize the location of the samples.
+As expected, the places of highest uncertainty are those covered by surface water or associated with wetlands. These places are likely to be misclassified. For this reason, `sits` provides `sits_uncertainty_sampling()`, which takes the uncertainty cube as its input and produces a tibble with locations in WGS84 with high uncertainty. Its parameters are: (a) `uncert_cube`, an uncertainty cube; (b)`n`, the number of uncertain points to be included; (c) `min_uncert`, the minimum value of uncertainty for pixels to be included in the list; and (d) `sampling_window`, which defines a window where only one sample will be selected. The aim of `sampling_window` is to improve the spatial distribution of the new samples by avoiding the inclusion of points in the same neighborhood. After running the function, we can use `sits_view()` to visualize the location of the samples.
 
 :::{.panel-tabset}
 ## R

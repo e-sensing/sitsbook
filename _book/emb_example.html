@@ -1,0 +1,1687 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.361">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<meta name="author" content="Gilberto Camara, Rolf Simoes, Felipe Souza, Felipe Carlos, Pedro Andrade, Karine Ferreira, Lorena Santos, Charlotte Pelletier, Bianca Zadrosny">
+<title>Satellite Image Time Series Analysis on Earth Observation Data Cubes - 27&nbsp; Building regional embeddings: a full example</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./vector_datacubes.html" rel="next">
+<link href="./emb_build.html" rel="prev">
+<link href="././images/cover_sits_book_quarto.jpg" rel="icon" type="image/jpeg">
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script src="site_libs/quarto-contrib/sitshelp-0.1.0/sitshelp.js"></script>
+<link href="site_libs/quarto-contrib/sitshelp-0.1.0/sitshelp.css" rel="stylesheet"><script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script><script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script><script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+</head>
+<body class="nav-sidebar floating">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top"><nav class="quarto-secondary-nav"><div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+      <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./embeddings.html">Foundational Models and Embeddings</a></li><li class="breadcrumb-item"><a href="./emb_example.html"><span class="chapter-number">27</span>&nbsp; <span class="chapter-title">Building regional embeddings: a full example</span></a></li></ol></nav>
+      <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+      </a>
+      <button type="button" class="btn quarto-search-button" aria-label="" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav></header><!-- content --><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal sidebar-navigation floating overflow-auto"><div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">Satellite Image Time Series Analysis on Earth Observation Data Cubes</a> 
+        <div class="sidebar-tools-main">
+    <a href="https://github.com/e-sensing/sitsbook" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
+  <a href="" class="quarto-reader-toggle quarto-navigation-tool px-1" onclick="window.quartoToggleReader(); return false;" title="Toggle reader mode">
+  <div class="quarto-reader-toggle-btn">
+  <i class="bi"></i>
+  </div>
+</a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Greetings</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./setup.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Setup</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./support.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Support</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./acknowledgements.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Acknowledgements</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./introduction.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">The Basics of SITS</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./intro_quicktour.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">A quick tour of SITS</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./intro_examples.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">How to use SITS with real examples</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./intro_visualisation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Data visualisation in SITS</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./datacubes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Earth observation data cubes</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./dc_ardcollections.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Analysis-ready image collections</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./dc_regularize.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Building regular data cubes</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./dc_merge.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Merging multi-source EO data cubes</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./dc_localcubes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Data cubes from local files</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./dc_cubeoperations.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Algebraic operations on data cubes</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./dc_mixture.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Spectral mixture analysis</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./dc_reduce.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Temporal reduction operations</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./dc_texture.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Texture operations in data cubes</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./timeseries.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Satellite image time series</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ts_basics.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Basic operations on image time series</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ts_cluster.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Hierarchical clustering of time series</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ts_som.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Self-organized maps for sample quality control</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ts_balance.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Reducing imbalances in training samples</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./classification.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Machine learning for image time series</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./cl_machinelearning.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Machine learning algorithms for image time series</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./cl_tuning.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Deep learning model tuning</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./cl_rasterclassification.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Classification of raster data cubes</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./cl_smoothing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">Bayesian smoothing for classification post-processing</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./cl_reclassification.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">Map reclassification</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./cl_uncertainty.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">Uncertainty and active learning</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./cl_ensembleprediction.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">Ensemble prediction with multiple models</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./validation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Validation and accuracy measurement</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./val_kfold.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">23</span>&nbsp; <span class="chapter-title">Cross-validation of training data</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./val_map.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">24</span>&nbsp; <span class="chapter-title">Map accuracy assessment</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./embeddings.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Foundational Models and Embeddings</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./emb_methods.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">25</span>&nbsp; <span class="chapter-title">Embedding Methods in SITS</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./emb_build.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">26</span>&nbsp; <span class="chapter-title">Building regional embeddings: a simple example</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./emb_example.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">27</span>&nbsp; <span class="chapter-title">Building regional embeddings: a full example</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./vector_datacubes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Vector data cubes</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./vec_obia.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">28</span>&nbsp; <span class="chapter-title">Object-based time series image analysis</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./vec_creating.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">29</span>&nbsp; <span class="chapter-title">Creating vector data cube from local files</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./annex.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Advanced Topics</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth1 show">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./annex_export.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">30</span>&nbsp; <span class="chapter-title">Exporting data to other packages</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./annex_gee.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">31</span>&nbsp; <span class="chapter-title">SITS and GEE: side-by-side comparison</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./annex_api.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">32</span>&nbsp; <span class="chapter-title">Developing new functions in SITS</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./annex_ml.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">33</span>&nbsp; <span class="chapter-title">Including new methods for machine learning</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./annex_stac.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">34</span>&nbsp; <span class="chapter-title">Supporting STAC-based ARD catalogs</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./annex_parallel.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">35</span>&nbsp; <span class="chapter-title">How parallel processing works in SITS</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+    </ul>
+</div>
+</nav><div id="quarto-sidebar-glass" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active"><h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+<li><a href="#configurations-to-run-this-chapter" id="toc-configurations-to-run-this-chapter" class="nav-link active" data-scroll-target="#configurations-to-run-this-chapter">Configurations to run this chapter</a></li>
+  <li><a href="#overview" id="toc-overview" class="nav-link" data-scroll-target="#overview"><span class="header-section-number">27.1</span> Overview</a></li>
+  <li><a href="#area-of-interest" id="toc-area-of-interest" class="nav-link" data-scroll-target="#area-of-interest"><span class="header-section-number">27.2</span> Area of interest</a></li>
+  <li><a href="#processing-pipeline" id="toc-processing-pipeline" class="nav-link" data-scroll-target="#processing-pipeline"><span class="header-section-number">27.3</span> Processing pipeline</a></li>
+  <li><a href="#producing-a-two-year-data-cube-for-the-cerrado" id="toc-producing-a-two-year-data-cube-for-the-cerrado" class="nav-link" data-scroll-target="#producing-a-two-year-data-cube-for-the-cerrado"><span class="header-section-number">27.4</span> Producing a two year data cube for the Cerrado</a></li>
+  <li><a href="#generating-regional-encoders-using-self-supervised-learning" id="toc-generating-regional-encoders-using-self-supervised-learning" class="nav-link" data-scroll-target="#generating-regional-encoders-using-self-supervised-learning"><span class="header-section-number">27.5</span> Generating regional encoders using self-supervised learning</a></li>
+  <li><a href="#using-encoders-to-produce-earth-observation-embeddings" id="toc-using-encoders-to-produce-earth-observation-embeddings" class="nav-link" data-scroll-target="#using-encoders-to-produce-earth-observation-embeddings"><span class="header-section-number">27.6</span> Using encoders to produce Earth observation embeddings</a></li>
+  <li><a href="#classifying-eo-embeddings-for-land-use-and-land-cover-applications" id="toc-classifying-eo-embeddings-for-land-use-and-land-cover-applications" class="nav-link" data-scroll-target="#classifying-eo-embeddings-for-land-use-and-land-cover-applications"><span class="header-section-number">27.7</span> Classifying EO embeddings for land use and land cover applications</a></li>
+  <li><a href="#measuring-the-accuracy-of-the-classification" id="toc-measuring-the-accuracy-of-the-classification" class="nav-link" data-scroll-target="#measuring-the-accuracy-of-the-classification"><span class="header-section-number">27.8</span> Measuring the accuracy of the classification</a></li>
+  <li><a href="#summary" id="toc-summary" class="nav-link" data-scroll-target="#summary"><span class="header-section-number">27.9</span> Summary</a></li>
+  <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references"><span class="header-section-number">27.10</span> References</a></li>
+  </ul><div class="toc-actions"><div><i class="bi bi-github"></i></div><div class="action-links"><p><a href="https://github.com/e-sensing/sitsbook/edit/quarto/emb_example.qmd" class="toc-action">Edit this page</a></p><p><a href="https://github.com/e-sensing/sitsbook/issues/new" class="toc-action">Report an issue</a></p></div></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content"><script>window.__SITSHELP_CONFIG__ = { apiUrl: "https://sits-rag.ngrok.io" };</script><header id="title-block-header" class="quarto-title-block default"><div class="quarto-title">
+<h1 class="title">
+<span class="chapter-number">27</span>&nbsp; <span class="chapter-title">Building regional embeddings: a full example</span>
+</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+</header><section id="configurations-to-run-this-chapter" class="level3 unnumbered"><h3 class="unnumbered anchored" data-anchor-id="configurations-to-run-this-chapter">Configurations to run this chapter</h3>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist">
+<li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true" aria-current="page">R</a></li>
+<li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false">Python</a></li>
+</ul>
+<div class="tab-content">
+<div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
+<div class="cell">
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># load package "tibble"</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://tibble.tidyverse.org/">tibble</a></span><span class="op">)</span></span>
+<span><span class="co"># load packages "sits" and "sitsdata"</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/e-sensing/sits/">sits</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/e-sensing/sitsdata/">sitsdata</a></span><span class="op">)</span></span>
+<span><span class="co"># set tempdir if it does not exist </span></span>
+<span><span class="va">tempdir_r</span> <span class="op">&lt;-</span> <span class="st">"~/sitsbook/tempdir/R/emb_examples"</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/files2.html">dir.create</a></span><span class="op">(</span><span class="va">tempdir_r</span>, showWarnings <span class="op">=</span> <span class="cn">FALSE</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="va">tempdir_r_class</span> <span class="op">&lt;-</span> <span class="st">"~/sitsbook/tempdir/R/emb_examples/class"</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/files2.html">dir.create</a></span><span class="op">(</span><span class="va">tempdir_r_class</span>, showWarnings <span class="op">=</span> <span class="cn">FALSE</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="va">tempdir_r_data</span> <span class="op">&lt;-</span> <span class="st">"~/sitsbook/tempdir/R/emb_examples/data"</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/files2.html">dir.create</a></span><span class="op">(</span><span class="va">tempdir_r_data</span>, showWarnings <span class="op">=</span> <span class="cn">FALSE</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="va">tempdir_r_bdc</span> <span class="op">&lt;-</span> <span class="st">"~/sitsbook/tempdir/R/emb_examples/bdc"</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/files2.html">dir.create</a></span><span class="op">(</span><span class="va">tempdir_r_bdc</span>, showWarnings <span class="op">=</span> <span class="cn">FALSE</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="va">tempdir_r_emb</span> <span class="op">&lt;-</span> <span class="st">"~/sitsbook/tempdir/R/emb_examples/embeddings"</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/files2.html">dir.create</a></span><span class="op">(</span><span class="va">tempdir_r_emb</span>, showWarnings <span class="op">=</span> <span class="cn">FALSE</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+<div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># load "pysits" library</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pysits <span class="im">import</span> <span class="op">*</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pathlib <span class="im">import</span> Path</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># set tempdir if it does not exist</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>tempdir_py <span class="op">=</span> Path.home() <span class="op">/</span> <span class="st">"sitsbook/tempdir/Python/emb_exemple"</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>tempdir_py_class <span class="op">=</span> Path.home() <span class="op">/</span> <span class="st">"sitsbook/tempdir/Python/emb_examples/class"</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>tempdir_py_data <span class="op">=</span> Path.home() <span class="op">/</span> <span class="st">"sitsbook/tempdir/Python/emb_examples/data"</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>tempdir_py_bdc <span class="op">=</span> Path.home() <span class="op">/</span> <span class="st">"sitsbook/tempdir/Python/emb_examples/bdc"</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>tempdir_py_emb <span class="op">=</span> Path.home() <span class="op">/</span> <span class="st">"sitsbook/tempdir/Python/emb_examples/embeddings"</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Create directory</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>tempdir_py_class.mkdir(parents<span class="op">=</span><span class="va">True</span>, exist_ok<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>tempdir_py_data.mkdir(parents<span class="op">=</span><span class="va">True</span>, exist_ok<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>tempdir_py_bdc.mkdir(parents<span class="op">=</span><span class="va">True</span>, exist_ok<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>tempdir_py_emb.mkdir(parents<span class="op">=</span><span class="va">True</span>, exist_ok<span class="op">=</span><span class="va">True</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
+</section><section id="overview" class="level2" data-number="27.1"><h2 data-number="27.1" class="anchored" data-anchor-id="overview">
+<span class="header-section-number">27.1</span> Overview</h2>
+<p>The <code>sits</code> package allows building of customized embeddings of data cubes using self-supervised learning. Any regular data cube, including multi-year and multi-modal ones, can be used as input. It is also recommended, but not mandatory, that a classified data cube for the same region and timeframe is used as a basis for selecting a stratified training sample. Users can thus design regional foundational models designed for specific cases and thus produce embeddings that are arguably better align with their desired products.</p>
+<p>The embedding workflow takes satellite image time series, learns a compact representation with a deep-learning encoder, and then runs a standard classification pipeline on those embeddings instead of on the raw bands.</p>
+<p>This chapter scales up the workflow presented in the chapter <a href="https://e-sensing.github.io/sitsbook/emb_build.html">“Building regional embeddings: a simple example”</a>. While that chapter used a single Sentinel-2 tile in Rondonia and the VICReg method, here we cover an entire biome, the Brazilian Cerrado, using Landsat-8 data and the LeJEPA (Lean Joint-Embedding Predictive Architecture) method. A detailed description of LeJEPA is given in the chapter <a href="https://e-sensing.github.io/sitsbook/emb_methods.html">“Embedding Methods in SITS”</a>.</p>
+<p>Processing data for a whole biome requires substantial computing resources; most of the steps below are best run on a machine with a GPU and a large amount of RAM. For this reason, all code blocks in this chapter are not executed when the book is built. To allow readers to follow the example without repeating the most expensive steps, we provide the intermediate products (training samples, pre-trained encoder, embedding cube and validation data) in the Hugging Face repositories maintained by the <code>e-sensing</code> group. Readers can thus skip any step and start from the data provided for the next one.</p>
+</section><section id="area-of-interest" class="level2" data-number="27.2"><h2 data-number="27.2" class="anchored" data-anchor-id="area-of-interest">
+<span class="header-section-number">27.2</span> Area of interest</h2>
+<p>In this section, we present an application of SSL encoder to produce a two-year land use and cover classification of the Cerrado biome in Brazil using Landsat-8 images. Cerrado is the second largest biome in Brazil with 1.9 million km<span class="math inline">\(^2\)</span>. The Brazilian Cerrado is a tropical savanna ecoregion with a rich ecosystem ranging from grasslands to woodlands. It is home to more than 7000 species of plants with high levels of endemism <span class="citation" data-cites="Klink2005"><a href="#ref-Klink2005" role="doc-biblioref">[1]</a></span>. It includes three major types of natural vegetation: <em>Open Cerrado</em>, typically composed of grasses and small shrubs with a sporadic presence of small tree vegetation; <em>Cerrado Sensu Stricto</em>, a typical savanna formation, characterized by the presence of low, irregularly branched, thin-trunked trees; and <em>Cerradão</em>, a dry forest of medium-sized trees (up to 10–12 m) <span class="citation" data-cites="Goodland1971"><a href="#ref-Goodland1971" role="doc-biblioref">[2]</a></span>. Its natural areas are being converted to agriculture at a fast pace, as it is one of the world’s fast moving agricultural frontiers <span class="citation" data-cites="Walter2006"><a href="#ref-Walter2006" role="doc-biblioref">[3]</a></span>. The main agricultural land uses include cattle ranching, crop farms, and planted forests.</p>
+<p>The Cerrado’s farmland is dominated by cattle pasture (by area) and a double-cropped soy–corn system (by value). Other land uses include cotton, sugarcane and planted forests. Estimates indicate there are 51 Mha of pasture in the Cerrado, which is 26% of the biome, 31% of Brazil’s pastures and 54% of the biome’s agricultural area. In 2023, almost half of Brazil’s soy area was in the Cerrado (19.3 Mha), ahead of the Atlantic Forest (10.3 Mha) and the Amazon (5.9 Mha). In 2015, 48% of Brazil’s soybean production came from the Cerrado. Most Cerrado corn is sown right after the soy harvest, on the same fields. Sugarcane has expanded strongly into the Cerrado. The Cerrado also has eucalyptus plantations, and also permanent crops such as coffee and citrus.</p>
+<p>The diversity of the Cerrado makes it a demanding test for embeddings. Natural vegetation ranges from grasslands to dry forests, with strong seasonal variation driven by the dry season. Anthropic uses include pastures in different states of management, single- and double-cropped annual agriculture, sugarcane and planted forests. Many of these classes are hard to separate in a single image but have distinct trajectories in a satellite image time series.</p>
+<p>In this example, we use regular Landsat-8 data cubes from the Brazil Data Cube (“BDC”). The data has been extracted from the BDC and transformed into a monthly cube that spans two years, from January 2017 to December 2018. We have selected 12 BDC tiles which are representative of the Cerrado’s diversity. The encoder is trained with samples covering the years 2017 to 2024, and is then applied to the data cube. All data needed to run the example is available in Hugging Face.</p>
+</section><section id="processing-pipeline" class="level2" data-number="27.3"><h2 data-number="27.3" class="anchored" data-anchor-id="processing-pipeline">
+<span class="header-section-number">27.3</span> Processing pipeline</h2>
+<p>This chapter presents a step-by-step approach to create and deploy regional encoder models:</p>
+<ol type="1">
+<li><p>Producing a monthly data cube covering two years for selected areas of the Cerrado.</p></li>
+<li><p>Generating regional encoders using self-supervised learning. A large set of unlabelled time series is used to train a LeJEPA encoder, which learns how to summarise a time series as a 64-dimensional vector.</p></li>
+<li><p>Using encoders to produce Earth observation embeddings. The encoder is applied to every pixel of a regular data cube, producing an embedding cube whose bands are the embedding dimensions.</p></li>
+<li><p>Classifying EO embeddings for land use and land cover applications. A small set of labelled samples is encoded with the same encoder and used to train a classifier, which is then applied to the embedding cube following the usual <code>sits</code> workflow of classification, smoothing and labelling.</p></li>
+<li><p>Evaluating classification of EO embeddings. The resulting map is compared with an independent set of validation points.</p></li>
+</ol>
+<p>The results from each processing step are available in the Hugging Face repository. Therefore, users can processing each step independently.</p>
+</section><section id="producing-a-two-year-data-cube-for-the-cerrado" class="level2" data-number="27.4"><h2 data-number="27.4" class="anchored" data-anchor-id="producing-a-two-year-data-cube-for-the-cerrado">
+<span class="header-section-number">27.4</span> Producing a two year data cube for the Cerrado</h2>
+<p>The first step is to select a set of BDC tiles that represent the diversity of the Cerrado. The BDC uses three hierarchical grids based on the Albers Equal Area projection and SIRGAS 2000 datum. The medium grid is used for Landsat-8 OLI collections at 30 m resolution; tiles have an extent of 211.2 <span class="math inline">\(\times\)</span> 211.2 km<sup>2</sup>, and each image has 7040 <span class="math inline">\(\times\)</span> 7040 pixels. The data cubes in the BDC are regularly spaced in time and cloud-corrected <span class="citation" data-cites="Ferreira2020a"><a href="#ref-Ferreira2020a" role="doc-biblioref">[4]</a></span>. The tiles can be viewed in the <a href="">BDC Explorer</a></p>
+<p>The tiles of the BDC cover a rectangular area that extends beyond the Cerrado. To classify only pixels inside the biome, we retrieve a GeoPackage file with the Cerrado limits, which will be used as the region of interest (<code>roi</code>) in the regularization and classification. For reference, the results of this processing step have been already saved in the Hugging Face repository.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist">
+<li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true">R</a></li>
+<li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false">Python</a></li>
+</ul>
+<div class="tab-content">
+<div id="tabset-2-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-2-1-tab">
+<div class="cell">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co">#</span></span>
+<span><span class="co"># Recover the Cerrado limits</span></span>
+<span><span class="co">#</span></span>
+<span><span class="va">cerrado_limits</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_from_hf.html">sits_from_hf</a></span><span class="op">(</span></span>
+<span>    repo <span class="op">=</span> <span class="st">"e-sensing/samples_cerrado"</span>,</span>
+<span>    file <span class="op">=</span> <span class="st">"cerrado_limits.gpkg"</span>,</span>
+<span>    type <span class="op">=</span> <span class="st">"dataset"</span></span>
+<span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+<div id="tabset-2-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-2-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Recover the cerrado limits</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>cerrado_limits <span class="op">=</span> sits_from_hf(</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    repo <span class="op">=</span> <span class="st">"e-sensing/samples_cerrado"</span>,</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">file</span> <span class="op">=</span> <span class="st">"cerrado_limits.gpkg"</span>,</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">type</span> <span class="op">=</span> <span class="st">"dataset"</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
+<p>The next step is to select a set of BDC tiles for the Cerrado region.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist">
+<li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-3-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-1" role="tab" aria-controls="tabset-3-1" aria-selected="true">R</a></li>
+<li class="nav-item" role="presentation"><a class="nav-link" id="tabset-3-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-2" role="tab" aria-controls="tabset-3-2" aria-selected="false">Python</a></li>
+</ul>
+<div class="tab-content">
+<div id="tabset-3-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-3-1-tab">
+<div class="cell">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co">#</span></span>
+<span><span class="co"># Define the BDC Cerrado tiles</span></span>
+<span><span class="co">#</span></span>
+<span><span class="va">cerrado_tiles</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span></span>
+<span>    <span class="st">"017004"</span>, <span class="st">"015005"</span>, <span class="st">"015006"</span>,</span>
+<span>    <span class="st">"015007"</span>, <span class="st">"014008"</span>, <span class="st">"015009"</span>,</span>
+<span>    <span class="st">"009010"</span>, <span class="st">"013010"</span>, <span class="st">"013012"</span>,</span>
+<span>    <span class="st">"014012"</span>, <span class="st">"011013"</span>, <span class="st">"013014"</span></span>
+<span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+<div id="tabset-3-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-3-2-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Define the BDC Cerrado tiles</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>cerrado_tiles <span class="op">=</span> [</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"017004"</span>, <span class="st">"015005"</span>, <span class="st">"015006"</span>,</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">"015007"</span>, <span class="st">"014008"</span>, <span class="st">"015009"</span>,</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">"009010"</span>, <span class="st">"013010"</span>, <span class="st">"013012"</span>,</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">"014012"</span>, <span class="st">"011013"</span>, <span class="st">"013014"</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
+<p>Now, we define a data cube in the BDC with the selected tiles.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist">
+<li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-4-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-1" role="tab" aria-controls="tabset-4-1" aria-selected="true">R</a></li>
+<li class="nav-item" role="presentation"><a class="nav-link" id="tabset-4-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-2" role="tab" aria-controls="tabset-4-2" aria-selected="false">Python</a></li>
+</ul>
+<div class="tab-content">
+<div id="tabset-4-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-4-1-tab">
+<div class="cell">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co">#</span></span>
+<span><span class="co"># Define the BDC data cube</span></span>
+<span><span class="co">#</span></span>
+<span><span class="va">cerrado_cube_bdc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_cube.html">sits_cube</a></span><span class="op">(</span></span>
+<span>    source <span class="op">=</span> <span class="st">"BDC"</span>,</span>
+<span>    collection <span class="op">=</span> <span class="st">"LANDSAT-OLI-16D"</span>,</span>
+<span>    tiles <span class="op">=</span> <span class="va">cerrado_tiles</span>,</span>
+<span>    start_date <span class="op">=</span> <span class="st">"2017-01-01"</span>,</span>
+<span>    end_date <span class="op">=</span> <span class="st">"2018-12-31"</span>,</span>
+<span>    multicores <span class="op">=</span> <span class="fl">8</span>,</span>
+<span>    progress <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+<div id="tabset-4-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-4-2-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Define the BDC data cube</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>cerrado_cube_bdc <span class="op">=</span> sits_cube(</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    source <span class="op">=</span> <span class="st">"BDC"</span>,</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    collection <span class="op">=</span> <span class="st">"LANDSAT-OLI-16D"</span>,</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    tiles <span class="op">=</span> cerrado_tiles,</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    start_date <span class="op">=</span> <span class="st">"2017-01-01"</span>,</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    end_date <span class="op">=</span> <span class="st">"2018-12-31"</span>,</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>    multicores <span class="op">=</span> <span class="dv">8</span>,</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>    progress <span class="op">=</span> TRUE</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
+<p>The next step is to create a local copy of the data to speed up processing. We use the <code>roi</code> parameter to reduce the area being copied to the parts contained in the Cerrado biome.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist">
+<li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-5-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-1" role="tab" aria-controls="tabset-5-1" aria-selected="true">R</a></li>
+<li class="nav-item" role="presentation"><a class="nav-link" id="tabset-5-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-2" role="tab" aria-controls="tabset-5-2" aria-selected="false">Python</a></li>
+</ul>
+<div class="tab-content">
+<div id="tabset-5-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-5-1-tab">
+<div class="cell">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co">#</span></span>
+<span><span class="co"># Copy the BDC data cube to a local directory</span></span>
+<span><span class="co">#</span></span>
+<span><span class="va">cerrado_cube_local</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_cube_copy.html">sits_cube_copy</a></span><span class="op">(</span></span>
+<span>    cube  <span class="op">=</span> <span class="va">cerrado_cube_bdc</span>,</span>
+<span>    roi <span class="op">=</span> <span class="va">cerrado_limits</span>,</span>
+<span>    multicores <span class="op">=</span> <span class="fl">8</span>,</span>
+<span>    output_dir <span class="op">=</span> <span class="va">tempdir_r_bdc</span>,</span>
+<span>    progress <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+<div id="tabset-5-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-5-2-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Copy the BDC data cube to a local directory</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>cerrado_cube_local <span class="op">=</span> sits_cube_copy(</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    cube  <span class="op">=</span> cerrado_cube_bdc,</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    roi <span class="op">=</span> cerrado_limits,</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>    multicores <span class="op">=</span> <span class="dv">8</span>,</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    output_dir <span class="op">=</span> tempdir_r_bdc,</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>    progress <span class="op">=</span> TRUE</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
+<p>The next step is to produce a regular data cube with monthly intervals.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist">
+<li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-6-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-6-1" role="tab" aria-controls="tabset-6-1" aria-selected="true">R</a></li>
+<li class="nav-item" role="presentation"><a class="nav-link" id="tabset-6-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-6-2" role="tab" aria-controls="tabset-6-2" aria-selected="false">Python</a></li>
+</ul>
+<div class="tab-content">
+<div id="tabset-6-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-6-1-tab">
+<div class="cell">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co">#</span></span>
+<span><span class="co"># Regularize data cube with a one month interval</span></span>
+<span><span class="co">#</span></span>
+<span><span class="va">cerrado_cube_reg_2018</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_regularize.html">sits_regularize</a></span><span class="op">(</span></span>
+<span>    cube  <span class="op">=</span> <span class="va">cerrado_cube_local</span>,</span>
+<span>    period <span class="op">=</span> <span class="st">"P1M"</span>,</span>
+<span>    roi <span class="op">=</span> <span class="va">cerrado_limits</span>,</span>
+<span>    multicores <span class="op">=</span> <span class="fl">8</span>,</span>
+<span>    output_dir <span class="op">=</span> <span class="va">tempdir_r_data</span>,</span>
+<span>    progress <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co"># plot a tile and date of the regular cube</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">cerrado_cube_reg_2018</span>, tile <span class="op">=</span> <span class="st">"009010"</span>, date <span class="op">=</span> <span class="st">"2017-07-01"</span>, </span>
+<span>     blue <span class="op">=</span> <span class="st">"BLUE"</span>, green <span class="op">=</span> <span class="st">"NIR08"</span>,  red <span class="op">=</span> <span class="st">"SWIR22"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+<div id="tabset-6-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-6-2-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Regularize data cube with a one month interval</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>cerrado_cube_reg_2018 <span class="op">=</span> sits_regularize(</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    cube  <span class="op">=</span> cerrado_cube_local,</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    period <span class="op">=</span> <span class="st">"P1M"</span>,</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>    roi <span class="op">=</span> cerrado_limits,</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>    multicores <span class="op">=</span> <span class="dv">8</span>,</span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>    output_dir <span class="op">=</span> tempdir_r_data,</span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>    progress <span class="op">=</span> TRUE</span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a><span class="co"># plot a tile and date of the regular cube</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>plot(cerrado_cube_reg_2018, tile <span class="op">=</span> <span class="st">"009010"</span>, date <span class="op">=</span> <span class="st">"2017-07-01"</span>, </span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>     blue <span class="op">=</span> <span class="st">"BLUE"</span>, green <span class="op">=</span> <span class="st">"NIR08"</span>,  red <span class="op">=</span> <span class="st">"SWIR22"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-emb-reg-cube" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure"><p><img src="./images/emb_cube_cerrado_reg_009010.png" class="img-fluid figure-img" style="width:80.0%"></p>
+<figcaption class="figure-caption">Figure&nbsp;27.1: Plot of regular one-month cube for tile 009010 and date “2017-07-01”.</figcaption></figure>
+</div>
+</div>
+</div>
+</section><section id="generating-regional-encoders-using-self-supervised-learning" class="level2" data-number="27.5"><h2 data-number="27.5" class="anchored" data-anchor-id="generating-regional-encoders-using-self-supervised-learning">
+<span class="header-section-number">27.5</span> Generating regional encoders using self-supervised learning</h2>
+<p>The first step is to build an encoder adapted to the region of interest. Self-supervised learning (SSL) methods do not need labels; they learn a representation from the structure of the data itself. To capture the spatial and temporal variability of the Cerrado, the training set should be large and cover the whole biome. It should also span several years, so that the encoder learns to represent interannual variations in climate and land management and can be applied to data from any year in the training period.</p>
+<p>As discussed in the chapter <a href="https://e-sensing.github.io/sitsbook/emb_build.html">“Building regional embeddings: a simple example”</a>, the samples for SSL can be obtained either by random sampling of a data cube (<code><a href="https://e-sensing.github.io/sits/reference/sits_random_sampling.html">sits_random_sampling()</a></code>) or by stratified sampling based on an existing classified map (<code><a href="https://e-sensing.github.io/sits/reference/sits_stratified_sampling.html">sits_stratified_sampling()</a></code>). The second approach is preferable since it ensures that less frequent classes are well represented.</p>
+<p>The code below retrieves the samples used to train the encoder from Hugging Face. As described in the chapter <a href="https://e-sensing.github.io/sitsbook/emb_methods.html">“Embedding Methods in SITS”</a>, this set contains about 480,000 Landsat-8 time series covering the Brazilian Cerrado between 2017 and 2024. The result is a <code>sits</code> tibble, with one row per sample and the time series stored in the <code>time_series</code> column. Any labels in the sample set are ignored by the SSL method.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist">
+<li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-7-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-7-1" role="tab" aria-controls="tabset-7-1" aria-selected="true">R</a></li>
+<li class="nav-item" role="presentation"><a class="nav-link" id="tabset-7-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-7-2" role="tab" aria-controls="tabset-7-2" aria-selected="false">Python</a></li>
+</ul>
+<div class="tab-content">
+<div id="tabset-7-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-7-1-tab">
+<div class="cell">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co">#</span></span>
+<span><span class="co"># Read samples for the SSL training from 2017 to 2024 from Hugging Face</span></span>
+<span><span class="co">#</span></span>
+<span><span class="va">pretrain_samples</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_from_hf.html">sits_from_hf</a></span><span class="op">(</span></span>
+<span>    repo <span class="op">=</span> <span class="st">"e-sensing/samples_cerrado"</span>,</span>
+<span>    file <span class="op">=</span> <span class="st">"samples_cerrado_2017_2024_pretrain.parquet"</span>,</span>
+<span>    type <span class="op">=</span> <span class="st">"dataset"</span></span>
+<span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+<div id="tabset-7-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-7-2-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Read samples for the SSL training from 2017 to 2024 from Hugging Face</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>pretrain_samples <span class="op">=</span> sits_from_hf(</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    repo <span class="op">=</span> <span class="st">"e-sensing/samples_cerrado"</span>,</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">file</span> <span class="op">=</span> <span class="st">"samples_cerrado_2017_2024_pretrain.parquet"</span>,</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">type</span> <span class="op">=</span> <span class="st">"dataset"</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
+<p>The next step trains the encoder using <code><a href="https://e-sensing.github.io/sits/reference/sits_pre_train.html">sits_pre_train()</a></code>, which takes two parameters: the unlabelled <code>samples</code> and the representation learning method <code>rl_method</code>. We use <code><a href="https://e-sensing.github.io/sits/reference/sits_ssl_lejepa.html">sits_ssl_lejepa()</a></code>, which implements the LeJEPA method. LeJEPA avoids the collapse of the embeddings by forcing their distribution to be close to an isotropic Gaussian, so that all embedding dimensions carry comparable information. The main parameters are <code>embedding_dim</code> (size of the embedding vector, here 64), <code>encoder_model</code> (the deep learning network that processes the time series, here a temporal convolutional neural network built with <code><a href="https://e-sensing.github.io/sits/reference/sits_tempcnn.html">sits_tempcnn()</a></code>), <code>epochs</code> (maximum number of training epochs) and <code>batch_size</code>. A large batch size (2048) is used because the SIGReg term of the LeJEPA loss is estimated from the distribution of embeddings within each batch. When <code>verbose = TRUE</code>, the function reports the training and validation loss for each epoch. For a description of all parameters, please see <a href="emb_methods.html#tbl-common-par">Table&nbsp;<span>25.1</span></a> and <a href="emb_methods.html#tbl-lejepa-par">Table&nbsp;<span>25.4</span></a> in the chapter <a href="https://e-sensing.github.io/sitsbook/emb_methods.html">“Embedding Methods in SITS”</a>.</p>
+<p>The result is an object of class <code>sits_encoder</code>, which contains the trained weights of the network and the information about bands and timeline of the training data. Note that training an encoder with almost half a million samples takes many hours, even with a GPU. Readers who do not want to wait can use the pre-trained encoder that we retrieve in the next section.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist">
+<li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-8-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-8-1" role="tab" aria-controls="tabset-8-1" aria-selected="true">R</a></li>
+<li class="nav-item" role="presentation"><a class="nav-link" id="tabset-8-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-8-2" role="tab" aria-controls="tabset-8-2" aria-selected="false">Python</a></li>
+</ul>
+<div class="tab-content">
+<div id="tabset-8-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-8-1-tab">
+<div class="cell">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co">#</span></span>
+<span><span class="co"># Create and save LeJEPA encoder</span></span>
+<span><span class="co">#</span></span>
+<span><span class="va">lejepa_encoder</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_pre_train.html">sits_pre_train</a></span><span class="op">(</span></span>
+<span>    samples <span class="op">=</span> <span class="va">pretrain_samples</span>,</span>
+<span>    rl_method <span class="op">=</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_ssl_lejepa.html">sits_ssl_lejepa</a></span><span class="op">(</span></span>
+<span>        embedding_dim <span class="op">=</span> <span class="fl">64</span>,</span>
+<span>        epochs <span class="op">=</span> <span class="fl">150</span>,</span>
+<span>        batch_size <span class="op">=</span> <span class="fl">2048</span>,</span>
+<span>        encoder_model <span class="op">=</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_tempcnn.html">sits_tempcnn</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>        verbose <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>    <span class="op">)</span></span>
+<span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+<div id="tabset-8-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-8-2-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Create LeJEPA encoder</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>lejepa_encoder <span class="op">&lt;-</span> sits_pre_train(</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>    samples <span class="op">=</span> pretrain_samples,</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>    rl_method <span class="op">=</span> sits_ssl_lejepa(</span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>        embedding_dim <span class="op">=</span> <span class="dv">64</span>,</span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>        epochs <span class="op">=</span> <span class="dv">150</span>,</span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>        batch_size <span class="op">=</span> <span class="dv">2048</span>,</span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>        encoder_model <span class="op">=</span> sits_tempcnn(),</span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>        verbose <span class="op">=</span> TRUE</span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
+</section><section id="using-encoders-to-produce-earth-observation-embeddings" class="level2" data-number="27.6"><h2 data-number="27.6" class="anchored" data-anchor-id="using-encoders-to-produce-earth-observation-embeddings">
+<span class="header-section-number">27.6</span> Using encoders to produce Earth observation embeddings</h2>
+<p>Once the encoder is available, it can be applied to a data cube. For each pixel, the encoder takes the full time series of all bands and produces a vector of 64 values. The result is an embedding cube, which has the same spatial extent and resolution as the original cube, but where each band corresponds to one dimension of the embedding and there is no temporal dimension. An embedding cube is much more compact than the original cube and can be used as input to standard classification methods.</p>
+<p>We start by downloading the Landsat-8 regular data cube for 2018 from Hugging Face. The files are stored in the directory <code>tempdir_r_data</code> (or <code>tempdir_py_data</code>) and the function returns a <code>sits</code> data cube that describes them. Note that the bands and the number of time steps of this cube must match those of the samples used to train the encoder; otherwise <code><a href="https://e-sensing.github.io/sits/reference/sits_encode.html">sits_encode()</a></code> will fail.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist">
+<li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-9-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-9-1" role="tab" aria-controls="tabset-9-1" aria-selected="true">R</a></li>
+<li class="nav-item" role="presentation"><a class="nav-link" id="tabset-9-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-9-2" role="tab" aria-controls="tabset-9-2" aria-selected="false">Python</a></li>
+</ul>
+<div class="tab-content">
+<div id="tabset-9-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-9-1-tab">
+<div class="cell">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Download the 2018 data cube</span></span>
+<span><span class="co">#</span></span>
+<span><span class="va">cerrado_cube_reg_2018</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_from_hf.html">sits_from_hf</a></span><span class="op">(</span></span>
+<span>    repo <span class="op">=</span> <span class="st">"e-sensing/cerrado_cube_reg_2018"</span>,</span>
+<span>    type <span class="op">=</span> <span class="st">"dataset"</span>,</span>
+<span>    output_dir <span class="op">=</span> <span class="va">tempdir_r_data</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">cerrado_cube_reg_2018</span>, tile <span class="op">=</span> <span class="st">"015009"</span>, date <span class="op">=</span> <span class="st">"2017-07-01"</span>, </span>
+<span>     blue <span class="op">=</span> <span class="st">"BLUE"</span>, green <span class="op">=</span> <span class="st">"NIR08"</span>,  red <span class="op">=</span> <span class="st">"SWIR22"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+<div id="tabset-9-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-9-2-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Download the 2018 data cube</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>cerrado_cube_reg_2018 <span class="op">=</span> sits_from_hf(</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>    repo <span class="op">=</span> <span class="st">"e-sensing/cerrado_cube_reg_2018"</span>,</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">type</span> <span class="op">=</span> <span class="st">"dataset"</span>,</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>    output_dir <span class="op">=</span> tempdir_py_data</span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>plot(cerrado_cube_reg_2018, tile <span class="op">=</span> <span class="st">"015009"</span>, date <span class="op">=</span> <span class="st">"2017-07-01"</span>, </span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>     blue <span class="op">=</span> <span class="st">"BLUE"</span>, green <span class="op">=</span> <span class="st">"NIR08"</span>,  red <span class="op">=</span> <span class="st">"SWIR22"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-emb-reg-cube-2" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure"><p><img src="./images/emb_cube_cerrado_reg_015009.png" class="img-fluid figure-img" style="width:80.0%"></p>
+<figcaption class="figure-caption">Figure&nbsp;27.2: Plot of regular one-month cube for tile 009010 and date “2017-07-01”.</figcaption></figure>
+</div>
+</div>
+</div>
+<p>As a shortcut to the training step in the previous section, we retrieve a LeJEPA encoder already trained with the 2017–2024 samples, which uses a TempCNN network as the encoder model. The encoder is stored as an RDS file in Hugging Face; the result is the same <code>sits_encoder</code> object that would be produced by <code><a href="https://e-sensing.github.io/sits/reference/sits_pre_train.html">sits_pre_train()</a></code>.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist">
+<li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-10-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-10-1" role="tab" aria-controls="tabset-10-1" aria-selected="true">R</a></li>
+<li class="nav-item" role="presentation"><a class="nav-link" id="tabset-10-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-10-2" role="tab" aria-controls="tabset-10-2" aria-selected="false">Python</a></li>
+</ul>
+<div class="tab-content">
+<div id="tabset-10-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-10-1-tab">
+<div class="cell">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co">#</span></span>
+<span><span class="co">#  Retrieve the  encoder</span></span>
+<span><span class="co">#</span></span>
+<span><span class="va">lejepa_encoder</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_from_hf.html">sits_from_hf</a></span><span class="op">(</span></span>
+<span>    repo <span class="op">=</span> <span class="st">"e-sensing/encoders_cerrado"</span>,</span>
+<span>    file <span class="op">=</span> <span class="st">"ssl_lejepa_tcnn_model_2017_2024.rds"</span>,</span>
+<span>    type <span class="op">=</span> <span class="st">"model"</span></span>
+<span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+<div id="tabset-10-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-10-2-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="co">#  Retrieve the  encoder</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>lejepa_encoder <span class="op">=</span> sits_from_hf(</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>    repo <span class="op">=</span> <span class="st">"e-sensing/encoders_cerrado"</span>,</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">file</span> <span class="op">=</span> <span class="st">"ssl_lejepa_tcnn_model_2017_2024.rds"</span>,</span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">type</span> <span class="op">=</span> <span class="st">"model"</span></span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
+<p>We now produce the embedding cube with <code><a href="https://e-sensing.github.io/sits/reference/sits_encode.html">sits_encode()</a></code>. The main parameters are <code>data</code> (a regular data cube or a set of samples) and <code>encoder</code> (the trained encoder). The other parameters control processing: <code>memsize</code> (RAM available, in GB), <code>multicores</code> (number of CPU cores), <code>gpu_memory</code> (memory of the GPU, in GB) and <code>batch_size</code> (number of pixels sent to the GPU at each step). These are the same parameters used by <code><a href="https://e-sensing.github.io/sits/reference/sits_classify.html">sits_classify()</a></code>, described in the chapter <a href="https://e-sensing.github.io/sitsbook/cl_rasterclassification.html">“Classification of raster data cubes”</a>; see also the chapter on <a href="https://e-sensing.github.io/sitsbook/annex_parallel.html">“How parallel processing works in SITS”</a> for how <code>sits</code> uses memory and cores. The files are written to <code>output_dir</code>. The result is an embedding cube with 64 bands named <code>EMB01</code> to <code>EMB64</code>. As shown in the chapter <a href="https://e-sensing.github.io/sitsbook/emb_build.html">“Building regional embeddings: a simple example”</a>, any three of these bands can be visualised as a color composite with <code><a href="https://rdrr.io/r/graphics/plot.default.html">plot()</a></code>. Encoding a whole biome is a lengthy process.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist">
+<li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-11-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-11-1" role="tab" aria-controls="tabset-11-1" aria-selected="true">R</a></li>
+<li class="nav-item" role="presentation"><a class="nav-link" id="tabset-11-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-11-2" role="tab" aria-controls="tabset-11-2" aria-selected="false">Python</a></li>
+</ul>
+<div class="tab-content">
+<div id="tabset-11-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-11-1-tab">
+<div class="cell">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co">#</span></span>
+<span><span class="co">#  Generate the embeddings cube</span></span>
+<span><span class="co">#</span></span>
+<span><span class="va">lejepa_embedding</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_encode.html">sits_encode</a></span><span class="op">(</span></span>
+<span>    data <span class="op">=</span> <span class="va">cerrado_cube_reg_2018</span>,</span>
+<span>    encoder <span class="op">=</span> <span class="va">lejepa_encoder</span>,</span>
+<span>    memsize <span class="op">=</span> <span class="fl">12</span>,</span>
+<span>    multicores <span class="op">=</span> <span class="fl">6</span>,</span>
+<span>    gpu_memory <span class="op">=</span> <span class="fl">12</span>,</span>
+<span>    batch_size <span class="op">=</span> <span class="fl">4096</span>,</span>
+<span>    output_dir <span class="op">=</span> <span class="va">tempdir_r_emb</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">lejepa_embedding</span>, tile <span class="op">=</span> <span class="st">"009010"</span>, </span>
+<span>     red <span class="op">=</span> <span class="st">"EMB11"</span>, green <span class="op">=</span> <span class="st">"EMB12"</span>, blue <span class="op">=</span> <span class="st">"EMB13"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+<div id="tabset-11-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-11-2-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="co">#  Generate the embeddings cube</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>lejepa_embedding <span class="op">=</span> sits_encode(</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>    data <span class="op">=</span> cerrado_cube_reg_2018,</span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>    encoder <span class="op">=</span> lejepa_encoder,</span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>    memsize <span class="op">=</span> <span class="dv">12</span>,</span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>    multicores <span class="op">=</span> <span class="dv">6</span>,</span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>    gpu_memory <span class="op">=</span> <span class="dv">12</span>,</span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>    batch_size <span class="op">=</span> <span class="dv">4096</span>,</span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a>    output_dir <span class="op">=</span> tempdir_py_emb</span>
+<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a>plot(lejepa_embedding, tile <span class="op">=</span> <span class="st">"009010"</span>, </span>
+<span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a>     red <span class="op">=</span> <span class="st">"EMB11"</span>, green <span class="op">=</span> <span class="st">"EMB12"</span>, blue <span class="op">=</span> <span class="st">"EMB13"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-emb-lejepa-cube" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure"><p><img src="./images/emb_lejepa_cube_009010.png" class="img-fluid figure-img" style="width:80.0%"></p>
+<figcaption class="figure-caption">Figure&nbsp;27.3: Plot of LeJEPA embedding cube for tile 009010.</figcaption></figure>
+</div>
+</div>
+</div>
+</section><section id="classifying-eo-embeddings-for-land-use-and-land-cover-applications" class="level2" data-number="27.7"><h2 data-number="27.7" class="anchored" data-anchor-id="classifying-eo-embeddings-for-land-use-and-land-cover-applications">
+<span class="header-section-number">27.7</span> Classifying EO embeddings for land use and land cover applications</h2>
+<p>After obtaining the embedding cube, we use it to produce a land use and land cover map. This step, often called fine-tuning, follows the usual <code>sits</code> workflow described in the chapter <a href="https://e-sensing.github.io/sitsbook/cl_rasterclassification.html">“Classification of raster data cubes”</a>: train a model with labelled samples, classify the cube to obtain class probabilities, smooth the probabilities and label the result. The main difference is that both the samples and the cube are expressed in the embedding space. One of the expected benefits of embeddings is that a classifier trained on them needs fewer labelled samples than one trained on the original bands, since the encoder has already learned the relevant temporal patterns.</p>
+<p>Since encoding the full data cube takes a long time, we provide the 2018 embedding cube in Hugging Face. The code below downloads it to <code>tempdir_r_emb</code> (or <code>tempdir_py_emb</code>). Readers who ran <code><a href="https://e-sensing.github.io/sits/reference/sits_encode.html">sits_encode()</a></code> in the previous section can skip this step.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist">
+<li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-12-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-12-1" role="tab" aria-controls="tabset-12-1" aria-selected="true">R</a></li>
+<li class="nav-item" role="presentation"><a class="nav-link" id="tabset-12-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-12-2" role="tab" aria-controls="tabset-12-2" aria-selected="false">Python</a></li>
+</ul>
+<div class="tab-content">
+<div id="tabset-12-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-12-1-tab">
+<div class="cell">
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co">#</span></span>
+<span><span class="co"># Load the embeddings cube</span></span>
+<span><span class="co">#</span></span>
+<span><span class="va">lejepa_embedding</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_from_hf.html">sits_from_hf</a></span><span class="op">(</span></span>
+<span>    repo <span class="op">=</span> <span class="st">"e-sensing/cerrado_emb_ssl_lejepa_tcnn_2018"</span>,</span>
+<span>    type <span class="op">=</span> <span class="st">"dataset"</span>,</span>
+<span>    output_dir <span class="op">=</span> <span class="va">tempdir_r_emb</span></span>
+<span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+<div id="tabset-12-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-12-2-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Load the embeddings cube</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>lejepa_embedding <span class="op">=</span> sits_from_hf(</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>    repo <span class="op">=</span> <span class="st">"e-sensing/cerrado_emb_ssl_lejepa_tcnn_2018"</span>,</span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">type</span> <span class="op">=</span> <span class="st">"dataset"</span>,</span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>    output_dir <span class="op">=</span> tempdir_py_emb</span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
+<p>The labelled samples must be encoded with the same encoder that produced the embedding cube; otherwise samples and cube would be in different embedding spaces. If the encoder is not available in the current session, we retrieve it again from Hugging Face.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist">
+<li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-13-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-13-1" role="tab" aria-controls="tabset-13-1" aria-selected="true">R</a></li>
+<li class="nav-item" role="presentation"><a class="nav-link" id="tabset-13-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-13-2" role="tab" aria-controls="tabset-13-2" aria-selected="false">Python</a></li>
+</ul>
+<div class="tab-content">
+<div id="tabset-13-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-13-1-tab">
+<div class="cell">
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co">#</span></span>
+<span><span class="co"># Get LeJEPA encoder</span></span>
+<span><span class="co">#</span></span>
+<span><span class="va">lejepa_encoder</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_from_hf.html">sits_from_hf</a></span><span class="op">(</span></span>
+<span>    repo <span class="op">=</span> <span class="st">"e-sensing/encoders_cerrado"</span>,</span>
+<span>    file <span class="op">=</span> <span class="st">"ssl_lejepa_tcnn_model_2017_2024.rds"</span>,</span>
+<span>    type <span class="op">=</span> <span class="st">"model"</span></span>
+<span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+<div id="tabset-13-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-13-2-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Get LeJEPA encoder</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>lejepa_encoder <span class="op">=</span> sits_from_hf(</span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>    repo <span class="op">=</span> <span class="st">"e-sensing/encoders_cerrado"</span>,</span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">file</span> <span class="op">=</span> <span class="st">"ssl_lejepa_tcnn_model_2017_2024.rds"</span>,</span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">type</span> <span class="op">=</span> <span class="st">"dataset"</span></span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
+<p>Next, we retrieve the labelled samples for the Cerrado. These are Landsat-8 time series with the same bands and timeline as the 2018 data cube, each associated with a land use and land cover class. The result is a <code>sits</code> tibble; users can inspect the number of samples per class with <code>summary(labelled_samples)</code>, as described in the chapter <a href="https://e-sensing.github.io/sitsbook/ts_basics.html">“Basic operations on image time series”</a>.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist">
+<li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-14-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-14-1" role="tab" aria-controls="tabset-14-1" aria-selected="true">R</a></li>
+<li class="nav-item" role="presentation"><a class="nav-link" id="tabset-14-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-14-2" role="tab" aria-controls="tabset-14-2" aria-selected="false">Python</a></li>
+</ul>
+<div class="tab-content">
+<div id="tabset-14-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-14-1-tab">
+<div class="cell">
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co">#</span></span>
+<span><span class="co"># Load the samples</span></span>
+<span><span class="co">#</span></span>
+<span><span class="va">labelled_samples</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_from_hf.html">sits_from_hf</a></span><span class="op">(</span></span>
+<span>    repo <span class="op">=</span> <span class="st">"e-sensing/samples_cerrado"</span>,</span>
+<span>    file <span class="op">=</span> <span class="st">"labelled_samples_cerrado.parquet"</span>,</span>
+<span>    type <span class="op">=</span> <span class="st">"dataset"</span></span>
+<span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+<div id="tabset-14-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-14-2-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Load the samples</span></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>labelled_samples <span class="op">=</span> sits_from_hf(</span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>    repo <span class="op">=</span> <span class="st">"e-sensing/samples_cerrado"</span>,</span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">file</span> <span class="op">=</span> <span class="st">"labelled_samples_cerrado.parquet"</span>,</span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">type</span> <span class="op">=</span> <span class="st">"dataset"</span></span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
+<p>To test the hypothesis that classifiers trained on embeddings need a small number of labelled samples, we use only 20% of the labelled samples, as in the chapter <a href="https://e-sensing.github.io/sitsbook/emb_build.html">“Building regional embeddings: a simple example”</a>. Function <code><a href="https://e-sensing.github.io/sits/reference/sits_sample.html">sits_sample()</a></code> with <code>frac = 0.2</code> selects 20% of the samples of each class at random, thus keeping the original class proportions. The result is a smaller <code>sits</code> tibble.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist">
+<li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-15-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-15-1" role="tab" aria-controls="tabset-15-1" aria-selected="true">R</a></li>
+<li class="nav-item" role="presentation"><a class="nav-link" id="tabset-15-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-15-2" role="tab" aria-controls="tabset-15-2" aria-selected="false">Python</a></li>
+</ul>
+<div class="tab-content">
+<div id="tabset-15-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-15-1-tab">
+<div class="cell">
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co">#</span></span>
+<span><span class="co">#  Reduce the number of samples</span></span>
+<span><span class="co">#</span></span>
+<span><span class="va">labelled_samples_red</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_sample.html">sits_sample</a></span><span class="op">(</span><span class="va">labelled_samples</span>, frac <span class="op">=</span> <span class="fl">0.2</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+<div id="tabset-15-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-15-2-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="co">#  Reduce the number of samples</span></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>labelled_samples_red <span class="op">=</span> sits_sample(labelled_samples, frac <span class="op">=</span> <span class="fl">0.2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
+<p>We then use <code><a href="https://e-sensing.github.io/sits/reference/sits_encode.html">sits_encode()</a></code> to transform the reduced sample set into the embedding space. When applied to samples, <code><a href="https://e-sensing.github.io/sits/reference/sits_encode.html">sits_encode()</a></code> replaces each time series by its 64-dimensional embedding, while keeping the location, dates and label of each sample. The result is a <code>sits</code> tibble whose “bands” are the embedding dimensions <code>EMB01</code> to <code>EMB64</code>, with a single value per sample. Before training a model, users may want to check how well the classes are separated in the embedding space using <code><a href="https://rdrr.io/r/graphics/plot.default.html">plot()</a></code> with modes <code>"tsne"</code>, <code>"PCA"</code> or <code>"dimensions"</code>, as shown in the chapter <a href="https://e-sensing.github.io/sitsbook/emb_build.html">“Building regional embeddings: a simple example”</a>.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist">
+<li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-16-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-16-1" role="tab" aria-controls="tabset-16-1" aria-selected="true">R</a></li>
+<li class="nav-item" role="presentation"><a class="nav-link" id="tabset-16-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-16-2" role="tab" aria-controls="tabset-16-2" aria-selected="false">Python</a></li>
+</ul>
+<div class="tab-content">
+<div id="tabset-16-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-16-1-tab">
+<div class="cell">
+<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co">#</span></span>
+<span><span class="co"># Encode the samples</span></span>
+<span><span class="co">#</span></span>
+<span><span class="va">samples_lejepa</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_encode.html">sits_encode</a></span><span class="op">(</span></span>
+<span>    data <span class="op">=</span> <span class="va">labelled_samples_red</span>,</span>
+<span>    encoder <span class="op">=</span> <span class="va">lejepa_encoder</span>,</span>
+<span>    multicores <span class="op">=</span> <span class="fl">8</span>,</span>
+<span>    gpu_memory <span class="op">=</span> <span class="fl">16</span>,</span>
+<span>    batch_size <span class="op">=</span> <span class="fl">512</span>,</span>
+<span>    verbose <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+<div id="tabset-16-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-16-2-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Encode the samples</span></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>samples_lejepa <span class="op">=</span> sits_encode(</span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>    data <span class="op">=</span> labelled_samples_red,</span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>    encoder <span class="op">=</span> lejepa_encoder,</span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a>    multicores <span class="op">=</span> <span class="dv">8</span>,</span>
+<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a>    gpu_memory <span class="op">=</span> <span class="dv">16</span>,</span>
+<span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a>    batch_size <span class="op">=</span> <span class="dv">512</span>,</span>
+<span id="cb32-10"><a href="#cb32-10" aria-hidden="true" tabindex="-1"></a>    verbose <span class="op">=</span> TRUE</span>
+<span id="cb32-11"><a href="#cb32-11" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
+<p>With the encoded samples, we train a classification model using <code><a href="https://e-sensing.github.io/sits/reference/sits_train.html">sits_train()</a></code>. We use a multilayer perceptron (<code><a href="https://e-sensing.github.io/sits/reference/sits_mlp.html">sits_mlp()</a></code>), described in the chapter <a href="https://e-sensing.github.io/sitsbook/cl_machinelearning.html">“Machine learning algorithms for image time series”</a>. Since the encoder has already summarised the temporal behaviour of each pixel, the embeddings have no temporal structure left to explore; models designed for time series, such as TempCNN or LightTAE, offer no advantage here, and an MLP is a fast and suitable choice. The parameter <code>min_delta</code> sets the minimum improvement in the validation loss required to keep training (early stopping), <code>epochs</code> is the maximum number of training epochs and <code>batch_size</code> is the number of samples used in each training step. The result is a trained model that can be used by <code><a href="https://e-sensing.github.io/sits/reference/sits_classify.html">sits_classify()</a></code>.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist">
+<li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-17-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-17-1" role="tab" aria-controls="tabset-17-1" aria-selected="true">R</a></li>
+<li class="nav-item" role="presentation"><a class="nav-link" id="tabset-17-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-17-2" role="tab" aria-controls="tabset-17-2" aria-selected="false">Python</a></li>
+</ul>
+<div class="tab-content">
+<div id="tabset-17-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-17-1-tab">
+<div class="cell">
+<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co">#</span></span>
+<span><span class="co"># Build an MLP model for classification</span></span>
+<span><span class="co">#</span></span>
+<span><span class="va">mlp_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_train.html">sits_train</a></span><span class="op">(</span></span>
+<span>    samples <span class="op">=</span> <span class="va">samples_lejepa</span>,</span>
+<span>    ml_method <span class="op">=</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_mlp.html">sits_mlp</a></span><span class="op">(</span></span>
+<span>        min_delta <span class="op">=</span> <span class="fl">0.005</span>,</span>
+<span>        epochs <span class="op">=</span> <span class="fl">150</span>,</span>
+<span>        batch_size <span class="op">=</span> <span class="fl">128</span>,</span>
+<span>        verbose <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>    <span class="op">)</span></span>
+<span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+<div id="tabset-17-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-17-2-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Build an MLP model for classification</span></span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>mlp_model <span class="op">=</span> sits_train(</span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>    samples <span class="op">=</span> samples_lejepa,</span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a>    ml_method <span class="op">=</span> sits_mlp(</span>
+<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a>        min_delta <span class="op">=</span> <span class="fl">0.005</span>,</span>
+<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a>        epochs <span class="op">=</span> <span class="dv">150</span>,</span>
+<span id="cb34-9"><a href="#cb34-9" aria-hidden="true" tabindex="-1"></a>        batch_size <span class="op">=</span> <span class="dv">128</span>,</span>
+<span id="cb34-10"><a href="#cb34-10" aria-hidden="true" tabindex="-1"></a>        verbose <span class="op">=</span> TRUE</span>
+<span id="cb34-11"><a href="#cb34-11" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb34-12"><a href="#cb34-12" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
+<p>We now classify the embedding cube with <code><a href="https://e-sensing.github.io/sits/reference/sits_classify.html">sits_classify()</a></code>, using the MLP model and restricting the processing to the Cerrado limits. The parameters <code>memsize</code>, <code>multicores</code>, <code>gpu_memory</code> and <code>batch_size</code> have the same meaning as in <code><a href="https://e-sensing.github.io/sits/reference/sits_encode.html">sits_encode()</a></code>. The parameter <code>version</code> adds a label to the output file names, which avoids overwriting results when comparing different encoders or models. The result is a probability cube, with one band per class, where each pixel contains the probability of belonging to each class, as explained in the chapter <a href="https://e-sensing.github.io/sitsbook/cl_rasterclassification.html">“Classification of raster data cubes”</a>.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist">
+<li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-18-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-18-1" role="tab" aria-controls="tabset-18-1" aria-selected="true">R</a></li>
+<li class="nav-item" role="presentation"><a class="nav-link" id="tabset-18-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-18-2" role="tab" aria-controls="tabset-18-2" aria-selected="false">Python</a></li>
+</ul>
+<div class="tab-content">
+<div id="tabset-18-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-18-1-tab">
+<div class="cell">
+<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co">#</span></span>
+<span><span class="co"># Generate a Probability cube</span></span>
+<span><span class="co">#</span></span>
+<span><span class="va">cube_probs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_classify.html">sits_classify</a></span><span class="op">(</span></span>
+<span>    data <span class="op">=</span> <span class="va">lejepa_embedding</span>,</span>
+<span>    ml_model <span class="op">=</span> <span class="va">mlp_model</span>,</span>
+<span>    memsize <span class="op">=</span> <span class="fl">12</span>,</span>
+<span>    multicores <span class="op">=</span> <span class="fl">6</span>,</span>
+<span>    gpu_memory <span class="op">=</span> <span class="fl">12</span>,</span>
+<span>    batch_size <span class="op">=</span> <span class="fl">4096</span>,</span>
+<span>    output_dir <span class="op">=</span> <span class="va">tempdir_r_class</span>,</span>
+<span>    version <span class="op">=</span> <span class="st">"lejepa"</span></span>
+<span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+<div id="tabset-18-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-18-2-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Generate a Probability cube</span></span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>cube_probs <span class="op">=</span> sits_classify(</span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a>    data <span class="op">=</span> lejepa_embedding,</span>
+<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a>    ml_model <span class="op">=</span> mlp_model,</span>
+<span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a>    roi <span class="op">=</span> cerrado_limits,</span>
+<span id="cb36-8"><a href="#cb36-8" aria-hidden="true" tabindex="-1"></a>    memsize <span class="op">=</span> <span class="dv">12</span>,</span>
+<span id="cb36-9"><a href="#cb36-9" aria-hidden="true" tabindex="-1"></a>    multicores <span class="op">=</span> <span class="dv">6</span>,</span>
+<span id="cb36-10"><a href="#cb36-10" aria-hidden="true" tabindex="-1"></a>    gpu_memory <span class="op">=</span> <span class="dv">12</span>,</span>
+<span id="cb36-11"><a href="#cb36-11" aria-hidden="true" tabindex="-1"></a>    batch_size <span class="op">=</span> <span class="dv">4096</span>,</span>
+<span id="cb36-12"><a href="#cb36-12" aria-hidden="true" tabindex="-1"></a>    output_dir <span class="op">=</span> tempdir_py_class,</span>
+<span id="cb36-13"><a href="#cb36-13" aria-hidden="true" tabindex="-1"></a>    version <span class="op">=</span> <span class="st">"lejepa"</span></span>
+<span id="cb36-14"><a href="#cb36-14" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
+<p>Pixel-based classification tends to produce noisy maps with isolated pixels. To reduce this effect, we apply Bayesian smoothing with <code><a href="https://e-sensing.github.io/sits/reference/sits_smooth.html">sits_smooth()</a></code>, which uses the class probabilities of the neighbourhood of each pixel to update its own probabilities, as described in the chapter <a href="https://e-sensing.github.io/sitsbook/cl_smoothing.html">“Bayesian smoothing for classification post-processing”</a>. The result is a smoothed probability cube with the same structure as the input.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist">
+<li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-19-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-19-1" role="tab" aria-controls="tabset-19-1" aria-selected="true">R</a></li>
+<li class="nav-item" role="presentation"><a class="nav-link" id="tabset-19-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-19-2" role="tab" aria-controls="tabset-19-2" aria-selected="false">Python</a></li>
+</ul>
+<div class="tab-content">
+<div id="tabset-19-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-19-1-tab">
+<div class="cell">
+<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co">#</span></span>
+<span><span class="co"># Produce a smoothed cube</span></span>
+<span><span class="co">#</span></span>
+<span><span class="va">cube_smooth</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_smooth.html">sits_smooth</a></span><span class="op">(</span></span>
+<span>    cube <span class="op">=</span> <span class="va">cube_probs</span>,</span>
+<span>    memsize <span class="op">=</span> <span class="fl">30</span>,</span>
+<span>    multicores <span class="op">=</span> <span class="fl">10</span>,</span>
+<span>    gpu_memory <span class="op">=</span> <span class="fl">12</span>,</span>
+<span>    batch_size <span class="op">=</span> <span class="fl">4096</span>,</span>
+<span>    output_dir <span class="op">=</span> <span class="va">tempdir_r_class</span></span>
+<span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+<div id="tabset-19-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-19-2-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Produce a classification map</span></span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>cube_smooth <span class="op">=</span> sits_smooth(</span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>    cube <span class="op">=</span> cube_probs,</span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a>    memsize <span class="op">=</span> <span class="dv">30</span>,</span>
+<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a>    multicores <span class="op">=</span> <span class="dv">10</span>,</span>
+<span id="cb38-7"><a href="#cb38-7" aria-hidden="true" tabindex="-1"></a>    gpu_memory <span class="op">=</span> <span class="dv">12</span>,</span>
+<span id="cb38-8"><a href="#cb38-8" aria-hidden="true" tabindex="-1"></a>    batch_size <span class="op">=</span> <span class="dv">4096</span>,</span>
+<span id="cb38-9"><a href="#cb38-9" aria-hidden="true" tabindex="-1"></a>    output_dir <span class="op">=</span> tempdir_py_class,</span>
+<span id="cb38-10"><a href="#cb38-10" aria-hidden="true" tabindex="-1"></a>    version <span class="op">=</span> <span class="st">"lejepa"</span></span>
+<span id="cb38-11"><a href="#cb38-11" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
+<p>Finally, <code><a href="https://e-sensing.github.io/sits/reference/sits_label_classification.html">sits_label_classification()</a></code> assigns each pixel to the class with the highest smoothed probability. The result is a classified data cube with a single band, containing the land use and land cover map of the Cerrado for 2018. The map can be visualised with <code>plot(cube_class)</code>.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist">
+<li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-20-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-20-1" role="tab" aria-controls="tabset-20-1" aria-selected="true">R</a></li>
+<li class="nav-item" role="presentation"><a class="nav-link" id="tabset-20-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-20-2" role="tab" aria-controls="tabset-20-2" aria-selected="false">Python</a></li>
+</ul>
+<div class="tab-content">
+<div id="tabset-20-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-20-1-tab">
+<div class="cell">
+<div class="sourceCode" id="cb39"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co">#</span></span>
+<span><span class="co"># Produce a classification map</span></span>
+<span><span class="co">#</span></span>
+<span><span class="va">cube_class</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_label_classification.html">sits_label_classification</a></span><span class="op">(</span></span>
+<span>    <span class="va">cube_smooth</span>,</span>
+<span>    memsize <span class="op">=</span> <span class="fl">32</span>,</span>
+<span>    multicores <span class="op">=</span> <span class="fl">8</span>,</span>
+<span>    output_dir <span class="op">=</span> <span class="va">tempdir_r_class</span>,</span>
+<span>    version <span class="op">=</span> <span class="st">"lejepa"</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">cube_class</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+<div id="tabset-20-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-20-2-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb40"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Produce a classification map</span></span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a>cube_class <span class="op">=</span> sits_label_classification(</span>
+<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a>    cube_smooth,</span>
+<span id="cb40-6"><a href="#cb40-6" aria-hidden="true" tabindex="-1"></a>    memsize <span class="op">=</span> <span class="dv">32</span>,</span>
+<span id="cb40-7"><a href="#cb40-7" aria-hidden="true" tabindex="-1"></a>    multicores <span class="op">=</span> <span class="dv">8</span>,</span>
+<span id="cb40-8"><a href="#cb40-8" aria-hidden="true" tabindex="-1"></a>    output_dir <span class="op">=</span> tempdir_py_class,</span>
+<span id="cb40-9"><a href="#cb40-9" aria-hidden="true" tabindex="-1"></a>    version <span class="op">=</span> <span class="st">"lejepa"</span></span>
+<span id="cb40-10"><a href="#cb40-10" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb40-11"><a href="#cb40-11" aria-hidden="true" tabindex="-1"></a>plot(cube_class)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-emb-lejepa-class" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure"><p><img src="./images/emb_lejepa_class_009010.png" class="img-fluid figure-img" style="width:100.0%"></p>
+<figcaption class="figure-caption">Figure&nbsp;27.4: Plot of LeJEPA embedding cube for tile 009010.</figcaption></figure>
+</div>
+</div>
+</div>
+</section><section id="measuring-the-accuracy-of-the-classification" class="level2" data-number="27.8"><h2 data-number="27.8" class="anchored" data-anchor-id="measuring-the-accuracy-of-the-classification">
+<span class="header-section-number">27.8</span> Measuring the accuracy of the classification</h2>
+<p>The last step is to assess the quality of the map produced from the embeddings. Accuracy should be measured with reference data that is independent of the samples used for training the encoder and the classifier. The chapter <a href="https://e-sensing.github.io/sitsbook/val_map.html">“Map accuracy assessment”</a> discusses good practices for designing a validation sample and for estimating accuracy and area <span class="citation" data-cites="Olofsson2014"><a href="#ref-Olofsson2014" role="doc-biblioref">[5]</a></span>.</p>
+<p>We start by retrieving a set of validation points for 2018 from Hugging Face. Each point has a location and a reference label assigned by an interpreter. The result is a table that can be used as input to <code><a href="https://e-sensing.github.io/sits/reference/sits_accuracy.html">sits_accuracy()</a></code>.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist">
+<li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-21-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-21-1" role="tab" aria-controls="tabset-21-1" aria-selected="true">R</a></li>
+<li class="nav-item" role="presentation"><a class="nav-link" id="tabset-21-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-21-2" role="tab" aria-controls="tabset-21-2" aria-selected="false">Python</a></li>
+</ul>
+<div class="tab-content">
+<div id="tabset-21-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-21-1-tab">
+<div class="cell">
+<div class="sourceCode" id="cb41"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co">#</span></span>
+<span><span class="co">#  Recover validation data</span></span>
+<span><span class="co">#</span></span>
+<span><span class="va">validation_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_from_hf.html">sits_from_hf</a></span><span class="op">(</span></span>
+<span>    repo <span class="op">=</span> <span class="st">"e-sensing/samples_cerrado"</span>,</span>
+<span>    file <span class="op">=</span> <span class="st">"validation_data_2018.parquet"</span>,</span>
+<span>    type <span class="op">=</span> <span class="st">"dataset"</span></span>
+<span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+<div id="tabset-21-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-21-2-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb42"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a><span class="co">#  Recover validation data</span></span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a>validation_data <span class="op">=</span> sits_from_hf(</span>
+<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a>    repo <span class="op">=</span> <span class="st">"e-sensing/samples_cerrado"</span>,</span>
+<span id="cb42-6"><a href="#cb42-6" aria-hidden="true" tabindex="-1"></a>    <span class="bu">file</span> <span class="op">=</span> <span class="st">"validation_data_2018.parquet"</span>,</span>
+<span id="cb42-7"><a href="#cb42-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">type</span> <span class="op">=</span> <span class="st">"dataset"</span></span>
+<span id="cb42-8"><a href="#cb42-8" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
+<p>We then compare the classified map with the validation points using <code><a href="https://e-sensing.github.io/sits/reference/sits_accuracy.html">sits_accuracy()</a></code>. For each validation point, the function retrieves the class assigned by the map and compares it with the reference label. The result is an accuracy assessment object, which includes the confusion matrix and the overall, user’s and producer’s accuracies for each class. Use <code>acc</code> to print the results. Comparing these figures with those of a classification based on the original Landsat-8 bands is a useful way to evaluate the benefits of the embeddings for the Cerrado.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist">
+<li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-22-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-22-1" role="tab" aria-controls="tabset-22-1" aria-selected="true">R</a></li>
+<li class="nav-item" role="presentation"><a class="nav-link" id="tabset-22-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-22-2" role="tab" aria-controls="tabset-22-2" aria-selected="false">Python</a></li>
+</ul>
+<div class="tab-content">
+<div id="tabset-22-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-22-1-tab">
+<div class="cell">
+<div class="sourceCode" id="cb43"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co">#</span></span>
+<span><span class="co">#  Measure accuracy</span></span>
+<span><span class="co">#</span></span>
+<span><span class="va">acc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_accuracy.html">sits_accuracy</a></span><span class="op">(</span></span>
+<span>    data <span class="op">=</span> <span class="va">cube_class</span>,</span>
+<span>    validation <span class="op">=</span> <span class="va">validation_data</span>,</span>
+<span>    method <span class="op">=</span> <span class="st">"pixel"</span></span>
+<span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+<div id="tabset-22-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-22-2-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb44"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a><span class="co">#  Measure accuracy</span></span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
+<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a>acc <span class="op">=</span> sits_accuracy(</span>
+<span id="cb44-5"><a href="#cb44-5" aria-hidden="true" tabindex="-1"></a>    data <span class="op">=</span> cube_class,</span>
+<span id="cb44-6"><a href="#cb44-6" aria-hidden="true" tabindex="-1"></a>    validation <span class="op">=</span> validation_data,</span>
+<span id="cb44-7"><a href="#cb44-7" aria-hidden="true" tabindex="-1"></a>    method <span class="op">=</span> <span class="st">"pixel"</span></span>
+<span id="cb44-8"><a href="#cb44-8" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
+</section><section id="summary" class="level2" data-number="27.9"><h2 data-number="27.9" class="anchored" data-anchor-id="summary">
+<span class="header-section-number">27.9</span> Summary</h2>
+<p>This chapter presented a complete example of building and using regional Earth observation embeddings for a whole biome, the Brazilian Cerrado. A LeJEPA encoder was trained by self-supervised learning on unlabelled Landsat-8 time series covering 2017 to 2024, and then used to transform a 2018 data cube into an embedding cube with 64 dimensions. Using only 20% of the available labelled samples, encoded with the same encoder, we trained a multilayer perceptron and followed the standard <code>sits</code> workflow of classification, smoothing and labelling to produce a land use and land cover map. The map was then evaluated with an independent validation set. Since the encoder was trained over several years, the same encoder can be applied to data cubes of other years in the training period, allowing consistent multi-year mapping with few labelled samples.</p>
+</section><section id="references" class="level2" data-number="27.10"><h2 data-number="27.10" class="anchored" data-anchor-id="references">
+<span class="header-section-number">27.10</span> References</h2>
+
+
+<div id="refs" class="references csl-bib-body" role="list">
+<div id="ref-Klink2005" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[1] </div>
+<div class="csl-right-inline">C. A. Klink and R. B. Machado, <span>“Conservation of the <span>Brazilian</span> cerrado,”</span> <em>Conservation Biology</em>, vol. 19, no. 3, pp. 707–713, 2005.</div>
+</div>
+<div id="ref-Goodland1971" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[2] </div>
+<div class="csl-right-inline">R. Goodland, <span>“A <span>Physiognomic Analysis</span> of the <span>‘<span>Cerrado</span>’</span> <span>Vegetation</span> of <span>Central Brasil</span>,”</span> <em>The Journal of Ecology</em>, vol. 59, no. 2, p. 411, 1971, doi: <a href="https://doi.org/10.2307/2258321">10.2307/2258321</a>.</div>
+</div>
+<div id="ref-Walter2006" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[3] </div>
+<div class="csl-right-inline">B. M. T. Walter, <span>“<span class="nocase">Fitofisionomias do bioma Cerrado: síntese terminológica e relações florísticas.</span>”</span> PhD thesis, Universidade de Brasilia, 2006.</div>
+</div>
+<div id="ref-Ferreira2020a" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[4] </div>
+<div class="csl-right-inline">K. Ferreira <em>et al.</em>, <span>“Using <span>Remote Sensing Images</span> and <span>Cloud Services</span> on <span>AWS</span> to <span>Improve Land Use</span> and <span>Cover Monitoring</span>,”</span> 2020.</div>
+</div>
+<div id="ref-Olofsson2014" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[5] </div>
+<div class="csl-right-inline">P. Olofsson, G. M. Foody, M. Herold, S. V. Stehman, C. E. Woodcock, and M. A. Wulder, <span>“Good practices for estimating area and assessing accuracy of land change,”</span> <em>Remote Sensing of Environment</em>, vol. 148, pp. 42–57, 2014.</div>
+</div>
+</div>
+</section></main><!-- /main --><script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script><nav class="page-navigation"><div class="nav-page nav-page-previous">
+      <a href="./emb_build.html" class="pagination-link">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">26</span>&nbsp; <span class="chapter-title">Building regional embeddings: a simple example</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./vector_datacubes.html" class="pagination-link">
+        <span class="nav-page-text">Vector data cubes</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer"><div class="nav-footer">
+    <div class="nav-footer-left">The SITS book was written by Gilberto Camara, Rolf Simoes, Felipe Souza, Felipe Carlos, Pedro Andrade, Karine Ferreira, Pedro Brito, Alexandre Assunção, Charlotte Pelletier, and Bianca Zadrosny.</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">This book was built with <a href="https://quarto.org/">Quarto</a>.</div>
+  </div>
+</footer>
+
+
+</body></html>

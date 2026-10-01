@@ -63,14 +63,18 @@ The most straightforward approach to model tuning is to run a grid search; this 
 
 The `sits_tuning()` function takes the following parameters:
 
-- `samples`: Training dataset to be used by the model.
-- `samples_validation`: Optional dataset containing time series to be used for validation. If missing, the next parameter will be used.
-- `validation_split`: If `samples_validation` is not used, this parameter defines the proportion of time series in the training dataset to be used for validation (default is 20%).
-- `ml_method()`: Deep learning method (either `sits_mlp()`, `sits_tempcnn()`, `sits_lstm_fcn()`, `sits_resnet()` or `sits_lighttae()`).
-- `params`: Defines the optimizer and its hyperparameters by calling `sits_tuning_hparams()`, as shown in the example below.
-- `trials`: Number of trials to run the random search.
-- `multicores`: Number of cores to be used for the procedure.
-- `progress`: Show a progress bar?
+| Parameter | Meaning |
+|:----------|:--------|
+| `samples` | Training dataset to be used by the model. |
+| `samples_validation` | Optional dataset containing time series to be used for validation. If missing, the next parameter will be used. |
+| `validation_split` | If `samples_validation` is not used, this parameter defines the proportion of time series in the training dataset to be used for validation (default is 20%). |
+| `ml_method()` | Deep learning method (either `sits_mlp()`, `sits_tempcnn()`, `sits_lstm_fcn()`, `sits_resnet()` or `sits_lighttae()`). |
+| `params` | Defines the optimizer and its hyperparameters by calling `sits_tuning_hparams()`, as shown in the example below. |
+| `trials` | Number of trials to run the random search. |
+| `multicores` | Number of cores to be used for the procedure. |
+| `progress` | Show a progress bar? |
+
+: Parameters for tuning function. 
 
 The `sits_tuning_hparams()` function inside `sits_tuning()` allows defining optimizers and their hyperparameters, including `lr` (learning rate), `eps` (controls numerical stability), and `weight_decay` (controls overfitting). The default values for `eps` and `weight_decay` in all `sits` deep learning functions are 1e-08 and 1e-06, respectively. The default `lr` for `sits_lighttae()` and `sits_tempcnn()` is 0.005.
 
@@ -88,6 +92,50 @@ We suggest using the log-uniform distribution to search over a wide range of val
 ## Tuning a LightTAE model
 
 Our first example is tuning a Lightweight Temporal Attention Encoder model (`sits_lighttae()`) [@Garnot2020] on the MOD13Q1 dataset for the state of Mato Grosso. To recall, this data set contains time series samples from the Brazilian Mato Grosso state obtained from the MODIS MOD13Q1 product. It has 1,837 samples and seven classes (`Cerrado`, `Forest`, `Pasture`, `Soy_Corn`, `Soy_Cotton`, `Soy_Fallow`, `Soy_Millet`) [@Picoli2018] and is available in the R package `sitsdata`. In this example, we show how the accuracy is related to hyperparameter `lr` (learning rate).
+
+We first retrieve the training data from Hugging Face, as follows.
+
+:::{.panel-tabset}
+## R
+```{r}
+#| label: get-data-hf
+#| cache: true
+#| warning: false
+# Get the samples from Hugging Face
+samples_matogrosso_mod13q1 <- sits_from_hf(
+  repo = "e-sensing/samples_book",
+  file = "samples_matogrosso_mod13q1.parquet",
+  type = "dataset"
+)
+
+# Get data point to classify
+point_mt_mod13q1 <- sits_from_hf(
+  repo = "e-sensing/samples_book",
+  file = "point_mt_mod13q1.parquet",
+  type = "dataset"
+)
+```
+## Python
+```{python}
+#| label: py-get-data-hf
+#| eval: false
+# Get the samples from Hugging Face
+samples_matogrosso_mod13q1 = sits_from_hf(
+  repo = "e-sensing/samples_book",
+  file = "samples_matogrosso_mod13q1.parquet",
+  type = "dataset"
+)
+
+# Get data point to classify
+point_mt_mod13q1 = sits_from_hf(
+  repo = "e-sensing/samples_book",
+  file = "point_mt_mod13q1.parquet",
+  type = "dataset"
+)
+```
+:::
+
+The next step is to apply `sits_tuning` to the LightTAE model with the training data.
 
 :::{.panel-tabset}
 ## R
@@ -108,10 +156,10 @@ tuned_mt <- sits_tuning(
              )
          ),
      trials = 30,
-     multicores = 8,
+     multicores = 4,
      seed = 29031956,
-     gpu_memory = 16,
-     batch_size = 2^16,
+     gpu_memory = 20,
+     batch_size = 2^20,
      progress = FALSE
 )
 tuned_mt
@@ -121,11 +169,6 @@ tuned_mt
 #| eval: false
 # Set seed 
 r_set_seed(29031956)
-# Load samples
-samples_matogrosso_mod13q1 = load_samples(
-    name = "samples_matogrosso_mod13q1", 
-    package = "sitsdata"
-)
 
 # Tuning ``sits_lighttae`` model
 tuned_mt = sits_tuning(
@@ -150,7 +193,7 @@ tuned_mt
 ```{r}
 #| label: py-tuning-ltae
 #| cache: true
-#| warning: false
+#| echo: false
 tuned_mt
 ```
 :::
@@ -216,6 +259,35 @@ best_5
 
 In the example, we use `sits_tuning()` to find good hyperparameters to train the `sits_tempcnn()` algorithm for a dataset for measuring deforestation in Rondonia (`samples_deforestation_rondonia`) available in package `sitsdata`. This dataset consists of 6,007 samples collected from Sentinel-2 images covering the state of Rondonia. There are nine classes: `Clear_Cut_Bare_Soil`, `Clear_Cut_Burned_Area`, `Mountainside_Forest`, `Forest`, `Riparian_Forest`, `Clear_Cut_Vegetation`, `Water`, `Wetland`, and `Seasonally_Flooded`. Each time series contains values from Sentinel-2/2A bands B02, B03, B04, B05, B06, B07, B8A, B08, B11 and B12, from 2022-01-05 to 2022-12-23 in 16-day intervals. The samples are intended to detect deforestation events and have been collected by remote sensing experts using visual interpretation.
 
+We obtain the training samples from Hugging Face.
+
+:::{.panel-tabset}
+## R
+```{r}
+#| label: get-samples-hf
+#| cache: true
+#| warning: false
+# Get the samples from Hugging Face
+samples_deforestation_rondonia <- sits_from_hf(
+  repo = "e-sensing/samples_book",
+  file = "samples_deforestation_rondonia.parquet",
+  type = "dataset"
+)
+```
+## Python
+```{python}
+#| label: py-get-samples-hf
+#| eval: false
+# Load samples
+samples_deforestation_rondonia = sits_from_hf(
+  repo = "e-sensing/samples_book",
+  file = "samples_deforestation_rondonia.parquet",
+  type = "dataset"
+)
+```
+:::
+
+
 The hyperparameters for the `sits_tempcnn()` method include the size of the layers, convolution kernels, dropout rates, learning rate, and weight decay. Please refer to the description of the Temporal CNN algorithm in Chapter [Machine learning algorithms for image time series](https://e-sensing.github.io/sitsbook/cl_machinelearning.html).
 
 :::{.panel-tabset}
@@ -254,11 +326,6 @@ tuned_tempcnn <- sits_tuning(
 #| eval: false
 # Set seed
 r_set_seed(29031956)
-# Load samples
-samples_deforestation_rondonia = load_samples(
-    name = "samples_deforestation_rondonia", 
-    package = "sitsdata"
-)
 
 # Tuning ``sits_tempcnn`` model
 tuned_tempcnn = sits_tuning(
@@ -283,8 +350,8 @@ tuned_tempcnn = sits_tuning(
   trials = 20,
   multicores = 8,
   seed = 29031956,
-  gpu_memory = 16,
-  batch_size = 2^16
+  gpu_memory = 18,
+  batch_size = 2^18
 )
 ```
 :::

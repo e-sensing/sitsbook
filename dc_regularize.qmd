@@ -144,9 +144,34 @@ Different satellites—even those within the same mission, such as Sentinel-2A a
 
 In our example, tile `20LKP` has 12 images within the selected time period, while tile `20LLP` has 25. To harmonize these differences, we use the `sits_regularize()` function, which builds a data cube with a regular timeline and estimates the best available pixel value for each time interval.
 
-To build a regular data cube, we need to set the period to be used by `sits_regularize()`. The period parameter defines the time interval between observations, using the ISO 8601 time period format. This format specifies intervals as `P[n]Y[n]M[n]D`, where "Y" stands for years, "M" for months, and "D" for days. For example, `P1M` denotes a one-month interval, and `P15D` denotes a fifteen-day interval. For each time step, `sits_regularize()` identifies all available images within the defined window. Then, for each pixel, it sorts these candidate values by increasing cloud cover and selects the first cloud-free value. In this way, the function builds a regular time series for each pixel, even when observations come from different dates or satellites.
+The `sits_regularize()` function takes the following parameters:
 
-In this example, we set the regular cube’s spatial resolution to 40 meters to speed up processing. For real-world applications, however, we recommend using a resolution of 10 meters. To avoid time-outs by cloud providers, copy the ARD data to a local directory using `sits_cube_copy()` before applying regularization. This separates the process of creating a regular data cube into two distinct steps: (a) downloading data from ARD collections and (b) building the data cube from local files. This approach can significantly speed up processing. After `sits` builds the regular cube, the ARD images can be deleted to save space. Depending on the speed of your Internet connection, `sits_cube_copy()` may take some time to complete.
+| Parameter | Meaning |
+|:----------|:--------|
+| `cube` | cube whose observation period and/or spatial resolution is not constant. |
+| `period` | ISO8601-compliant time period for regular data cubes, with number and unit, where "D", "M" and "Y" stand for days, month and year; e.g., "P16D" for 16 days. |
+| `res` | spatial resolution of regularized images (in meters). |
+| `output_dir` | valid directory for storing regularized images. |
+| `timeline` | user-defined timeline for regularized cube (optional). |
+| `roi` | region of interest (optional - see function documentation for details). |
+| `crs` | coordinate reference system of the roi (optional - see function documentation for details). |
+| `tiles` | tiles to be produced (optional). |
+| `grid_system` | grid system to be used for the output images. |
+| `multicores` | number of cores used for parallel processing (default = 2). |
+| `progress` | show progress bar? |
+
+The `period` parameter defines the time interval between observations, using the ISO 8601 time period format. This format specifies intervals as `P[n]Y[n]M[n]D`, where "Y" stands for years, "M" for months, and "D" for days. For example, `P1M` denotes a one-month interval, and `P15D` denotes a fifteen-day interval. For each time step, `sits_regularize()` identifies all available images within the defined window. Then, for each pixel, it sorts these candidate values by increasing cloud cover and selects the first cloud-free value. In this way, the function builds a regular time series for each pixel, even when observations come from different dates or satellites.
+
+The `grid_system` parameter is optional. It is used to set the grid system of 
+the regularized cube, in case it is different from the input cube. The output grid
+systems available in sits are:
+
+- the grid system used in the Sentinel-2 satellites ("MGRS").
+- the grid systems used the  Brazil Data Cube, which are; (a) "BDC_LG_V2", used for CBERS-4 WFI images; (b) "BDC_MD_V2", used for Landsat images; and (c) "BDC_SM_V2", used for Sentinel-2 images. Unlike the MGRS grid, which uses the UTM project, the BDC uses the Albers  Equal Area Projection. 
+
+Defining the output grid system is recommended when the input data is a Sentinel-1 cube, or auxiliary data such as DEM cubes, or meteorological data, such as the rainfall cube available in Digital Earth Africa. 
+
+In the following  example, we set the regular cube’s spatial resolution to 40 meters to speed up processing. For real-world applications, however, we recommend using a resolution of 10 meters. To avoid time-outs by cloud providers, copy the ARD data to a local directory using `sits_cube_copy()` before applying regularization. This separates the process of creating a regular data cube into two distinct steps: (a) downloading data from ARD collections and (b) building the data cube from local files. This approach can significantly speed up processing. After `sits` builds the regular cube, the ARD images can be deleted to save space. Depending on the speed of your Internet connection, `sits_cube_copy()` may take some time to complete.
 
 
 :::{.panel-tabset}

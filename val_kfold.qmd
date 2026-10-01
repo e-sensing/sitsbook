@@ -55,12 +55,40 @@ Cross-validation uses part of the available samples to fit the classification mo
 
 `sits_kfold_validate()` supports k-fold validation in `sits`. The result is the confusion matrix and the accuracy statistics (overall and by class). In the examples below, we use multiprocessing to speed up the results. The parameters of `sits_kfold_validate` are:
 
-1. `samples`:  training samples organized as a time series tibble;
-2. `folds`: number of folds, or how many times to split the data (default = 5);
-3. `ml_method`: ML/DL method to be used for the validation (default = Random Forest);
-4. `multicores`: number of cores to be used for parallel processing (default = 2).
+| Parameter | Meaning |
+|:----------|:--------|
+| `samples` | training samples organized as a time series tibble; |
+| `folds` | number of folds, or how many times to split the data (default = 5); |
+| `ml_method` | ML/DL method to be used for the validation (default = Random Forest); |
+| `multicores` | number of cores to be used for parallel processing (default = 2). |
 
-Below we show an example of cross-validation on the `samples_matogrosso_mod13q1` dataset. The resulting validation can be exported to an XLSX file, visualized as a confusion matrix, or have its metrics displayed.
+Below we show an example of cross-validation on the `samples_matogrosso_mod13q1` dataset. The resulting validation can be exported to an XLSX file, visualized as a confusion matrix, or have its metrics displayed. The training data to be used in the examples is available on Hugging Face and show be retrieved before running the validation, as shown below.
+
+:::{.panel-tabset}
+## R
+```{r}
+#| label: get-data-hf
+#| cache: true
+#| warning: false
+# Get the samples from Hugging Face
+samples_matogrosso_mod13q1 <- sits_from_hf(
+  repo = "e-sensing/samples_book",
+  file = "samples_matogrosso_mod13q1.parquet",
+  type = "dataset"
+)
+```
+## Python
+```{python}
+#| label: py-get-data-hf
+#| eval: false
+# Get the samples from Hugging Face
+samples_matogrosso_mod13q1 = sits_from_hf(
+  repo = "e-sensing/samples_book",
+  file = "samples_matogrosso_mod13q1.parquet",
+  type = "dataset"
+)
+```
+:::
 
 :::{.panel-tabset}
 ## R
@@ -75,6 +103,7 @@ Below we show an example of cross-validation on the `samples_matogrosso_mod13q1`
 #|   Confusion matrix for 5-fold validation resulting from Random Forest classification of Mato Grosso samples.
 #| fig-align: center
 #| out-width: 90%
+# Run the validation
 rfor_validate_mt <- sits_kfold_validate(
     samples = samples_matogrosso_mod13q1,
     folds = 5,
@@ -88,12 +117,7 @@ plot(rfor_validate_mt, type = "confusion_matrix")
 ```{python}
 #| echo: true
 #| eval: false
-# Load samples
-samples_matogrosso_mod13q1 = load_samples(
-    name = "samples_matogrosso_mod13q1", 
-    package = "sitsdata"
-)
-
+# Run the validation
 rfor_validate_mt = sits_kfold_validate(
     samples = samples_matogrosso_mod13q1,
     folds = 5,

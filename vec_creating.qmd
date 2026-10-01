@@ -15,13 +15,15 @@ format: html
 #| echo: true
 #| eval: true
 #| output: false
+# Increase the timeout for download
+options(timeout = 1200)
 # load package "tibble"
 library(tibble)
 # load packages "sits" and "sitsdata"
 library(sits)
 library(sitsdata)
 # set tempdir if it does not exist 
-tempdir_r <- "~/sitsbook/tempdir/R/vc_create"
+tempdir_r <- "~/sitsbook/tempdir/R/vec_create"
 dir.create(tempdir_r, showWarnings = FALSE)
 ```
 ## Python
@@ -33,7 +35,7 @@ dir.create(tempdir_r, showWarnings = FALSE)
 from pysits import *
 from pathlib import Path
 # set tempdir if it does not exist 
-tempdir_py = Path.home() / "sitsbook/tempdir/Python/vc_create"
+tempdir_py = Path.home() / "sitsbook/tempdir/Python/vec_create"
 tempdir_py.mkdir(parents=True, exist_ok=True)
 ```
 :::
@@ -49,55 +51,367 @@ In what follows, we illustrate the procedure of linking vector and raster file.
 
 ## Retrieving an external vector file 
 
-In this example, 
+In this example, we will use a vector file developed by the "Fields of the World" (FTW)
+project [@Kerner2025]. FTW is a community-driven, global initiative that uses artificial intelligence and satellite imagery to map every agricultural field on Earth. Its aims are to detect and outline agricultural field boundaries at scale using machine learning and deep learning. It provide high-resolution boundary data spanning hundreds of countries and territories, mapping billions of individual field polygons. For more details in the project, please visit the [Fields of the World website](https://fieldsofthe.world/).
+
+The selected FTW subset covers an agricultural area in the State of Bahia in Brazil and corresponds to an area inside the `S13W46` grid provide by FTW in their website, defined by the bounding box with limits `(lat_min = -11.82, lat_max = -11.57, lon_min = -45.75, lon_max = -45.52)`. The  FTW file contains closed polygons which are geometrically consistent. The data is available in the `sitsdata` package, as show below. 
+
+
+:::{.panel-tabset}
+## R
+```{r}
+#| label: list-fow-dir
+#| echo: true
+#| eval: true
+#| cache: true
+# directory where FTW file is located
+fow_dir <- system.file("/extdata/fields_of_the_world", package = "sitsdata")
+list.files(fow_dir)
+```
+## Python
+```{python}
+#| echo: true
+#| eval: false
+#| output: false
+# FTW file is available in a local directory 
+fow_dir = r_package_dir("extdata/Rondonia-20LMR/", package = "sitsdata")
+# List FTW file
+files = [p.name for p in Path(fow_dir).iterdir() if p.is_file()]
+print(files)
+```
+```{r}
+#| label: py-list-fow-dir
+#| echo: false
+#| eval: true
+#| cache: true
+fow_dir <- system.file("/extdata/fields_of_the_world", package = "sitsdata")
+list.files(fow_dir)
+```
+:::
+
+The FTW file has been converted from the original format `geoparquet`  to a `geopackage` format, which is used by `sits`. Its name has also been changed
+to conform to the expected `sits` file format for raster and vector processed files, namely  `c("X1", "X2", "tile", "start_date", "end_date", "band", "version")`. In this case, the components of the file name are split using `_`, and the first two elements are ignored (although we have included `SENTINEL` and `FOW` for clarity). The band type is `segments`. Any geopackage polygon file that contains these required items can be imported and linked to a corresponding raster file, as shown below.
+
+
+For further information, please see 
+the section ["Reading classified images as a local data cube](https://e-sensing.github.io/sitsbook/dc_localcubes.html#reading-classified-images-as-local-data-cube) in this book. 
 
 ## Retrieving a local data cube
 
-We take the MODIS data set for a small area in Mato Grosso, Brazil available in the `sits` package. For details on how to retrieve raster data cubes from local files, please see chapter "Data cubes from local files". 
+In this example, we will use an embedding cube covering the same region as the FTW segments. This cube has been produced using the scripts described in the ["Building regional embeddings"](https://e-sensing.github.io/sitsbook/emb_build.html). The original data consists of a two-year LANDSAT-8 cube for the period 2023-01-01 to 2024-12-31 covering the Brazilian Cerrado biome in monnthly intervals. To build the embedding, we used the JeLEPA algorithm [Balestriero2025] which is implemented by the `sits_ssl_lejepa()` function. 
 
 :::{.panel-tabset}
 ## R
 ```{r}
-#| label: vec-modis-cube
+#| label: fig-lejepa-cube
 #| eval: true
 #| cache: true
 #| warning: false
-# Retrieve a local cube based with MODIS data
+#| fig-width: 5
+#| fig-height: 5
+#| fig-dpi: 300
+#| fig-cap: |
+#|   RGB composite image for the LeJEPA embedding cube.
+#| fig-align: center
+#| out-width: 80%
+# Retrieve a local embedding cube built with LeJEPA encoder
 # data directory
-data_dir <- system.file("extdata/raster/mod13q1", package = "sits")
+images_dir <- system.file("extdata/Bahia-LeJEPA", package = "sitsdata")
 
 # local cube
-modis_cube <- sits_cube(
+lejepa_cube <- sits_cube(
     source = "BDC",
-    collection = "MOD13Q1-6.1",
-    data_dir = data_dir,
+    collection = "LANDSAT-OLI-16D",
+    data_dir = images_dir,
     parse_info = c("satellite", "sensor", "tile", "band", "date")
 )
+# plot an RGB combination of three dimensions of the embedding cube
+plot(lejepa_cube, green = "EMB10", red = "EMB12", blue = "EMB13")
 ```
 ## Python
 ```{python}
 #| eval: false
 # Retrieve a local cube based with MODIS data
 # data directory
-data_dir = r_package_dir("extdata/raster/mod13q1", package = "sits")
+images_dir = r_package_dir("extdata/Bahia-LeJEPA", package = "sitsdata")
 
 # local cube
-modis_cube = sits_cube(
+lejepa_cube = sits_cube(
     source = "BDC",
-    collection = "MOD13Q1-6.1",
-    data_dir = data_dir,
-    parse_info = ("satellite", "sensor", "tile", "band", "date")
+    collection = "LANDSAT-OLI-16D",
+    data_dir = images_dir,
+    parse_info = c("satellite", "sensor", "tile", "band", "date")
 )
+
+# plot an RGB combination of three dimensions of the embedding cube
+plot(lejepa_cube, green = "EMB10", red = "EMB12", blue = "EMB13")
+```
+```{r}
+#| label: py-fig-lejepa-cube
+#| echo: false
+#| eval: true
+#| cache: true
+#| warning: false
+#| fig-width: 5
+#| fig-height: 5
+#| fig-dpi: 300
+#| fig-cap: |
+#|   RGB composite image for the LeJEPA embedding cube.
+#| fig-align: center
+#| out-width: 80%
+# plot an RGB combination of three dimensions of the embedding cube
+plot(lejepa_cube, green = "EMB10", red = "EMB12", blue = "EMB13")
 ```
 :::
 
-Then, we produce a vector data cube associated to the raster data cube using `sits_segment`, as described in the previous chapter.
+## Building a vector data cube for raster and vector files
+
+We now produce a vector data cube by associating the FTW vector file
+with the raster data cube produced above. To do this, we use the
+`sits_cube()` function, with the following parameters:
+
+| Parameter | Meaning |
+|:----------|:--------|
+| `source` | original source from which the data has been downloaded. |
+| `collection` | image collection in data source. |
+| `raster_cube` | raster cube to be merged with vector data. |
+| `vector_dir` | local directory where vector files are stored. |
+| `parse_info` | parsing information for metadata retrieval on local file. |
+| `delim` | delimiter for parsing local files (default = "_"). |
+| `multicores` | number of workers for parallel processing (default = 2). |
+| `version` | version of the vector file (default = "v1"). |
+| `progress` | show a progress bar? |
 
 :::{.panel-tabset}
 ## R
 ```{r}
-#| label: fig-vec-modis-segments
+#| label: fig-vec-cube
 #| echo: true
+#| eval: true
+#| cache: true
+#| warning: false
+#| fig-width: 5
+#| fig-height: 5
+#| fig-dpi: 300
+#| fig-cap: |
+#|   Vector data cube for a small area in the state of Bahia, Brazil.
+#| fig-align: center
+#| out-width: 80%
+# create a vector cube by merging a raster cube with a vector file with segments
+vec_lejepa_cube <- sits_cube(
+    source = "BDC",
+    collection = "LANDSAT-OLI-16D",
+    raster_cube = lejepa_cube,
+    vector_dir = fow_dir,
+    parse_info = c("X1", "X2", "tile", "start_date", "end_date", "band", "version")
+)
+
+# plot the segmented cube
+plot(vec_lejepa_cube, 
+     green = "EMB21", red = "EMB22", blue = "EMB23", 
+     seg_color = "white", line_width = 0.6)
+```
+## Python
+```{python}
+#| echo: true
+#| eval: false
+#| label: py-noeval-fig-vec-cube
+#| fig-width: 5
+#| fig-height: 5
+#| fig-dpi: 300
+#| fig-cap: |
+#|   Vector data cube for a small area in the state of Bahia, Brazil.
+#| fig-align: center
+#| out-width: 80%
+# create a vector cube by merging a raster cube with a vector file with segments
+vec_lejepa_cube = sits_cube(
+    source = "BDC",
+    collection = "LANDSAT-OLI-16D",
+    raster_cube = lejepa_cube,
+    vector_dir = fow_dir,
+    parse_info = c("X1", "X2", "tile", "start_date", "end_date", "band", "version")
+)
+
+# plot the segmented cube
+plot(vec_lejepa_cube, 
+     green = "EMB21", red = "EMB22", blue = "EMB23", 
+     seg_color = "white", line_width = 0.6)
+```
+```{r}
+#| label: py-fig-vec-cube
+#| echo: false
+#| eval: true
+#| cache: true
+#| warning: false
+#| fig-width: 5
+#| fig-height: 5
+#| fig-dpi: 300
+#| fig-cap: |
+#|  Vector data cube for a small area in the state of Bahia, Brazil.
+#| fig-align: center
+#| out-width: 80%
+# plot the segmented cube
+plot(vec_lejepa_cube, 
+     green = "EMB21", red = "EMB22", blue = "EMB23", 
+     seg_color = "white", line_width = 0.6)
+```
+:::
+
+## Training a classification model 
+
+After building a vector data cube, we can now classify it, following the guidelines 
+of the previous chapter ["Object-based time series image analysis](https://e-sensing.github.io/sitsbook/vec_obia.html). We start by building 
+a machine learning model using the MLP (multi-layer perceptron) algorithm. To do so,
+we use a samples of a labelled training set developed by the `sits` team for LUCC classification in the Cerrado biome in Brazil. The data set is available in
+Hugging Face. 
+
+:::{.panel-tabset}
+## R
+```{r}
+#| label: sample-dataset
+#| echo: true
+#| eval: true
+#| cache: true
+#| warning: false
+# Download the labelled data set from Hugging Face 
+samples_cerrado <- sits_from_hf(
+  repo = "e-sensing/samples_cerrado",
+  file = "labelled_samples_cerrado.parquet",
+  type = "dataset"
+)
+# Use 10% of  samples
+samples_cerrado_frac <- sits_sample(samples_cerrado, frac = 0.1)
+# plot cube
+summary(samples_cerrado_frac)
+```
+## Python
+```{python}
+#| echo: true
+#| eval: false
+# Download the labelled data set from Hugging Face 
+samples_cerrado = sits_from_hf(
+  repo = "e-sensing/samples_cerrado",
+  file = "labelled_samples_cerrado.parquet",
+  type = "dataset"
+)
+# Use 10% of  samples
+samples_cerrado_frac = sits_sample(samples_cerrado, frac = 0.1)
+# plot cube
+summary(samples_cerrado_frac)
+```
+```{r}
+#| label: py-sample-dataset
+#| echo: false
+#| eval: true
+#| cache: true
+#| warning: false
+summary(samples_cerrado_frac)
+```
+:::
+
+These samples were obtained by extracting time series for Landsat data cube. As 
+such their data contains values for the original Landsat bands. To be used to 
+train embeddings, they have to be converted to the same dimensions as those 
+of embeddings cube. To do so, we follow the procedure used in the
+["Building regional embeddings"](https://e-sensing.github.io/sitsbook/emb_build.html) chapter, which is to transform the samples using the same LeJEPA encoder that produced
+the embeddings cube. For details on how to generate such encoder, please refer to
+the above-mentioned chapter. For brevity's sake, we will use a version of the encoder which is archived in the Hugging Face repository. 
+
+To transform the samples to the embedding space, we retrieve the LeJEPA encoder
+from Hugging Face and use it to encode the samples.
+
+:::{.panel-tabset}
+## R
+```{r}
+#| label: sample-encoding
+#| echo: true
+#| eval: true
+#| cache: true
+#| cache.lazy: false
+#| warning: false
+
+# Download the encoder from Hugging Face 
+lejepa_encoder <- sits_from_hf(
+  repo = "e-sensing/encoders_cerrado", 
+  file = "ssl_lejepa_tcnn_model_2017_2024.rds",
+  type = "model"
+)
+# Encode the samples to transform them into the embedding space
+samples_cerrado_enc <- sits_encode(
+    data = samples_cerrado_frac, 
+    encoder = lejepa_encoder)
+```
+## Python
+```{python}
+#| echo: true
+#| eval: false
+# Download the encoder from Hugging Face 
+lejepa_encoder = sits_from_hf(
+  repo = "e-sensing/encoders_cerrado", 
+  file = "ssl_lejepa_tcnn_model_2017_2024.rds",
+  type = "model"
+)
+# Encode the samples to transform them into the embedding space
+samples_cerrado_enc = sits_encode(
+    data = samples_cerrado_frac, 
+    encoder = lejepa_encoder)
+```
+:::
+
+After converting the samples to the embedding space, we build a classification model using the multi-layer perceptron algorithm (`sits_mlp()`). 
+
+:::{.panel-tabset}
+## R
+```{r}
+#| label: fig-vec-mlp
+#| echo: true
+#| eval: true
+#| cache: true
+#| cache.lazy: true
+#| warning: false
+#| fig-width: 7
+#| fig-height: 5
+#| fig-dpi: 300
+#| fig-cap: |
+#|  Accuracy and loss functions of the MLP model.
+#| fig-align: center
+#| out-width: 80%
+# train mlp model
+mlp_model <- sits_train(
+    samples = samples_cerrado_enc,
+    ml_method = sits_mlp(
+        layers = c(256, 256, 256)
+    )
+)
+# plot the evolution 
+plot(mlp_model)
+```
+## Python
+```{python}
+#| eval: false
+#| echo: true
+#| cache: true
+#| warning: false
+#| fig-width: 5
+#| fig-height: 3
+#| fig-dpi: 300
+#| fig-cap: |
+#|  Evolution of accuracy and loss functions of the multi-layer perceptron model.
+#| fig-align: center
+#| out-width: 80%
+# train mlp model
+mlp_model = sits_train(
+    samples = samples_cerrado_enc,
+    ml_method = sits_mlp(
+        layers = c(256, 256, 256)
+    )
+)
+# plot the evolution 
+plot(mlp_model)
+```
+```{r}
+#| label: py-fig-vec-mlp
+#| echo: false
 #| eval: true
 #| cache: true
 #| warning: false
@@ -105,288 +419,150 @@ Then, we produce a vector data cube associated to the raster data cube using `si
 #| fig-height: 3
 #| fig-dpi: 300
 #| fig-cap: |
-#|   Example of MODIS image segmentation for a small area in Sinop, Brazil.
+#|  Evolution of accuracy and loss functions of the multi-layer perceptron model.
 #| fig-align: center
 #| out-width: 80%
-# segment the vector cube
-segs_cube <- sits_segment(
-    cube = modis_cube,
-    output_dir = tempdir_r 
-)
+# plot the evolution 
+plot(mlp_model)
+```
+:::
 
-# plot the segmented cube
-plot(segs_cube)
+## Obtaining a classified map using a vector data cube
+
+To classify the cube `vector_lejepa_cube`, we follow the procedure described
+in Chapter ["Object-based time series image analysis"](https://e-sensing.github.io/sitsbook/vec_obia.html). The first step
+is a pixel-based classification using the trained model to the probabilities
+associated to each pixel for each class. The `memsize`, `multicores` 
+and `gpu_memory` parameters should be set by users according to the capabilities
+of their machines.
+
+:::{.panel-tabset}
+## R
+```{r}
+#| label: fig-vec-local-probs
+#| echo: true
+#| eval: true
+#| cache: true
+#| warning: false
+#| fig-width: 5
+#| fig-height: 5
+#| fig-dpi: 300
+#| fig-cap: |
+#|  Probabilites for class "Annual Crop"
+#| fig-align: center
+#| out-width: 80%
+# classify the embeddings cube to obtain class probabilities
+vec_lejepa_cube_probs <- sits_classify(
+    data = vec_lejepa_cube,
+    ml_model = mlp_model, 
+    multicores = 4,
+    memsize = 8, 
+    gpu_memory = 8, 
+    output_dir = tempdir_r
+)
+# plot the probabilities of label "Annual_Crop"
+plot(vec_lejepa_cube_probs, labels = "Annual_Crop")
 ```
 ## Python
 ```{python}
-#| echo: true
 #| eval: false
-# segment the vector cube
-segs_cube = sits_segment(
-    cube = modis_cube,
+# classify the embeddings cube to obtain class probabilities
+vec_lejepa_cube_probs = sits_classify(
+    data = vector_lejepa_cube,
+    ml_model = mlp_model, 
+    roi = segments,
+    multicores = 4,
+    memsize = 8, 
+    gpu_memory = 8, 
     output_dir = tempdir_py
 )
-
-# plot the segmented cube
-plot(segs_cube)
+# plot the probabilities of label "Annual_Crop"
+plot(vec_lejepa_cube_probs, labels = "Annual_Crop")
 ```
 ```{r}
-#| label: py-fig-vec-modis-segments
-#| echo: true
-#| eval: true
+#| echo: false
 #| cache: true
 #| warning: false
 #| fig-width: 5
-#| fig-height: 3
+#| fig-height: 5
 #| fig-dpi: 300
 #| fig-cap: |
-#|  Example of MODIS image segmentation for a small area in Sinop, Brazil..
+#|  Probabilites for class "Annual Crop". 
 #| fig-align: center
 #| out-width: 80%
-# plot the segmented cube
-plot(segs_cube)
+# plot the probabilities of label "Annual_Crop"
+plot(vec_lejepa_cube_probs, labels = "Annual_Crop")
 ```
 :::
 
-The resulting vector file is stored in the `tempdir` directory, in the `geopackage` format. The file should contain closed polygons which are geometrically consistent. Listing the resulting file, one can better understand the convention.
+After obtaning the probabilities, the next step is smoothing them. Given that
+the input is a vector data cube, each segment defines a neighborhood boundary
+for `sits_smooth()`. See the reference in the [previous chapter](https://e-sensing.github.io/sitsbook/vec_obia.html#example-of-snic-based-segmentation-and-classification). 
 
 :::{.panel-tabset}
 ## R
 ```{r}
-#| echo: true
-#| eval: true
-#| cache: true
-list.files(tempdir_r, pattern = "*segments*")
-```
-## Python
-```{python}
-#| echo: true
-#| eval: false
-list(
-    tempdir_py.glob(pattern = "*segments*")
-)
-```
-```{r}
-#| echo: false
-#| eval: true
-#| cache: true
-list.files(tempdir_r, pattern = "*segments*")
-```
-:::
-
-The segments file is a geopackage whose title contains optional information on satellite and sensor  and mandatory information on `tile`, `start_date`, `end_date`, `band` (in this case `segments`) and `version`. Any geopackage polygon file that contains these required items can be imported and linked to a corresponding raster file, as shown below. 
-
-## Linking raster and vector data 
-
-Now consider the inverse situation, where a set of a segments is already stored locally and users want to recover them and associate to a raster data cube. In the same way as we do for raster data cubes in [Data cubes from local files](https://e-sensing.github.io/sitsbook/dc_localcubes.html), we use the `sits_cube()` function with the following parameters:
-
-- `source`: data source of the raster data (in this case, the Brazil Data Cube).
-- `collection`: ARD collection associated to the images (in the example, `MOD13Q1-6.1").
-- `raster_cube`: raster data cube to associate with the polygons.
-- `vector_dir`: directory where the vectors are stored. 
-- `parse_info`: how to extract metadata from the name of the `geopackage` file. The minimum required elements are `tile`, `start_date`, `end_date`, `band` and `version`. The start and end dates must match those of the raster cube.
-- `delim`: delimiter character for breaking down the file into parts ("_" by default.)
-
-To import an external `geopackage` file, it must be named according to a convention that is understable by `sits`. The file needs to contain the required information (`tile`, `start_date`, `end_date`, `band` and `version`) separated by underlines. All other parts of the `geopackage` file name can use dummy values (e.g, `X1`). In the example below, we recover the file we produced before. We could replace it by any other polygon file in geopackage format that matches the `parse_info` information listed above. As `satellite` and `sensor` are optional, we use place holders from them.
-
-:::{.panel-tabset}
-## R
-```{r}
-#| label: fig-vec-local-segments
+#| label: fig-vec-local-bayes
 #| echo: true
 #| eval: true
 #| cache: true
 #| warning: false
 #| fig-width: 5
-#| fig-height: 3
+#| fig-height: 5
 #| fig-dpi: 300
 #| fig-cap: |
-#|  Vector data cube which combines segments and raster files.
+#|  Smoothed probabilites for class "Annual Crop". 
 #| fig-align: center
 #| out-width: 80%
-# recover the local segmented cube
-local_segs_cube <- sits_cube(
-    source = "BDC",
-    collection = "MOD13Q1-6.1",
-    raster_cube = modis_cube,
-    vector_dir = tempdir_r,
-    parse_info =  c("X1", "X2", "tile", "start_date", "end_date", "band", "version"),
-    delim = "_"
+# smoothen the probability cube
+vec_lejepa_cube_bayes <- sits_smooth(
+    cube = vec_lejepa_cube_probs,
+    multicores = 4,
+    memsize = 8, 
+    gpu_memory = 8, 
+    output_dir = tempdir_r
 )
-
-# plot the recovered model and compare with previous plot
-plot(local_segs_cube, line_width = 1.0)
+# plot the probabilities of label "Annual_Crop"
+plot(vec_lejepa_cube_bayes, labels = "Annual_Crop")
 ```
 ## Python
 ```{python}
 #| eval: false
-# recover the local segmented cube
-local_segs_cube = sits_cube(
-    source = "BDC",
-    collection = "MOD13Q1-6.1",
-    raster_cube = modis_cube,
-    vector_dir = tempdir_py,
-    vector_band = "segments",
-    parse_info = ("X1", "X2", "tile", "start_date", "end_date", "band", "version")
+# smoothen the probability cube
+vec_lejepa_cube_bayes = sits_smooth(
+    cube = vec_lejepa_cube_probs,
+    multicores = 4,
+    memsize = 8, 
+    gpu_memory = 8, 
+    output_dir = tempdir_py
 )
-
-# plot the recover model and compare with previous plot
-plot(local_segs_cube)
+# plot the smoothed probabilities of label "Annual_Crop"
+plot(vec_lejepa_cube_bayes, labels = "Annual_Crop")
 ```
 ```{r}
-#| label: py-fig-vec-local-segments
 #| echo: false
-#| eval: true
 #| cache: true
 #| warning: false
 #| fig-width: 5
-#| fig-height: 3
+#| fig-height: 5
 #| fig-dpi: 300
 #| fig-cap: |
-#|  Vector data cube which combines segments and raster files.
+#|  Smoothed probabilites for class "Annual Crop".  
 #| fig-align: center
 #| out-width: 80%
-# plot the recovered model and compare with previous plot
-plot(local_segs_cube, line_width = 1.0)
+# plot the smoothed probabilities of label "Annual_Crop"
+plot(vec_lejepa_cube_bayes, labels = "Annual_Crop")
 ```
 :::
 
-The resulting plot should be the same as the original one. We now train a model with the Random Forest algorithm, and use the result to classify the segments. Then we show how to recover the classified data from the local files which was produced by the classifier. 
-
-:::{.panel-tabset}
-## R
-```{r}
-#| label: fig-vec-probs-cube
-#| echo: true
-#| eval: true
-#| cache: true
-#| warning: false
-#| fig-width: 5
-#| fig-height: 3
-#| fig-dpi: 300
-#| fig-cap: |
-#|  Probabilities of class Forest in the classified vector data cube.
-#| fig-align: center
-#| out-width: 80%
-# create a Random Forest model
-rfor_model <- sits_train(samples_modis_ndvi, sits_rfor())
-# classify the segments
-probs_vector_cube <- sits_classify(
-    data = segs_cube,
-    ml_model = rfor_model,
-    output_dir = tempdir_r,
-)
-# plot cube
-plot(probs_vector_cube, labels = "Forest")
-```
-## Python
-```{python}
-#| echo: true
-#| eval: false
-# classify the segments
-# create a Random Forest model
-rfor_model = sits_train(samples_modis_ndvi, sits_rfor())
-probs_vector_cube = sits_classify(
-    data = segs_cube,
-    ml_model = rfor_model,
-    output_dir = tempdir_py,
-    n_sam_pol = 10
-)
-
-# plot cube
-plot(probs_vector_cube, labels = "Forest")
-```
-```{r}
-#| label: py-fig-vec-probs-cube
-#| echo: false
-#| eval: true
-#| cache: true
-#| warning: false
-#| fig-width: 5
-#| fig-height: 3
-#| fig-dpi: 300
-#| fig-cap: |
-#|  Probabilities of class Forest in the classified vector data cube.
-#| fig-align: center
-#| out-width: 80%
-# plot cube
-plot(probs_vector_cube, labels = "Forest")
-```
-:::
-
-In the same way as before, we can recover the probability cube from local files using `sits_cube()`.
-
-:::{.panel-tabset}
-## R
-```{r}
-#| label: fig-vec-probs-recover
-#| echo: true
-#| eval: true
-#| cache: true
-#| warning: false
-#| fig-width: 5
-#| fig-height: 3
-#| fig-dpi: 300
-#| fig-cap: |
-#|  Probability cube recovered from local raster cube and segments files.
-#| fig-align: center
-#| out-width: 80%
-# recover vector cube
-local_probs_vector_cube <- sits_cube(
-    source = "BDC",
-    collection = "MOD13Q1-6.1",
-    raster_cube = probs_vector_cube,
-    vector_dir = tempdir_r,
-    parse_info =  c("X1", "X2", "tile", "start_date", "end_date", "band", "version")
-)
-
-# plot
-plot(local_probs_vector_cube, labels = "Forest")
-```
-## Python
-```{python}
-#| eval: false
-# recover vector cube
-local_probs_vector_cube = sits_cube(
-    source = "BDC",
-    collection = "MOD13Q1-6.1",
-    raster_cube = probs_vector_cube,
-    vector_dir = tempdir_py,
-    parse_info =  ("X1", "X2", "tile", "start_date", "end_date", "band", "version")
-)
-
-# plot
-plot(local_probs_vector_cube, labels = "Forest")
-```
-```{r}
-#| label: py-fig-vec-probs-recover
-#| echo: false
-#| eval: true
-#| cache: true
-#| warning: false
-#| fig-width: 5
-#| fig-height: 3
-#| fig-dpi: 300
-#| fig-cap: |
-#|  Probability cube recovered from local raster cube and segments files.
-#| fig-align: center
-#| out-width: 80%
-# recover vector cube
-local_probs_vector_cube <- sits_cube(
-    source = "BDC",
-    collection = "MOD13Q1-6.1",
-    raster_cube = probs_vector_cube,
-    vector_dir = tempdir_r,
-    parse_info =  c("X1", "X2", "tile", "start_date", "end_date", "band", "version")
-)
-
-# plot
-plot(local_probs_vector_cube, labels = "Forest")
-```
-
-:::
-
-Finally, we produce a classified map.
+The final step is producing a labelled classification map, based on 
+the smoothed probability cube. For vector data cubes, 
+`sits_label_classification()` performs segment-based labeling: 
+pixel-level probabilities are aggregated inside each segment 
+using the method specified by  the `label_method` parameter.
+Options are "mean" (default), "median", or "majority".
+All pixels within a segment receive the same class label in the output raster. 
+The GPKG file with segments is updated to include a class column. 
 
 :::{.panel-tabset}
 ## R
@@ -396,87 +572,56 @@ Finally, we produce a classified map.
 #| eval: true
 #| cache: true
 #| warning: false
-#| fig-width: 5
-#| fig-height: 3
+#| fig-width: 8
+#| fig-height: 5
 #| fig-dpi: 300
 #| fig-cap: |
-#|  Labeled vector data cube based on the probabilities.
+#|  Labelled map for agricultural area in the state of Bahia, Brasil. 
 #| fig-align: center
-#| out-width: 80%
-# label the segments
-class_vector_cube <- sits_label_classification(
-    cube = probs_vector_cube,
-    output_dir = tempdir_r,
-    label_method = "mean"
+#| out-width: 90%
+# label the vector cube with smoothed probabilities
+vec_lejepa_cube_class <- sits_label_classification(
+    cube = vec_lejepa_cube_bayes,
+    label_method = "mean",
+    multicores = 4,
+    memsize = 8, 
+    output_dir = tempdir_r
 )
-plot(class_vector_cube)
+# plot the labelled map
+plot(vec_lejepa_cube_class)
 ```
 ## Python
 ```{python}
 #| eval: false
-# label the segments
-class_vector_cube = sits_label_classification(
-    cube = probs_vector_cube,
+# label the vector cube with smoothed probabilities
+vec_lejepa_cube_class = sits_label_classification(
+    cube = vec_lejepa_cube_bayes,
     label_method = "mean",
-    output_dir = tempdir_py,
+    multicores = 4,
+    memsize = 8, 
+    output_dir = tempdir_py
 )
-
-# plot
-plot(class_vector_cube)
+# plot the labelled map
+plot(vector_lejepa_cube_class)
 ```
 ```{r}
-#| label: py-fig-vec-local-class
-#| echo: true
-#| eval: true
+#| echo: false
 #| cache: true
 #| warning: false
-#| fig-width: 5
-#| fig-height: 3
+#| fig-width: 8
+#| fig-height: 5
 #| fig-dpi: 300
 #| fig-cap: |
-#|  Labeled vector data cube based on the probabilities.
+#|  Labelled map for agricultural area in the state of Bahia, Brasil.
 #| fig-align: center
-#| out-width: 80%
-# plot
-plot(class_vector_cube)
+#| out-width: 90%
+# plot the labelled map
+plot(vec_lejepa_cube_class)
 ```
-:::
-
-We then show an example of how to recover a labeled vector data cube from local files. As in the previous examples, the segments file is located in the `vector_dir`, and the parameter `parse_info` tells `sits` how to recover its metadata.
-
-:::{.panel-tabset}
-## R
-```{r}
-# recover vector cube
-local_class_vector_cube <- sits_cube(
-    source = "BDC",
-    collection = "MOD13Q1-6.1",
-    raster_cube = class_vector_cube,
-    vector_dir = tempdir_r,
-    parse_info =  c("X1", "X2", "tile", "start_date", "end_date", "band", "version")
-)
-
-# plot
-plot(local_class_vector_cube)
-```
-## Python
-```{python}
-# recover vector cube
-local_class_vector_cube = sits_cube(
-    source = "BDC",
-    collection = "MOD13Q1-6.1",
-    raster_cube = modis_cube,
-    vector_dir = tempdir_py,
-    vector_band = "class",
-    parse_info =  ("X1", "X2", "tile", "start_date", "end_date", "band", "version")
-)
-
-# plot
-plot(local_class_vector_cube)
-```
-
 :::
 
 ## Summary
 
-In this chapter, we show how mix vector and raster data cubes. For the operation to succeed, the vector cube must be a geopackage file whose polygons and contained inside the raster data cube and files need to provide adequate metadata. The polygon file can come from outside sources, provided it spatio-temporal coordinates match those of the raster data cube to which it is being merged. This allows much flexibility to users to combine external polygon files to sits. 
+In this chapter, we show how mix a vector file with a raster data cube to build
+a vector data cube. The vector file must be in the geopackage format and its polygons are contained inside the extent of the raster data cube. Also, the vector file 
+name needs to provide adequate metadata. This allows much flexibility to users to combine external polygon files to sits. 

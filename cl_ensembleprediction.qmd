@@ -57,6 +57,37 @@ The `sits` package provides `sits_combine_predictions()` to estimate ensemble pr
 
 In what follows, we will use the same sample dataset and data cube used in Chapter [Image classification in data cubes](https://e-sensing.github.io/sitsbook/cl_rasterclassification.html) to illustrate how to produce an ensemble prediction. The dataset `samples_deforestation_rondonia` consists of 6,007 samples collected from Sentinel-2 images covering the state of Rondonia. Each time series contains values from all Sentinel-2/2A spectral bands for the year 2022 in 16-day intervals. The data cube is a subset of the Sentinel-2 tile "20LMR" which contains all spectral bands, plus spectral indices "NDVI", "EVI" and "NBR" for the year 2022.
 
+To begin with, we retrieve the training data from Hugging Face.
+
+:::{.panel-tabset}
+## R
+```{r}
+#| echo: true
+#| label: get-data-hf
+#| cache: true
+#| result: false
+#| warning: false
+# get the samples for deforestation in Rondonia from Hugging Face
+samples_deforestation_rondonia <- sits_from_hf(
+  repo = "e-sensing/samples_book",
+  file = "samples_deforestation_rondonia.parquet",
+  type = "dataset"
+)
+```
+## Python
+```{python}
+#| eval: false
+# load data
+samples_deforestation_rondonia = sits_from_hf(
+  repo = "e-sensing/samples_book",
+  file = "samples_deforestation_rondonia.parquet",
+  type = "dataset"
+)
+```
+:::
+
+
+
 ## Recovering the data cube
 
 The first step is to recover the data cube which is available in the `sitsdata` package, and to select only the spectral bands.
@@ -202,11 +233,6 @@ plot(ro_cube_20LMR_rfor_probs, labels = "Forest")
 ## Python
 ```{python}
 #| eval: false
-# load data
-samples_deforestation_rondonia = load_samples(
-    name = "samples_deforestation_rondonia",
-    package = "sitsdata"
-)
 
 # train a Random Forest model
 rfor_model = sits_train(samples_deforestation_rondonia, sits_rfor())
@@ -901,7 +927,17 @@ The study area presents many challenges for land classification, given the prese
 
 ## Combining the different predictions
 
-Given the differences and complementarities between the three predicted outcomes, combining them using `sits_combine_predictions()` is useful. This function takes the following arguments: (a) `cubes`, a list of the cubes to be combined. These cubes should be probability cubes which optionally may have been smoothed; (b) `type`, which indicates how to combine the probability maps. The options are `average`, which performs a weighted mean of the probabilities, and `uncertainty`, which uses the uncertainty cubes to combine the predictions; (c) `weights`, a vector of weights to be used to combine the predictions when `average` is selected; (d) `uncertainty_cubes`, a list of uncertainty cubes associated to the predictions;  (e) `multicores`, number of cores to be used; (f) `memsize`, RAM used in the classification; (g) `output_dir`, the directory where the classified raster files will be written.
+Given the differences and complementarities between the three predicted outcomes, combining them using `sits_combine_predictions()` is useful. 
+This function takes the following arguments:
+
+| Parameter | Meaning |
+|:----------|:--------|
+| `cubes` | a list of the cubes to be combined. These cubes should be probability cubes which optionally may have been smoothed. |
+| `type` | which indicates how to combine the probability maps. The options are `average`, which performs a weighted mean of the probabilities, and `uncertainty`, which uses the uncertainty cubes to combine the predictions -`weights`, a vector of weights to be used to combine the predictions when `average` is selected (default is equal weights). |
+| `uncertainty_cubes` | a list of uncertainty cubes associated to the predictions (optional). |
+| `multicores` | number of cores to be used. |
+| `memsize` | RAM used in the classification. |
+| `output_dir` | directory where the classified raster files will be written. |
 
 :::{.panel-tabset}
 ## R

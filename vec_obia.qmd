@@ -60,16 +60,18 @@ The general sequence of the processes involved in OBIA in `sits` is:
 
 The first step of the OBIA procedure in `sits` is to select a data cube to be segmented and a function that performs the segmentation. For this purpose, `sits` provides a generic `sits_segment()` function, which allows users to select different algorithms. The `sits_segment()` function has the following parameters:
 
--   `cube`: a regular data cube.
--   `seg_fn`: function to apply the segmentation
--   `roi`: spatial region of interest in the cube
--   `start_date`: starting date for the space-time segmentation
--   `end_date`: final date for the space-time segmentation
--   `memsize`: memory available for processing
--   `multicores`: number of cores available for processing
--   `output_dir`: output directory for the resulting cube
--   `version`: version of the result
--   `progress`: show progress bar?
+| Parameter | Meaning |
+|:----------|:--------|
+| `cube` | a regular data cube. |
+| `seg_fn` | function to apply the segmentation |
+| `roi` | spatial region of interest in the cube |
+| `start_date` | starting date for the space-time segmentation |
+| `end_date` | final date for the space-time segmentation |
+| `memsize` | memory available for processing |
+| `multicores` | number of cores available for processing |
+| `output_dir` | output directory for the resulting cube |
+| `version` | version of the result |
+| `progress` | show progress bar? |
 
 Currently, there are two segmentation functions available: (a) `sits_snic`, which implements the Simple Non-Iterative Clustering (SNIC) algorithm; (b) `sits_slic`, which implements an extended version of the Simple Linear Iterative Clustering (SLIC). Both are described below. We suggest using `sits_snic` since it is much faster than `sits_slic` and produces good results in general. 
 
@@ -120,10 +122,12 @@ The outcome of the SLIC algorithm is a set of superpixels which try to capture t
 
 The SNIC implementation in `sits` uses the `snic` R package. The parameters for the `sits_snic()` function are:
 
--   `grid_seeding`: spatial organization of initial grid seeds (one of `rectangular`, `diamond`, `hexagonal`, `random`).
--   `spacing`: distance (in number of pixels) between initial superpixels' centers.
--   `compactness`: numerical value between 0 and 1 that controls superpixels' density. Larger values cause clusters to be more compact.
--   `padding`: distance (in pixels) from the image borders within which no seeds are placed.
+| Parameter | Meaning |
+|:----------|:--------|
+| `grid_seeding` | spatial organization of initial grid seeds (one of `rectangular`, `diamond`, `hexagonal`, `random`). |
+| `spacing` | distance (in number of pixels) between initial superpixels' centers. |
+| `compactness` | numerical value between 0 and 1 that controls superpixels' density. Larger values cause clusters to be more compact. |
+| `padding` | distance (in pixels) from the image borders within which no seeds are placed. |
 
 To show an example of SNIC-based segmentation, we first build a data cube, using images available in the `sitsdata` package.
 
@@ -306,6 +310,35 @@ knitr::include_graphics("./images/segmentation_view.png")
 
 After obtaining the segments, the next step is to classify them. This is done by first training a classification model. This case study uses the training dataset `samples_deforestation_rondonia`, available in package `sitsdata`. This dataset consists of 6007 samples collected from Sentinel-2 images covering the state of Rondonia. There are nine classes: `Clear_Cut_Bare_Soil`, `Clear_Cut_Burned_Area`, `Mountainside_Forest`, `Forest`, `Riparian_Forest`, `Clear_Cut_Vegetation`, `Water`, `Wetland`, and `Seasonally_Flooded`. Each time series contains values from Sentinel-2A/2B bands B02, B03, B04, B05, B06, B07, B8A, B08, B11 and B12, from 2022-01-05 to 2022-12-23 in 16-day intervals. The samples are intended to detect deforestation events and have been used in earlier examples of the book. For the training, we select the same bands as those of the data cube.
 
+To begin with, we retrieve the training data from Hugging Face.
+
+:::{.panel-tabset}
+## R
+```{r}
+#| echo: true
+#| label: get-data-hf
+#| cache: true
+#| result: false
+#| warning: false
+# get the samples for deforestation in Rondonia from Hugging Face
+samples_deforestation_rondonia <- sits_from_hf(
+  repo = "e-sensing/samples_book",
+  file = "samples_deforestation_rondonia.parquet",
+  type = "dataset"
+)
+```
+## Python
+```{python}
+#| eval: false
+# load data
+samples_deforestation_rondonia = sits_from_hf(
+  repo = "e-sensing/samples_book",
+  file = "samples_deforestation_rondonia.parquet",
+  type = "dataset"
+)
+```
+:::
+
 :::{.panel-tabset}
 ## R
 ```{r} 
@@ -324,12 +357,6 @@ tcnn_model <- sits_train(samples_deforestation, sits_tempcnn())
 ## Python
 ```{python} 
 #| eval: false
-# Load data
-samples_deforestation_rondonia = load_samples(
-    name = "samples_deforestation_rondonia",
-    package = "sitsdata"
-)
-
 # Select bands
 samples_deforestation = sits_select(samples_deforestation_rondonia,
                                      bands = ("B02", "B8A", "B11"))
@@ -340,21 +367,24 @@ tcnn_model = sits_train(samples_deforestation, sits_tempcnn())
 :::
 The segment classification procedure applies the model to every pixel inside each segment. Each pixel is then assigned a set of probability values, one for each class. The output of the procedure is a raster data cube containing a probability layer for each class. The parameters for the `sits_classify()` function for vector cubes are: 
 
-* `data`: either a data cube or a set of time series.
-* `ml_model`: a trained model that uses one of the machine learning methods provided.
-* `impute_fn`: an imputation function used to interpolate NA values (default = `impute_linear`).
-* `multicores`: number of CPU cores that will be used for processing (default = 2).
-* `memsize`: RAM memory available for classification expressed in GB (default = 4).
-* `gpu_memory`: GPU memory available for classification, expressed in GB, if a GPU is available and a torch-based model is used (default = 4).
-* `batch_size`: size of batches used for processing (default = 1000 x `gpu_memory`).
-* `roi`: Region of interest where pixels will be classified: either an sf object, a shapefile, or a numeric vector in WGS 84 with named XY values ("xmin", "xmax", "ymin", "ymax") or named lat/long values ("lon_min", "lat_min", "lon_max", "lat_max"). 
-* `exclusion_mask`:  Areas to be excluded from the classification process, defined by either an `sf` object or by a shapefile.
-* `start_date`: Start date for the classification process.
-* `end_date`: End date for the classification process.
-* `output_dir`: Directory where results will be stored.
-* `version`: For version control.
-* `progress`: Progress bar to track processing steps. 
+| Parameter | Meaning |
+|:----------|:--------|
+| `data` | either a data cube or a set of time series. |
+| `ml_model` | a trained model that uses one of the machine learning methods provided. |
+| `impute_fn` | an imputation function used to interpolate NA values (default = `impute_linear`). |
+| `multicores` | number of CPU cores that will be used for processing (default = 2). |
+| `memsize` | RAM memory available for classification expressed in GB (default = 4). |
+| `gpu_memory` | GPU memory available for classification, expressed in GB, if a GPU is available and a torch-based model is used (default = 4). |
+| `batch_size` | size of batches used for processing (default = 1000 x `gpu_memory`). |
+| `roi` | Region of interest where pixels will be classified: either an sf object, a shapefile, or a numeric vector in WGS 84 with named XY values ("xmin", "xmax", "ymin", "ymax") or named lat/long values ("lon_min", "lat_min", "lon_max", "lat_max"). |
+| `exclusion_mask` | Areas to be excluded from the classification process, defined by either an `sf` object or by a shapefile. |
+| `start_date` | Start date for the classification process. |
+| `end_date` | End date for the classification process. |
+| `output_dir` | Directory where results will be stored. |
+| `version` | For version control. |
+| `progress` | Progress bar to track processing steps. |
 
+:: Parameters for `sits_classify` in case of vector cubes.
 
 In what follows, we compute the probabilities for the classes and visualize them. Note that the probabilities are computed on a pixel-by-pixel basis. The segments are used only in the subsequent function (`sits_smooth()` and `sits_label_classification()`). 
 
@@ -422,15 +452,17 @@ plot(segments_20LMR_probs, labels = "Forest")
 
 Then we can compute the smoothed probability cube. In the case of vector cubes, `sits_smooth()` works differently than the function does for pixel-based raster cubes. In the pixel-based case, users define a neighborhood as a fixed-sized window (e.g., 7x7 or 9x9 pixels). For vector cubes, each segment defines a neighborhood boundary. Inside the segment, `sits_smooth()` uses the `neigh_fraction` parameter to define the pixels that will be used to compute the resulting values. The smoothing method and the parameters are the same as described in the chapter ["Bayesian smoothing for classification post-processing"](https://e-sensing.github.io/sitsbook/cl_smoothing.html); the only difference is the neighborhood definition. The parameters are:
 
-* `cube`: Probability data cube to be smoothed;
-* `neigh_fraction`: Fraction of neighbors with high probabilities used in Bayesian inference (default = 0.5).
-* `smoothness`: Estimated variance of logit of conditional class probabilities (default = 20).
-* `exclusion_mask`:  Areas to be excluded from the classification process, defined by either an `sf` object or by a shapefile.
-* `multicores`: number of CPU cores that will be used for processing (default = 2).
-* `memsize`: RAM memory available for classification expressed in GB (default = 4).
-* `output_dir`: Directory where results will be stored.
-* `version`: For version control.
-* `progress`: Progress bar to track processing steps. 
+| Parameter | Meaning |
+|:----------|:--------|
+| `cube` | Probability data cube to be smoothed; |
+| `neigh_fraction` | Fraction of neighbors with high probabilities used in Bayesian inference (default = 0.5). |
+| `smoothness` | Estimated variance of logit of conditional class probabilities (default = 20). |
+| `exclusion_mask` | Areas to be excluded from the classification process, defined by either an `sf` object or by a shapefile. |
+| `multicores` | number of CPU cores that will be used for processing (default = 2). |
+| `memsize` | RAM memory available for classification expressed in GB (default = 4). |
+| `output_dir` | Directory where results will be stored. |
+| `version` | For version control. |
+| `progress` | Progress bar to track processing steps. |
 
 :::{.panel-tabset}
 ## R
@@ -466,13 +498,15 @@ Finally, we can compute the most likely class for each of the segments. For vect
 
 The parameters used in `sits_label_classification()` in case of vector cubes are:
 
-* `cube`: Probability data cube to be labeled;
-* `label_method`: Aggregation function for probabilities inside each segment (default = `mean`).
-* `multicores`: number of CPU cores that will be used for processing (default = 2).
-* `memsize`: RAM memory available for classification expressed in GB (default = 4).
-* `output_dir`: Directory where results will be stored.
-* `version`: For version control.
-* `progress`: Progress bar to track processing steps. 
+| Parameter | Meaning |
+|:----------|:--------|
+| `cube` | Probability data cube to be labeled; |
+| `label_method` | Aggregation function for probabilities inside each segment (default = `mean`). |
+| `multicores` | number of CPU cores that will be used for processing (default = 2). |
+| `memsize` | RAM memory available for classification expressed in GB (default = 4). |
+| `output_dir` | Directory where results will be stored. |
+| `version` | For version control. |
+| `progress` | Progress bar to track processing steps. |
 
 :::{.panel-tabset}
 ## R

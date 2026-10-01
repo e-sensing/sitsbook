@@ -93,18 +93,20 @@ To obtain information on ARD image collections from cloud providers, `sits` uses
 
 The function `sits_cube()` supports access to image collections from cloud services; it has the following parameters:
 
-- `source`: Name of the provider. 
-- `collection`: A collection available in the provider and supported by `sits`. To find out which collections are supported by `sits`, see `sits_list_collections()`.
-- `platform`: Optional parameter specifying the platform in collections with multiple satellites. 
-- `tiles`: Set of tiles of image collection reference system. Either `tiles` or `roi` should be specified. 
--  `roi`: A region of interest. Either: (a) a named vector (`lon_min`, `lon_max`, `lat_min`, `lat_max`) in WGS 84 coordinates; (b) an `sf` object; (c) a path to a shapefile polygon; or (d) A named vector (`xmin`, `xmax`, `ymin`, `ymax`) with XY coordinates. All images intersecting the convex hull of the `roi` are selected. 
-- `bands`: Optional parameter with the bands to be used. If missing, all bands from the collection are used.
-- `orbit`: Optional parameter required only for Sentinel-1 images (default = "descending").
-- `start_date`: The initial date for the temporal interval containing the time series of images.
-- `end_date`: The final date for the temporal interval containing the time series of images.
-- `progress`: Logical parameter to enable (`TRUE`) or disable (`FALSE`) the progress bar while querying cloud metadata or loading cube files.
-- `crs`: Coordinate Reference System of the `roi`, required when the `roi` uses projected coordinates instead of WGS 84.
-- `multicores`: Number of CPU cores used for parallel processing during metadata queries (default = 2).
+| Parameter | Meaning |
+|:----------|:--------|
+| `source` | Name of the provider. |
+| `collection` | A collection available in the provider and supported by `sits`. To find out which collections are supported by `sits`, see `sits_list_collections()`. |
+| `platform` | Optional parameter specifying the platform in collections with multiple satellites. |
+| `tiles` | Set of tiles of image collection reference system. Either `tiles` or `roi` should be specified. |
+| `roi` | A region of interest. Either: (a) a named vector (`lon_min`, `lon_max`, `lat_min`, `lat_max`) in WGS 84 coordinates; (b) an `sf` object; (c) a path to a shapefile polygon; or (d) A named vector (`xmin`, `xmax`, `ymin`, `ymax`) with XY coordinates. All images intersecting the convex hull of the `roi` are selected. |
+| `bands` | Optional parameter with the bands to be used. If missing, all bands from the collection are used. |
+| `orbit` | Optional parameter required only for Sentinel-1 images (default = "descending"). |
+| `start_date` | The initial date for the temporal interval containing the time series of images. |
+| `end_date` | The final date for the temporal interval containing the time series of images. |
+| `progress` | Logical parameter to enable (`TRUE`) or disable (`FALSE`) the progress bar while querying cloud metadata or loading cube files. |
+| `crs` | Coordinate Reference System of the `roi`, required when the `roi` uses projected coordinates instead of WGS 84. |
+| `multicores` | Number of CPU cores used for parallel processing during metadata queries (default = 2). |
 
 The result of `sits_cube()` is a tibble with a description of the selected images required for further processing. It does not contain the actual data, but only pointers to the images. The attributes of individual image files can be accessed by listing the `file_info` column of the tibble. 
 
@@ -116,7 +118,6 @@ Amazon Web Services (AWS) holds two kinds of collections: *open-data* and *reque
 ## R
 ```{r}
 #| label: fig-cube-aws-s2
-#| results: hide
 #| cache: true
 #| fig-width: 5
 #| fig-height: 5
@@ -169,7 +170,6 @@ plot(
 ```{r}
 #| echo: false
 #| label: py-fig-cube-aws-s2
-#| results: hide
 #| warning: false
 #| cache: true
 #| fig-width: 5
@@ -220,7 +220,7 @@ s2_20LKP_cube_MPC <- sits_cube(
     tiles = "20LKP",
     bands = c("B02", "B8A", "B11", "CLOUD"),
     start_date = "2019-07-01",
-    end_date = "2019-07-28"
+    end_date   = "2019-07-28"
 )
 
 # Plot a color composite of one date of the cube
@@ -235,7 +235,6 @@ plot(
 ## Python
 ```{python}
 #| eval: false
-#| label: py-fig-cube-mpc-s2
 #| results: hide
 #| warning: false
 #| cache: true
@@ -326,9 +325,7 @@ s2_L8_cube_MPC <- sits_cube(
 )
 
 # Plot the tile that covers the Lencois Maranhenses
-plot(
-    s2_L8_cube_MPC
-)
+plot(s2_L8_cube_MPC)
 ```
 ## Python
 ```{python}
@@ -405,7 +402,7 @@ cube_s1_grd <- sits_cube(
     orbit = "descending",
     tiles = c("21LUJ","21LVJ"),
     start_date = "2021-08-01",
-    end_date = "2021-09-30"
+    end_date = "2021-10-01"
 )
 
 plot(
@@ -478,7 +475,7 @@ The terrain correction addresses geometric distortions caused by the side-lookin
 #| fig-height: 5
 #| fig-dpi: 300
 #| fig-cap: |
-#|   Sentinel-1-RTC image of an area in Colombia.
+#|   Sentinel-1-RTC image of an area covering Lake Tanganika in Africa.
 #| fig-align: center
 #| out-width: 90%
 cube_s1_rtc <- sits_cube(
@@ -486,7 +483,7 @@ cube_s1_rtc <- sits_cube(
     collection = "SENTINEL-1-RTC",
     bands = c("VV", "VH"),
     orbit = "descending",
-    tiles = "18NZM",
+    tiles = "35MQR",
     start_date = "2021-08-01",
     end_date = "2021-09-30"
 )
@@ -506,7 +503,7 @@ cube_s1_rtc = sits_cube(
     collection="SENTINEL-1-RTC",
     bands=("VV", "VH"),
     orbit="descending",
-    tiles="18NZM",
+    tiles="35MQR",
     start_date="2021-08-01",
     end_date="2021-09-30"
 )
@@ -528,7 +525,7 @@ plot(
 #| fig-height: 5
 #| fig-dpi: 300
 #| fig-cap: |
-#|   Sentinel-1-RTC image of an area in Colombia.
+#|   Sentinel-1-RTC image of an area covering Lake Tanganika in Africa.
 #| fig-align: center
 #| out-width: 90%
 plot(
@@ -562,20 +559,20 @@ tile they want to visualize.
 #| fig-height: 5
 #| fig-dpi: 300
 #| fig-cap: |
-#|   Copernicus 30-meter DEM of an area in Brazil.
+#|   Copernicus 30-meter DEM of an area in the Dolomites in Italy.
 #| fig-align: center
 #| out-width: 90%
 cube_dem_30 <- sits_cube(
     source = "MPC",
     collection = "COP-DEM-GLO-30",
-    tiles = "20LMR",
+    tiles = "32TPS",
     band = "ELEVATION"
 )
 
 plot(
     cube_dem_30, 
     band = "ELEVATION",
-    tile = "10-S09-00-W063-00",
+    tile = "10-N46-00-E011-00",
     palette = "RdYlGn",
     rev = TRUE,
     legend_position = "outside"
@@ -587,14 +584,14 @@ plot(
 cube_dem_30 = sits_cube(
     source="MPC",
     collection="COP-DEM-GLO-30",
-    tiles="20LMR",
+    tiles="32TPS",
     band="ELEVATION"
 )
 
 plot(
     cube_dem_30, 
     band="ELEVATION",
-    tile="10-S09-00-W063-00",
+    tile="10-N46-00-E011-00",
     palette="RdYlGn",
     rev=True,
     legend_position="outside"
@@ -610,13 +607,13 @@ plot(
 #| fig-height: 5
 #| fig-dpi: 300
 #| fig-cap: |
-#|   Copernicus 30-meter DEM of an area in Brazil.
+#|   Copernicus 30-meter DEM of an area in the Dolomites in Italy.
 #| fig-align: center
 #| out-width: 90%
 plot(
     cube_dem_30, 
     band = "ELEVATION",
-    tile = "10-S09-00-W063-00",
+    tile = "10-N46-00-E011-00",
     palette = "RdYlGn",
     rev = TRUE,
     legend_position = "outside"
@@ -665,7 +662,7 @@ cbers_tile <- sits_cube(
     tiles = "005004",
     bands = c("B13", "B14", "B15", "B16", "CLOUD"),
     start_date = "2021-05-01",
-    end_date = "2021-09-01")
+    end_date = "2021-10-30")
 
 # Plot one time instance
 plot(
@@ -679,7 +676,6 @@ plot(
 ## Python
 ```{python}
 #| eval: false
-#| label: py-fig-cube-bdc-cbers
 #| results: hide
 #| warning: false
 #| cache: true
@@ -697,7 +693,7 @@ cbers_tile = sits_cube(
     tiles="005004",
     bands=("B13", "B14", "B15", "B16", "CLOUD"),
     start_date="2021-05-01",
-    end_date="2021-09-01"
+    end_date="2021-10-30"
 )
 
 # Plot one time instance
@@ -792,7 +788,7 @@ lena_cube <- sits_cube(
     collection = "SENTINEL-2-L2A",
     bands = c("B02", "B04", "B8A", "B11", "B12"),
     start_date = "2023-06-01",
-    end_date = "2023-09-01",
+    end_date = "2023-08-31",
     tiles = "52XDF"
 )
 
@@ -814,7 +810,7 @@ lena_cube = sits_cube(
     collection="SENTINEL-2-L2A",
     bands=("B02", "B04", "B8A", "B11", "B12"),
     start_date="2023-05-01",
-    end_date="2023-09-01",
+    end_date="2023-08-31",
     tiles="52XDF"
 )
 
@@ -843,10 +839,10 @@ plot(
 # plot an image from summertime
 plot(
     lena_cube, 
-    date="2023-07-06", 
-    red="B12", 
-    green="B8A", 
-    blue="B04"
+    date <- "2023-07-06", 
+    red <- "B12", 
+    green <- "B8A", 
+    blue <- "B04"
 )
 ```
 :::
@@ -982,7 +978,7 @@ dea_s2_cube <- sits_cube(
     ),
     bands = c("B02", "B04", "B08"),
     start_date = "2019-04-01",
-    end_date = "2019-05-30"
+    end_date = "2019-06-01"
 )
 
 plot(
@@ -1004,7 +1000,7 @@ dea_s2_cube = sits_cube(
     ),
     bands=("B02", "B04", "B08"),
     start_date="2019-04-01",
-    end_date="2019-05-30"
+    end_date="2019-06-01"
 )
 
 plot(
@@ -1059,7 +1055,7 @@ dea_l9_cube <- sits_cube(
     ),
     bands = c("B04", "B05", "B06"),
     start_date = "2023-05-01",
-    end_date = "2023-08-30"
+    end_date = "2023-09-01"
 )
 
 plot(dea_l9_cube, date = "2023-06-26", 
@@ -1077,7 +1073,7 @@ dea_l9_cube = sits_cube(
     ),
     bands = ("B04", "B05", "B06"),
     start_date = "2023-05-01",
-    end_date = "2023-08-30"
+    end_date = "2023-09-01"
 )
 
 plot(dea_l9_cube, date = "2023-06-26", 
@@ -1123,7 +1119,7 @@ dea_alos_cube = sits_cube(
         lon_min = 28.69, lat_min = -2.35, 
         lon_max = 29.35, lat_max = -1.56
     ),
-    bands = c("HH", "HV"),
+    bands = c("HV", "HH"),
     start_date = "2020-01-01",
     end_date = "2020-12-31"
 )
@@ -1140,7 +1136,7 @@ dea_alos_cube = sits_cube(
         lon_min = 28.69, lat_min = -2.35, 
         lon_max = 29.35, lat_max = -1.56
     ),
-    bands = ("HH", "HV"),
+    bands = ("HV", "HH"),
     start_date = "2020-01-01",
     end_date = "2020-12-31"
 )
@@ -1202,7 +1198,7 @@ s2_56KKV <- sits_cube(
   tiles = "56KKV",
   bands = c("BLUE", "GREEN", "RED", "NIR-2", "SWIR-2", "CLOUD"),
   start_date = "2023-09-01",
-  end_date = "2023-11-30"
+  end_date = "2023-12-01"
 )
 
 # plot the resulting map
@@ -1218,7 +1214,7 @@ s2_56KKV = sits_cube(
   tiles = "56KKV",
   bands = ("BLUE", "GREEN", "RED", "NIR-2", "SWIR-2", "CLOUD"),
   start_date = "2023-09-01",
-  end_date = "2023-11-30"
+  end_date = "2023-12-01"
 )
 
 # plot the resulting map
@@ -1312,8 +1308,8 @@ hls_cube_s2 <- sits_cube(
   collection = "HLSS30",
   roi = roi,
   bands = c("BLUE", "GREEN", "RED", "CLOUD"),
-  start_date = as.Date("2020-06-01"),
-  end_date = as.Date("2020-09-01")
+  start_date = "2020-06-01",
+  end_date = "2020-09-01"
 )
 
 # plot the cube
@@ -1388,7 +1384,7 @@ ogh_cube <- sits_cube(
      bands = c("BLUE", "NIR", "SWIR2"),
      roi = roi,
      start_date = as.Date("2018-03-01"),
-     end_date = as.Date("2018-07-01")
+     end_date = as.Date("2018-08-01")
 )
 
 # plot the cube
@@ -1406,7 +1402,7 @@ ogh_cube <- sits_cube(
      bands = c("BLUE", "NIR", "SWIR2"),
      roi = roi,
      start_date = as.Date("2018-03-01"),
-     end_date = as.Date("2018-07-01")
+     end_date = as.Date("2018-08-01")
 )
 
 # plot the cube

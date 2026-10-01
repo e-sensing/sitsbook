@@ -81,19 +81,19 @@ plot(stars_object[,,,,1])
 
 ### Exporting data cubes to terra
 
-The `terra` package in R is a high-performance framework for spatial raster and vector data analysis. It was developed as the successor to the older raster package, offering a faster, more memory-efficient, and flexible API for working with geographic data. To export data cubes to `terra`, `sits` uses `sits_as_terra()` function which takes information about files, bands and dates in a data cube to produce an object of class  `SpatRaster` in `terra`. Because `terra` does not understand multi-tiles and multi-temporal cubes, users have to select a tile and a date from the data cube. By default, all bands are included in the terra object, but users can also select which bands to export.
+The `terra` package in R is a high-performance framework for spatial raster and vector data analysis. It was developed as the successor to the older raster package, offering a faster, more memory-efficient, and flexible API for working with geographic data. To export data cubes to `terra`, `sits` uses `sits_as_terra()` function which takes information about files, bands and dates in a data cube to produce an object of class  `SpatRasterDataset` in `terra`. A `SpatRasterDataset` is an object that holds a collection of sub-datasets, where each sub-dataset is a SpatRaster sharing the same spatial extent and coordinate reference system. In terms of correspondence with `sits`, each sub-dataset holds all the bands of the data cube for a single time step. Therefore, the `SpatRasterDataset` will hold as many sub-datasets as there are time steps in the cube.
 
 ```{r}
 # create a data cube from a local set of TIFF files
-# this is a cube with 23 instances and one band ("NDVI")
-data_dir <- system.file("extdata/raster/mod13q1", package = "sits")
+# this is a cube with 23 instances and three bands ("NDVI", "EVI", "CLOUD")
+data_dir <- system.file("extdata/sinop", package = "sitsdata")
 cube <- sits_cube(
     source = "BDC",
     collection = "MOD13Q1-6.1",
     data_dir = data_dir
 )
-terra_object <- sits_as_terra(cube, date = "2013-09-14")
-# plot the first date of the stars object
+terra_object <- sits_as_terra(cube)
+# show the contents of the SpatRasterDataset object
 terra_object
 ```
 

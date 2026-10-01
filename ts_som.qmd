@@ -83,6 +83,13 @@ The examples of this chapter use `samples_cerrado_mod13q1`, a set of time series
 #| label: samples-cerrado-modis
 #| warning: false
 #| cache: true
+# Load the samples from Hugging Face
+samples_cerrado_mod13q1 <- sits_from_hf(
+  repo = "e-sensing/samples_book",
+  file = "samples_cerrado_mod13q1.parquet",
+  type = "dataset"
+)
+
 # Take only the NDVI and EVI bands
 samples_cerrado_mod13q1_2bands <- sits_select(
     data = samples_cerrado_mod13q1, 
@@ -94,10 +101,11 @@ summary(samples_cerrado_mod13q1_2bands)
 ## Python
 ```{python}
 #| eval: false
-# Load samples
-samples_cerrado_mod13q1 = load_samples(
-    name = "samples_cerrado_mod13q1", 
-    package = "sitsdata"
+# Load the samples from Hugging Face
+samples_cerrado_mod13q1 = sits_from_hf(
+  repo = "e-sensing/samples_book",
+  file = "samples_cerrado_mod13q1.parquet",
+  type = "dataset"
 )
 
 # Take only the NDVI and EVI bands
@@ -122,7 +130,16 @@ summary(samples_cerrado_mod13q1_2bands)
 
 ## Creating the SOM map
 
-To perform the SOM-based quality assessment, the first step is to run `sits_som_map()`, which uses the `kohonen` R package to compute a SOM grid [@Wehrens2018], controlled by five parameters. The grid size is given by `grid_xdim` and `grid_ydim`. The starting learning rate is `alpha`, which decreases during the iterations. To measure the separation between samples, use `distance` (either "dtw" or "euclidean"). The number of iterations is set by `rlen`. When using `sits_som_map()` in machines which have multiprocessing support for the OpenMP protocol, setting the learning mode parameter `mode` to "patch" improves processing time. In Windows, please use "online".
+To perform the SOM-based quality assessment, the first step is to run `sits_som_map()`, which uses the `kohonen` R package to compute a SOM grid [@Wehrens2018], controlled by five parameters: 
+
+| Parameter | Meaning |
+|:----------|:--------|
+| `data` | samples to be evaluated. |
+| `grid_xdim`, `grid_ydim` | define the SOM grid size. |
+| `alpha` | starting learning rate, which decreases during the iterations (default = 1). |
+| `distance` | metric for calculating separation between samples. It is either "dtw" or "euclidean" (default is "dtw"). |
+| `rlen` | number of iterations (default = 100). |
+| `mode` | defines multiprocessing support. When using `sits_som_map()` in machines which have multiprocessing support for the OpenMP protocol, setting the learning mode parameter `mode` to "patch" improves processing time. In Windows, please use "online". |
 
 We suggest using the Dynamic Time Warping ("dtw") metric as the distance measure. It is a technique used to measure the similarity between two temporal sequences that may vary in speed or timing [@Berndt1994]. The core idea of DTW is to find the optimal alignment between two sequences by allowing non-linear mapping of one sequence onto another. In time series analysis, DTW matches two series slightly out of sync. This property is useful in land use studies for matching time series of agricultural areas [@Maus2015].
 
@@ -181,7 +198,11 @@ plot(som_cluster)
 ```
 :::
 
-The output of the `sits_som_map()` is a list with three elements: (a) `data`, the original set of time series with two additional columns for each time series: `id_sample` (the original id of each sample) and `id_neuron` (the id of the neuron to which it belongs); (b) `labelled_neurons`, a tibble with information on the neurons. For each neuron, it gives the prior and posterior probabilities of all labels which occur in the samples assigned to it; and (c) the SOM grid. To plot the SOM grid, use `plot()`. The neurons are labelled using majority voting.
+The output of the `sits_som_map()` is a list with three elements: 
+
+- `data`: the original set of time series with two additional columns for each time series: `id_sample` (the original id of each sample) and `id_neuron` (the id of the neuron to which it belongs); 
+- `labelled_neurons`: a tibble with information on the neurons. For each neuron, it gives the prior and posterior probabilities of all labels which occur in the samples assigned to it.
+- the SOM grid. To plot the SOM grid, use `plot()`. The neurons are labelled using majority voting.
 
 The SOM grid shows that most classes are associated with neurons close to each other, although there are exceptions. Some Pasture neurons are far from the main cluster because the transition between open savanna and pasture areas is not always well defined and depends on climate and latitude. Also, the neurons associated with Soy_Fallow are dispersed in the map, indicating possible problems in distinguishing this class from the other agricultural classes. The SOM map can be used to remove outliers, as shown below.
 
@@ -239,19 +260,30 @@ Many labels are associated with clusters where there are some samples with a dif
 
 ## Detecting noisy samples using SOM
 
-The third step in the quality assessment uses the discrete probability distribution associated with each neuron, which is included in the `labeled_neurons` tibble produced by `sits_som_map()`. This approach associates probabilities with frequency of occurrence. More homogeneous neurons (those in which one label has high frequency) are assumed to be composed of good quality samples. Heterogeneous neurons (those with two or more classes with significant frequencies) are likely to contain noisy samples. The algorithm computes two values for each sample:
+The third step in the quality assessment uses the discrete probability distribution associated with each neuron, which is included in the `labeled_neurons` tibble produced by `sits_som_map()`. This approach associates probabilities with frequency of occurrence. More homogeneous neurons (those in which one label has high frequency) are assumed to be composed of good quality samples. Heterogeneous neurons (those with two or more classes with significant frequencies) are likely to contain noisy samples. 
+
+To identify noisy samples, we take the result of the `sits_som_map()` function as the first argument to the function `sits_som_clean_samples()`. This function finds out which samples are noisy, which are clean, and which need to be further examined by the user. It requires the following parameters:
+
+| Parameter | Meaning |
+|:----------|:--------|
+| `som_map` | the output of `sits_som_map()`. |
+| `prior_threshold` | minimal percentage for samples of a class in a SOM neuron to be considered non-noisy. Default is 60%, which means that the majority class of samples a SOM neuron should have at least that frequency. |
+| `posterior_threshold` | minimal percentage for samples of a class in the neighborhood of the SOM neuron to be considered non-noisy. |
+| `keep` | type of evaluation to be used for each sample. |
+
+The algorithm computes two values for each sample:
 
 - *prior probability*: the probability that the label assigned to the sample is correct, considering the frequency of samples in the same neuron. For example, if a neuron has 20 samples, of which 15 are labeled as `Pasture` and 5 as `Forest`, all samples labeled Forest are assigned a prior probability of 25%. This indicates that Forest samples in this neuron may not be of good quality.
 
 - *posterior probability*: the probability that the label assigned to the sample is correct, considering the neighboring neurons. Take the case of the above-mentioned neuron whose samples labeled `Pasture` have a prior probability of 75%. What happens if all the neighboring neurons have `Forest` as a majority label? To answer this question, we use Bayesian inference to estimate if these samples are noisy based on the surrounding neurons [@Santos2021a].
 
-To identify noisy samples, we take the result of the `sits_som_map()` function as the first argument to the function `sits_som_clean_samples()`. This function finds out which samples are noisy, which are clean, and which need to be further examined by the user. It requires the `prior_threshold` and `posterior_threshold` parameters according to the following rules:
+Based on these two probabilities, each sample is evaluated as follows:
 
--   If the prior probability of a sample is less than `prior_threshold`, the sample is assumed to be noisy and tagged as "remove";
--   If the prior probability is greater or equal to `prior_threshold` and the posterior probability calculated by Bayesian inference is greater or equal to `posterior_threshold`, the sample is assumed not to be noisy and thus is tagged as "clean";
--   If the prior probability is greater or equal to `prior_threshold` and the posterior probability is less than `posterior_threshold`, we have a situation when the sample is part of the majority level of those assigned to its neuron, but its label is not consistent with most of its neighbors. This is an anomalous condition and is tagged as "analyze". Users are encouraged to inspect such samples to find out whether they are in fact noisy or not.
+1. If the prior probability of a sample is less than `prior_threshold`, the sample is assumed to be noisy and tagged as "remove";
+2. If the prior probability is greater or equal to `prior_threshold` and the posterior probability calculated by Bayesian inference is greater or equal to `posterior_threshold`, the sample is assumed not to be noisy and thus is tagged as "clean";
+3. If the prior probability is greater or equal to `prior_threshold` and the posterior probability is less than `posterior_threshold`, we have a situation when the sample is part of the majority level of those assigned to its neuron, but its label is not consistent with most of its neighbors. This is an anomalous condition and is tagged as "analyze". Users are encouraged to inspect such samples to find out whether they are in fact noisy or not.
 
-The default value for both `prior_threshold` and `posterior_threshold` is 60%. The `sits_som_clean_samples()` has an additional parameter (`keep`), which indicates which samples should be kept in the set based on their prior and posterior probabilities. The default for `keep` is `c("clean", "analyze")`. As a result of the cleaning, about 900 samples have been considered to be noisy and thus to be possibly removed. We first show the complete distribution of the samples and later remove the noisy ones.
+The `sits_som_clean_samples()` function has an additional parameter (`keep`), which indicates which samples should be kept in the set based on their prior and posterior probabilities. The default for `keep` is `c("clean", "analyze")`. As a result of the cleaning, about 900 samples have been considered to be noisy and thus to be possibly removed. We first show the complete distribution of the samples and later remove the noisy ones.
 
 :::{.panel-tabset}
 ## R

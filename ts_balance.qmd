@@ -60,6 +60,13 @@ The examples of this chapter use `samples_cerrado_mod13q1`, a set of time series
 #| label: summary-samples-cerrado-modis
 #| warning: false
 #| cache: true
+# Load the samples from Hugging Face
+samples_cerrado_mod13q1 = sits_from_hf(
+  repo = "e-sensing/samples_book",
+  file = "samples_cerrado_mod13q1.parquet",
+  type = "dataset"
+)
+
 # Take only the NDVI and EVI bands
 samples_cerrado_mod13q1_2bands <- sits_select(
     data = samples_cerrado_mod13q1, 
@@ -71,10 +78,11 @@ summary(samples_cerrado_mod13q1_2bands)
 ## Python
 ```{python}
 #| eval: false
-# Load samples
-samples_cerrado_mod13q1 = load_samples(
-    name = "samples_cerrado_mod13q1",
-    package = "sitsdata"
+# Load the samples from Hugging Face
+samples_cerrado_mod13q1 = sits_from_hf(
+  repo = "e-sensing/samples_book",
+  file = "samples_cerrado_mod13q1.parquet",
+  type = "dataset"
 )
 
 # Take only the NDVI and EVI bands
@@ -89,6 +97,7 @@ summary(samples_cerrado_mod13q1_2bands)
 #| label: py-summary-samples-cerrado-modis
 #| warning: false
 #| cache: true
+#| echo: false
 # Show the summary of the samples
 summary(samples_cerrado_mod13q1_2bands)
 ```
@@ -102,7 +111,16 @@ The function `sits_reduce_imbalance()` deals with training set imbalance; it inc
 
 To perform undersampling, `sits_reduce_imbalance()` builds a SOM map for each majority label based on the required number of samples to be selected. Each dimension of the SOM is set to `ceiling(sqrt(new_number_samples/4))` to allow a reasonable number of neurons to group similar samples. After calculating the SOM map, the algorithm extracts four samples per neuron to generate a reduced set of samples that approximates the variation of the original one.
 
-The `sits_reduce_imbalance()` algorithm has two parameters: `n_samples_over` and `n_samples_under`. The first parameter indicates the minimum number of samples per class. All classes with fewer samples than this value are oversampled. The second parameter controls the maximum number of samples per class; all classes with more samples than this value are undersampled. The following example uses `sits_reduce_imbalance()` with the Cerrado samples used in the previous chapter. We generate a balanced dataset where all classes have a minimum of 1000 and a maximum of 1500 samples.
+The `sits_reduce_imbalance()` parameters are: 
+
+| Parameter | Meaning |
+|:----------|:--------|
+| `samples` | sample set to rebalance. |
+| `n_samples_over` | minimum number of samples per class. All classes with fewer samples than this value are oversampled. |
+| `n_samples_under` | maximum number of samples per class. All classes with more samples than this value are undersampled. |
+| `multicores` | number of cores for parallel processing. |
+
+The following example uses `sits_reduce_imbalance()` with the Cerrado samples used in the previous chapter. We generate a balanced dataset where all classes have a minimum of 1000 and a maximum of 1500 samples.
 
 :::{.panel-tabset}
 ## R
@@ -198,6 +216,7 @@ plot(som_eval)
 ```{r}
 #| label: py-fig-balanced-sommap
 #| cache: true
+#| echo: false
 #| warning: false
 #| fig-width: 7
 #| fig-height: 5

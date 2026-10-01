@@ -1,11 +1,7 @@
 ---
-title: "Building regional embeddings"
+title: "Building regional embeddings: a simple example"
 format: html
 ---
-
-<a href="https://www.kaggle.com/code/esensing/building-regional-embeddings" target="_blank">
-<img src="https://kaggle.com/static/images/open-in-kaggle.svg"/>
-</a>
 
 ### Configurations to run this chapter{-}
 
@@ -29,7 +25,7 @@ dir.create(tempdir_r_class, showWarnings = FALSE, recursive = TRUE)
 ## Python
 ```{python}
 #| echo: true
-#| eval: true
+#| eval: false
 #| output: false
 # load "pysits" library
 from pysits import *
@@ -44,111 +40,8 @@ tempdir_py_class.mkdir(parents=True, exist_ok=True)
 
 ## Overview
 
-The `sits` package allows building of customized embeddings of data cubes using self-supervised learning. Any regular data cube, including multi-year and multi-modal ones, can be used as input. It is also recommended, but not mandatory, that a classified data cube for the same region and timeframe is used as a basis for selecting a stratified training sample. Users can thus design regional foundational models designed for specific cases and thus produce embeddings that are arguably better align with their desired products.  
-
-The embedding workflow takes satellite image time series, learns a compact
-representation with a deep-learning encoder, and then runs a standard
+The `sits` package allows building of customized embeddings of data cubes using self-supervised learning. Any regular data cube, including multi-year and multi-modal ones, can be used as input. It is also recommended, but not mandatory, that a classified data cube for the same region and timeframe is used as a basis for selecting a stratified training sample. Users can thus design regional foundational models designed for specific cases and thus produce embeddings that are arguably better align with their desired products.  The embedding workflow takes satellite image time series, learns a compact representation with a deep-learning encoder, and then runs a standard
 classification pipeline on those embeddings instead of on the raw bands.
-
-## Embedding pipeline 
-
-### Learning the encoder
-
-The function `sits_pre_train()` trains a deep-learning encoder from time-series samples. It is a thin dispatcher: the real work is done by an `encoder_method` function.
-
-| Parameter | Meaning |
-|---|---|
-| `samples` | Time series used for training the encoders (class `sits`). Labels are optional — SSL methods ignore them; supervised methods use them only to build pairs. The dimensions (bands and time-steps) of the data in `samples` should match those of data cube to be encoded. |
-| `rl_method` | A representation learning function that takes `samples` and returns a `sits_encoder`. One of `sits_ssl_lejepa()`, `sits_ssl_vicreg()`, `sits_ssl_mae()`, `sits_contrastive_learning()`, `sits_barlow_twins()`|
-
-: Pre-training parameters {#tbl-pre-train}
-
-## Parameter for representation learning function
-
-Each learning method has its own set of parameters. They also a set of common parameters, shown below.
-
-**Common parameters for all embedding models**
-
-| Parameter | Meaning |
-|---|---|
-| `samples` | Time series used for training the encoder. Default = `NULL` when called via `sits_pre_train()` |
-| `embedding_dim` | Dimension of resulting embeddings (default = 64).|
-| `encoder_model` | Deep learning method that takes time series as input and produces latent representations that are used to compute the loss function. Default = `sits_tempcnn()`. Alternatives include `sits_lighttae()`, `sits_tae()`,  `sits_resnet()` and `sits_mlp()` |
-| `epochs` | Maximum number of training epochs (default = 150). | 
-| `batch_size` | Batch size for training (default = 512). | 
-| `validation_split` |  Fraction of samples held out for validation loss monitoring (default = 0.2) |
-| `optimizer` | Gradient descent algorithms. Computes loss and improves model paramenters for better convergence (default = `torch::adamw`). | 
-| `opt_hparams`| Named list of hyperparameters used by the optimizer. The most relevant parameters are `lr` (learning rate - default = 5.0e-04), `eps` (term added to the denominator to improve numerical stability - default = 1.0e-08), and `weight_decay` (prevents machine learning models from overfitting - default = 1.0e-06). |
-| `lr_decay_epochs` | Step size (in epochs) for learning rate decay (default = 1) | 
-| `lr_decay_rate` | Multiplicative decay factor (default = 0.95) |
-| `patience` | Number of epochs without improvement for halting training (default = 20). | 
-| `min_delta` | Minimum improvement for early stopping (default = 0.01) | 
-| `verbose` | Logical value for printing training progress (default = `FALSE`| 
-| `seed` | Random seed for reproducibility (default = 10). | 
-
-: Parameters shared by all encoders {#tbl-common-par}
-
-**LeJEPA**
-
-The parameters specific for `sits_ssl_lejepa()` are described below. For an explanation of how the methods work, please check the preceeding chapter of the book.
-
-| Parameter | Meaning |
-|---|---|
-| `proj_dim` | Dimension of the projector head used for pre-training (default = 128). | 
-| `lambda` | Trade-off between invariance and SIGReg (default = 0.02). |
-| `num_knots` | Number of quadrature knots for the SIGReg characteristic function test. Default = 17. | 
-| `num_slices` | Number of random projection directions for SIGReg (default = 256). |
-
-: Specific parameters for LeJEPA method {#tbl-lejepa-par}
-
-**MAE**
-
-The parameters specific for `sits_ssl_mae()` are described below. For an explanation of how the methods work, please check the preceeding chapter of the book.
-
-| Parameter | Meaning |
-|---|---|
-| `decoder_width` | Width of the decoder MLP hidden layer used for reconstruction (default = 128). |
-| `masking_method` | Mask selection strategy. Options are `"random"`  or `"contiguous"` (default = `"random"`). | 
-| `mask_ratio` | Fraction of timesteps to mask (default = 0.6). |
-| `mask_value` | Fill value used for masked timesteps (default = 0). |
-| `masked_bands` | which bands to mask. Default = `NULL`, when all bands are eligible for masking. | 
-
-: Specific parameters for MAE method {#tbl-mae-par}
-
-**VICReg**
-
-The parameters specific for `sits_ssl_vicreg()` are described below. For an explanation of how the methods work, please check the preceeding chapter of the book.
-
-| Parameter | Meaning |
-|---|---|
-| `proj_dim` | Dimensionality of the projector head used during pre-training (default = 128). |
-| `sim_coeff` | Weight of the invariance (MSE) term in  the VICReg loss. Balances the mean squared distance matching the two augmented views (default = 25.0) | 
-| `std_coeff` | Weight of the variance (hinge) term in the VICReg loss. Enforces the standard deviation per dimension above the target threshold  (default = 25.0) |
-| `cov_coeff` | Weight of the covariance (off-diagonal) term in the VICReg loss. Decorrelates the variables to eliminate redundancy (default = 1.0) |
-
-: Specific parameters for VICReg method {#tbl-vicreg-par}
-
-**Barlow Twins**
-
-The specific parameters for the Barlow Twins method are described below.
-
-| Parameter | Meaning |
-|---|---|
-| `proj_dim` | Dimensionality of the projector head used during pre-training (default = 128). |
-| `bt_lambda`| Weight of the redundancy-reduction (off-diagonal) term in the Barlow Twins loss. Default = 5e-3. |
-| `num_pairs` | Total number of pairs to form per epoch. Default = NULL. In this case, one pair is formed for every sample in the training split. |
-    
-: Specific parameters for Barlow Twins method {#tbl-btwins-par}
-
-**Supervised Contrastive Loss**
-
-The specific parameters for the SupCon method are described below.
-
-| Parameter | Meaning |
-|---|---|
-| `proj_dim` | Dimensionality of the projector head used during pre-training (default = 128). |
-| `scaling`| Scaling for the contrastive loss.  Lower values sharpen the similarity distribution (default = 0.07). |
-| `num_pairs` | Total number of pairs to  form per epoch. Default = NULL. In this case, one pair is formed for every sample in the training split. |
     
 ## Processing pipeline
 
@@ -218,7 +111,8 @@ rondonia_cube = sits_cube(
 We start by selecting a large set of samples from an area of interest. This area should be 
 large enough so as to capture spatial variations of the different classes. Depending on
 the representation learning method, one can use unlabeled samples; this is the practice 
-for MAE, VICReg and LeJEPA techniques. For the Barlow Twins and Supervised Contrastive 
+for MAE, Barlow Twins, VICReg and LeJEPA techniques. For the Supervised Barlow Twins 
+and Supervised Contrastive 
 Loss method, we need labelled samples.
 
 The training data for self-supervised learning is a set of unlabeled samples, which can be drawn in two ways:  (a) Select a random sample from the chosen data cube; (b) select a stratified sample based on a classified data cube that covers the same region as the original. Although a random selection is simpler, using a classified data cube is recommended, since it enables balancing the samples between the different classes. In the first case, we use `sits_random_sampling()` and specify the total number of samples for self-supervised learning, as shown in the example below. When a classified data cube is available as a base  layer, one can use `sits_stratified_sampling()` to aim for a an SSL sample distribution which captures frequent and less frequent classes. We show an example later in the chapter. 
@@ -274,9 +168,12 @@ The resulting samples consist of 30,000 time series covering a one-year period. 
 ## R
 ```{r}
 #| eval: false
-# recover the samples 
-samples_file <- system.file("extdata/samples/rondonia_30k.rds", package = "sitsdata")
-samples <- readRDS(samples_file)
+# Get the samples from Hugging Face
+samples <- sits_from_hf(
+  repo = "e-sensing/samples_book",
+  file = "rondonia30k.parquet",
+  type = "dataset"
+)
 
 # use only optical bands, not indexes
 samples <- sits_select(
@@ -290,9 +187,12 @@ samples <- sits_select(
 ```{python}
 #| eval: false
 # recover the samples
-samples_file = r_package_dir("extdata/samples/rondonia_30k.rds", package = "sitsdata")
-samples = read_rds(samples_file)
-
+# Get the samples from Hugging Face
+samples = sits_from_hf(
+  repo = "e-sensing/samples_book",
+  file = "rondonia30k.parquet",
+  type = "dataset"
+)
 # use only optical bands, not indexes
 samples = sits_select(
     samples,
@@ -501,7 +401,12 @@ embeeding dimensions with the same encoder we used for the data cube
 ## R
 ```{r}
 #| eval: false
-# random selection from tile 
+# Get the samples from Hugging Face
+samples_deforestation_rondonia <- sits_from_hf(
+  repo = "e-sensing/samples_book",
+  file = "samples_deforestation_rondonia.parquet",
+  type = "dataset"
+)
 # selecting a subset of the original training data
 samples_fine_tuning <- sits_sample(samples_deforestation_rondonia, frac = 0.2)
 
@@ -517,10 +422,11 @@ plot(samples_embedding, mode = "tsne", perplexity = 30)
 ## Python
 ```{python}
 #| eval: false
-# obtain the samples
-samples_deforestation_rondonia = load_samples(
-    name = "samples_deforestation_rondonia",
-    package = "sitsdata"
+# Obtain the samples 
+samples_deforestation_rondonia = sits_from_hf(
+  repo = "e-sensing/samples_book",
+  file = "samples_deforestation_rondonia.parquet",
+  type = "dataset"
 )
 
 # random selection from tile

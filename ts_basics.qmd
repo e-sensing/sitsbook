@@ -28,7 +28,7 @@ dir.create(tempdir_r, showWarnings = FALSE)
 ## Python
 ```{python}
 #| echo: true
-#| eval: true
+#| eval: false
 #| output: false
 # load "pysits" library
 from pysits import *
@@ -39,6 +39,7 @@ tempdir_py.mkdir(parents=True, exist_ok=True)
 ```
 ```{python}
 #| echo: false
+#| eval: false
 import pandas as pd
 pd.set_option('display.max_columns', 7)
 pd.set_option('display.width', 600)
@@ -56,21 +57,34 @@ In `sits`, time series are stored in a data frame data structure, both in R and 
 #| label: ts-samples
 #| warning: false
 #| cache: true
-# Samples
+# Get the samples from Hugging Face
+samples_matogrosso_mod13q1 <- sits_from_hf(
+  repo = "e-sensing/samples_book",
+  file = "samples_matogrosso_mod13q1.parquet",
+  type = "dataset"
+)
+# Show the first samples
 samples_matogrosso_mod13q1[1:4,]
 ```
 ## Python
 ```{python}
 #| label: py-ts-samples
+#| eval: false
 #| warning: false
 #| cache: true
-# Samples
-samples_matogrosso_mod13q1 = load_samples(
-    name = "samples_matogrosso_mod13q1", 
-    package = "sitsdata"
+# Get the samples from Hugging Face
+samples_matogrosso_mod13q1 = sits_from_hf(
+  repo = "e-sensing/samples_book",
+  file = "samples_matogrosso_mod13q1.parquet",
+  type = "dataset"
 )
-
+# Show the first samples
 samples_matogrosso_mod13q1[0:4]
+```
+```{r}
+#| echo: false
+#| cache: true
+samples_matogrosso_mod13q1[1:4,]
 ```
 :::
 
@@ -91,7 +105,13 @@ summary(samples_matogrosso_mod13q1)
 ## Python
 ```{python}
 #| label: py-ts-summary
-#| warning: false
+#| eval: false
+#| cache: true
+summary(samples_matogrosso_mod13q1)
+```
+```{r}
+#| label: py-ts-summary-cache
+#| echo: false
 #| cache: true
 summary(samples_matogrosso_mod13q1)
 ```
@@ -122,8 +142,7 @@ summary(samples_new_labels)
 ## Python
 ```{python}
 #| label: py-ts-new-labels
-#| warning: false
-#| cache: true
+#| eval: false
 # Copy the sample set for Mato Grosso 
 samples_new_labels = samples_matogrosso_mod13q1.copy(deep = True)
 
@@ -136,6 +155,12 @@ samples_new_labels.sits.labels = (
     "Cropland", "Cropland","Cropland"
 )
 
+summary(samples_new_labels)
+```
+```{r}
+#| label: py-ts-new-labels-cache
+#| echo: false
+#| cache: true
 summary(samples_new_labels)
 ```
 :::
@@ -159,12 +184,21 @@ samples_cerrado_ndvi <- sits_select(
 ## Python
 ```{python}
 #| label: py-ts-select
+#| eval: false
+# Select NDVI band and Cerrado label
+samples_cerrado_ndvi = sits_select(
+    samples_matogrosso_mod13q1, 
+    bands = "NDVI",
+    labels = "Cerrado")
+```
+```{r}
+#| label: py-ts-select-cache
 #| results: hide
 #| warning: false
 #| cache: true
-#| message: false
-# Select NDVI band and Cerrado label
-samples_cerrado_ndvi = sits_select(
+#| echo: false
+# Select NDVI band
+samples_cerrado_ndvi <- sits_select(
     samples_matogrosso_mod13q1, 
     bands = "NDVI",
     labels = "Cerrado")
@@ -274,6 +308,18 @@ samples_matogrosso_mod13q1 |>
 #| label: py-fig-ts-patterns
 #| results: hide
 #| warning: false
+#| eval: false
+# Estimate the patterns for each class and plot them
+plot(
+    sits_patterns(
+        samples_matogrosso_mod13q1
+    )
+)
+```
+```{r}
+#| label: py-fig-ts-patterns-cache
+#| results: hide
+#| echo: false
 #| cache: true
 #| fig-width: 7
 #| fig-height: 5
@@ -283,11 +329,9 @@ samples_matogrosso_mod13q1 |>
 #| fig-cap: | 
 #|     Patterns for Mato Grosso MOD13Q1 samples.
 # Estimate the patterns for each class and plot them
-plot(
-    sits_patterns(
-        samples_matogrosso_mod13q1
-    )
-)
+samples_matogrosso_mod13q1 |>  
+    sits_patterns() |> 
+    plot()
 ```
 :::
 
@@ -299,14 +343,19 @@ When working with machine learning classification of Earth observation data, it 
 
 Meyer and Pebesma propose using a spatial distance distribution plot, which displays two distributions of nearest-neighbor distances: sample-to-sample and prediction-location-to-sample [@Meyer2022]. The difference between the two distributions reflects the degree of spatial clustering in the reference data. Ideally, the two distributions should be similar. Cases where the sample-to-sample distance distribution does not match prediction-location-to-sample distribution indicate possible problems in training data collection.
 
-`sits` implements spatial distance distribution plots with the `sits_geo_dist()` function. This function takes the training data in the `samples` parameter, and the study area in the `roi` parameter expressed as an `sf` object. Additional parameters are `n` (maximum number of samples for each distribution) and `crs` (coordinate reference system for the samples). By default, `n` is 1000, and `crs` is "EPSG:4326". The example below shows how to use `sits_geo_dist()`.
+`sits` implements spatial distance distribution plots with the `sits_geo_dist()` function. This function takes the following parameters:
+
+| Parameter | Meaning |
+|:----------|:--------|
+| `samples` | the training data. |
+| `roi` | study area expressed as an `sf` object. |
+| `n` | maximum number of samples for each distribution (default = 1000) |
+| `crs` | coordinate reference system for the samples(default = "EPSG:4326". |
+
+The example below shows how to use `sits_geo_dist()`.
 
 :::{.panel-tabset}
 ## R
-```{r}
-#| echo: false
-set.seed(777)
-```
 ```{r}
 #| label: fig-ts-geodist
 #| cache: true
@@ -319,6 +368,8 @@ set.seed(777)
 #| fig-align: center
 #| fig-cap: | 
 #|    Distribution of sample-to-sample and sample-to-prediction distances.
+# Set seed
+set.seed(777)
 # Read a shapefile for the state of Mato Grosso, Brazil
 mt_shp <- system.file("extdata/shapefiles/mato_grosso/mt.shp",
                       package = "sits")
@@ -342,23 +393,14 @@ plot(distances)
 ```
 ## Python
 ```{python}
-#| echo: false
-r_set_seed(777)
-```
-```{python}
 #| label: py-fig-ts-geodist
-#| cache: true
-#| message: false
-#| warning: false
-#| fig-width: 7
-#| fig-height: 5
-#| fig-dpi: 300
-#| out-width: 90%
-#| fig-align: center
-#| fig-cap: | 
-#|    Distribution of sample-to-sample and sample-to-prediction distances.
+#| eval: false
+# Set seed
+r_set_seed(777)
 # Import GeoPandas
 import geopandas as gpd
+# set seed 
+r_set_seed(777)
 
 # Read a shapefile for the state of Mato Grosso, Brazil
 mt_shp = r_package_dir("extdata/shapefiles/mato_grosso/mt.shp",
@@ -381,13 +423,35 @@ distances = sits_geo_dist(
 # Plot sample-to-sample and sample-to-prediction distances
 plot(distances)
 ```
+```{r}
+#| label: py-fig-ts-geodist-cache
+#| cache: true
+#| message: false
+#| echo: false
+#| fig-width: 7
+#| fig-height: 5
+#| fig-dpi: 300
+#| out-width: 90%
+#| fig-align: center
+#| fig-cap: | 
+#|    Distribution of sample-to-sample and sample-to-prediction distances.
+# Plot sample-to-sample and sample-to-prediction distances
+plot(distances)
+```
 :::
 
 The plot shows a mismatch between the sample-to-sample and the sample-to-prediction distributions. Most samples are closer to each other than they are close to the location where values need to be predicted. In this case, there are many areas where few or no samples have been collected and where the prediction uncertainty will be higher. In this and similar cases, improving the distribution of training samples is always welcome. If that is not possible, areas with insufficient samples could have lower accuracy. This information must be reported to potential users of classification results.
 
 ## Time series from data cubes
 
-To get a set of time series in `sits`, first create a regular data cube and then request one or more time series from the cube using `sits_get_data()`. This function uses two mandatory parameters: `cube` and `samples`. The `cube` indicates the data cube from which the time series will be extracted. The `samples` parameter accepts the following data types:
+To get a set of time series in `sits`, first create a regular data cube and then request one or more time series from the cube using `sits_get_data()`. This function uses two mandatory parameters: 
+
+| Parameter | Meaning |
+|:----------|:--------|
+| `cube` | the data cube from which the time series will be extracted. |
+| `samples` | description of the samples to be retrieved. |
+
+The `samples` parameter accepts the following data types:
 
 - A data.frame with information on `latitude` and `longitude` (mandatory), `start_date`, `end_date`, and `label` for each sample point.
 - A csv file with columns `latitude`, `longitude`, `start_date`, `end_date`, and `label`.
@@ -431,17 +495,7 @@ plot(series)
 ## Python
 ```{python}
 #| label: py-fig-ts-get
-#| cache: true
-#| message: false
-#| warning: false
-#| fig-width: 7
-#| fig-height: 5
-#| fig-dpi: 300
-#| fig-align: "center"
-#| out-width: "90%" 
-#| fig-cap: "NDVI and EVI time series fetched from local raster cube."
-# Import pandas
-import pandas as pd
+#| eval: false
 
 # Obtain a raster cube based on local files
 data_dir = r_package_dir("extdata/sinop", package = "sitsdata")
@@ -460,6 +514,19 @@ sample_latlong = pd.DataFrame([dict(
 series = sits_get_data(cube = raster_cube,
                         samples = sample_latlong)
 
+plot(series)
+```
+```{r} 
+#| label: py-fig-ts-get-cache
+#| cache: true
+#| message: false
+#| echo: false
+#| fig-width: 7
+#| fig-height: 5
+#| fig-dpi: 300
+#| out-width: 90%
+#| fig-align: center
+#| fig-cap: "NDVI and EVI time series fetched from local raster cube."
 plot(series)
 ```
 :::
@@ -500,6 +567,15 @@ samples_csv = pd.read_csv(samples_csv_file)
 # Print the first three samples
 samples_csv[0:3]
 ```
+```{r}
+#| label: ts-csv-samples-get-cache
+#| cache: true
+#| echo: false
+#| warning: false
+# Print the first three samples
+samples_csv[1:3,]
+```
+
 :::
 
 To retrieve training samples for time series analysis, users must provide the temporal information (`start_date` and `end_date`). In the simplest case, all samples share the same dates. That is not a strict requirement. It is possible to specify different dates as long as they have a compatible duration. For example, the dataset `samples_matogrosso_mod13q1` provided with the `sitsdata` package contains samples from different years covering the same duration. These samples are from the MOD13Q1 product, which contains the same number of images per year. Thus, all time series in the dataset `samples_matogrosso_mod13q1` have the same number of dates.
@@ -538,7 +614,8 @@ points[1:3,]
 ## Python
 ```{python}
 #| label: py-ts-csv-samples-raster
-#| cache: true
+#| echo: true
+#| eval: false
 #| message: false
 #| warning: false
 # Obtain a raster cube based on local files
@@ -560,6 +637,14 @@ points = sits_get_data(cube = raster_cube,
 
 # Show the tibble with the first three points
 points[1:3]
+```
+```{r}
+#| label: py-ts-csv-samples-raster-cache
+#| cache: true
+#| echo: false
+#| warning: false
+# Show the tibble with the first three points
+points[1:3,]
 ```
 :::
 
@@ -604,7 +689,14 @@ samples_cerrado_forested
 #| cache: true
 #| message: false
 #| warning: false
-samples_cerrado_forested <- readRDS("./etc/samples_cerrado_forested.rds")
+# Get the samples from Hugging Face
+samples_cerrado_forested <- sits_from_hf(
+  repo = "e-sensing/samples_book",
+  file = "samples_cerrado_forested.parquet",
+  type = "dataset"
+)
+
+# Show the first samples
 samples_cerrado_forested
 ```
 ## Python
@@ -637,13 +729,13 @@ samples_cerrado_forested = sits_get_data(
 # Display the time series for the locations of Woody Savanna
 samples_cerrado_forested
 ```
-```{python}
+```{r}
 #| echo: false
-#| label: py-ts-get-data-forested
+#| label: py-ts-get-data-forested-cache
 #| cache: true
 #| message: false
 #| warning: false
-samples_cerrado_forested = read_rds("./etc/samples_cerrado_forested.rds")
+# Show the samples
 samples_cerrado_forested
 ```
 :::

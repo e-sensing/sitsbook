@@ -125,8 +125,12 @@ This case study uses the training dataset `samples_deforestation_rondonia`, avai
 #| label: samples-deforestation
 #| cache: true
 #| warning: false
-# Obtain the samples 
-data("samples_deforestation_rondonia")
+# Get the samples from Hugging Face
+samples_deforestation_rondonia <- sits_from_hf(
+  repo = "e-sensing/samples_book",
+  file = "samples_deforestation_rondonia.parquet",
+  type = "dataset"
+)
 
 # Show the contents of the samples
 summary(samples_deforestation_rondonia)
@@ -135,9 +139,10 @@ summary(samples_deforestation_rondonia)
 ```{python}
 #| eval: false
 # Obtain the samples 
-samples_deforestation_rondonia = load_samples(
-    name = "samples_deforestation_rondonia", 
-    package = "sitsdata"
+samples_deforestation_rondonia = sits_from_hf(
+  repo = "e-sensing/samples_book",
+  file = "samples_deforestation_rondonia.parquet",
+  type = "dataset"
 )
 
 # Show the contents of the samples
@@ -288,21 +293,25 @@ The figure shows bands and dates that represent relevant inflection points in th
 
 By default, all classification algorithms in `sits` use CPU-based parallel processing, done internally by the package. The algorithms are adaptable; the only requirement for users is to inform the configuration of their machines. To achieve efficiency, `sits` implements a fault-tolerant multitasking procedure, using a cluster of independent workers linked to a virtual machine. To avoid communication overhead, all large payloads are read and stored independently; direct interaction between the main process and the workers is kept at a minimum. Details of CPU-based parallel processing in `sits` can be found in the Chapter [How parallel processing works in SITS](https://e-sensing.github.io/sitsbook/annex_parallel.html).
 
-To classify both data cubes and sets of time series, use `sits_classify()`, which uses parallel processing to speed up the performance, as described at the end of this chapter. The parameters used for both data cubes and time series are:
+To classify both data cubes and sets of time series, use `sits_classify()`, which uses parallel processing to speed up the performance, as described at the end of this chapter. Its parameters are:
 
-* `data`: either a data cube or a set of time series (mandatory).
-* `ml_model`: a trained model that uses one of the machine learning methods provided (mandatory).
-* `impute_fn`: imputation function used to interpolate NA values (default = `impute_linear`).
-* `multicores`, number of CPU cores that will be used for processing (default = 2).
-* `memsize`: RAM memory available for classification (default = 4).
-* `roi`:  Region of interest where pixels will be classified. either an `sf` object, shapefile, or a vector with named XY values in the cube's projection ("xmin", "xmax", "ymin", "ymax") or by a named lat/long values ("lon_min", "lat_min", "lon_max", "lat_max") (optional).
-* `exclusion_mask`: Areas to be excluded from the classification, defined by either an `sf` object or by a shapefile (optional).
-* `start_date`: Start date for the classification process (optional).
-* `end_date`: End date for the classification process (optional).
-* `output_dir`: Directory where results will be stored (mandatory for raster data cubes). 
-* `version`:  For version control (default = "v1")
-* `verbose` : Detailed information about processing (default = FALSE).
-* `progress`: progress bar to track processing steps (default = TRUE).
+| Parameter | Meaning |
+|:----------|:--------|
+| `data` | either a data cube or a set of time series (mandatory). |
+| `ml_model` | a trained model that uses one of the machine learning methods provided (mandatory). |
+| `impute_fn` | imputation function used to interpolate NA values (default = `impute_linear`). |
+| `roi` | Region of interest where pixels will be classified. See details in the function documentation. |
+| `exclusion_mask` | Areas to be excluded from the classification, defined by either an `sf` object or by a shapefile (optional). |
+| `start_date` | Start date for the classification process (optional). |
+| `end_date` | End date for the classification process (optional). |
+| `multicores` | number of CPU cores that will be used for processing (default = 2). |
+| `memsize` | RAM memory available for classification in GB (default = 4). |
+| `gpu_memory` | if a GPU is available, defines the graphics memory to be used for classification (default = 4). |
+| `batch_size` | size of samples to be sent to GPU for classification (default is 1000 * `gpu_memory`). |
+| `output_dir` | Directory where results will be stored (mandatory for raster data cubes). |
+| `version` | For version control (default = "v1"). |
+| `verbose` | Detailed information about processing (default = FALSE). |
+| `progress` | progress bar to track processing steps (default = TRUE). |
 
 The `version` parameter distinguishes different variants of the same classification, as in the case of outputs produced by different models.
 
@@ -368,16 +377,18 @@ The probability cube provides information on the output values of the algorithm 
 
 The parameters for `sits_smooth()` are:
 
-* `cube`: A data cube with a set of probability matrices (mandatory).
-* `window_size`:  Size of the spatial neighborhood (default = 9 for a 9 x 9 filter).
-* `neigh_fraction`: Fraction of neighbors with high probabilities to be used in Bayesian inference (default = 0.5).
-* `smoothness`: Bayesian smoothing parameter (default = 20)
-* `exclusion_mask`: Areas to be excluded from the classification, defined by either an `sf` object or by a shapefile (optional).
-* `multicores`, number of CPU cores that will be used for processing (default = 2).
-* `memsize`: RAM memory available for classification (default = 4).
-* `output_dir`: Directory where results will be stored (mandatory). 
-* `version`:  For version control (default = "v1").
-* `progress`: progress bar to track processing steps (default = TRUE).
+| Parameter | Meaning |
+|:----------|:--------|
+| `cube` | A data cube with a set of probability matrices (mandatory). |
+| `window_size` | Size of the spatial neighborhood (default = 9 for a 9 x 9 filter). |
+| `neigh_fraction` | Fraction of neighbors with high probabilities to be used in Bayesian inference (default = 0.5). |
+| `smoothness` | Bayesian smoothing parameter (default = 20). |
+| `exclusion_mask` | Areas to be excluded from the classification, defined by either an `sf` object or by a shapefile (optional). |
+| `multicores` | number of CPU cores that will be used for processing (default = 2). |
+| `memsize` | RAM memory available for classification (default = 4). |
+| `output_dir` | Directory where results will be stored (mandatory). |
+| `version` | For version control (default = "v1"). |
+| `progress` | progress bar to track processing steps (default = TRUE). |
 
 
 :::{.panel-tabset}
@@ -445,12 +456,14 @@ In general, users should perform a post-processing smoothing after obtaining the
 
 The parameters for `sits_label_classification()` for raster data cubes are:
 
-* `cube`: A data cube with a set of probability matrices (mandatory).
-* `multicores`, number of CPU cores that will be used for processing (default = 2).
-* `memsize`: RAM memory available for classification (default = 4).
-* `output_dir`: Directory where results will be stored (mandatory). 
-* `version`:  For version control (default = "v1").
-* `progress`: progress bar to track processing steps (default = TRUE).
+| Parameter | Meaning |
+|:----------|:--------|
+| `cube` | A data cube with a set of probability matrices (mandatory). |
+| `multicores` | number of CPU cores that will be used for processing (default = 2). |
+| `memsize` | RAM memory available for classification (default = 4). |
+| `output_dir` | Directory where results will be stored (mandatory). |
+| `version` | For version control (default = "v1"). |
+| `progress` | progress bar to track processing steps (default = TRUE). |
 
 :::{.panel-tabset}
 ## R

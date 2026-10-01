@@ -1,0 +1,1652 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.361">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<meta name="author" content="Gilberto Camara, Rolf Simoes, Felipe Souza, Felipe Carlos, Pedro Andrade, Karine Ferreira, Lorena Santos, Charlotte Pelletier, Bianca Zadrosny">
+<title>Satellite Image Time Series Analysis on Earth Observation Data Cubes - 25&nbsp; Embedding Methods in SITS</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./emb_build.html" rel="next">
+<link href="./embeddings.html" rel="prev">
+<link href="././images/cover_sits_book_quarto.jpg" rel="icon" type="image/jpeg">
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script src="site_libs/quarto-contrib/sitshelp-0.1.0/sitshelp.js"></script>
+<link href="site_libs/quarto-contrib/sitshelp-0.1.0/sitshelp.css" rel="stylesheet"><script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script><script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script><script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+</head>
+<body class="nav-sidebar floating">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top"><nav class="quarto-secondary-nav"><div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+      <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./embeddings.html">Foundational Models and Embeddings</a></li><li class="breadcrumb-item"><a href="./emb_methods.html"><span class="chapter-number">25</span>&nbsp; <span class="chapter-title">Embedding Methods in SITS</span></a></li></ol></nav>
+      <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+      </a>
+      <button type="button" class="btn quarto-search-button" aria-label="" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav></header><!-- content --><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal sidebar-navigation floating overflow-auto"><div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">Satellite Image Time Series Analysis on Earth Observation Data Cubes</a> 
+        <div class="sidebar-tools-main">
+    <a href="https://github.com/e-sensing/sitsbook" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
+  <a href="" class="quarto-reader-toggle quarto-navigation-tool px-1" onclick="window.quartoToggleReader(); return false;" title="Toggle reader mode">
+  <div class="quarto-reader-toggle-btn">
+  <i class="bi"></i>
+  </div>
+</a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Greetings</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./setup.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Setup</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./support.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Support</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./acknowledgements.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Acknowledgements</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./introduction.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">The Basics of SITS</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./intro_quicktour.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">A quick tour of SITS</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./intro_examples.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">How to use SITS with real examples</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./intro_visualisation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Data visualisation in SITS</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./datacubes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Earth observation data cubes</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./dc_ardcollections.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Analysis-ready image collections</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./dc_regularize.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Building regular data cubes</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./dc_merge.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Merging multi-source EO data cubes</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./dc_localcubes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Data cubes from local files</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./dc_cubeoperations.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Algebraic operations on data cubes</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./dc_mixture.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Spectral mixture analysis</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./dc_reduce.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Temporal reduction operations</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./dc_texture.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Texture operations in data cubes</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./timeseries.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Satellite image time series</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ts_basics.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Basic operations on image time series</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ts_cluster.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Hierarchical clustering of time series</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ts_som.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Self-organized maps for sample quality control</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ts_balance.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Reducing imbalances in training samples</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./classification.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Machine learning for image time series</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./cl_machinelearning.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Machine learning algorithms for image time series</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./cl_tuning.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Deep learning model tuning</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./cl_rasterclassification.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Classification of raster data cubes</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./cl_smoothing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">Bayesian smoothing for classification post-processing</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./cl_reclassification.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">Map reclassification</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./cl_uncertainty.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">Uncertainty and active learning</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./cl_ensembleprediction.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">Ensemble prediction with multiple models</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./validation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Validation and accuracy measurement</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./val_kfold.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">23</span>&nbsp; <span class="chapter-title">Cross-validation of training data</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./val_map.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">24</span>&nbsp; <span class="chapter-title">Map accuracy assessment</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./embeddings.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Foundational Models and Embeddings</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./emb_methods.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">25</span>&nbsp; <span class="chapter-title">Embedding Methods in SITS</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./emb_build.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">26</span>&nbsp; <span class="chapter-title">Building regional embeddings: a simple example</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./emb_example.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">27</span>&nbsp; <span class="chapter-title">Building regional embeddings: a full example</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./vector_datacubes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Vector data cubes</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./vec_obia.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">28</span>&nbsp; <span class="chapter-title">Object-based time series image analysis</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./vec_creating.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">29</span>&nbsp; <span class="chapter-title">Creating vector data cube from local files</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./annex.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Advanced Topics</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth1 show">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./annex_export.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">30</span>&nbsp; <span class="chapter-title">Exporting data to other packages</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./annex_gee.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">31</span>&nbsp; <span class="chapter-title">SITS and GEE: side-by-side comparison</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./annex_api.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">32</span>&nbsp; <span class="chapter-title">Developing new functions in SITS</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./annex_ml.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">33</span>&nbsp; <span class="chapter-title">Including new methods for machine learning</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./annex_stac.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">34</span>&nbsp; <span class="chapter-title">Supporting STAC-based ARD catalogs</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./annex_parallel.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">35</span>&nbsp; <span class="chapter-title">How parallel processing works in SITS</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+    </ul>
+</div>
+</nav><div id="quarto-sidebar-glass" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active"><h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+<li><a href="#configurations-to-run-this-chapter" id="toc-configurations-to-run-this-chapter" class="nav-link active" data-scroll-target="#configurations-to-run-this-chapter">Configurations to run this chapter</a></li>
+  <li><a href="#overview" id="toc-overview" class="nav-link" data-scroll-target="#overview"><span class="header-section-number">25.1</span> Overview</a></li>
+  <li><a href="#embedding-pipeline" id="toc-embedding-pipeline" class="nav-link" data-scroll-target="#embedding-pipeline"><span class="header-section-number">25.2</span> Embedding pipeline</a></li>
+  <li><a href="#time-series-augmentation-for-self-supervised-learning" id="toc-time-series-augmentation-for-self-supervised-learning" class="nav-link" data-scroll-target="#time-series-augmentation-for-self-supervised-learning"><span class="header-section-number">25.3</span> Time series augmentation for self-supervised learning</a></li>
+  <li><a href="#parameters-shared-by-all-representation-learning-functions" id="toc-parameters-shared-by-all-representation-learning-functions" class="nav-link" data-scroll-target="#parameters-shared-by-all-representation-learning-functions"><span class="header-section-number">25.4</span> Parameters shared by all representation learning functions</a></li>
+  <li>
+<a href="#masked-autoencoders" id="toc-masked-autoencoders" class="nav-link" data-scroll-target="#masked-autoencoders"><span class="header-section-number">25.5</span> Masked autoencoders</a>
+  <ul class="collapse">
+<li><a href="#description" id="toc-description" class="nav-link" data-scroll-target="#description"><span class="header-section-number">25.5.1</span> Description</a></li>
+  <li><a href="#implementation-of-mae-in-sits" id="toc-implementation-of-mae-in-sits" class="nav-link" data-scroll-target="#implementation-of-mae-in-sits"><span class="header-section-number">25.5.2</span> Implementation of MAE in SITS</a></li>
+  </ul>
+</li>
+  <li><a href="#joint-embedding-methods-an-overview" id="toc-joint-embedding-methods-an-overview" class="nav-link" data-scroll-target="#joint-embedding-methods-an-overview"><span class="header-section-number">25.6</span> Joint-embedding methods: an overview</a></li>
+  <li>
+<a href="#vicreg-variance-invariance-covariance-regularization" id="toc-vicreg-variance-invariance-covariance-regularization" class="nav-link" data-scroll-target="#vicreg-variance-invariance-covariance-regularization"><span class="header-section-number">25.7</span> VICReg (Variance-Invariance-Covariance Regularization)</a>
+  <ul class="collapse">
+<li><a href="#description-1" id="toc-description-1" class="nav-link" data-scroll-target="#description-1"><span class="header-section-number">25.7.1</span> Description</a></li>
+  <li><a href="#implementation-of-vicreg-in-sits" id="toc-implementation-of-vicreg-in-sits" class="nav-link" data-scroll-target="#implementation-of-vicreg-in-sits"><span class="header-section-number">25.7.2</span> Implementation of VICReg in SITS</a></li>
+  </ul>
+</li>
+  <li>
+<a href="#lean-joint-embedding-predictive-architecture-lejepa" id="toc-lean-joint-embedding-predictive-architecture-lejepa" class="nav-link" data-scroll-target="#lean-joint-embedding-predictive-architecture-lejepa"><span class="header-section-number">25.8</span> Lean Joint-Embedding Predictive Architecture (LeJEPA)</a>
+  <ul class="collapse">
+<li><a href="#description-2" id="toc-description-2" class="nav-link" data-scroll-target="#description-2"><span class="header-section-number">25.8.1</span> Description</a></li>
+  <li><a href="#implementation-of-lejepa-in-sits" id="toc-implementation-of-lejepa-in-sits" class="nav-link" data-scroll-target="#implementation-of-lejepa-in-sits"><span class="header-section-number">25.8.2</span> Implementation of LeJEPA in SITS</a></li>
+  </ul>
+</li>
+  <li>
+<a href="#barlow-twins" id="toc-barlow-twins" class="nav-link" data-scroll-target="#barlow-twins"><span class="header-section-number">25.9</span> Barlow Twins</a>
+  <ul class="collapse">
+<li><a href="#description-3" id="toc-description-3" class="nav-link" data-scroll-target="#description-3"><span class="header-section-number">25.9.1</span> Description</a></li>
+  <li><a href="#implementation-of-barlow-twins-in-sits" id="toc-implementation-of-barlow-twins-in-sits" class="nav-link" data-scroll-target="#implementation-of-barlow-twins-in-sits"><span class="header-section-number">25.9.2</span> Implementation of Barlow Twins in SITS</a></li>
+  </ul>
+</li>
+  <li>
+<a href="#supervised-contrastive-learning" id="toc-supervised-contrastive-learning" class="nav-link" data-scroll-target="#supervised-contrastive-learning"><span class="header-section-number">25.10</span> Supervised Contrastive Learning</a>
+  <ul class="collapse">
+<li><a href="#implementation-of-supervised-contrastive-learning-in-sits" id="toc-implementation-of-supervised-contrastive-learning-in-sits" class="nav-link" data-scroll-target="#implementation-of-supervised-contrastive-learning-in-sits"><span class="header-section-number">25.10.1</span> Implementation of Supervised Contrastive Learning in <code>sits</code></a></li>
+  </ul>
+</li>
+  <li>
+<a href="#supervised-barlow-twins" id="toc-supervised-barlow-twins" class="nav-link" data-scroll-target="#supervised-barlow-twins"><span class="header-section-number">25.11</span> Supervised Barlow Twins</a>
+  <ul class="collapse">
+<li><a href="#description-4" id="toc-description-4" class="nav-link" data-scroll-target="#description-4"><span class="header-section-number">25.11.1</span> Description</a></li>
+  <li><a href="#comparing-the-six-methods" id="toc-comparing-the-six-methods" class="nav-link" data-scroll-target="#comparing-the-six-methods"><span class="header-section-number">25.11.2</span> Comparing the six methods</a></li>
+  </ul>
+</li>
+  <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references"><span class="header-section-number">25.12</span> References</a></li>
+  </ul><div class="toc-actions"><div><i class="bi bi-github"></i></div><div class="action-links"><p><a href="https://github.com/e-sensing/sitsbook/edit/quarto/emb_methods.qmd" class="toc-action">Edit this page</a></p><p><a href="https://github.com/e-sensing/sitsbook/issues/new" class="toc-action">Report an issue</a></p></div></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content"><script>window.__SITSHELP_CONFIG__ = { apiUrl: "https://sits-rag.ngrok.io" };</script><header id="title-block-header" class="quarto-title-block default"><div class="quarto-title">
+<h1 class="title">
+<span class="chapter-number">25</span>&nbsp; <span class="chapter-title">Embedding Methods in SITS</span>
+</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+</header><section id="configurations-to-run-this-chapter" class="level3 unnumbered"><h3 class="unnumbered anchored" data-anchor-id="configurations-to-run-this-chapter">Configurations to run this chapter</h3>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist">
+<li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true" aria-current="page">R</a></li>
+<li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false">Python</a></li>
+</ul>
+<div class="tab-content">
+<div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
+<div class="cell">
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># load package "tibble"</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://tibble.tidyverse.org/">tibble</a></span><span class="op">)</span></span>
+<span><span class="co"># load packages "sits" and "sitsdata"</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/e-sensing/sits/">sits</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/e-sensing/sitsdata/">sitsdata</a></span><span class="op">)</span></span>
+<span><span class="co"># set tempdir if it does not exist </span></span>
+<span><span class="va">tempdir_r</span> <span class="op">&lt;-</span> <span class="st">"~/sitsbook/tempdir/R/emb_methods"</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/files2.html">dir.create</a></span><span class="op">(</span><span class="va">tempdir_r</span>, showWarnings <span class="op">=</span> <span class="cn">FALSE</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+<div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># load "pysits" library</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pysits <span class="im">import</span> <span class="op">*</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pathlib <span class="im">import</span> Path</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># set tempdir if it does not exist</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>tempdir_py <span class="op">=</span> Path.home() <span class="op">/</span> <span class="st">"sitsbook/tempdir/Python/emb_methods"</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Create directory</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>tempdir_py.mkdir(parents<span class="op">=</span><span class="va">True</span>, exist_ok<span class="op">=</span><span class="va">True</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
+</section><section id="overview" class="level2" data-number="25.1"><h2 data-number="25.1" class="anchored" data-anchor-id="overview">
+<span class="header-section-number">25.1</span> Overview</h2>
+<p>The <code>sits</code> package allows building of customized embeddings of data cubes using self-supervised learning. Any regular data cube, including multi-year and multi-modal ones, can be used as input. It is also recommended, but not mandatory, that a classified data cube for the same region and timeframe is used as a basis for selecting a stratified training sample. Users can thus design regional foundational models designed for specific cases and thus produce embeddings that are arguably better align with their desired products.</p>
+<p>The embedding workflow takes satellite image time series, learns a compact representation with a deep-learning encoder, and then runs a standard classification pipeline on those embeddings instead of on the raw bands.</p>
+<p>In <code>sits</code> we provide five methods for building embeddings. Four are self-supervised: (a) Masked Autoencoders (MAE); (b) Variance-Invariance-Covariance regularization (VICReg); (c) Lean Joint-Embedding Predictive Architectures (LeJEPA); (d) Barlow Twins. Two are supervised: Supervised Contrastive Learning and Supervised Barlow Twins. In what follows, we describe the embedding pipeline and then present each method in detail.</p>
+<p>More detailed descriptions of the processing pipeline for generating embeddings are given in the next chapters of the book: <a href="https://e-sensing.github.io/sitsbook/emb_build.html">“Building regional embeddings: a simple example”</a> and <a href="https://e-sensing.github.io/sitsbook/emb_example.html">“Building regional embeddings: a full example”</a></p>
+</section><section id="embedding-pipeline" class="level2" data-number="25.2"><h2 data-number="25.2" class="anchored" data-anchor-id="embedding-pipeline">
+<span class="header-section-number">25.2</span> Embedding pipeline</h2>
+<p>The function <code><a href="https://e-sensing.github.io/sits/reference/sits_pre_train.html">sits_pre_train()</a></code> trains a deep-learning encoder from time-series samples. It is a thin dispatcher: the real work is done by an <code>encoder_method</code> function. Its parameters are:</p>
+<ul>
+<li>
+<code>samples</code>: time series used for training the encoders (class <code>sits</code>). Labels are optional — SSL methods ignore them; supervised methods use them only to build pairs. The dimensions (bands and time-steps) of the data in <code>samples</code> should match those of data cube to be encoded.</li>
+<li>
+<code>rl_method</code>: representation learning method that takes <code>samples</code> and returns a <code>sits_encoder</code>. One of <code><a href="https://e-sensing.github.io/sits/reference/sits_ssl_lejepa.html">sits_ssl_lejepa()</a></code>, <code><a href="https://e-sensing.github.io/sits/reference/sits_ssl_vicreg.html">sits_ssl_vicreg()</a></code>, <code><a href="https://e-sensing.github.io/sits/reference/sits_ssl_mae.html">sits_ssl_mae()</a></code>, <code><a href="https://e-sensing.github.io/sits/reference/sits_ssl_barlow_twins.html">sits_ssl_barlow_twins()</a></code>, <code>sits_barlow_twins</code> or <code><a href="https://e-sensing.github.io/sits/reference/sits_contrastive_learning.html">sits_contrastive_learning()</a></code>,</li>
+</ul></section><section id="time-series-augmentation-for-self-supervised-learning" class="level2" data-number="25.3"><h2 data-number="25.3" class="anchored" data-anchor-id="time-series-augmentation-for-self-supervised-learning">
+<span class="header-section-number">25.3</span> Time series augmentation for self-supervised learning</h2>
+<p>When using self-supervised contrastive learning methods with satellite image time s series, a key challenge is building positive pairs. Transformations that work for images have no obvious counterpart for time series, and generic perturbations such as jittering, resizing or masking bring limited gains.</p>
+<p>Saget et al.<span class="citation" data-cites="Saget2025"><a href="#ref-Saget2025" role="doc-biblioref">[1]</a></span> propose an augmentation method based on resampling that generates positive pairs for contrastive pre-training on unlabelled satellite image time series. Given a series <span class="math inline">\(S \in \mathbb{R}^{T \times C}\)</span>, the procedure has three steps. First, <span class="math inline">\(S\)</span> is linearly interpolated onto a finer grid of <span class="math inline">\(T_{up} = 2T\)</span> steps, yielding a densified series <span class="math inline">\(S_{up}\)</span> from which many plausible observation schedules can be drawn. Second, two subsequences of <span class="math inline">\(T_{sub} = T/2\)</span> steps are drawn from <span class="math inline">\(S_{up}\)</span> with disjoint index sets, so that the two views share no observation; the draw is constrained to take at least <span class="math inline">\(\lfloor T_{sub}/4 \rfloor\)</span> steps from each temporal quarter, which forces both views to span the whole observation period instead of collapsing onto a single window. Third, the timestamps of each subsequence are rescaled to the original interval <span class="math inline">\([1,T]\)</span> and the values are interpolated back onto the original grid, so both views regain the length, resolution and alignment expected by the encoder.</p>
+<p>The two views describe the same phenological trajectory under different revisit schedules and slightly shifted timing, which pushes the encoder to encode the shape of the seasonal profile rather than the exact acquisition dates. This augmentation strategy is used for the LeJEPA, VICReg and Barlow Twins methods.</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-emb-augment" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure"><p><img src="./images/ssl_ts_augmentation.png" class="img-fluid figure-img" style="width:100.0%"></p>
+<figcaption class="figure-caption">Figure&nbsp;25.1: {Resampling augmentation for time series. (a) The input series. (b) Linear upsampling to <span class="math inline">\(T_{up} = 2T\)</span> steps. (c) Two subsequences of <span class="math inline">\(T_{sub} = T/2\)</span> steps drawn with disjoint index sets. (d) Timestamps rescaled to <span class="math inline">\([1,T]\)</span> and interpolated onto the original grid, producing a positive pair; the grey line is the input series.(source: [Saget2025]).</figcaption></figure>
+</div>
+</div>
+</div>
+</section><section id="parameters-shared-by-all-representation-learning-functions" class="level2" data-number="25.4"><h2 data-number="25.4" class="anchored" data-anchor-id="parameters-shared-by-all-representation-learning-functions">
+<span class="header-section-number">25.4</span> Parameters shared by all representation learning functions</h2>
+<p>Each learning method has its own set of parameters. They also a set of common parameters, shown below.</p>
+<div id="tbl-common-par" class="anchored">
+<table class="table">
+<caption>Table&nbsp;25.1: Parameters shared by all encoders</caption>
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead><tr class="header">
+<th style="text-align: left;">Parameter</th>
+<th style="text-align: left;">Meaning</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><code>samples</code></td>
+<td style="text-align: left;">Time series used for training the encoder. Default = <code>NULL</code> when called via <code><a href="https://e-sensing.github.io/sits/reference/sits_pre_train.html">sits_pre_train()</a></code>
+</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>embedding_dim</code></td>
+<td style="text-align: left;">Dimension of resulting embeddings (default = 64).</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>encoder_model</code></td>
+<td style="text-align: left;">Deep learning method that takes time series as input and produces latent representations that are used to compute the loss function. Default = <code><a href="https://e-sensing.github.io/sits/reference/sits_tempcnn.html">sits_tempcnn()</a></code>. Alternatives include <code><a href="https://e-sensing.github.io/sits/reference/sits_lighttae.html">sits_lighttae()</a></code>, <code><a href="https://e-sensing.github.io/sits/reference/sits_tae.html">sits_tae()</a></code>, <code><a href="https://e-sensing.github.io/sits/reference/sits_resnet.html">sits_resnet()</a></code> and <code><a href="https://e-sensing.github.io/sits/reference/sits_mlp.html">sits_mlp()</a></code>
+</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>epochs</code></td>
+<td style="text-align: left;">Maximum number of training epochs (default = 150).</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>batch_size</code></td>
+<td style="text-align: left;">Batch size for training (default = 512).</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>validation_split</code></td>
+<td style="text-align: left;">Fraction of samples held out for validation loss monitoring (default = 0.2)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>optimizer</code></td>
+<td style="text-align: left;">Gradient descent algorithms. Computes loss and improves model paramenters for better convergence (default = <code>torch::adamw</code>).</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>opt_hparams</code></td>
+<td style="text-align: left;">Named list of hyperparameters used by the optimizer. The most relevant parameters are <code>lr</code> (learning rate - default = 5.0e-04), <code>eps</code> (term added to the denominator to improve numerical stability - default = 1.0e-08), and <code>weight_decay</code> (prevents machine learning models from overfitting - default = 1.0e-06).</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>lr_decay_epochs</code></td>
+<td style="text-align: left;">Step size (in epochs) for learning rate decay (default = 1)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>lr_decay_rate</code></td>
+<td style="text-align: left;">Multiplicative decay factor (default = 0.95)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>patience</code></td>
+<td style="text-align: left;">Number of epochs without improvement for halting training (default = 20).</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>min_delta</code></td>
+<td style="text-align: left;">Minimum improvement for early stopping (default = 0.01)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>verbose</code></td>
+<td style="text-align: left;">Logical value for printing training progress (default = <code>FALSE</code>
+</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>seed</code></td>
+<td style="text-align: left;">Random seed for reproducibility (default = 10).</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section><section id="masked-autoencoders" class="level2" data-number="25.5"><h2 data-number="25.5" class="anchored" data-anchor-id="masked-autoencoders">
+<span class="header-section-number">25.5</span> Masked autoencoders</h2>
+<section id="description" class="level3" data-number="25.5.1"><h3 data-number="25.5.1" class="anchored" data-anchor-id="description">
+<span class="header-section-number">25.5.1</span> Description</h3>
+<p>Masked Autoencoders (MAEs) are a class of self-supervised learning neural networks that learn to understand data by hiding portions of an input and training the model to reconstruct the missing pieces <span class="citation" data-cites="He2022"><a href="#ref-He2022" role="doc-biblioref">[2]</a></span>. In <code>sits</code>, the MAE model is fed a satellite image time series where a large portion of the values are masked. By default, a fraction of the time steps are hidden, chosen at random. The model aims to reconstruct the missing values based on the available ones. To do this successfully, the model must learn what features naturally co-occur in the real world. When processing time-series data, the MAE learns the temporal signatures of land cover and land use pixels. This is also the strategy used in the PRESTO foundational model <span class="citation" data-cites="Tseng2024"><a href="#ref-Tseng2024" role="doc-biblioref">[3]</a></span>. The embedding is the latent representation produced by the encoder before reconstruction. It is never explicitly told what is important — it discovers structure by being forced to predict missing observations.</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-emb-mae" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure"><p><img src="./images/emb_masked_autoencoders.png" class="img-fluid figure-img" style="width:100.0%"></p>
+<figcaption class="figure-caption">Figure&nbsp;25.2: Graphical illustration of an masked autoencoders of time series. .</figcaption></figure>
+</div>
+</div>
+</div>
+<p>The MAE loss function is a masked mean squared error, computed only over the masked positions. The indices run over the batch of samples <span class="math inline">\(i\)</span>, the time steps <span class="math inline">\(t\)</span>, and the spectral bands <span class="math inline">\(b\)</span>. The binary mask <span class="math inline">\(m_{i,t} \in \{0,1\}\)</span> marks which time steps are hidden ($1 = $ masked, $0 = $ visible); it carries no band index because masking is applied to a whole time step at once, so every band of a masked step is hidden together. The target <span class="math inline">\(x_{i,t,b}\)</span> is the <em>observed</em> value after the same per-band normalization (zero mean, unit variance across the training samples) used to feed the encoder, and <span class="math inline">\(\hat{x}_{i,t,b}\)</span> is the value the decoder reconstructs for that position:</p>
+<p><span id="eq-mae"><span class="math display">\[
+\mathcal{L}_{\text{MAE}} = \frac{\displaystyle\sum_{i,t,b} m_{i,t}\,\bigl(\hat{x}_{i,t,b} - x_{i,t,b}\bigr)^2}{\displaystyle\max\!\Bigl(1,\; \sum_{i,t,b} m_{i,t}\Bigr)}
+\tag{25.1}\]</span></span></p>
+<p>The numerator accumulates the squared reconstruction error only where <span class="math inline">\(m_{i,t}=1\)</span>, and the denominator counts those same masked entries, so the loss is the mean squared error over the hidden positions. The denominator is clamped to at least 1 to avoid division by zero when a batch happens to mask nothing. Visible time steps contribute nothing to the loss: the encoder is rewarded only for reconstructing what it could not see.</p>
+</section><section id="implementation-of-mae-in-sits" class="level3" data-number="25.5.2"><h3 data-number="25.5.2" class="anchored" data-anchor-id="implementation-of-mae-in-sits">
+<span class="header-section-number">25.5.2</span> Implementation of MAE in SITS</h3>
+<p>The parameters specific for <code><a href="https://e-sensing.github.io/sits/reference/sits_ssl_mae.html">sits_ssl_mae()</a></code> in sits are:</p>
+<p>The parameters specific for <code><a href="https://e-sensing.github.io/sits/reference/sits_ssl_mae.html">sits_ssl_mae()</a></code> are described below. For an explanation of how the methods work, please check the preceeding chapter of the book.</p>
+<div id="tbl-mae-par" class="anchored">
+<table class="table">
+<caption>Table&nbsp;25.2: Specific parameters for MAE method</caption>
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead><tr class="header">
+<th style="text-align: left;">Parameter</th>
+<th style="text-align: left;">Meaning</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><code>decoder_width</code></td>
+<td style="text-align: left;">Width of the decoder MLP hidden layer used for reconstruction (default = 128).</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>masking_method</code></td>
+<td style="text-align: left;">Mask selection strategy. Options are <code>"random"</code> or <code>"contiguous"</code> (default = <code>"random"</code>).</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>mask_ratio</code></td>
+<td style="text-align: left;">Fraction of timesteps to mask (default = 0.6).</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>mask_value</code></td>
+<td style="text-align: left;">Fill value used for masked timesteps (default = 0).</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>masked_bands</code></td>
+<td style="text-align: left;">which bands to mask. Default = <code>NULL</code>, when all bands are eligible for masking.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The following examples shows how to obtain an MAE encoder from a data set of 480,000 samples covering the Brazilian Cerrado, built using Landsat-8 images. The Cerrado is the second largest biome in Brazil with 1.9 million km<span class="math inline">\(^2\)</span>. It is a tropical savanna ecoregion with a rich ecosystem ranging from grasslands to woodlands. Please be aware that running the example below takes a long processing time. For more details, please see the following chapters.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist">
+<li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true">R</a></li>
+<li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false">Python</a></li>
+</ul>
+<div class="tab-content">
+<div id="tabset-2-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-2-1-tab">
+<div class="cell">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Obtain the samples </span></span>
+<span><span class="va">samples_pretrain</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_from_hf.html">sits_from_hf</a></span><span class="op">(</span></span>
+<span>  repo <span class="op">=</span> <span class="st">"e-sensing/samples_cerrado"</span>,</span>
+<span>  file <span class="op">=</span> <span class="st">"samples_cerrado_2017_2024_pretrain.parquet"</span>,</span>
+<span>  type <span class="op">=</span> <span class="st">"dataset"</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># build a MAE encoder </span></span>
+<span><span class="va">mae_encoder</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_pre_train.html">sits_pre_train</a></span><span class="op">(</span></span>
+<span>    samples <span class="op">=</span> <span class="va">samples_pretrain</span>,</span>
+<span>    rl_method <span class="op">=</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_ssl_mae.html">sits_ssl_mae</a></span><span class="op">(</span></span>
+<span>        embedding_dim <span class="op">=</span> <span class="fl">64L</span>,</span>
+<span>        masking_method <span class="op">=</span> <span class="st">"random"</span>,</span>
+<span>        mask_ratio <span class="op">=</span> <span class="fl">0.6</span>,</span>
+<span>        mask_value <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>        masked_bands <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>        encoder_model <span class="op">=</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_tempcnn.html">sits_tempcnn</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>        decoder_width <span class="op">=</span> <span class="fl">128L</span>,</span>
+<span>        dropout_rate <span class="op">=</span> <span class="fl">0.2</span>,</span>
+<span>        epochs <span class="op">=</span> <span class="fl">150</span>,</span>
+<span>        batch_size <span class="op">=</span> <span class="fl">512</span></span>
+<span>    <span class="op">)</span></span>
+<span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+<div id="tabset-2-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-2-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Obtain the samples </span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>samples_pretrain <span class="op">=</span> sits_from_hf(</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  repo <span class="op">=</span> <span class="st">"e-sensing/samples_cerrado"</span>,</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="bu">file</span> <span class="op">=</span> <span class="st">"samples_cerrado_2017_2024_pretrain.parquet"</span>,</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="bu">type</span> <span class="op">=</span> <span class="st">"dataset"</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="co"># build an MAE encoder </span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>mae_encoder <span class="op">&lt;-</span> sits_pre_train(</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    samples <span class="op">=</span> samples_pretrain,</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    rl_method <span class="op">=</span> sits_ssl_mae(</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>        embedding_dim <span class="op">=</span> <span class="dv">64L</span>,</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>        masking_method <span class="op">=</span> <span class="st">"random"</span>,</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>        mask_ratio <span class="op">=</span> <span class="fl">0.6</span>,</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>        mask_value <span class="op">=</span> <span class="dv">0</span>,</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>        masked_bands <span class="op">=</span> NULL,</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>        encoder_model <span class="op">=</span> sits_tempcnn(),</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>        decoder_width <span class="op">=</span> <span class="dv">128L</span>,</span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>        dropout_rate <span class="op">=</span> <span class="fl">0.2</span>,</span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>        epochs <span class="op">=</span> <span class="dv">150</span>,</span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>        batch_size <span class="op">=</span> <span class="dv">512</span></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
+</section></section><section id="joint-embedding-methods-an-overview" class="level2" data-number="25.6"><h2 data-number="25.6" class="anchored" data-anchor-id="joint-embedding-methods-an-overview">
+<span class="header-section-number">25.6</span> Joint-embedding methods: an overview</h2>
+<p>Apart from MAE, the self-supervised algorithms used in <code>sits</code> are joint-embedding methods. A joint-embedding encoder-projector architecture is a framework in deep learning where an encoder extracts features from unlabeled data, and a projector maps those features into a lower-dimensional space to optimize a contrastive or invariance-based loss function. Joint-embedding self-supervised methods learn time-series representation by making the embeddings of two related “views” of the same sample agree, while preventing the trivial solution where the network maps everything to a constant (collapse).</p>
+<p>The encoder is neural network (such as a TempCNN or LightTAE that converts raw input data (like an image) into a rich, high-level latent representation. The projector is a multi-layer perceptron (MLP) placed on top of the encoder. It maps the encoder’s output into a separate space where the loss function is computed. The encoder-projector combination trains the network by pulling together representations of different augmented views of the same input (positive pairs).</p>
+<p>The encoder maps each view of shape <em>[batch, n_times, n_bands]</em>, to an embedding of shape <em>[batch, embedding_dim]</em> . The encoder weights are reused for both positive views. The projector matches a shape of size <em>[batch, embedding_dim] proj_dim]</em> to a shape of size <em>[batch, proj_dim]</em>. Both views go through the same encoder and the same projector (shared weights), and the loss is computed on the two projected outputs. During fine-tuning or deployment for downstream tasks, the projector is usually thrown away, and only the backbone encoder is retained.</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-emb-encoder-projector" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure"><p><img src="./images/emb_joint_embedding.png" class="img-fluid figure-img" style="width:100.0%"></p>
+<figcaption class="figure-caption">Figure&nbsp;25.3: Joint embedding encoder-projector architecture for self-supervised learning og time series.</figcaption></figure>
+</div>
+</div>
+</div>
+<p>In what follows, we discuss three methods of SSL using joint-embedding: VICReg (Variance-Invariance-Covariance Regularization), LeJEPA (Lean Joint-Embedding Predictive Architecture), and Barlow Twins.</p>
+</section><section id="vicreg-variance-invariance-covariance-regularization" class="level2" data-number="25.7"><h2 data-number="25.7" class="anchored" data-anchor-id="vicreg-variance-invariance-covariance-regularization">
+<span class="header-section-number">25.7</span> VICReg (Variance-Invariance-Covariance Regularization)</h2>
+<section id="description-1" class="level3" data-number="25.7.1"><h3 data-number="25.7.1" class="anchored" data-anchor-id="description-1">
+<span class="header-section-number">25.7.1</span> Description</h3>
+<p>VICReg is a <strong>joint-embedding</strong> method <span class="citation" data-cites="Bardes2022"><a href="#ref-Bardes2022" role="doc-biblioref">[4]</a></span> that builds two views of the same input, push both through a shared encoder and projector, and applies a loss that keeps paired embeddings close while preventing collapse. For satellite image time series, we employ the method proposed by <span class="citation" data-cites="Saget2025"><a href="#ref-Saget2025" role="doc-biblioref">[1]</a></span> that generates positive pairs, as described above.</p>
+<p>The core problem VICReg solves is collapse. When training a network so that two views of the same pixel give the same embedding, the easiest solution is to output the same constant vector for every pixel, which is a consistent but useless approach. Contrastive methods avoid this by also pushing different locations apart, which requires negative pairs. VICReg avoids it with statistics computed over the batch instead, with three loss components: invariance, variance, and covariance</p>
+<p>Invariance does the actual learning: take a pixel’s time series, build two augmented views of it and penalize the distance between their embeddings. The message is “these are the same place, so describe them the same way.” Variance blocks the shortcut. Look at one dimension of the embedding — say dimension 7 — across all pixels in the batch, and measure its standard deviation. If it falls below a threshold, the loss penalizes it. Every one of the 64 slots must keep varying across the batch, so a constant output is no longer available.</p>
+<p>Covariance stops a subtler failure. Nothing so far prevents all 64 dimensions from encoding the same thing 64 times over. So VICReg computes the covariance between every pair of dimensions and pushes the off-diagonal terms toward zero. Each slot is forced to carry information the others don’t, spreading the signal across the full vector. The covariance term is important, since spectral bands and consecutive dates are heavily correlated — decorrelation is what makes 64 dimensions hold different information.</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-emb-vicreg" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure"><p><img src="./images/emb_vicreg_sits.png" class="img-fluid figure-img" style="width:100.0%"></p>
+<figcaption class="figure-caption">Figure&nbsp;25.4: VICReg pipeline. The augmented views are passed through the encoder to produce embeddings, which are used as inputs to the loss functions.</figcaption></figure>
+</div>
+</div>
+</div>
+<p>The embeddings produce two augmented views per sample. Let <span class="math inline">\(Z^A, Z^B \in \mathbb{R}^{N \times D}\)</span> be the projector outputs of the two views over a batch of <span class="math inline">\(N\)</span> samples. Each row <span class="math inline">\(Z_{i,:}\)</span> is the embedding of sample <span class="math inline">\(i\)</span>, and <span class="math inline">\(D = d_p\)</span> is the projector output dimensionality. Take <span class="math inline">\(Z_{:,j}\)</span> for column <span class="math inline">\(j\)</span>, i.e.&nbsp;feature <span class="math inline">\(j\)</span> collected across all <span class="math inline">\(N\)</span> samples in the batch. The VICReg loss sums three terms:</p>
+<p><em>Invariance</em> — mean squared error between paired views:</p>
+<p><span id="eq-vicreg-inv"><span class="math display">\[
+\ell_{\text{inv}} = \frac{1}{N D}\sum_{i=1}^{N}\sum_{j=1}^{D}\bigl(Z^A_{i,j} - Z^B_{i,j}\bigr)^2.
+\tag{25.2}\]</span></span></p>
+<p><em>Variance</em> — a hinge that keeps each feature’s batch standard deviation at or above 1 (with <span class="math inline">\(\epsilon = 10^{-4}\)</span>), preventing collapse:</p>
+<p><span id="eq-vicreg-var"><span class="math display">\[
+v(Z) = \frac{1}{D}\sum_{j=1}^{D}\max\!\Bigl(0,\; 1 - \sqrt{\operatorname{Var}(Z_{:,j}) + \epsilon}\Bigr),
+\qquad
+\ell_{\text{var}} = \tfrac{1}{2}\bigl(v(Z^A) + v(Z^B)\bigr).
+\tag{25.3}\]</span></span></p>
+<p>Here <span class="math inline">\(\operatorname{Var}(Z_{:,j})\)</span> is the variance of feature <span class="math inline">\(j\)</span> across the <span class="math inline">\(N\)</span> samples of the batch, so <span class="math inline">\(\sqrt{\operatorname{Var}(Z_{:,j}) + \epsilon}\)</span> is that feature’s batch standard deviation. The hinge <span class="math inline">\(\max(0,\,1 - \cdot)\)</span> penalizes a feature only while its standard deviation stays below the target value of 1; once every feature varies enough, the term is zero. <span class="math inline">\(\ell_{\text{var}}\)</span> averages this penalty over the two views.</p>
+<p><em>Covariance</em> — decorrelates features by penalizing off-diagonal covariance:</p>
+<p><span id="eq-vicreg-cov1"><span class="math display">\[
+C(Z) = \frac{1}{N-1}\,(Z - \bar Z)^\top (Z - \bar Z),
+\qquad
+c(Z) = \frac{1}{D}\sum_{j \neq k} \bigl[C(Z)\bigr]_{j,k}^2,
+\tag{25.4}\]</span></span></p>
+<p><span id="eq-vicreg-cov2"><span class="math display">\[
+\ell_{\text{cov}} = c(Z^A) + c(Z^B).
+\tag{25.5}\]</span></span></p>
+<p>Here <span class="math inline">\(\bar Z\)</span> is the row vector of column means (each feature’s batch mean), broadcast over rows, so <span class="math inline">\(C(Z) \in \mathbb{R}^{D \times D}\)</span> is the empirical covariance matrix of the features and <span class="math inline">\([C(Z)]_{j,k}\)</span> is the covariance between features <span class="math inline">\(j\)</span> and <span class="math inline">\(k\)</span>. The sum in <span class="math inline">\(c(Z)\)</span> runs over all off-diagonal pairs (<span class="math inline">\(j \neq k\)</span>), so only <em>between-feature</em> covariances are penalized while the diagonal variances are left to the variance term.</p>
+<p>The total loss combines them with fixed coefficients:</p>
+<p><span id="eq-vicreg-loss"><span class="math display">\[
+\mathcal{L}_{\text{VICReg}} = \lambda_{\text{sim}}\,\ell_{\text{inv}}
+\;+\; \lambda_{\text{std}}\,\ell_{\text{var}}
+\;+\; \lambda_{\text{cov}}\,\ell_{\text{cov}}
+\tag{25.6}\]</span></span></p>
+<p>The default weights are <span class="math inline">\(\lambda_{\text{sim}} = 25\)</span>, <span class="math inline">\(\lambda_{\text{std}} = 25\)</span>, and <span class="math inline">\(\lambda_{\text{cov}} = 1\)</span> (arguments <code>sim_coeff</code>, <code>std_coeff</code>, and <code>cov_coeff</code>). The covariance term is given a much smaller weight because it sums <span class="math inline">\(D(D-1)\)</span> off-diagonal entries and would otherwise dominate. Since VICReg relies on batch statistics, so batches need to be large enough for the variance and covariance estimates to be significant.</p>
+</section><section id="implementation-of-vicreg-in-sits" class="level3" data-number="25.7.2"><h3 data-number="25.7.2" class="anchored" data-anchor-id="implementation-of-vicreg-in-sits">
+<span class="header-section-number">25.7.2</span> Implementation of VICReg in SITS</h3>
+<p>The parameters specific for <code><a href="https://e-sensing.github.io/sits/reference/sits_ssl_vicreg.html">sits_ssl_vicreg()</a></code> are described below. For an explanation of how the methods work, please check the preceeding chapter of the book.</p>
+<div id="tbl-vicreg-par" class="anchored">
+<table class="table">
+<caption>Table&nbsp;25.3: Specific parameters for VICReg method</caption>
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead><tr class="header">
+<th style="text-align: left;">Parameter</th>
+<th style="text-align: left;">Meaning</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><code>proj_dim</code></td>
+<td style="text-align: left;">Dimensionality of the projector head used during pre-training (default = 128).</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>sim_coeff</code></td>
+<td style="text-align: left;">Weight of the invariance (MSE) term in the VICReg loss. Balances the mean squared distance matching the two augmented views (default = 25.0)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>std_coeff</code></td>
+<td style="text-align: left;">Weight of the variance (hinge) term in the VICReg loss. Enforces the standard deviation per dimension above the target threshold (default = 25.0)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>cov_coeff</code></td>
+<td style="text-align: left;">Weight of the covariance (off-diagonal) term in the VICReg loss. Decorrelates the variables to eliminate redundancy (default = 1.0)</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The following examples shows how to obtain a VICReg encoder from a data set of 480,000 samples covering the Brazilian Cerrado, built using Landsat-8 images. Please be aware that running the example below takes a long processing time. For more details, please see the following chapters.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist">
+<li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-3-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-1" role="tab" aria-controls="tabset-3-1" aria-selected="true">R</a></li>
+<li class="nav-item" role="presentation"><a class="nav-link" id="tabset-3-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-2" role="tab" aria-controls="tabset-3-2" aria-selected="false">Python</a></li>
+</ul>
+<div class="tab-content">
+<div id="tabset-3-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-3-1-tab">
+<div class="cell">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># recover the samples </span></span>
+<span><span class="va">samples_pretrain</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_from_hf.html">sits_from_hf</a></span><span class="op">(</span></span>
+<span>  repo <span class="op">=</span> <span class="st">"e-sensing/samples_cerrado"</span>,</span>
+<span>  file <span class="op">=</span> <span class="st">"samples_cerrado_2017_2024_pretrain.parquet"</span>,</span>
+<span>  type <span class="op">=</span> <span class="st">"dataset"</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># build a VICReg encoder </span></span>
+<span><span class="va">vicreg_encoder</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_pre_train.html">sits_pre_train</a></span><span class="op">(</span></span>
+<span>    samples <span class="op">=</span> <span class="va">samples_pretrain</span>,</span>
+<span>    rl_method <span class="op">=</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_ssl_vicreg.html">sits_ssl_vicreg</a></span><span class="op">(</span></span>
+<span>        embedding_dim    <span class="op">=</span> <span class="fl">64</span>,</span>
+<span>        proj_dim         <span class="op">=</span> <span class="fl">128</span>,</span>
+<span>        sim_coeff        <span class="op">=</span> <span class="fl">25.0</span>,</span>
+<span>        std_coeff        <span class="op">=</span> <span class="fl">25.0</span>,</span>
+<span>        cov_coeff        <span class="op">=</span> <span class="fl">1.0</span>,</span>
+<span>        encoder_model    <span class="op">=</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_tempcnn.html">sits_tempcnn</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>        epochs           <span class="op">=</span> <span class="fl">150</span>,</span>
+<span>        batch_size       <span class="op">=</span> <span class="fl">128</span></span>
+<span>    <span class="op">)</span></span>
+<span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+<div id="tabset-3-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-3-2-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Obtain the samples </span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>samples_pretrain <span class="op">=</span> sits_from_hf(</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  repo <span class="op">=</span> <span class="st">"e-sensing/samples_cerrado"</span>,</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="bu">file</span> <span class="op">=</span> <span class="st">"samples_cerrado_2017_2024_pretrain.parquet"</span>,</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="bu">type</span> <span class="op">=</span> <span class="st">"dataset"</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="co"># build a VICReg encoder </span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>vicreg_encoder <span class="op">=</span> sits_pre_train(</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    samples <span class="op">=</span> samples_pretrain,</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    rl_method <span class="op">=</span> sits_ssl_vicreg(</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>        embedding_dim    <span class="op">=</span> <span class="dv">64</span>,</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>        proj_dim         <span class="op">=</span> <span class="dv">128</span>,</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>        sim_coeff        <span class="op">=</span> <span class="fl">25.0</span>,</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>        std_coeff        <span class="op">=</span> <span class="fl">25.0</span>,</span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>        cov_coeff        <span class="op">=</span> <span class="fl">1.0</span>,</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>        encoder_model    <span class="op">=</span> sits_tempcnn(),</span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>        epochs           <span class="op">=</span> <span class="dv">150</span>,</span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>        batch_size       <span class="op">=</span> <span class="dv">128</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
+</section></section><section id="lean-joint-embedding-predictive-architecture-lejepa" class="level2" data-number="25.8"><h2 data-number="25.8" class="anchored" data-anchor-id="lean-joint-embedding-predictive-architecture-lejepa">
+<span class="header-section-number">25.8</span> Lean Joint-Embedding Predictive Architecture (LeJEPA)</h2>
+<section id="description-2" class="level3" data-number="25.8.1"><h3 data-number="25.8.1" class="anchored" data-anchor-id="description-2">
+<span class="header-section-number">25.8.1</span> Description</h3>
+<p>LeJEPA <span class="citation" data-cites="Balestriero2025"><a href="#ref-Balestriero2025" role="doc-biblioref">[5]</a></span> starts from a different place than VICReg. Its two ideas are: predict in embedding space rather than pixel space, and replace the VICReg loss with a single provable constraint. LeJEPA avoids the embedding collapse by assuming that the embedding distribution should be an isotropic Gaussian, which minimizes worst-case downstream prediction risk. Intuitively, the cloud of embeddings should be a round ball with no preferred direction, because any elongation means some directions carry most of the information. So instead of discouraging collapse indirectly, LeJEPA just enforces the target distribution directly. The loss has two terms — prediction error plus a distributional penalty — with a single trade-off hyperparameter.</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-emb-lejepa" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure"><p><img src="./images/emb_lejepa_isotropy.png" class="img-fluid figure-img" style="width:100.0%"></p>
+<figcaption class="figure-caption">Figure&nbsp;25.5: LeJEPA avoids anisotropic (right) embeddings which lead to higher variance estimators and enforces isotropic embeddings (left) (source: <span class="citation" data-cites="Balestriero2025"><a href="#ref-Balestriero2025" role="doc-biblioref">[5]</a></span>)</figcaption></figure>
+</div>
+</div>
+</div>
+<p>One challenge for LeJEPA is that testing whether a cloud of 64-dimensional vectors is Gaussian is inviable in high dimensions. The authors introduce SIGReg (Sketched Isotropic Gaussian Regularization). Draw many random directions, project every embedding onto each one, and run a one-dimensional goodness-of-fit test against a standard normal. If every random slice looks normal, the joint distribution is isotropic Gaussian. Cost is linear in batch size and dimension.</p>
+<p>LeJEPA has useful properties for Earth observation data. Isotropy means all 64 dimensions carry comparable information, which matters when your deliverable is a fixed-length vector to be used for classification.</p>
+<p>The loss function in LeJEPA stacks the two projected views as <span class="math inline">\(z \in \mathbb{R}^{V \times N \times D}\)</span>, where <span class="math inline">\(V = 2\)</span> is the number of views, <span class="math inline">\(N\)</span> is the number of samples in the batch, and <span class="math inline">\(D\)</span> is the projector output dimensionality. The entry <span class="math inline">\(z^{(v)}_{i,j}\)</span> is feature <span class="math inline">\(j\)</span> of view <span class="math inline">\(v\)</span> for sample <span class="math inline">\(i\)</span>. The loss has two components: an invariance loss and the SIGReg term.</p>
+<p>The invariance loss is the MSE (mean square error) of each view from the per-sample view mean <span class="math inline">\(\bar z = \tfrac{1}{V}\sum_v z^{(v)}\)</span>:</p>
+<p><span id="eq-lejepa-inv"><span class="math display">\[
+\ell_{\text{inv}} = \frac{1}{V N D}\sum_{v,i,j}\bigl(\bar z_{i,j} - z^{(v)}_{i,j}\bigr)^2.
+\tag{25.7}\]</span></span></p>
+<p>The SIGReg (Sketched Isotropic Gaussian Regularization) pushes the embedding distribution toward an isotropic Gaussian. For each of <span class="math inline">\(S\)</span> random unit directions <span class="math inline">\(a \in \mathbb{R}^D\)</span> (argument <code>num_slices</code>, default 256), it forms the scalar projections <span class="math inline">\(u_i = z^{(v)}_i \cdot a\)</span> — the coordinate of sample <span class="math inline">\(i\)</span>’s embedding along direction <span class="math inline">\(a\)</span> — and compares their empirical characteristic function (ECF) to the characteristic function of a standard normal, <span class="math inline">\(\phi(t) = e^{-t^2/2}\)</span>, using an Epps–Pulley statistic evaluated at <span class="math inline">\(K\)</span> quadrature knots <span class="math inline">\(t_k \in [0, 3]\)</span> (argument <code>num_knots</code>, default 17):</p>
+<p><span id="eq-lejepa-knots"><span class="math display">\[
+\widehat{\phi}(t_k) = \frac{1}{N}\sum_{i=1}^{N} e^{\,\mathrm{i}\,t_k u_i},
+\tag{25.8}\]</span></span></p>
+<p>where <span class="math inline">\(\mathrm{i} = \sqrt{-1}\)</span> is the imaginary unit (not to be confused with the sample index <span class="math inline">\(i\)</span> in the sum), and <span class="math inline">\(\widehat{\phi}(t_k)\)</span> is the empirical characteristic function of the projected values <span class="math inline">\(u_1,\dots,u_N\)</span> evaluated at knot <span class="math inline">\(t_k\)</span>. If the <span class="math inline">\(u_i\)</span> are standard normal, <span class="math inline">\(\widehat{\phi}(t_k)\)</span> should match <span class="math inline">\(\phi(t_k)\)</span>; SIGReg penalizes the squared gap between them.</p>
+<p><span id="eq-lejepa-sigreg"><span class="math display">\[
+\ell_{\text{SIGReg}} = \mathbb{E}_{a,\,v}\!\left[\; N \sum_{k=1}^{K} \tilde w_k
+\Bigl(\underbrace{\bigl(\tfrac{1}{N}\textstyle\sum_i \cos(t_k u_i) - \phi(t_k)\bigr)^2}_{\text{real part}}
++ \underbrace{\bigl(\tfrac{1}{N}\textstyle\sum_i \sin(t_k u_i)\bigr)^2}_{\text{imag. part}}\Bigr)\right],
+\tag{25.9}\]</span></span></p>
+<p>Here <span class="math inline">\(\mathbb{E}_{a,\,v}\)</span> denotes the average over the <span class="math inline">\(S\)</span> random directions <span class="math inline">\(a\)</span> and the <span class="math inline">\(V\)</span> views, and <span class="math inline">\(\tilde w_k\)</span> are the trapezoidal quadrature weights for the knots <span class="math inline">\(t_k\)</span> (multiplied by <span class="math inline">\(\phi(t_k)\)</span>) that turn the sum over knots into an approximation of the integrated ECF discrepancy. The bracket splits the squared error of the complex ECF into its real part (a sum of cosines, compared to <span class="math inline">\(\phi(t_k)\)</span>) and its imaginary part (a sum of sines, whose target is 0 because the standard normal is symmetric). The two terms combine with a single trade-off:</p>
+<p><span id="eq-lejepa-loss"><span class="math display">\[
+\mathcal{L}_{\text{LeJEPA}} = (1 - \lambda)\,\ell_{\text{inv}} \;+\; \lambda\,\ell_{\text{SIGReg}}
+\tag{25.10}\]</span></span></p>
+<p>with default <span class="math inline">\(\lambda = 0.02\)</span>.</p>
+</section><section id="implementation-of-lejepa-in-sits" class="level3" data-number="25.8.2"><h3 data-number="25.8.2" class="anchored" data-anchor-id="implementation-of-lejepa-in-sits">
+<span class="header-section-number">25.8.2</span> Implementation of LeJEPA in SITS</h3>
+<p>The parameters specific for <code><a href="https://e-sensing.github.io/sits/reference/sits_ssl_lejepa.html">sits_ssl_lejepa()</a></code> are described below. For an explanation of how the methods work, please check the preceeding chapter of the book.</p>
+<div id="tbl-lejepa-par" class="anchored">
+<table class="table">
+<caption>Table&nbsp;25.4: Specific parameters for LeJEPA method</caption>
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead><tr class="header">
+<th style="text-align: left;">Parameter</th>
+<th style="text-align: left;">Meaning</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><code>proj_dim</code></td>
+<td style="text-align: left;">Dimension of the projector head used for pre-training (default = 128).</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>lambda</code></td>
+<td style="text-align: left;">Trade-off between invariance and SIGReg (default = 0.02).</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>num_knots</code></td>
+<td style="text-align: left;">Number of quadrature knots for the SIGReg characteristic function test. Default = 17.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>num_slices</code></td>
+<td style="text-align: left;">Number of random projection directions for SIGReg (default = 256).</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The following examples shows how to obtain a LeJEPA encoder from a data set of 480,000 samples covering the Brazilian Cerrado, built using Landsat-8 images. Please be aware that running the example below takes a long processing time. For more details, please see the following chapters.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist">
+<li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-4-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-1" role="tab" aria-controls="tabset-4-1" aria-selected="true">R</a></li>
+<li class="nav-item" role="presentation"><a class="nav-link" id="tabset-4-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-2" role="tab" aria-controls="tabset-4-2" aria-selected="false">Python</a></li>
+</ul>
+<div class="tab-content">
+<div id="tabset-4-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-4-1-tab">
+<div class="cell">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># recover the samples </span></span>
+<span><span class="co"># recover the samples </span></span>
+<span><span class="va">samples_pretrain</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_from_hf.html">sits_from_hf</a></span><span class="op">(</span></span>
+<span>  repo <span class="op">=</span> <span class="st">"e-sensing/samples_cerrado"</span>,</span>
+<span>  file <span class="op">=</span> <span class="st">"samples_cerrado_2017_2024_pretrain.parquet"</span>,</span>
+<span>  type <span class="op">=</span> <span class="st">"dataset"</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># build a LeJEPA encoder </span></span>
+<span><span class="va">lejepa_encoder</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_pre_train.html">sits_pre_train</a></span><span class="op">(</span></span>
+<span>    samples <span class="op">=</span> <span class="va">samples_pretrain</span>,</span>
+<span>    rl_method <span class="op">=</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_ssl_lejepa.html">sits_ssl_lejepa</a></span><span class="op">(</span></span>
+<span>        embedding_dim    <span class="op">=</span> <span class="fl">64</span>,</span>
+<span>        proj_dim         <span class="op">=</span> <span class="fl">128</span>,</span>
+<span>        lambda           <span class="op">=</span> <span class="fl">0.02</span>,</span>
+<span>        num_knots        <span class="op">=</span> <span class="fl">17</span>,</span>
+<span>        num_slices       <span class="op">=</span> <span class="fl">256</span>,</span>
+<span>        encoder_model    <span class="op">=</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_tempcnn.html">sits_tempcnn</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>        epochs           <span class="op">=</span> <span class="fl">150</span>,</span>
+<span>        batch_size       <span class="op">=</span> <span class="fl">128</span></span>
+<span>    <span class="op">)</span></span>
+<span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+<div id="tabset-4-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-4-2-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Obtain the samples </span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>samples_pretrain <span class="op">=</span> sits_from_hf(</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  repo <span class="op">=</span> <span class="st">"e-sensing/samples_cerrado"</span>,</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="bu">file</span> <span class="op">=</span> <span class="st">"samples_cerrado_2017_2024_pretrain.parquet"</span>,</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  <span class="bu">type</span> <span class="op">=</span> <span class="st">"dataset"</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="co"># build a LeJEPA encoder </span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>lejepa_encoder <span class="op">=</span> sits_pre_train(</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>    samples <span class="op">=</span> samples_pretrain,</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>    rl_method <span class="op">=</span> sits_ssl_lejepa(</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>        embedding_dim    <span class="op">=</span> <span class="dv">64</span>,</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>        proj_dim         <span class="op">=</span> <span class="dv">128</span>,</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>        <span class="kw">lambda</span>           <span class="op">=</span> <span class="fl">0.02</span>,</span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>        num_knots        <span class="op">=</span> <span class="dv">17</span>,</span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>        num_slices       <span class="op">=</span> <span class="dv">256</span>,</span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>        encoder_model    <span class="op">=</span> sits_tempcnn(),</span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>        epochs           <span class="op">=</span> <span class="dv">150</span>,</span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>        batch_size       <span class="op">=</span> <span class="dv">128</span></span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
+</section></section><section id="barlow-twins" class="level2" data-number="25.9"><h2 data-number="25.9" class="anchored" data-anchor-id="barlow-twins">
+<span class="header-section-number">25.9</span> Barlow Twins</h2>
+<section id="description-3" class="level3" data-number="25.9.1"><h3 data-number="25.9.1" class="anchored" data-anchor-id="description-3">
+<span class="header-section-number">25.9.1</span> Description</h3>
+<p>Barlow Twins is a way to teach an encoder to produce good, compact embeddings without needing a classifier at training time <span class="citation" data-cites="Zbontar2021"><a href="#ref-Zbontar2021" role="doc-biblioref">[6]</a></span>. The model takes two perturbed versions of the same time series. It is trained to produce identical embeddings for both versions. A regularizer prevents the network from solving the problem in a trivial way, collapsing everything into the same vector. TESSERA uses this approach, with sparse random temporal sampling to simulate the actual irregularity of the series <span class="citation" data-cites="Feng2025"><a href="#ref-Feng2025" role="doc-biblioref">[7]</a></span>.</p>
+<p>The method is self-supervised — the two views are two random augmentations of one image. Two versions of the same sample run in parallel through the same encoder (a Siamese setup). The loss function measures how much the two embeddings agree, and whether their individual dimensions carry non-redundant information.</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-emb-btwins" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure"><p><img src="./images/emb_barlow_twins.png" class="img-fluid figure-img" style="width:100.0%"></p>
+<figcaption class="figure-caption">Figure&nbsp;25.6: Graphical representation of the Barlow Twins model.</figcaption></figure>
+</div>
+</div>
+</div>
+<p>.</p>
+<p>The loss function works by taking a batch of <span class="math inline">\(N\)</span> view-pairs. Run both views through encoder + projector to get <span class="math inline">\(Z^A, Z^B \in \mathbb{R}^{N \times D}\)</span>, where <span class="math inline">\(N\)</span> is the batch size and <span class="math inline">\(D = d_p\)</span> is the projector output dimensionality. Standardize each feature <span class="math inline">\(j\)</span> across the batch to zero mean and unit variance, giving <span class="math inline">\(\hat{Z}^A_{i,j}\)</span> and <span class="math inline">\(\hat{Z}^B_{i,j}\)</span> (the standardized value of feature <span class="math inline">\(j\)</span> for sample <span class="math inline">\(i\)</span> in views A and B). Then form the empirical cross-correlation matrix:</p>
+<p><span id="eq-btwins-cross"><span class="math display">\[
+C_{jk} = \frac{1}{N}\sum_{i=1}^{N} \hat{Z}^A_{i,j}\,\hat{Z}^B_{i,k}, \qquad C \in \mathbb{R}^{D \times D}, \quad C_{jk} \in [-1, 1].
+\tag{25.11}\]</span></span></p>
+<p>Each entry <span class="math inline">\(C_{jk}\)</span> is the correlation, over the <span class="math inline">\(N\)</span> samples, between feature <span class="math inline">\(j\)</span> of view A and feature <span class="math inline">\(k\)</span> of view B; the diagonal <span class="math inline">\(C_{jj}\)</span> measures how consistently feature <span class="math inline">\(j\)</span> is reproduced across the two views. The objective function drives <span class="math inline">\(C\)</span> toward the identity matrix:</p>
+<p><span id="eq-btwins-loss"><span class="math display">\[
+\mathcal{L}_{\text{BT}}
+= \underbrace{\sum_{j=1}^{D}\bigl(C_{jj} - 1\bigr)^{2}}_{\text{invariance}}
+\;+\;
+\lambda\,\underbrace{\sum_{j=1}^{D}\sum_{\substack{k=1\\ k \neq j}}^{D} C_{jk}^{2}}_{\text{redundancy reduction}}
+\tag{25.12}\]</span></span></p>
+<p>The invariance term pushes the diagonal to 1, so the same feature computed from the two same-class views should be perfectly correlated. The redundancy-reduction term pushes the off-diagonals to 0: distinct embedding dimensions should be decorrelated, so they carry non-overlapping information. The parameter <span class="math inline">\(\lambda\)</span> (default <span class="math inline">\(5\times10^{-3}\)</span>) balances the two.</p>
+</section><section id="implementation-of-barlow-twins-in-sits" class="level3" data-number="25.9.2"><h3 data-number="25.9.2" class="anchored" data-anchor-id="implementation-of-barlow-twins-in-sits">
+<span class="header-section-number">25.9.2</span> Implementation of Barlow Twins in SITS</h3>
+<p>The specific parameters for the Barlow Twins method are described below.</p>
+<div id="tbl-btwins-par" class="anchored">
+<table class="table">
+<caption>Table&nbsp;25.5: Specific parameters for Barlow Twins method</caption>
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead><tr class="header">
+<th style="text-align: left;">Parameter</th>
+<th style="text-align: left;">Meaning</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><code>proj_dim</code></td>
+<td style="text-align: left;">Dimensionality of the projector head used during pre-training (default = 128).</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>bt_lambda</code></td>
+<td style="text-align: left;">Weight of the redundancy-reduction (off-diagonal) term in the Barlow Twins loss. Default = 5e-3.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The following examples shows how to obtain a Barlow Twins encoder from a data set of 480,000 samples covering the Brazilian Cerrado, built using Landsat-8 images. Please be aware that running the example below takes a long processing time. For more details, please see the following chapters.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist">
+<li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-5-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-1" role="tab" aria-controls="tabset-5-1" aria-selected="true">R</a></li>
+<li class="nav-item" role="presentation"><a class="nav-link" id="tabset-5-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-2" role="tab" aria-controls="tabset-5-2" aria-selected="false">Python</a></li>
+</ul>
+<div class="tab-content">
+<div id="tabset-5-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-5-1-tab">
+<div class="cell">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># recover the samples </span></span>
+<span><span class="va">samples_pretrain</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_from_hf.html">sits_from_hf</a></span><span class="op">(</span></span>
+<span>  repo <span class="op">=</span> <span class="st">"e-sensing/samples_cerrado"</span>,</span>
+<span>  file <span class="op">=</span> <span class="st">"samples_cerrado_2017_2024_pretrain.parquet"</span>,</span>
+<span>  type <span class="op">=</span> <span class="st">"dataset"</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># build a Barlow Twins encoder </span></span>
+<span><span class="va">btwins_encoder</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_pre_train.html">sits_pre_train</a></span><span class="op">(</span></span>
+<span>    samples <span class="op">=</span> <span class="va">samples_pretrain</span>,</span>
+<span>    rl_method <span class="op">=</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_ssl_barlow_twins.html">sits_ssl_barlow_twins</a></span><span class="op">(</span></span>
+<span>        embedding_dim    <span class="op">=</span> <span class="fl">64</span>,</span>
+<span>        proj_dim         <span class="op">=</span> <span class="fl">128</span>,</span>
+<span>        bt_lambda        <span class="op">=</span> <span class="fl">0.005</span>,</span>
+<span>        encoder_model    <span class="op">=</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_tempcnn.html">sits_tempcnn</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>        epochs           <span class="op">=</span> <span class="fl">150</span>,</span>
+<span>        batch_size       <span class="op">=</span> <span class="fl">128</span></span>
+<span>    <span class="op">)</span></span>
+<span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+<div id="tabset-5-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-5-2-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Obtain the samples </span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>samples_pretrain <span class="op">=</span> sits_from_hf(</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  repo <span class="op">=</span> <span class="st">"e-sensing/samples_cerrado"</span>,</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="bu">file</span> <span class="op">=</span> <span class="st">"samples_cerrado_2017_2024_pretrain.parquet"</span>,</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>  <span class="bu">type</span> <span class="op">=</span> <span class="st">"dataset"</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="co"># build a Barlow Twins encoder </span></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>btwins_encoder <span class="op">=</span> sits_pre_train(</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>    samples <span class="op">=</span> samples_pretrain,</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>    rl_method <span class="op">=</span> sits_ssl_barlow_twins(</span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>        embedding_dim    <span class="op">=</span> <span class="dv">64</span>,</span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>        proj_dim         <span class="op">=</span> <span class="dv">128</span>,</span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>        bt_lambda        <span class="op">=</span> <span class="fl">0.005</span>,</span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>        encoder_model    <span class="op">=</span> sits_tempcnn(),</span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>        epochs           <span class="op">=</span> <span class="dv">150</span>,</span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>        batch_size       <span class="op">=</span> <span class="dv">128</span></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
+</section></section><section id="supervised-contrastive-learning" class="level2" data-number="25.10"><h2 data-number="25.10" class="anchored" data-anchor-id="supervised-contrastive-learning">
+<span class="header-section-number">25.10</span> Supervised Contrastive Learning</h2>
+<p>Supervised Contrastive learning <span class="citation" data-cites="Khosla2021"><a href="#ref-Khosla2021" role="doc-biblioref">[8]</a></span> is a algorithm that learns useful representations by teaching an encoder to distinguish <em>similar</em> pairs from <em>dissimilar</em> ones. For each instance, two time series with the same label form a positive pair; time series from other classes act as negatives. Training pulls positives together in the embedding space and pushes negatives apart. This provides a rich training signal: the embedding of a Cerrado grassland pixel is pulled toward all other grassland pixels in the batch simultaneously, regardless of which satellite, season, or sensor captured them. The result is tighter class clusters in embedding space and better generalization to new samples. Supervised methods can exploit existing reference data that operational monitoring programmes typically hold.</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-emb-contrast" class="quarto-figure quarto-figure-center anchored">
+<figure class="figure"><p><img src="./images/emb_contrastive_learning.png" class="img-fluid figure-img" style="width:100.0%"></p>
+<figcaption class="figure-caption">Figure&nbsp;25.7: Contrastive self-supervised learning applied directly to pairs of time series. A shared encoder f_0 maps each series to an embedding. The loss attracts embeddings from similar series (positive pairs) and repels those from dissimilar series (negative pairs).</figcaption></figure>
+</div>
+</div>
+</div>
+<p>Concretely, training works on batches. Take a batch of time series, each with a class label. For every time series in the batch (the <em>anchor</em>), all other series sharing its label are its positives, and every series from a different class is a negative. The encoder projects each series to a normalized embedding vector, and the loss compares the anchor to all other embeddings at once via a dot-product similarity scaled by a temperature parameter <span class="math inline">\(\tau\)</span>: it rewards the anchor for being closer (in cosine similarity) to its positives than to any of the negatives, summed over every possible anchor in the batch. Because a batch can contain many positives per anchor (e.g., several pixels of “pasture”), the signal is denser than a plain “one positive, many negatives” contrastive setup — the more same-class examples are in a batch, the more comparisons reinforce the same pull, which is why larger, class-balanced batches tend to produce tighter clusters.</p>
+<p>Let <span class="math inline">\(I\)</span> be the index set of a batch, <span class="math inline">\(z_i\)</span> the L2-normalized embedding of sample <span class="math inline">\(i\)</span> (so a dot product <span class="math inline">\(z_i \cdot z_p\)</span> equals the cosine similarity between the two embeddings), <span class="math inline">\(A(i) = I \setminus \{i\}\)</span> all other samples in the batch, and <span class="math inline">\(P(i) \subset A(i)\)</span> the subset of <span class="math inline">\(A(i)\)</span> sharing sample <span class="math inline">\(i\)</span>’s class label, with <span class="math inline">\(|P(i)|\)</span> its number of positives. The supervised contrastive loss is</p>
+<p><span id="eq-supcon-loss"><span class="math display">\[
+\mathcal{L}_{\text{SupCon}} = \sum_{i \in I} \frac{-1}{|P(i)|} \sum_{p \in P(i)} \log \frac{\exp\!\left(z_i \cdot z_p / \tau\right)}{\displaystyle\sum_{a \in A(i)} \exp\!\left(z_i \cdot z_a / \tau\right)}
+\tag{25.13}\]</span></span></p>
+<p>For each anchor <span class="math inline">\(i\)</span>, the inner term is a softmax over all other samples in the batch, with positives <span class="math inline">\(p \in P(i)\)</span> playing the role of the “correct” class; the log-softmax is then averaged over all of the anchor’s positives, and the outer sum runs over every sample acting as an anchor in turn. Minimizing <span class="math inline">\(\mathcal{L}_{\text{SupCon}}\)</span> increases <span class="math inline">\(z_i \cdot z_p\)</span> for same-class pairs relative to <span class="math inline">\(z_i \cdot z_a\)</span> for all other pairs, which is what packs same-class embeddings into tight clusters while keeping different classes apart. The temperature <span class="math inline">\(\tau\)</span> controls how sharply the loss penalizes close negatives: a small <span class="math inline">\(\tau\)</span> concentrates the gradient on the hardest negatives (those nearly as similar to the anchor as its positives), while a larger <span class="math inline">\(\tau\)</span> spreads it more evenly.</p>
+<section id="implementation-of-supervised-contrastive-learning-in-sits" class="level3" data-number="25.10.1"><h3 data-number="25.10.1" class="anchored" data-anchor-id="implementation-of-supervised-contrastive-learning-in-sits">
+<span class="header-section-number">25.10.1</span> Implementation of Supervised Contrastive Learning in <code>sits</code>
+</h3>
+<p>The parameters specific for the <code><a href="https://e-sensing.github.io/sits/reference/sits_contrastive_learning.html">sits_contrastive_learning()</a></code> are:</p>
+<div id="tbl-btwins-par" class="anchored">
+<table class="table">
+<caption>Table&nbsp;25.6: Specific parameters for supervised contrastive learning method</caption>
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead><tr class="header">
+<th>Parameter</th>
+<th>Meaning</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td><code>proj_dim</code></td>
+<td>Dimensionality of the projector head used during pre-training (default = 128).</td>
+</tr>
+<tr class="even">
+<td><code>scaling</code></td>
+<td>Scaling for the contrastive loss. Lower values sharpen the similarity distribution (default = 0.07).</td>
+</tr>
+<tr class="odd">
+<td><code>num_pairs</code></td>
+<td>Total number of pairs to form per epoch. Default = NULL. In this case, one pair is formed for every sample in the training split.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The following examples shows how to obtain a Suprevised Constrastive Learning encoder from a data set of 480,000 samples covering the Brazilian Cerrado, built using Landsat-8 images. Please be aware that running the example below takes a long processing time. For more details, please see the following chapters.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist">
+<li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-6-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-6-1" role="tab" aria-controls="tabset-6-1" aria-selected="true">R</a></li>
+<li class="nav-item" role="presentation"><a class="nav-link" id="tabset-6-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-6-2" role="tab" aria-controls="tabset-6-2" aria-selected="false">Python</a></li>
+</ul>
+<div class="tab-content">
+<div id="tabset-6-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-6-1-tab">
+<div class="cell">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Recover the samples </span></span>
+<span><span class="va">samples_pretrain</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_from_hf.html">sits_from_hf</a></span><span class="op">(</span></span>
+<span>  repo <span class="op">=</span> <span class="st">"e-sensing/samples_cerrado"</span>,</span>
+<span>  file <span class="op">=</span> <span class="st">"samples_cerrado_2017_2024_pretrain.parquet"</span>,</span>
+<span>  type <span class="op">=</span> <span class="st">"dataset"</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># build a Supervised Contrastive Learner encoder </span></span>
+<span><span class="va">supcon_encoder</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_pre_train.html">sits_pre_train</a></span><span class="op">(</span></span>
+<span>    samples <span class="op">=</span> <span class="va">samples_pretrain</span>,</span>
+<span>    rl_method <span class="op">=</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_contrastive_learning.html">sits_contrastive_learning</a></span><span class="op">(</span></span>
+<span>        embedding_dim    <span class="op">=</span> <span class="fl">64</span>,</span>
+<span>        proj_dim         <span class="op">=</span> <span class="fl">128</span>,</span>
+<span>        <span class="va">scaling</span>          <span class="op">-</span> <span class="fl">0.07</span>,</span>
+<span>        encoder_model    <span class="op">=</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_tempcnn.html">sits_tempcnn</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>        epochs           <span class="op">=</span> <span class="fl">150</span>,</span>
+<span>        batch_size       <span class="op">=</span> <span class="fl">128</span></span>
+<span>    <span class="op">)</span></span>
+<span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+<div id="tabset-6-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-6-2-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Obtain the samples </span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>samples_pretrain <span class="op">=</span> sits_from_hf(</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  repo <span class="op">=</span> <span class="st">"e-sensing/samples_cerrado"</span>,</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="bu">file</span> <span class="op">=</span> <span class="st">"samples_cerrado_2017_2024_pretrain.parquet"</span>,</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="bu">type</span> <span class="op">=</span> <span class="st">"dataset"</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="co"># build a Supervised Contrastive Learning encoder </span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>supcon_encoder <span class="op">=</span> sits_pre_train(</span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>    samples <span class="op">=</span> samples_pretrain,</span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>    rl_method <span class="op">=</span> sits_contrastive_learning(</span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>        embedding_dim    <span class="op">=</span> <span class="dv">64</span>,</span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>        proj_dim         <span class="op">=</span> <span class="dv">128</span>,</span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>        scaling          <span class="op">-</span> <span class="fl">0.07</span>,</span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>        encoder_model    <span class="op">=</span> sits_tempcnn(),</span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>        epochs           <span class="op">=</span> <span class="dv">150</span>,</span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>        batch_size       <span class="op">=</span> <span class="dv">128</span></span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
+</section></section><section id="supervised-barlow-twins" class="level2" data-number="25.11"><h2 data-number="25.11" class="anchored" data-anchor-id="supervised-barlow-twins">
+<span class="header-section-number">25.11</span> Supervised Barlow Twins</h2>
+<section id="description-4" class="level3" data-number="25.11.1"><h3 data-number="25.11.1" class="anchored" data-anchor-id="description-4">
+<span class="header-section-number">25.11.1</span> Description</h3>
+<p>Supervised Barlow Twins is an alternative way to teach an encoder to produce good, compact embeddings using the Barlow Twins loss. The original method <span class="citation" data-cites="Zbontar2021"><a href="#ref-Zbontar2021" role="doc-biblioref">[6]</a></span> is self-supervised — the two views are two random augmentations of one image. The SSL Barlow Twins method has been described above. The supervised variant requires the samples to be labelled. The two views passed through the encoder are two different samples that share the same class label. Labels decide which samples get paired, but the loss itself never looks at the labels. Two samples of the same class run in parallel through the same encoder (a Siamese setup). The loss function measures how much the two embeddings agree, and whether their individual dimensions carry non-redundant information.</p>
+<p>In sits, the supervised Barlow Twins method is implemented with <code><a href="https://e-sensing.github.io/sits/reference/sits_barlow_twins.html">sits_barlow_twins()</a></code>. Its parameters are the same as the <code><a href="https://e-sensing.github.io/sits/reference/sits_ssl_barlow_twins.html">sits_ssl_barlow_twins()</a></code>, described above. The only difference is that the training samples must be labelled.</p>
+</section><section id="comparing-the-six-methods" class="level3" data-number="25.11.2"><h3 data-number="25.11.2" class="anchored" data-anchor-id="comparing-the-six-methods">
+<span class="header-section-number">25.11.2</span> Comparing the six methods</h3>
+<p>The five approaches differ mainly in what counts as a “pair,” whether the loss needs negative examples to avoid collapse, and where — if at all — class labels enter the picture.</p>
+<table class="table">
+<colgroup>
+<col style="width: 30%">
+<col style="width: 23%">
+<col style="width: 23%">
+<col style="width: 23%">
+</colgroup>
+<thead><tr class="header">
+<th style="text-align: left;">Method</th>
+<th>Pair type</th>
+<th>Needs negatives?</th>
+<th>Where supervision enters</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">MAE</td>
+<td>anchor vs.&nbsp;its own masked/visible split</td>
+<td>No</td>
+<td>Unsupervised; labels not used</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">VICReg</td>
+<td>two augmented views of the same series</td>
+<td>No (collapse blocked by variance/covariance terms)</td>
+<td>Unsupervised; pairs come from augmentation, not labels</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">LeJEPA</td>
+<td>two augmented views of the same series</td>
+<td>No (collapse blocked by isotropic-Gaussian constraint)</td>
+<td>Unsupervised; pairs come from augmentation, not labels</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Barlow Twins</td>
+<td>two augmented views of the same series</td>
+<td>No (redundancy-reduction term blocks collapse, not negatives)</td>
+<td>Unsupervised; pairs come from augmentation</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Supervised Barlow Twins</td>
+<td>two different series sharing the same class label</td>
+<td>No (redundancy-reduction term blocks collapse, not negatives)</td>
+<td>Supervised only through pairing — the loss itself never sees the labels</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Supervised Contrastive Learning</td>
+<td>anchor vs.&nbsp;all same-class series in the batch (positives) and all other-class series (negatives)</td>
+<td>Yes — negatives are the mechanism that pushes classes apart</td>
+<td>Supervised directly in the loss — the softmax denominator is built from same- vs.&nbsp;different-class comparisons</td>
+</tr>
+</tbody>
+</table>
+<p>Some points are worth noting. MAE stands apart in never comparing two views at all — the loss compares reconstruction to itself, not to a second embedding — whereas the others are all joint-embedding methods pairing two things. VICReg, LeJEPA and Barlow Twins build their positive pairs entirely from augmentation rather than from class labels. Supervised Barlow Twins uses labels only to pick which pairs go together, leaving the objective itself label-agnostic. Supervised Contrastive Learning uses negatives inside the objective function.</p>
+</section></section><section id="references" class="level2" data-number="25.12"><h2 data-number="25.12" class="anchored" data-anchor-id="references">
+<span class="header-section-number">25.12</span> References</h2>
+
+
+<div id="refs" class="references csl-bib-body" role="list">
+<div id="ref-Saget2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[1] </div>
+<div class="csl-right-inline">A. Saget, B. Lafabregue, A. Cornuéjols, and P. Gançarski, <span>“Resampling <span>Augmentation</span> for <span>Time Series Contrastive Learning</span>: <span>Application</span> to <span>Remote Sensing</span>.”</span> arXiv, 2025, doi: <a href="https://doi.org/10.48550/arXiv.2506.18587">10.48550/arXiv.2506.18587</a>.</div>
+</div>
+<div id="ref-He2022" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[2] </div>
+<div class="csl-right-inline">K. He, X. Chen, S. Xie, Y. Li, P. Dollár, and R. Girshick, <span>“Masked <span>Autoencoders Are Scalable Vision Learners</span>,”</span> in <em><span>IEEE</span>/<span>CVF Conference</span> on <span>Computer Vision</span> and <span>Pattern Recognition</span></em>, 2022, pp. 16000–16009, doi: <a href="https://doi.org/10.48550/arXiv.2111.06377">10.48550/arXiv.2111.06377</a>.</div>
+</div>
+<div id="ref-Tseng2024" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[3] </div>
+<div class="csl-right-inline">G. Tseng, R. Cartuyvels, I. Zvonkov, M. Purohit, D. Rolnick, and H. Kerner, <span>“Lightweight, <span class="nocase">Pre-trained Transformers</span> for <span>Remote Sensing Timeseries</span>.”</span> arXiv, 2024, doi: <a href="https://doi.org/10.48550/arXiv.2304.14065">10.48550/arXiv.2304.14065</a>.</div>
+</div>
+<div id="ref-Bardes2022" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[4] </div>
+<div class="csl-right-inline">A. Bardes, J. Ponce, and Y. LeCun, <span>“<span>VICReg</span>: <span>Variance-Invariance-Covariance Regularization</span> for <span>Self-Supervised Learning</span>.”</span> arXiv, 2022, doi: <a href="https://doi.org/10.48550/arXiv.2105.04906">10.48550/arXiv.2105.04906</a>.</div>
+</div>
+<div id="ref-Balestriero2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[5] </div>
+<div class="csl-right-inline">R. Balestriero and Y. LeCun, <span>“<span>LeJEPA</span>: <span>Provable</span> and <span>Scalable Self-Supervised Learning Without</span> the <span>Heuristics</span>.”</span> arXiv, 2025, doi: <a href="https://doi.org/10.48550/arXiv.2511.08544">10.48550/arXiv.2511.08544</a>.</div>
+</div>
+<div id="ref-Zbontar2021" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[6] </div>
+<div class="csl-right-inline">J. Zbontar, L. Jing, I. Misra, Y. LeCun, and S. Deny, <span>“Barlow <span>Twins</span>: <span>Self-Supervised Learning</span> via <span>Redundancy Reduction</span>,”</span> in <em>Proceedings of the 38th <span>International Conference</span> on <span>Machine Learning</span></em>, 2021, pp. 12310–12320, [Online]. Available: <a href="https://proceedings.mlr.press/v139/zbontar21a.html">https://proceedings.mlr.press/v139/zbontar21a.html</a>.</div>
+</div>
+<div id="ref-Feng2025" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[7] </div>
+<div class="csl-right-inline">Z. Feng <em>et al.</em>, <span>“<span>TESSERA</span>: <span>Temporal Embeddings</span> of <span>Surface Spectra</span> for <span>Earth Representation</span> and <span>Analysis</span>.”</span> arXiv, 2025, doi: <a href="https://doi.org/10.48550/arXiv.2506.20380">10.48550/arXiv.2506.20380</a>.</div>
+</div>
+<div id="ref-Khosla2021" class="csl-entry" role="listitem">
+<div class="csl-left-margin">[8] </div>
+<div class="csl-right-inline">P. Khosla <em>et al.</em>, <span>“Supervised <span>Contrastive Learning</span>.”</span> arXiv, 2021, doi: <a href="https://doi.org/10.48550/arXiv.2004.11362">10.48550/arXiv.2004.11362</a>.</div>
+</div>
+</div>
+</section></main><!-- /main --><script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script><nav class="page-navigation"><div class="nav-page nav-page-previous">
+      <a href="./embeddings.html" class="pagination-link">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Foundational Models and Embeddings</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./emb_build.html" class="pagination-link">
+        <span class="nav-page-text"><span class="chapter-number">26</span>&nbsp; <span class="chapter-title">Building regional embeddings: a simple example</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer"><div class="nav-footer">
+    <div class="nav-footer-left">The SITS book was written by Gilberto Camara, Rolf Simoes, Felipe Souza, Felipe Carlos, Pedro Andrade, Karine Ferreira, Pedro Brito, Alexandre Assunção, Charlotte Pelletier, and Bianca Zadrosny.</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">This book was built with <a href="https://quarto.org/">Quarto</a>.</div>
+  </div>
+</footer>
+
+
+</body></html>

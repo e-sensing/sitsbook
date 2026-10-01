@@ -362,7 +362,20 @@ plot(rondonia_20LLQ_class,
 
 ## Assessing the local logit variance
 
-To determine appropriate settings for the $\sigma^2_{k}$ hyperparameter for each class to perform Bayesian smoothing, it is useful to calculate the local logit variances for each class. For each pixel, we estimate the local variance $s^2_{i,k}$ by considering the non-isotropic neighborhood. The local logit variances are estimated by `sits_variance()`; its main parameters are: (a) `cube`, a probability data cube; (b) `window_size`, dimension of the local neighborhood; (c) `neigh_fraction`, the percentage of pixels in the neighborhood used to calculate the variance. The example below uses half of the pixels of a 7 x 7 window to estimate the variance. The chosen pixels will be those with the highest probability pixels to be more representative of the actual class distribution. The output values are the logit variances in the vicinity of each pixel.
+To determine appropriate settings for the $\sigma^2_{k}$ hyperparameter for each class to perform Bayesian smoothing, it is useful to calculate the local logit variances for each class. For each pixel, we estimate the local variance $s^2_{i,k}$ by considering the non-isotropic neighborhood. The local logit variances are estimated by `sits_variance()`. Its main parameters are:
+
+| Parameter | Meaning |
+|:----------|:--------|
+| `cube` | a probability data cube. |
+| `window_size` | dimension of the local neighborhood. |
+| `neigh_fraction` | percentage of pixels in the neighborhood used to calculate the variance. |
+| `multicores` | number of CPU cores that will be used for processing (default = 2). |
+| `memsize` | RAM memory available for classification (default = 4). |
+| `output_dir` | Directory where results will be stored (mandatory). |
+| `version` | For version control (default = "v1"). |
+| `progress` | progress bar to track processing steps (default = TRUE). |
+
+The example below uses half of the pixels of a 7 x 7 window to estimate the variance. The chosen pixels will be those with the highest probability pixels to be more representative of the actual class distribution. The output values are the logit variances in the vicinity of each pixel.
 
 The choice of the 7 x 7 window size is a compromise between having enough values to  estimate the parameters of a normal distribution and the need to capture local effects  for class patches of small sizes. Classes such as `Water` tend to be spatially limited; a bigger window size could result in invalid values for their respective normal distributions.
 
@@ -547,7 +560,20 @@ We make the following recommendations for setting the $\sigma^2_{k}$ parameter, 
 Consider the case of forest areas and watersheds. If an expert wishes to have compact areas classified as forests without many outliers inside them, she will set the $\sigma^2$ parameter for the class `Forest` to be high. For comparison, to avoid small watersheds with few similar neighbors being relabeled, it is advisable to avoid a strong influence of the neighbors, setting $\sigma^2$ to be as low as possible. In contrast, transitional classes such as `Clear_Cut_Vegetation` are likely to be associated with some outliers; use large $\sigma^2_{k}$ for them.
 
 
-To remove the outliers and classification errors, we run a smoothing procedure with `sits_smooth()` with parameters: (a) `cube`, a probability cube produced by `sits_classify()`; (b) `window_size`, the local window to compute the neighborhood probabilities; (c) `neigh_fraction`, fraction of local neighbors used to calculate local statistics; (d) `smoothness`, a vector with estimates of the prior variance of each class; (e) `multicores`, number of CPU cores that will be used for processing; (f) `memsize`, memory available for classification; (g) `output_dir`, a directory where results will be stored; (h) `version`, for version control. The resulting cube can be visualized with `plot()`.
+To remove the outliers and classification errors, we run a smoothing procedure with `sits_smooth()` with parameters: 
+
+| Parameter | Meaning |
+|:----------|:--------|
+| `cube` | probability cube produced by `sits_classify()`. |
+| `window_size` | local window to compute the neighborhood probabilities. |
+| `neigh_fraction` | fraction of local neighbors used to calculate local statistics. |
+| `smoothness` | vector with estimates of the prior variance of each class. |
+| `multicores` | number of CPU cores that will be used for processing. |
+| `memsize` | memory available for classification. |
+| `output_dir` | a directory where results will be stored. |
+| `version` | for version control. |
+
+The resulting cube can be visualized with `plot()`.
 
 The parameters `window_size` and `neigh_fraction` control how many pixels in a neighborhood the Bayesian estimator will use to calculate the local statistics. For example, setting `window_size` to 9 and `neigh_fraction` to 0.50 (the defaults) ensures that 40 samples are used to estimate the local statistics. The `smoothness` values for the classes are set as recommended above.
 

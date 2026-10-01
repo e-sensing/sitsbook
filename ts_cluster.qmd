@@ -24,7 +24,7 @@ library(sitsdata)
 ## Python
 ```{python}
 #| echo: true
-#| eval: true
+#| eval: false
 #| output: false
 # load "pysits" library
 from pysits import *
@@ -52,13 +52,33 @@ The examples of this chapter use the `cerrado_2classes` data, a set of time seri
 #| label: samples-cerrado-2-classes
 #| warning: false
 #| cache: true
+# Get the samples from Hugging Face
+cerrado_2classes <- sits_from_hf(
+  repo = "e-sensing/samples_book",
+  file = "cerrado_2classes.parquet",
+  type = "dataset"
+)
 # Show the summary of the cerrado_2_classes dataset
 summary(cerrado_2classes)
 ```
 ## Python
 ```{python}
 #| label: py-samples-cerrado-2-classes
+#| eval: false
 #| warning: false
+#| cache: false
+# Get the samples from Hugging Face
+cerrado_2classes = sits_from_hf(
+  repo = "e-sensing/samples_book",
+  file = "cerrado_2classes.parquet",
+  type = "dataset"
+)
+# Show the summary of the cerrado_2_classes dataset
+summary(cerrado_2classes)
+```
+```{r}
+#| label: py-samples-cerrado-2-classes-cache
+#| echo: false
 #| cache: true
 # Show the summary of the cerrado_2_classes dataset
 summary(cerrado_2classes)
@@ -120,9 +140,17 @@ clusters <- sits_cluster_dendro(
 ```
 :::
 
-The `sits_cluster_dendro()` function has one mandatory parameter (`samples`), with the samples to be evaluated. Optional parameters include `bands`, `dist_method`, and `linkage`. The `dist_method` parameter specifies how to calculate the distance between two time series. We recommend a metric that uses dynamic time warping (DTW) [@Petitjean2012], as DTW is a reliable method for measuring differences between satellite image time series [@Maus2016]. The options available in `sits` are based on those provided by package `dtwclust`, which include `dtw_basic`, `dtw_lb`, and `dtw2`. Please check `?dtwclust::tsclust` for more information on DTW distances.
+The `sits_cluster_dendro()` function has the following parameters:
+| Parameter | Meaning |
+|:----------|:--------|
+| `samples` | samples to be evaluated. |
+| `bands` | bands to be used (defualt is all the bands in the sample). |
+| `dist_method` | how to calculate the distance between two time series (default = "dtw_basic"). |
+| `linkage` | distance metric between clusters. The recommended linkage criteria are: `complete` or `ward.D2` (default = "ward.D2") |
 
-The `linkage` parameter defines the distance metric between clusters. The recommended linkage criteria are: `complete` or `ward.D2`. Complete linkage prioritizes the within-cluster dissimilarities, producing compact clusters (samples close together), but results are sensitive to outliers. As an alternative, Ward proposes to use the sum-of-squares error to minimize data variance [@Ward1963]; his method is available as the `ward.D2` option to the `linkage` parameter. To cut the dendrogram, the `sits_cluster_dendro()` function computes the adjusted rand index (ARI) [@Rand1971], returning the height where the cut of the dendrogram maximizes the index. In the example, the ARI index indicates that there are six clusters. The result of `sits_cluster_dendro()` is a time series tibble with one additional column called "cluster". The function `sits_cluster_frequency()` provides information on the composition of each cluster.
+For the distance calculation, we recommend a metric that uses dynamic time warping (DTW) [@Petitjean2012], as DTW is a reliable method for measuring differences between satellite image time series [@Maus2016]. The options available in `sits` are based on those provided by package `dtwclust`, which include `dtw_basic`, `dtw_lb`, and `dtw2`. Please check `?dtwclust::tsclust` for more information on DTW distances.
+
+Complete linkage prioritizes the within-cluster dissimilarities, producing compact clusters (samples close together), but results are sensitive to outliers. As an alternative, Ward proposes to use the sum-of-squares error to minimize data variance [@Ward1963]; his method is available as the `ward.D2` option to the `linkage` parameter. To cut the dendrogram, the `sits_cluster_dendro()` function computes the adjusted rand index (ARI) [@Rand1971], returning the height where the cut of the dendrogram maximizes the index. In the example, the ARI index indicates that there are six clusters. The result of `sits_cluster_dendro()` is a time series tibble with one additional column called "cluster". The function `sits_cluster_frequency()` provides information on the composition of each cluster.
 
 :::{.panel-tabset}
 ## R
@@ -136,7 +164,13 @@ sits_cluster_frequency(clusters)
 ## Python
 ```{python}
 #| label: py-samples-cerrado-clusters
-#| warning: false
+#| eval: false
+# Show clusters samples frequency
+sits_cluster_frequency(clusters)
+```
+```{r}
+#| label: py-samples-cerrado-clusters-cache
+#| echo: false
 #| cache: true
 # Show clusters samples frequency
 sits_cluster_frequency(clusters)
@@ -163,14 +197,20 @@ sits_cluster_frequency(clean)
 ## Python
 ```{python}
 #| label: py-samples-cerrado-clean
-#| warning: false
-#| cache: true
+#| eval: false
 # Remove cluster 3 from the samples
 clusters_new = clusters.query("cluster != 3")
 
 # Clear clusters, leaving only the majority label
 clean = sits_cluster_clean(clusters_new)
 
+# Show clusters samples frequency
+sits_cluster_frequency(clean)
+```
+```{r}
+#| label: py-samples-cerrado-clean-cache
+#| echo: false
+#| cache: true
 # Show clusters samples frequency
 sits_cluster_frequency(clean)
 ```
