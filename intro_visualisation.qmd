@@ -18,14 +18,18 @@ This Chapter descibes how plotting and visualisation of time series and data cub
 #| echo: true
 #| output: false
 library(sits)
-library(sitsdata)
 tempdir_r <- "~/sitsbook/tempdir/R/intro_visualization"
 dir.create(tempdir_r, showWarnings = FALSE, recursive = TRUE)
+# Create a directory to store the data
+tempdir_data <- "~/sitsbook/tempdir/data/Rondonia20LMR"
+dir.create(tempdir_data, recursive = TRUE, showWarnings = FALSE)
+tempdir_class <- "~/sitsbook/tempdir/data/Rondonia_2022_Class"
+dir.create(tempdir_class, recursive = TRUE, showWarnings = FALSE)
 ```
 ## Python
 ```{python}
 #| echo: true
-#| eval: true
+#| cache: true
 #| output: false
 # load "pysits" library
 from pysits import *
@@ -33,6 +37,11 @@ from pathlib import Path
 # set tempdir if it does not exist 
 tempdir_py = Path.home() / "sitsbook/tempdir/Python/intro_visualization"
 tempdir_py.mkdir(parents=True, exist_ok=True)
+# Create a directory to store the raw data
+tempdir_data =  Path.home() / "sitsbook/tempdir/data/Rondonia20LMR"
+tempdir_data.mkdir(parents=True, exist_ok=True)
+tempdir_class = Path.home() / "sitsbook/tempdir/data/Rondonia_2022_Class"
+tempdir_class.mkdir(parents=True, exist_ok=True)
 ```
 ::: 
 
@@ -88,16 +97,12 @@ The following example shows a plot of an NDVI index of a data cube. This data cu
 #|   Sentinel-2 NDVI index covering tile 20LMR.
 #| fig-align: center
 #| out-width: 80%
-# set the directory where the data is 
-data_dir <- system.file("extdata/Rondonia-20LMR", package = "sitsdata")
-
-# read the data cube
-ro_20LMR <- sits_cube(
-  source = "MPC", 
-  collection = "SENTINEL-2-L2A",
-  data_dir = data_dir
+# Read data cube from Hugging Face
+ro_20LMR <- sits_from_hf(
+    repo = "e-sensing/book_Rondonia20LMR",
+    type = "dataset",
+    output_dir = tempdir_data
 )
-
 # plot the NDVI for date 2022-08-01
 plot(ro_20LMR, 
      band = "NDVI", 
@@ -108,15 +113,12 @@ plot(ro_20LMR,
 ```
 ## Python
 ```{python}
-
-# set the directory where the data is 
-data_dir = r_package_dir("extdata/Rondonia-20LMR", package = "sitsdata")
-
-# read the data cube
-ro_20LMR = sits_cube(
-  source = "MPC", 
-  collection = "SENTINEL-2-L2A",
-  data_dir = data_dir
+#| eval: false
+# Read data cube from Hugging Face
+ro_20LMR <- sits_from_hf(
+    repo = "e-sensing/book_Rondonia20LMR",
+    type = "dataset",
+    output_dir = tempdir_data
 )
 
 # plot the NDVI for date 2022-08-01
@@ -524,31 +526,11 @@ To simplify the process of importing your data into QGIS, the color palette used
 #| fig-cap: |
 #|   Classified cube for the state of Rondonia.
 #| fig-align: center
-# Create a cube based on a classified image 
-data_dir <- system.file("extdata/Rondonia-Class-2022-Mosaic", 
-                        package = "sitsdata")
-
-# labels of the classified image
-labels <- c("1" = "Clear_Cut_Bare_Soil",
-            "2" = "Clear_Cut_Burned_Area",
-            "3" = "Clear_Cut_Vegetation",
-            "4" = "Forest",
-            "5" = "Mountainside_Forest",
-            "6" = "Riparian_Forest",
-            "7" = "Seasonally_Flooded",
-            "8" = "Water",
-            "9" = "Wetland" 
-)
-
-# read classified data cube
-ro_class <- sits_cube(
-    source = "MPC", 
-    collection = "SENTINEL-2-L2A",
-    data_dir = data_dir, 
-    bands = "class",
-    labels = labels,
-    multicores = 4,
-    version = "mosaic"
+# Read classified data cube from Hugging Face
+ro_class <- sits_from_hf(
+    repo = "e-sensing/book_Rondonia_2022_class",
+    type = "dataset",
+    output_dir = tempdir_class
 )
 
 # Plot the classified cube
@@ -557,7 +539,7 @@ plot(ro_class, scale = 1.0)
 ## Python
 ```{python}
 #| label: py-fig-vis-rondonia
-#| cache: true
+#| eval: false
 #| warning: false
 #| fig-width: 5
 #| fig-height: 5
@@ -566,31 +548,11 @@ plot(ro_class, scale = 1.0)
 #| fig-cap: |
 #|   Classified cube for the state of Rondonia.
 #| fig-align: center
-# Create a cube based on a classified image 
-data_dir = r_package_dir("extdata/Rondonia-Class-2022-Mosaic", 
-                        package = "sitsdata")
-
-# labels of the classified image
-labels = {
-    "1": "Clear_Cut_Bare_Soil",
-    "2": "Clear_Cut_Burned_Area",
-    "3": "Clear_Cut_Vegetation",
-    "4": "Forest",
-    "5": "Mountainside_Forest",
-    "6": "Riparian_Forest",
-    "7": "Seasonally_Flooded",
-    "8": "Water",
-    "9": "Wetland"
-}
-
-# read classified data cube
-ro_class = sits_cube(
-    source = "MPC", 
-    collection = "SENTINEL-2-L2A",
-    data_dir = data_dir, 
-    bands = "class",
-    labels = labels,
-    version = "mosaic"
+# Read a classified cube from Hugging Face
+ro_class = sits_from_hf(
+    repo = "e-sensing/book_Rondonia_2022_class",
+    type = "dataset",
+    output_dir = tempdir_class
 )
 
 # Plot the classified cube
@@ -612,7 +574,7 @@ ro_class[["file_info"]][[1]]$path
 ## Python
 ```{python}
 #| label: py-file-info-path
-#| cache: true
+#| eval: false
 #| warning: false
 # Show the location of the classified map
 ro_class["file_info"][0]["path"]
@@ -633,7 +595,7 @@ sits_colors_qgis(ro_class, file = file.path(tempdir_r, "qgis_style.xml"))
 ## Python
 ```{python}
 #| label: py-export-qgis
-#| cache: true
+#| eval: false
 #| warning: false
 # Export the color schema to QGIS
 sits_colors_qgis(ro_class, file = tempdir_py / "qgis_style.xml")

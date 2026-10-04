@@ -22,10 +22,12 @@ library(sitsdata)
 tempdir_r <- "~/sitsbook/tempdir/R/intro_examples"
 dir.create(tempdir_r, recursive = TRUE)
 # set tempdir for Cerrado if it does not exist
-tempdir_cerrado_cube <- paste0(tempdir_r, "/cerrado/cube")
 tempdir_cerrado <- paste0(tempdir_r, "/cerrado")
+tempdir_cerrado_cube <- paste0(tempdir_r, "/cerrado/cube")
+tempdir_cerrado_class <- paste0(tempdir_r, "/cerrado/class")
 dir.create(tempdir_cerrado, recursive = TRUE)
 dir.create(tempdir_cerrado_cube, recursive = TRUE)
+dir.create(tempdir_cerrado_class, recursive = TRUE)
 # set tempdir for Rondonia if it does not exist
 tempdir_rondonia <- paste0(tempdir_r, "/rondonia")
 dir.create(tempdir_rondonia, recursive = TRUE)
@@ -48,11 +50,12 @@ tempdir_rondonia = tempdir_py / "rondonia"
 tempdir_rondonia.mkdir(parents=True, exist_ok=True)
 tempdir_rondonia_class = tempdir_rondonia / "class"
 tempdir_rondonia_class.mkdir(parents=True, exist_ok=True)
-
-
+# Create directories for the Cerrado example
 tempdir_cerrado = tempdir_py / "cerrado"
 tempdir_cerrado_cube = tempdir_cerrado / "cube"
 tempdir_cerrado_cube.mkdir(parents=True, exist_ok=True)
+tempdir_cerrado_class = tempdir_cerrado / "class"
+tempdir_cerrado_class.mkdir(parents=True, exist_ok=True)
 ```
 ```{python}
 #| echo: false
@@ -142,7 +145,7 @@ The training samples are available in the Hugging Face dataset "https://huggingf
 # Get the samples from Hugging Face
 samples_deforestation_rondonia <- sits_from_hf(
   repo = "e-sensing/samples_book",
-  file = "samples_deforestation_rondonia_18.parquet",
+  file = "samples_deforestation_rondonia_v18.parquet",
   type = "dataset"
 )
 ```
@@ -934,22 +937,11 @@ We used 5,402 validation points, which are independent of the training set used 
 ```{r}
 #| eval: true
 #| echo: true
-# Cerrado classification file
-cerrado_path = system.file(
-    "/extdata/Cerrado-Class-2017-2018-Mosaic", package = "sitsdata"
+# Read the classified data cube from Hugging Face
+cerrado_map <- sits_from_hf(
+    repo = "e-sensing/book_Cerrado_2018_class",
+    output_dir = tempdir_cerrado_class
 )
-
-# Read the classified data cube
-cerrado_map <- sits_cube(
-    source = "MPC",
-    collection = "LANDSAT-C2-L2",
-    bands = "class",
-    labels = c("1" = "Annual_Crop", "3" = "Cerrado", "4" = "Nat_NonVeg",
-               "6" = "Pasture", "7" = "Perennial_Crop", "8" = "Silviculture",
-               "9" = "Sugarcane", "10" = "Water"),
-    data_dir = cerrado_path
-)
-
 # Plot Cerrado map
 plot(cerrado_map)
 ```
@@ -958,23 +950,11 @@ plot(cerrado_map)
 ```{python}
 #| eval: false
 #| echo: true
-# Cerrado classification file
-cerrado_path = r_package_dir(
-    content_dir = "/extdata/Cerrado-Class-2017-2018-Mosaic", 
-    package = "sitsdata"
+# Read the classified data cube from Hugging Face
+cerrado_map <- sits_from_hf(
+    repo = "e-sensing/book_Cerrado_2018_class",
+    output_dir = tempdir_cerrado_class
 )
-
-# Read the classified data cube
-cerrado_map = sits_cube(
-    source = "MPC",
-    collection = "LANDSAT-C2-L2",
-    bands = "class",
-    labels = {"1": "Annual_Crop", "3": "Cerrado", "4": "Nat_NonVeg",
-               "6": "Pasture", "7":"Perennial_Crop", "8": "Silviculture",
-               "9": "Sugarcane", "10": "Water"},
-    data_dir = cerrado_path
-)
-
 # Plot Cerrado map
 plot(cerrado_map)
 ```

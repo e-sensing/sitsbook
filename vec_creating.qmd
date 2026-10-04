@@ -25,6 +25,9 @@ library(sitsdata)
 # set tempdir if it does not exist 
 tempdir_r <- "~/sitsbook/tempdir/R/vec_create"
 dir.create(tempdir_r, showWarnings = FALSE)
+# Create a directory to store the data
+tempdir_data <- "~/sitsbook/tempdir/data/Bahia_LeJEPA"
+dir.create(tempdir_data, recursive = TRUE, showWarnings = FALSE)
 ```
 ## Python
 ```{python}
@@ -37,6 +40,8 @@ from pathlib import Path
 # set tempdir if it does not exist 
 tempdir_py = Path.home() / "sitsbook/tempdir/Python/vec_create"
 tempdir_py.mkdir(parents=True, exist_ok=True)
+tempdir_data = Path.home() /"sitsbook/tempdir/data/Bahia_LeJEPA"
+tempdir_data.mkdir(parents=True, exist_ok=True)
 ```
 :::
 
@@ -74,7 +79,7 @@ list.files(fow_dir)
 #| eval: false
 #| output: false
 # FTW file is available in a local directory 
-fow_dir = r_package_dir("extdata/Rondonia-20LMR/", package = "sitsdata")
+fow_dir = r_package_dir("extdata/fields_of_the_world/", package = "sitsdata")
 # List FTW file
 files = [p.name for p in Path(fow_dir).iterdir() if p.is_file()]
 print(files)
@@ -114,16 +119,11 @@ In this example, we will use an embedding cube covering the same region as the F
 #|   RGB composite image for the LeJEPA embedding cube.
 #| fig-align: center
 #| out-width: 80%
-# Retrieve a local embedding cube built with LeJEPA encoder
-# data directory
-images_dir <- system.file("extdata/Bahia-LeJEPA", package = "sitsdata")
-
-# local cube
-lejepa_cube <- sits_cube(
-    source = "BDC",
-    collection = "LANDSAT-OLI-16D",
-    data_dir = images_dir,
-    parse_info = c("satellite", "sensor", "tile", "band", "date")
+# Retrieve an embedding cube built with LeJEPA encoder
+lejepa_cube <- sits_from_hf(
+    repo = "e-sensing/book_Bahia_LeJEPA",
+    type = "dataset",
+    output_dir = tempdir_data
 )
 # plot an RGB combination of three dimensions of the embedding cube
 plot(lejepa_cube, green = "EMB10", red = "EMB12", blue = "EMB13")
@@ -131,16 +131,11 @@ plot(lejepa_cube, green = "EMB10", red = "EMB12", blue = "EMB13")
 ## Python
 ```{python}
 #| eval: false
-# Retrieve a local cube based with MODIS data
-# data directory
-images_dir = r_package_dir("extdata/Bahia-LeJEPA", package = "sitsdata")
-
-# local cube
-lejepa_cube = sits_cube(
-    source = "BDC",
-    collection = "LANDSAT-OLI-16D",
-    data_dir = images_dir,
-    parse_info = c("satellite", "sensor", "tile", "band", "date")
+# Retrieve an embedding cube built with LeJEPA encoder
+lejepa_cube = sits_from_hf(
+    repo = "e-sensing/book_Bahia_LeJEPA",
+    type = "dataset",
+    output_dir = tempdir_data
 )
 
 # plot an RGB combination of three dimensions of the embedding cube

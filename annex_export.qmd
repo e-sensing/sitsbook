@@ -197,4 +197,96 @@ plt.tight_layout()
 plt.show()
 ```
 
+## Generic formats
+
+This section describes formats that are not tied to a programming language. Data exported in these formats can be read by `sits` in both R and Python, and also by other software such as GIS packages, databases and data analysis libraries.
+
+### Exporting time series to Parquet
+
+[Apache Parquet](https://parquet.apache.org/) is an open, column-oriented file format designed for efficient storage and retrieval of tabular data. Parquet files are compressed and can be read selectively by column, which makes them compact and fast to read. They are supported by many tools, including `arrow` in R, `pandas`, `polars` and `geopandas` in Python, DuckDB, GDAL and QGIS. For these reasons, Parquet is the recommended format in `sits` for saving and sharing time series. All training samples used in this book are stored as Parquet files in Hugging Face, as described in the chapter ["Sharing and retrieving data with Hugging Face"](https://e-sensing.github.io/sitsbook/annex_hf.html).
+
+Function `sits_to_parquet()` writes a `sits` tibble to a Parquet file. It has two parameters: `data`, the time series (tibble of class `sits`), and `file`, the full path of the file to be written, which must have the extension `.parquet`. The file uses a *long* layout: instead of storing each time series as a nested table, as `sits` does in memory, it has one row per sample and date. Each row holds the sample attributes (`longitude`, `latitude`, `start_date`, `end_date`, `label` and `cube`), a `sample:id` column that identifies the sample, an `Index` column with the date, and one column per band. A `geometry` column with the location of each sample is also added. Columns that do not follow the number of dates, such as `predicted` (classification results) and `base_data`, are kept nested. 
+
+The file footer contains two metadata blocks. The `sits` block stores the S3 class of the tibble, the order of the columns, the order of the bands and the names of the nested columns, so that the original tibble can be rebuilt exactly. The `geo` block follows the [GeoParquet 1.1](https://geoparquet.org/) specification, so that GDAL and QGIS read the file as a point layer. Both `sits_to_parquet()` and `sits_from_parquet()` require the `arrow` and `jsonlite` packages.
+
+In the example below, we export the `samples_modis_ndvi` data set, which has 1,218 time series with the NDVI band, to a Parquet file. We then use `arrow::read_parquet()` to read the file as a plain table, to show the long layout. 
+
+:::{.panel-tabset}
+## R
+```{r}
+# export the samples to a Parquet file
+
+parquet_file <- file.path(tempdir_r, "samples_modis_ndvi.parquet")
+sits_to_parquet(
+    data = samples_modis_ndvi,
+    file = parquet_file
+)
+# read the file as a plain table to show its layout
+arrow::read_parquet(parquet_file) |> 
+    head()
+```
+## Python
+```{python}
+#| eval: false
+import pandas as pd
+from pysits import sits_to_parquet, samples_modis_ndvi
+
+# export the samples to a Parquet file
+parquet_file = str(tempdir_py / "samples_modis_ndvi.parquet")
+sits_to_parquet(
+    data = samples_modis_ndvi,
+    file = parquet_file
+)
+# read the file as a plain table to show its layout
+pd.read_parquet(parquet_file).head()
+```
+:::
+
+Each sample now occupies as many rows as it has dates; the 1,218 samples of `samples_modis_ndvi`, with 12 dates each, become 14,616 rows. This layout is convenient for other tools. For example, analysts can filter the samples by label or date with SQL queries in DuckDB, or open the file in QGIS to view the locations of the samples.
+
+To import the data back into `sits`, use `sits_from_parquet()`. It reads a file written by `sits_to_parquet()` and uses the `sits` metadata block to rebuild the tibble, with its S3 class, column order and nested time series. The result is the same as the original data set, and it can be used in any `sits` function.
+
+:::{.panel-tabset}
+## R
+```{r}
+# read the samples back into sits
+samples_parquet <- sits_from_parquet(parquet_file)
+# the result is a sits tibble with nested time series
+samples_parquet
+```
+## Python
+```{python}
+#| eval: false
+from pysits import sits_from_parquet
+
+# read the samples back into sits
+samples_parquet = sits_from_parquet(parquet_file)
+# the result is a sits tibble with nested time series
+samples_parquet
+```
+:::
+
+Function `sits_from_parquet()` also reads Parquet files written by other programs, which have no `sits` metadata block. In this case, the file must have the columns `longitude`, `latitude`, `start_date`, `end_date` and `label`; files without them are refused. The class of the result is inferred from the columns: a column named `Index` is read as the time index, bands whose names start with `EMB` are read as embeddings (class `embeddings`), and a column named `cluster` indicates a set of clustered samples (class `sits_cluster`). Files written by a different version of the layout are read, with a warning.
+
+The `file` parameter can also be an HTTP or HTTPS URL. In this case, `sits_from_parquet()` first reads the file footer to check that it holds a `sits` sample set, and refuses the file before transferring any data if it does not. It then reports the size of the file and downloads it to a temporary location. The server must accept byte-range requests, as Hugging Face does. In the example below, we read the deforestation samples for Rondonia directly from their Hugging Face URL. The result is a `sits` tibble with 6,007 time series. The parameter `timeout` sets the number of seconds each request may take. For files stored in Hugging Face, `sits_from_hf()` is a simpler alternative, since it only requires the name of the repository and of the file.
+
+:::{.panel-tabset}
+## R
+```{r}
+#| eval: false
+# read samples directly from a URL
+samples_rondonia <- sits_from_parquet(
+    file = "https://huggingface.co/datasets/e-sensing/samples_book/resolve/main/samples_deforestation_rondonia.parquet"
+)
+```
+## Python
+```{python}
+#| eval: false
+# read samples directly from a URL
+samples_rondonia = sits_from_parquet(
+    file = "https://huggingface.co/datasets/e-sensing/samples_book/resolve/main/samples_deforestation_rondonia.parquet"
+)
+```
+:::
+
 ## References{-}

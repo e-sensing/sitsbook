@@ -23,6 +23,8 @@ library(sitsdata)
 # set tempdir if it does not exist 
 tempdir_r <- "~/sitsbook/tempdir/R/val_map"
 dir.create(tempdir_r, showWarnings = FALSE)
+tempdir_class <- "~/sitsbook/tempdir/data/Rondonia_2022_Class"
+dir.create(tempdir_class, showWarnings = FALSE)
 ```
 ## Python
 ```{python}
@@ -35,6 +37,8 @@ from pathlib import Path
 # set tempdir if it does not exist 
 tempdir_py = Path.home() / "sitsbook/tempdir/Python/val_map"
 tempdir_py.mkdir(parents=True, exist_ok=True)
+tempdir_class = Path.home() / "sitsbook/tempdir/data/Rondonia_2022_Class"
+tempdir_class.mkdir(parents=True, exist_ok=True)
 ```
 :::
 
@@ -52,9 +56,7 @@ We used Sentinel-2A and Sentinel-2B ARD (analysis ready) images from 2022-01-01 
 
 The work considered nine LUCC classes: (a) stable natural land cover, including `Forest` and `Water`; (b) events associated with clear-cuts, including `Clear_Cut_Vegetation`, `Clear_Cut_Bare_Soil`, and `Clear_Cut_Burned_Area`; (c) natural areas with seasonal variability, including `Wetland`, `Seasonally_Flooded`, and `Riparian_Forest`; (d) stable forest areas subject to topographic effects, including `Mountainside_Forest`.
 
-In this chapter, we will take the classification map as our starting point for accuracy assessment. This map can be retrieved from the `sitsdata` package as follows.
-
-**Load the classified map**
+In this chapter, we will take the classification map as our starting point for accuracy assessment. This map can be retrieved from Hugging Face as follows.
 
 :::{.panel-tabset}
 ## R
@@ -71,28 +73,11 @@ In this chapter, we will take the classification map as our starting point for a
 #|   Classified mosaic for land cover and land use in Rondonia state (Brazil) for 2022.
 #| fig-align: center
 #| out-width: 90%
-# define the classes of the probability cube
-labels <- c("1" = "Clear_Cut_Bare_Soil",
-            "2" = "Clear_Cut_Burned_Area", 
-            "3" = "Mountainside_Forest", 
-            "4" = "Forest", 
-            "5" = "Riparian_Forest", 
-            "6" = "Clear_Cut_Vegetation", 
-            "7" = "Water",
-            "8" = "Seasonally_Flooded",
-            "9" = "Wetland")
-
-# directory where the data is stored 
-data_dir <- system.file("extdata/Rondonia-Class-2022-Mosaic/", package = "sitsdata")
-
-# create a probability data cube from a file 
-rondonia_2022_class <- sits_cube(
-    source = "MPC",
-    collection = "SENTINEL-2-L2A",
-    data_dir = data_dir,
-    bands = "class",
-    labels = labels,
-    version = "mosaic"
+# Read classified data cube from Hugging Face
+rondonia_2022_class <- sits_from_hf(
+    repo = "e-sensing/book_Rondonia_2022_class",
+    type = "dataset",
+    output_dir = tempdir_class
 )
 # plot the classification map
 plot(rondonia_2022_class, legend_position = "inside")
@@ -101,28 +86,11 @@ plot(rondonia_2022_class, legend_position = "inside")
 ```{python}
 #| echo: true
 #| eval: false
-# define the classes of the probability cube
-labels = {"1"  : "Clear_Cut_Bare_Soil",
-            "2" : "Clear_Cut_Burned_Area", 
-            "3" : "Mountainside_Forest", 
-            "4" : "Forest", 
-            "5" : "Riparian_Forest", 
-            "6" : "Clear_Cut_Vegetation", 
-            "7" : "Water",
-            "8" : "Seasonally_Flooded",
-            "9" : "Wetland"}
-
-# directory where the data is stored 
-data_dir = r_package_dir("extdata/Rondonia-Class-2022-Mosaic/", package = "sitsdata")
-
-# create a probability data cube from a file 
-rondonia_2022_class = sits_cube(
-    source = "MPC",
-    collection = "SENTINEL-2-L2A",
-    data_dir = data_dir,
-    bands = "class",
-    labels = labels,
-    version = "mosaic"
+# Read classified data cube from Hugging Face
+rondonia_2022_class <- sits_from_hf(
+    repo = "e-sensing/book_Rondonia_2022_class",
+    type = "dataset",
+    output_dir = tempdir_class
 )
 # plot the classification map
 plot(rondonia_2022_class, legend_position = "inside")
@@ -402,7 +370,7 @@ rondonia_2022_reclass <- sits_reclassify(
 #| warning: false
 # Get ground truth points
 valid_csv <- system.file(
-    "extdata/Rondonia-Class-2022-Mosaic/rondonia_samples_reclass.csv", package = "sitsdata"
+    "extdata/Rondonia-Class-2022/rondonia_samples_reclass.csv", package = "sitsdata"
 )
 # Calculate accuracy according to Olofsson's method
 area_accuracy <- sits_accuracy(
@@ -417,7 +385,7 @@ area_accuracy
 #| eval: false
 # Get ground truth points
 valid_csv = r_package_dir(
-    "extdata/Rondonia-Class-2022-Mosaic/rondonia_samples_reclass.csv", package = "sitsdata"
+    "extdata/Rondonia-Class-2022/rondonia_samples_reclass.csv", package = "sitsdata"
 )
 # Calculate accuracy according to Olofsson's method
 area_accuracy = sits_accuracy(

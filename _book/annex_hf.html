@@ -1,0 +1,1296 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.361">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<meta name="author" content="Gilberto Camara, Rolf Simoes, Felipe Souza, Felipe Carlos, Pedro Andrade, Karine Ferreira, Lorena Santos, Charlotte Pelletier, Bianca Zadrosny">
+<title>Satellite Image Time Series Analysis on Earth Observation Data Cubes - 31&nbsp; Sharing and retrieving data with Hugging Face</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./annex_gee.html" rel="next">
+<link href="./annex_export.html" rel="prev">
+<link href="././images/cover_sits_book_quarto.jpg" rel="icon" type="image/jpeg">
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script src="site_libs/quarto-contrib/sitshelp-0.1.0/sitshelp.js"></script>
+<link href="site_libs/quarto-contrib/sitshelp-0.1.0/sitshelp.css" rel="stylesheet"><script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+</head>
+<body class="nav-sidebar floating">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top"><nav class="quarto-secondary-nav"><div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+      <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./annex.html">Advanced Topics</a></li><li class="breadcrumb-item"><a href="./annex_hf.html"><span class="chapter-number">31</span>&nbsp; <span class="chapter-title">Sharing and retrieving data with Hugging Face</span></a></li></ol></nav>
+      <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+      </a>
+      <button type="button" class="btn quarto-search-button" aria-label="" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav></header><!-- content --><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal sidebar-navigation floating overflow-auto"><div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">Satellite Image Time Series Analysis on Earth Observation Data Cubes</a> 
+        <div class="sidebar-tools-main">
+    <a href="https://github.com/e-sensing/sitsbook" title="Source Code" class="quarto-navigation-tool px-1" aria-label="Source Code"><i class="bi bi-github"></i></a>
+  <a href="" class="quarto-reader-toggle quarto-navigation-tool px-1" onclick="window.quartoToggleReader(); return false;" title="Toggle reader mode">
+  <div class="quarto-reader-toggle-btn">
+  <i class="bi"></i>
+  </div>
+</a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Greetings</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./setup.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Setup</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./support.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Support</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./acknowledgements.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Acknowledgements</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./introduction.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">The Basics of SITS</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./intro_quicktour.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">A quick tour of SITS</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./intro_examples.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">How to use SITS with real examples</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./intro_visualisation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Data visualisation in SITS</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./datacubes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Earth observation data cubes</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./dc_ardcollections.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Analysis-ready image collections</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./dc_regularize.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Building regular data cubes</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./dc_merge.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Merging multi-source EO data cubes</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./dc_localcubes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Data cubes from local files</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./dc_cubeoperations.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Algebraic operations on data cubes</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./dc_mixture.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Spectral mixture analysis</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./dc_reduce.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Temporal reduction operations</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./dc_texture.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Texture operations in data cubes</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./timeseries.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Satellite image time series</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ts_basics.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Basic operations on image time series</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ts_cluster.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Hierarchical clustering of time series</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ts_som.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Self-organized maps for sample quality control</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ts_balance.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">Reducing imbalances in training samples</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./classification.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Machine learning for image time series</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./cl_machinelearning.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Machine learning algorithms for image time series</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./cl_tuning.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Deep learning model tuning</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./cl_rasterclassification.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Classification of raster data cubes</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./cl_smoothing.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">19</span>&nbsp; <span class="chapter-title">Bayesian smoothing for classification post-processing</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./cl_reclassification.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">20</span>&nbsp; <span class="chapter-title">Map reclassification</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./cl_uncertainty.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">21</span>&nbsp; <span class="chapter-title">Uncertainty and active learning</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./cl_ensembleprediction.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">22</span>&nbsp; <span class="chapter-title">Ensemble prediction with multiple models</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./validation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Validation and accuracy measurement</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./val_kfold.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">23</span>&nbsp; <span class="chapter-title">Cross-validation of training data</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./val_map.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">24</span>&nbsp; <span class="chapter-title">Map accuracy assessment</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./embeddings.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Foundational Models and Embeddings</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./emb_methods.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">25</span>&nbsp; <span class="chapter-title">Embedding Methods in SITS</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./emb_build.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">26</span>&nbsp; <span class="chapter-title">Building regional embeddings: a simple example</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./emb_example.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">27</span>&nbsp; <span class="chapter-title">Building regional embeddings: a full example</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./vector_datacubes.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Vector data cubes</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./vec_obia.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">28</span>&nbsp; <span class="chapter-title">Object-based time series image analysis</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./vec_creating.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">29</span>&nbsp; <span class="chapter-title">Creating vector data cube from local files</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./annex.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Advanced Topics</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-8" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-8" class="collapse list-unstyled sidebar-section depth1 show">
+<li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./annex_export.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">30</span>&nbsp; <span class="chapter-title">Exporting data to other packages</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./annex_hf.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">31</span>&nbsp; <span class="chapter-title">Sharing and retrieving data with Hugging Face</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./annex_gee.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">32</span>&nbsp; <span class="chapter-title">SITS and GEE: side-by-side comparison</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./annex_api.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">33</span>&nbsp; <span class="chapter-title">Developing new functions in SITS</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./annex_ml.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">34</span>&nbsp; <span class="chapter-title">Including new methods for machine learning</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./annex_stac.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">35</span>&nbsp; <span class="chapter-title">Supporting STAC-based ARD catalogs</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./annex_parallel.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">36</span>&nbsp; <span class="chapter-title">How parallel processing works in SITS</span></span></a>
+  </div>
+</li>
+      </ul>
+</li>
+    </ul>
+</div>
+</nav><div id="quarto-sidebar-glass" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar,#quarto-sidebar-glass"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active"><h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+<li><a href="#configurations-to-run-this-chapter" id="toc-configurations-to-run-this-chapter" class="nav-link active" data-scroll-target="#configurations-to-run-this-chapter">Configurations to run this chapter</a></li>
+  <li><a href="#introduction" id="toc-introduction" class="nav-link" data-scroll-target="#introduction"><span class="header-section-number">31.1</span> Introduction</a></li>
+  <li>
+<a href="#retrieving-data-with-sits_from_hf" id="toc-retrieving-data-with-sits_from_hf" class="nav-link" data-scroll-target="#retrieving-data-with-sits_from_hf"><span class="header-section-number">31.2</span> Retrieving data with <code>sits_from_hf()</code></a>
+  <ul class="collapse">
+<li><a href="#retrieving-samples" id="toc-retrieving-samples" class="nav-link" data-scroll-target="#retrieving-samples"><span class="header-section-number">31.2.1</span> Retrieving samples</a></li>
+  <li><a href="#retrieving-models-and-encoders" id="toc-retrieving-models-and-encoders" class="nav-link" data-scroll-target="#retrieving-models-and-encoders"><span class="header-section-number">31.2.2</span> Retrieving models and encoders</a></li>
+  <li><a href="#retrieving-data-cubes" id="toc-retrieving-data-cubes" class="nav-link" data-scroll-target="#retrieving-data-cubes"><span class="header-section-number">31.2.3</span> Retrieving data cubes</a></li>
+  <li><a href="#accessing-private-repositories" id="toc-accessing-private-repositories" class="nav-link" data-scroll-target="#accessing-private-repositories"><span class="header-section-number">31.2.4</span> Accessing private repositories</a></li>
+  </ul>
+</li>
+  <li>
+<a href="#sharing-data-on-hugging-face" id="toc-sharing-data-on-hugging-face" class="nav-link" data-scroll-target="#sharing-data-on-hugging-face"><span class="header-section-number">31.3</span> Sharing data on Hugging Face</a>
+  <ul class="collapse">
+<li><a href="#sharing-samples" id="toc-sharing-samples" class="nav-link" data-scroll-target="#sharing-samples"><span class="header-section-number">31.3.1</span> Sharing samples</a></li>
+  <li><a href="#sharing-models" id="toc-sharing-models" class="nav-link" data-scroll-target="#sharing-models"><span class="header-section-number">31.3.2</span> Sharing models</a></li>
+  <li><a href="#sharing-data-cubes-with-sits_to_hf" id="toc-sharing-data-cubes-with-sits_to_hf" class="nav-link" data-scroll-target="#sharing-data-cubes-with-sits_to_hf"><span class="header-section-number">31.3.3</span> Sharing data cubes with <code>sits_to_hf()</code></a></li>
+  <li><a href="#uploading-files-to-hugging-face" id="toc-uploading-files-to-hugging-face" class="nav-link" data-scroll-target="#uploading-files-to-hugging-face"><span class="header-section-number">31.3.4</span> Uploading files to Hugging Face</a></li>
+  </ul>
+</li>
+  <li><a href="#summary" id="toc-summary" class="nav-link" data-scroll-target="#summary"><span class="header-section-number">31.4</span> Summary</a></li>
+  </ul><div class="toc-actions"><div><i class="bi bi-github"></i></div><div class="action-links"><p><a href="https://github.com/e-sensing/sitsbook/edit/quarto/annex_hf.qmd" class="toc-action">Edit this page</a></p><p><a href="https://github.com/e-sensing/sitsbook/issues/new" class="toc-action">Report an issue</a></p></div></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content"><script>window.__SITSHELP_CONFIG__ = { apiUrl: "https://sits-rag.ngrok.io" };</script><header id="title-block-header" class="quarto-title-block default"><div class="quarto-title">
+<h1 class="title">
+<span class="chapter-number">31</span>&nbsp; <span class="chapter-title">Sharing and retrieving data with Hugging Face</span>
+</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+</header><section id="configurations-to-run-this-chapter" class="level3 unnumbered"><h3 class="unnumbered anchored" data-anchor-id="configurations-to-run-this-chapter">Configurations to run this chapter</h3>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist">
+<li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-1-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-1" role="tab" aria-controls="tabset-1-1" aria-selected="true" aria-current="page">R</a></li>
+<li class="nav-item" role="presentation"><a class="nav-link" id="tabset-1-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-1-2" role="tab" aria-controls="tabset-1-2" aria-selected="false">Python</a></li>
+</ul>
+<div class="tab-content">
+<div id="tabset-1-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-1-1-tab">
+<div class="cell">
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># load package "tibble"</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://tibble.tidyverse.org/">tibble</a></span><span class="op">)</span></span>
+<span><span class="co"># load packages "sits" and "sitsdata"</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/e-sensing/sits/">sits</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/e-sensing/sitsdata/">sitsdata</a></span><span class="op">)</span></span>
+<span><span class="co"># set tempdir if it does not exist </span></span>
+<span><span class="va">tempdir_r</span> <span class="op">&lt;-</span> <span class="st">"~/sitsbook/tempdir/R/annex_hf"</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/files2.html">dir.create</a></span><span class="op">(</span><span class="va">tempdir_r</span>, showWarnings <span class="op">=</span> <span class="cn">FALSE</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="va">tempdir_r_cube</span> <span class="op">&lt;-</span> <span class="st">"~/sitsbook/tempdir/R/annex_hf/cube"</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/files2.html">dir.create</a></span><span class="op">(</span><span class="va">tempdir_r_cube</span>, showWarnings <span class="op">=</span> <span class="cn">FALSE</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="va">tempdir_r_share</span> <span class="op">&lt;-</span> <span class="st">"~/sitsbook/tempdir/R/annex_hf/share"</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/files2.html">dir.create</a></span><span class="op">(</span><span class="va">tempdir_r_share</span>, showWarnings <span class="op">=</span> <span class="cn">FALSE</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+<div id="tabset-1-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-1-2-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># load "pysits" library</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pysits <span class="im">import</span> <span class="op">*</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pathlib <span class="im">import</span> Path</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># set tempdir if it does not exist</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>tempdir_py <span class="op">=</span> Path.home() <span class="op">/</span> <span class="st">"sitsbook/tempdir/Python/annex_hf"</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>tempdir_py_cube <span class="op">=</span> Path.home() <span class="op">/</span> <span class="st">"sitsbook/tempdir/Python/annex_hf/cube"</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>tempdir_py_share <span class="op">=</span> Path.home() <span class="op">/</span> <span class="st">"sitsbook/tempdir/Python/annex_hf/share"</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Create directories</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>tempdir_py_cube.mkdir(parents<span class="op">=</span><span class="va">True</span>, exist_ok<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>tempdir_py_share.mkdir(parents<span class="op">=</span><span class="va">True</span>, exist_ok<span class="op">=</span><span class="va">True</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
+</section><section id="introduction" class="level2" data-number="31.1"><h2 data-number="31.1" class="anchored" data-anchor-id="introduction">
+<span class="header-section-number">31.1</span> Introduction</h2>
+<p><a href="https://huggingface.co">Hugging Face</a> is an open platform for sharing machine learning resources. Its Hub hosts git-based repositories of three kinds: <em>models</em>, <em>datasets</em> and <em>spaces</em> (applications). Each repository is identified by a name in the form <code>"&lt;user&gt;/&lt;repository&gt;"</code>, where <code>&lt;user&gt;</code> is either a personal account or an organisation. Public repositories can be read by anyone without an account; private repositories require an access token. Large files, such as satellite images, are stored efficiently, and each repository has a version history.</p>
+<p>These features make Hugging Face a convenient place to share the data used in Earth observation studies. Training samples, trained models and data cubes are often too big for code repositories such as GitHub, and too specialised for general-purpose data archives. By publishing them on Hugging Face, authors allow others to reproduce their results without repeating expensive steps, such as extracting time series from large image collections, regularising data cubes or training deep learning models.</p>
+<p>This book uses Hugging Face extensively. Most chapters retrieve their training samples from the <code>e-sensing/samples_book</code> dataset, and the chapters on embeddings retrieve data cubes, encoders and embedding cubes from Hugging Face, since producing them requires many hours of processing. The main repositories used in the book are listed below.</p>
+<div id="tbl-hf-repos" class="anchored">
+<table class="table">
+<caption>Table&nbsp;31.1: Hugging Face repositories used in this book</caption>
+<thead><tr class="header">
+<th style="text-align: left;">Repository</th>
+<th style="text-align: left;">Contents</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><code>e-sensing/samples_book</code></td>
+<td style="text-align: left;">Training samples used in this book (in Parquet)</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>e-sensing/samples_cerrado</code></td>
+<td style="text-align: left;">Data used in “Embeddings” chapters</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>e-sensing/rondonia20LMR</code></td>
+<td style="text-align: left;">Regular Sentinel-2 data cube for tile 20LMR (2022), used in <a href="https://e-sensing.github.io/sitsbook/intro_examples.html">“How to use SITS with real examples”</a>
+</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>e-sensing/cerrado_cube_reg_2018</code></td>
+<td style="text-align: left;">Regular Landsat-8 data cube for the Cerrado (2018) used in <a href="https://e-sensing.github.io/sitsbook/emb_example.html">“Building regional embeddings: a full example”</a>
+</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>e-sensing/cerrado_emb_ssl_lejepa_tcnn_2018</code></td>
+<td style="text-align: left;">Embedding cube produced by a LeJEPA encoder (2018) used in <a href="https://e-sensing.github.io/sitsbook/emb_example.html">“Building regional embeddings: a full example”</a>
+</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>e-sensing/encoders_cerrado</code></td>
+<td style="text-align: left;">Encoders trained with different representation learning methods (<code>.rds</code> files). Used in embeddings chapters</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The <code>sits</code> package provides two functions to work with Hugging Face. Function <code><a href="https://e-sensing.github.io/sits/reference/sits_from_hf.html">sits_from_hf()</a></code> reads samples, models and data cubes from a repository. Function <code><a href="https://e-sensing.github.io/sits/reference/sits_to_hf.html">sits_to_hf()</a></code> writes the files that describe a data cube, so that it can be uploaded to a dataset repository and later read by <code><a href="https://e-sensing.github.io/sits/reference/sits_from_hf.html">sits_from_hf()</a></code>. Samples and models do not need a description: they are shared as single files, saved with <code><a href="https://e-sensing.github.io/sits/reference/sits_to_parquet.html">sits_to_parquet()</a></code> or <code><a href="https://rdrr.io/r/base/readRDS.html">saveRDS()</a></code>. The rest of this chapter describes how to retrieve and share each type of data.</p>
+</section><section id="retrieving-data-with-sits_from_hf" class="level2" data-number="31.2"><h2 data-number="31.2" class="anchored" data-anchor-id="retrieving-data-with-sits_from_hf">
+<span class="header-section-number">31.2</span> Retrieving data with <code>sits_from_hf()</code>
+</h2>
+<p>Function <code><a href="https://e-sensing.github.io/sits/reference/sits_from_hf.html">sits_from_hf()</a></code> reads data from a Hugging Face repository. What it returns depends on the contents of the repository and on the <code>file</code> parameter:</p>
+<ul>
+<li>
+<em>Samples</em>: when <code>file</code> points to a <code>.parquet</code> file (written by <code><a href="https://e-sensing.github.io/sits/reference/sits_to_parquet.html">sits_to_parquet()</a></code>) or to an <code>.rds</code> file containing time series, the function returns a <code>sits</code> tibble.</li>
+<li>
+<em>Models</em>: when <code>file</code> points to an <code>.rds</code> file with a model trained by <code><a href="https://e-sensing.github.io/sits/reference/sits_train.html">sits_train()</a></code> or an encoder produced by <code><a href="https://e-sensing.github.io/sits/reference/sits_pre_train.html">sits_pre_train()</a></code>, the function returns the model.</li>
+<li>
+<em>Data cubes</em>: when <code>file</code> is not informed and the repository has a <code>sits/sits.yml</code> file (written by <code><a href="https://e-sensing.github.io/sits/reference/sits_to_hf.html">sits_to_hf()</a></code>), the function downloads the images to <code>output_dir</code> and returns a local data cube.</li>
+</ul>
+<p>The main parameters of <code><a href="https://e-sensing.github.io/sits/reference/sits_from_hf.html">sits_from_hf()</a></code> are:</p>
+<div id="tbl-hf-from-par" class="anchored">
+<table class="table">
+<caption>Table&nbsp;31.2: Main parameters of <code><a href="https://e-sensing.github.io/sits/reference/sits_from_hf.html">sits_from_hf()</a></code>
+</caption>
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead><tr class="header">
+<th style="text-align: left;">Parameter</th>
+<th style="text-align: left;">Meaning</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><code>repo</code></td>
+<td style="text-align: left;">Hugging Face repository, in the form <code>"&lt;user&gt;/&lt;repository&gt;"</code>.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>file</code></td>
+<td style="text-align: left;">File to be read (optional). Required when the repository has more than one <code>.rds</code> or <code>.parquet</code> file.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>type</code></td>
+<td style="text-align: left;">Type of the repository: <code>"dataset"</code> (default) or <code>"model"</code>. Data cubes are always shared as datasets.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>output_dir</code></td>
+<td style="text-align: left;">Directory where the images of a data cube are saved. Required for data cubes; the directory must exist.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">
+<code>bands</code>, <code>tiles</code>, <code>roi</code>, <code>crs</code>, <code>start_date</code>, <code>end_date</code>
+</td>
+<td style="text-align: left;">Optional selection of the part of the data cube to be downloaded.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">
+<code>labels</code>, <code>version</code>
+</td>
+<td style="text-align: left;">Optional selection of results produced by <code>sits</code> (e.g., probability cubes or classified maps).</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>n_tries</code></td>
+<td style="text-align: left;">Number of attempts to download each image (default = 3).</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>multicores</code></td>
+<td style="text-align: left;">Number of cores for parallel download (default = 2).</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>progress</code></td>
+<td style="text-align: left;">Show a progress bar? (default = <code>TRUE</code>).</td>
+</tr>
+</tbody>
+</table>
+</div>
+<section id="retrieving-samples" class="level3" data-number="31.2.1"><h3 data-number="31.2.1" class="anchored" data-anchor-id="retrieving-samples">
+<span class="header-section-number">31.2.1</span> Retrieving samples</h3>
+<p>Training samples are the most common type of data retrieved from Hugging Face in this book. In the example below, we retrieve the samples of deforestation in Rondonia used in the chapters <a href="https://e-sensing.github.io/sitsbook/cl_rasterclassification.html">“Classification of raster data cubes”</a> and <a href="https://e-sensing.github.io/sitsbook/emb_build.html">“Building regional embeddings: a simple example”</a>. Since the <code>e-sensing/samples_book</code> repository contains many files, we use <code>file</code> to choose one of them. The result is a <code>sits</code> tibble with 6,007 time series, each containing the Sentinel-2 bands <code>B02</code>, <code>B03</code>, <code>B04</code>, <code>B05</code>, <code>B06</code>, <code>B07</code>, <code>B08</code>, <code>B8A</code>, <code>B11</code> and <code>B12</code>. The function downloads the file to a temporary location and reads it; no <code>output_dir</code> is needed.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist">
+<li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-2-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-1" role="tab" aria-controls="tabset-2-1" aria-selected="true">R</a></li>
+<li class="nav-item" role="presentation"><a class="nav-link" id="tabset-2-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-2-2" role="tab" aria-controls="tabset-2-2" aria-selected="false">Python</a></li>
+</ul>
+<div class="tab-content">
+<div id="tabset-2-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-2-1-tab">
+<div class="cell">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Get the samples from Hugging Face</span></span>
+<span><span class="va">samples_deforestation_rondonia</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_from_hf.html">sits_from_hf</a></span><span class="op">(</span></span>
+<span>    repo <span class="op">=</span> <span class="st">"e-sensing/samples_book"</span>,</span>
+<span>    file <span class="op">=</span> <span class="st">"samples_deforestation_rondonia.parquet"</span>,</span>
+<span>    type <span class="op">=</span> <span class="st">"dataset"</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co"># show the bands and the number of samples per class</span></span>
+<span><span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_bands.html">sits_bands</a></span><span class="op">(</span><span class="va">samples_deforestation_rondonia</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html">summary</a></span><span class="op">(</span><span class="va">samples_deforestation_rondonia</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+<div id="tabset-2-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-2-2-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Get the samples from Hugging Face</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>samples_deforestation_rondonia <span class="op">=</span> sits_from_hf(</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    repo <span class="op">=</span> <span class="st">"e-sensing/samples_book"</span>,</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">file</span> <span class="op">=</span> <span class="st">"samples_deforestation_rondonia.parquet"</span>,</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">type</span> <span class="op">=</span> <span class="st">"dataset"</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co"># show the bands and the number of samples per class</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>sits_bands(samples_deforestation_rondonia)</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>summary(samples_deforestation_rondonia)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
+<p>The samples can then be used as any other <code>sits</code> tibble, for example to visualise temporal patterns with <code><a href="https://e-sensing.github.io/sits/reference/sits_patterns.html">sits_patterns()</a></code> or to train a model with <code><a href="https://e-sensing.github.io/sits/reference/sits_train.html">sits_train()</a></code>, as shown in the chapter <a href="https://e-sensing.github.io/sitsbook/ts_basics.html">“Basic operations on image time series”</a>.</p>
+</section><section id="retrieving-models-and-encoders" class="level3" data-number="31.2.2"><h3 data-number="31.2.2" class="anchored" data-anchor-id="retrieving-models-and-encoders">
+<span class="header-section-number">31.2.2</span> Retrieving models and encoders</h3>
+<p>Trained models and encoders are shared as <code>.rds</code> files in <em>model</em> repositories. To read them, set <code>type = "model"</code>. The example below retrieves the LeJEPA encoder used in the chapter <a href="https://e-sensing.github.io/sitsbook/emb_example.html">“Building regional embeddings: a full example”</a>. The <code>e-sensing/encoders_cerrado</code> repository has several encoders, each trained with a different representation learning method (see <a href="https://e-sensing.github.io/sitsbook/emb_methods.html">“Embedding Methods in SITS”</a>); we choose one with <code>file</code>. The result is a <code>sits_encoder</code> object, which can be used directly in <code><a href="https://e-sensing.github.io/sits/reference/sits_encode.html">sits_encode()</a></code>. Models trained with <code><a href="https://e-sensing.github.io/sits/reference/sits_train.html">sits_train()</a></code> are retrieved in the same way and can be used directly in <code><a href="https://e-sensing.github.io/sits/reference/sits_classify.html">sits_classify()</a></code>.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist">
+<li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-3-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-1" role="tab" aria-controls="tabset-3-1" aria-selected="true">R</a></li>
+<li class="nav-item" role="presentation"><a class="nav-link" id="tabset-3-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-3-2" role="tab" aria-controls="tabset-3-2" aria-selected="false">Python</a></li>
+</ul>
+<div class="tab-content">
+<div id="tabset-3-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-3-1-tab">
+<div class="cell">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Retrieve a LeJEPA encoder from a model repository</span></span>
+<span><span class="va">lejepa_encoder</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_from_hf.html">sits_from_hf</a></span><span class="op">(</span></span>
+<span>    repo <span class="op">=</span> <span class="st">"e-sensing/encoders_cerrado"</span>,</span>
+<span>    file <span class="op">=</span> <span class="st">"ssl_lejepa_tcnn_model_2017_2024.rds"</span>,</span>
+<span>    type <span class="op">=</span> <span class="st">"model"</span></span>
+<span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+<div id="tabset-3-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-3-2-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Retrieve a LeJEPA encoder from a model repository</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>lejepa_encoder <span class="op">=</span> sits_from_hf(</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    repo <span class="op">=</span> <span class="st">"e-sensing/encoders_cerrado"</span>,</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">file</span> <span class="op">=</span> <span class="st">"ssl_lejepa_tcnn_model_2017_2024.rds"</span>,</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">type</span> <span class="op">=</span> <span class="st">"model"</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
+</section><section id="retrieving-data-cubes" class="level3" data-number="31.2.3"><h3 data-number="31.2.3" class="anchored" data-anchor-id="retrieving-data-cubes">
+<span class="header-section-number">31.2.3</span> Retrieving data cubes</h3>
+<p>A data cube shared on Hugging Face is a dataset repository that contains the image files and a <code>sits</code> directory with a description of the cube (see the next section). When <code>file</code> is not informed, <code><a href="https://e-sensing.github.io/sits/reference/sits_from_hf.html">sits_from_hf()</a></code> reads this description, downloads the images to <code>output_dir</code> and returns a local data cube. After the download, the cube is the same as one created by <code><a href="https://e-sensing.github.io/sits/reference/sits_cube.html">sits_cube()</a></code> from local files (see <a href="https://e-sensing.github.io/sitsbook/dc_localcubes.html">“Data cubes from local files”</a>), and can be used in all <code>sits</code> functions.</p>
+<p>Data cubes for large areas can have tens or hundreds of gigabytes. To avoid downloading the whole dataset, users can choose part of the cube using <code>bands</code>, <code>tiles</code>, <code>roi</code>, <code>start_date</code> and <code>end_date</code>. Only the images that match the selection are downloaded. In the example below, we select three bands and the dry season of 2022 from the <code>rondonia20LMR</code> cube used in the chapter <a href="https://e-sensing.github.io/sitsbook/intro_examples.html">“How to use SITS with real examples”</a>, which reduces the download from about 26 GB to a small fraction of that size. The result is a data cube with bands <code>B02</code>, <code>B8A</code> and <code>B11</code> for the dates between June and September 2022.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist">
+<li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-4-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-1" role="tab" aria-controls="tabset-4-1" aria-selected="true">R</a></li>
+<li class="nav-item" role="presentation"><a class="nav-link" id="tabset-4-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-4-2" role="tab" aria-controls="tabset-4-2" aria-selected="false">Python</a></li>
+</ul>
+<div class="tab-content">
+<div id="tabset-4-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-4-1-tab">
+<div class="cell">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># Download part of the rondonia20LMR cube</span></span>
+<span><span class="va">cube_20LMR_part</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_from_hf.html">sits_from_hf</a></span><span class="op">(</span></span>
+<span>    repo <span class="op">=</span> <span class="st">"e-sensing/rondonia20LMR"</span>,</span>
+<span>    type <span class="op">=</span> <span class="st">"dataset"</span>,</span>
+<span>    bands <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"B02"</span>, <span class="st">"B8A"</span>, <span class="st">"B11"</span><span class="op">)</span>,</span>
+<span>    start_date <span class="op">=</span> <span class="st">"2022-06-01"</span>,</span>
+<span>    end_date <span class="op">=</span> <span class="st">"2022-09-30"</span>,</span>
+<span>    output_dir <span class="op">=</span> <span class="va">tempdir_r_cube</span>,</span>
+<span>    multicores <span class="op">=</span> <span class="fl">4</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html">plot</a></span><span class="op">(</span><span class="va">cube_20LMR_part</span>, date <span class="op">=</span> <span class="st">"2022-07-16"</span>, blue <span class="op">=</span> <span class="st">"B02"</span>, green <span class="op">=</span> <span class="st">"B8A"</span>, red <span class="op">=</span> <span class="st">"B11"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+<div id="tabset-4-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-4-2-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Download part of the rondonia20LMR cube</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>cube_20LMR_part <span class="op">=</span> sits_from_hf(</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    repo <span class="op">=</span> <span class="st">"e-sensing/rondonia20LMR"</span>,</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">type</span> <span class="op">=</span> <span class="st">"dataset"</span>,</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    bands <span class="op">=</span> (<span class="st">"B02"</span>, <span class="st">"B8A"</span>, <span class="st">"B11"</span>),</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    start_date <span class="op">=</span> <span class="st">"2022-06-01"</span>,</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    end_date <span class="op">=</span> <span class="st">"2022-09-30"</span>,</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    output_dir <span class="op">=</span> tempdir_py_cube,</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    multicores <span class="op">=</span> <span class="dv">4</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>plot(cube_20LMR_part, date <span class="op">=</span> <span class="st">"2022-07-16"</span>, blue <span class="op">=</span> <span class="st">"B02"</span>, green <span class="op">=</span> <span class="st">"B8A"</span>, red <span class="op">=</span> <span class="st">"B11"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
+<p>The same function retrieves embedding cubes and results produced by <code>sits</code>. For example, the embedding cube used in <a href="https://e-sensing.github.io/sitsbook/emb_example.html">“Building regional embeddings: a full example”</a> is read with <code>sits_from_hf(repo = "e-sensing/cerrado_emb_ssl_lejepa_tcnn_2018", output_dir = ...)</code>, and the result is an embedding cube ready to be classified. When a dataset holds results from a classification, such as probability cubes and classified maps, the parameters <code>labels</code> and <code>version</code> select which result is read.</p>
+<div class="callout callout-style-simple callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+Download limits and interrupted downloads
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Hugging Face limits the number of files a user can request in each five-minute window. To use these limits well, <code><a href="https://e-sensing.github.io/sits/reference/sits_from_hf.html">sits_from_hf()</a></code> downloads each image only once, in batches that fit the requests available; when no request is available, it waits for the next window. Images already in <code>output_dir</code> are not requested again. Therefore, if a download is interrupted, calling <code><a href="https://e-sensing.github.io/sits/reference/sits_from_hf.html">sits_from_hf()</a></code> again with the same parameters resumes it.</p>
+</div>
+</div>
+</section><section id="accessing-private-repositories" class="level3" data-number="31.2.4"><h3 data-number="31.2.4" class="anchored" data-anchor-id="accessing-private-repositories">
+<span class="header-section-number">31.2.4</span> Accessing private repositories</h3>
+<p>To read private repositories, users need a Hugging Face access token, which can be created in the <a href="https://huggingface.co/settings/tokens">account settings</a>. The token must be stored in the <code>HF_TOKEN</code> environment variable. In R, this is best done by adding a line <code>HF_TOKEN=&lt;your token&gt;</code> to the <code>.Renviron</code> file (for example, using <code><a href="https://usethis.r-lib.org/reference/edit.html">usethis::edit_r_environ()</a></code>), so that the token is not written in scripts. For a single session, one can use <code><a href="https://rdrr.io/r/base/Sys.setenv.html">Sys.setenv()</a></code>.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist">
+<li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-5-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-1" role="tab" aria-controls="tabset-5-1" aria-selected="true">R</a></li>
+<li class="nav-item" role="presentation"><a class="nav-link" id="tabset-5-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-5-2" role="tab" aria-controls="tabset-5-2" aria-selected="false">Python</a></li>
+</ul>
+<div class="tab-content">
+<div id="tabset-5-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-5-1-tab">
+<div class="cell">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># set the access token for the current session</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Sys.setenv.html">Sys.setenv</a></span><span class="op">(</span>HF_TOKEN <span class="op">=</span> <span class="st">"&lt;your token&gt;"</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+<div id="tabset-5-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-5-2-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> os</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="co"># set the access token for the current session</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>os.environ[<span class="st">"HF_TOKEN"</span>] <span class="op">=</span> <span class="st">"&lt;your token&gt;"</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
+</section></section><section id="sharing-data-on-hugging-face" class="level2" data-number="31.3"><h2 data-number="31.3" class="anchored" data-anchor-id="sharing-data-on-hugging-face">
+<span class="header-section-number">31.3</span> Sharing data on Hugging Face</h2>
+<p>Sharing data on Hugging Face has two steps. First, the data is saved locally in a format that <code><a href="https://e-sensing.github.io/sits/reference/sits_from_hf.html">sits_from_hf()</a></code> can read. Then, the files are uploaded to a repository. The <code>sits</code> package handles the first step; the upload is done with the tools provided by Hugging Face, described at the end of this section.</p>
+<section id="sharing-samples" class="level3" data-number="31.3.1"><h3 data-number="31.3.1" class="anchored" data-anchor-id="sharing-samples">
+<span class="header-section-number">31.3.1</span> Sharing samples</h3>
+<p>Samples are shared as single files. The recommended format is Parquet, which is compact, fast to read and readable by other tools. Function <code><a href="https://e-sensing.github.io/sits/reference/sits_to_parquet.html">sits_to_parquet()</a></code> writes a <code>sits</code> tibble to a Parquet file, which follows the GeoParquet standard so that GIS software such as QGIS can read the samples as points. In the example below, we save the <code>samples_modis_ndvi</code> data set, provided by <code>sits</code>, to a Parquet file in the local directory to be uploaded.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist">
+<li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-6-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-6-1" role="tab" aria-controls="tabset-6-1" aria-selected="true">R</a></li>
+<li class="nav-item" role="presentation"><a class="nav-link" id="tabset-6-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-6-2" role="tab" aria-controls="tabset-6-2" aria-selected="false">Python</a></li>
+</ul>
+<div class="tab-content">
+<div id="tabset-6-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-6-1-tab">
+<div class="cell">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># save samples to a Parquet file to be uploaded</span></span>
+<span><span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_to_parquet.html">sits_to_parquet</a></span><span class="op">(</span></span>
+<span>    data <span class="op">=</span> <span class="va">samples_modis_ndvi</span>,</span>
+<span>    file <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html">file.path</a></span><span class="op">(</span><span class="va">tempdir_r_share</span>, <span class="st">"samples_modis_ndvi.parquet"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+<div id="tabset-6-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-6-2-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># save samples to a Parquet file to be uploaded</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>sits_to_parquet(</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    data <span class="op">=</span> samples_modis_ndvi,</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">file</span> <span class="op">=</span> <span class="bu">str</span>(tempdir_py_share <span class="op">/</span> <span class="st">"samples_modis_ndvi.parquet"</span>)</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
+<p>After the file is uploaded to a dataset repository (for example, <code>"&lt;user&gt;/my_samples"</code>), it is read with <code>sits_from_hf(repo = "&lt;user&gt;/my_samples", file = "samples_modis_ndvi.parquet")</code>.</p>
+</section><section id="sharing-models" class="level3" data-number="31.3.2"><h3 data-number="31.3.2" class="anchored" data-anchor-id="sharing-models">
+<span class="header-section-number">31.3.2</span> Sharing models</h3>
+<p>Models trained by <code><a href="https://e-sensing.github.io/sits/reference/sits_train.html">sits_train()</a></code> and encoders produced by <code><a href="https://e-sensing.github.io/sits/reference/sits_pre_train.html">sits_pre_train()</a></code> are R objects, which are saved as <code>.rds</code> files using <code><a href="https://rdrr.io/r/base/readRDS.html">saveRDS()</a></code>. In the example below, we train a random forest model with the <code>samples_modis_ndvi</code> data set and save it. The file should be uploaded to a <em>model</em> repository, and it is then read with <code>sits_from_hf(repo = "&lt;user&gt;/my_models", file = "rfor_model_modis.rds", type = "model")</code>.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist">
+<li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-7-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-7-1" role="tab" aria-controls="tabset-7-1" aria-selected="true">R</a></li>
+<li class="nav-item" role="presentation"><a class="nav-link" id="tabset-7-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-7-2" role="tab" aria-controls="tabset-7-2" aria-selected="false">Python</a></li>
+</ul>
+<div class="tab-content">
+<div id="tabset-7-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-7-1-tab">
+<div class="cell">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># train a random forest model</span></span>
+<span><span class="va">rfor_model</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_train.html">sits_train</a></span><span class="op">(</span></span>
+<span>    samples <span class="op">=</span> <span class="va">samples_modis_ndvi</span>,</span>
+<span>    ml_method <span class="op">=</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_rfor.html">sits_rfor</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co"># save the model to be uploaded</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/readRDS.html">saveRDS</a></span><span class="op">(</span><span class="va">rfor_model</span>, <span class="fu"><a href="https://rdrr.io/r/base/file.path.html">file.path</a></span><span class="op">(</span><span class="va">tempdir_r_share</span>, <span class="st">"rfor_model_modis.rds"</span><span class="op">)</span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+<div id="tabset-7-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-7-2-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># train a random forest model</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>rfor_model <span class="op">=</span> sits_train(</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    samples <span class="op">=</span> samples_modis_ndvi,</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    ml_method <span class="op">=</span> sits_rfor()</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="co"># save the model to be uploaded</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>saveRDS(rfor_model, <span class="bu">str</span>(tempdir_py_share <span class="op">/</span> <span class="st">"rfor_model_modis.rds"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
+</section><section id="sharing-data-cubes-with-sits_to_hf" class="level3" data-number="31.3.3"><h3 data-number="31.3.3" class="anchored" data-anchor-id="sharing-data-cubes-with-sits_to_hf">
+<span class="header-section-number">31.3.3</span> Sharing data cubes with <code>sits_to_hf()</code>
+</h3>
+<p>A data cube shared on Hugging Face consists of the image files plus two files that describe the cube, kept in a <code>sits</code> directory of the repository so that they are not mixed with the images:</p>
+<ul>
+<li>
+<code>sits/sits.yml</code>: the collection definition of the dataset. It describes the satellite, sensor, grid system and, for each band, the missing value, the valid range, the scale factor, the offset, the spatial resolution and the data type. For results produced by <code>sits</code>, such as probability cubes and classified maps, it also includes the labels of the classes.</li>
+<li>
+<code>sits/cache.rds</code>: the data cube itself. When this file is available, <code><a href="https://e-sensing.github.io/sits/reference/sits_from_hf.html">sits_from_hf()</a></code> loads it instead of reading each image of the dataset to build the cube, which is much faster for large datasets.</li>
+</ul>
+<p>Function <code><a href="https://e-sensing.github.io/sits/reference/sits_to_hf.html">sits_to_hf()</a></code> writes these files from a data cube. Its parameters are:</p>
+<div id="tbl-hf-to-par" class="anchored">
+<table class="table">
+<caption>Table&nbsp;31.3: Parameters of <code><a href="https://e-sensing.github.io/sits/reference/sits_to_hf.html">sits_to_hf()</a></code>
+</caption>
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead><tr class="header">
+<th style="text-align: left;">Parameter</th>
+<th style="text-align: left;">Meaning</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><code>cube</code></td>
+<td style="text-align: left;">Data cube, or list of cubes, to be shared as a dataset.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><code>output_dir</code></td>
+<td style="text-align: left;">Directory where the files are written (optional). When not informed, the function only returns the collection definition.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><code>repo</code></td>
+<td style="text-align: left;">Hugging Face repository where the images will be uploaded (<code>"&lt;user&gt;/&lt;dataset&gt;"</code>). Required to write <code>cache.rds</code>, unless the cube was read from Hugging Face.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>There is one important requirement: the images must be named in the way <code>sits</code> names them. Images produced by <code>sits</code> functions such as <code><a href="https://e-sensing.github.io/sits/reference/sits_cube_copy.html">sits_cube_copy()</a></code>, <code><a href="https://e-sensing.github.io/sits/reference/sits_regularize.html">sits_regularize()</a></code>, <code><a href="https://e-sensing.github.io/sits/reference/sits_classify.html">sits_classify()</a></code>, <code><a href="https://e-sensing.github.io/sits/reference/sits_smooth.html">sits_smooth()</a></code> and <code><a href="https://e-sensing.github.io/sits/reference/sits_label_classification.html">sits_label_classification()</a></code> already follow this convention. File names combine the satellite, sensor, tile, band and date, for example <code>TERRA_MODIS_012010_NDVI_2013-09-14.tif</code>. Also, only the bands present in the dataset should be described; if a cube has bands that will not be shared, use <code><a href="https://e-sensing.github.io/sits/reference/sits_select.html">sits_select()</a></code> before calling <code><a href="https://e-sensing.github.io/sits/reference/sits_to_hf.html">sits_to_hf()</a></code>. For more information on how <code>sits</code> names files and on regularization, see the chapters <a href="https://e-sensing.github.io/sitsbook/dc_localcubes.html">“Data cubes from local files”</a> and <a href="https://e-sensing.github.io/sitsbook/dc_regularize.html">“Building regular data cubes”</a>.</p>
+<p>In the example below, we use the MODIS cube for Sinop provided by the <code>sits</code> package. First, we call <code><a href="https://e-sensing.github.io/sits/reference/sits_to_hf.html">sits_to_hf()</a></code> with only the cube. This returns the collection definition as an R list, which is useful to check the description before writing any file. Then, we call it again with <code>output_dir</code> and <code>repo</code> to write <code>sits/sits.yml</code> and <code>sits/cache.rds</code> in the local directory to be uploaded.</p>
+<div class="tabset-margin-container"></div><div class="panel-tabset">
+<ul class="nav nav-tabs" role="tablist">
+<li class="nav-item" role="presentation"><a class="nav-link active" id="tabset-8-1-tab" data-bs-toggle="tab" data-bs-target="#tabset-8-1" role="tab" aria-controls="tabset-8-1" aria-selected="true">R</a></li>
+<li class="nav-item" role="presentation"><a class="nav-link" id="tabset-8-2-tab" data-bs-toggle="tab" data-bs-target="#tabset-8-2" role="tab" aria-controls="tabset-8-2" aria-selected="false">Python</a></li>
+</ul>
+<div class="tab-content">
+<div id="tabset-8-1" class="tab-pane active" role="tabpanel" aria-labelledby="tabset-8-1-tab">
+<div class="cell">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r code-with-copy"><code class="sourceCode R"><span><span class="co"># create a data cube from local files</span></span>
+<span><span class="va">data_dir</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html">system.file</a></span><span class="op">(</span><span class="st">"extdata/raster/mod13q1"</span>, package <span class="op">=</span> <span class="st">"sits"</span><span class="op">)</span></span>
+<span><span class="va">cube</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_cube.html">sits_cube</a></span><span class="op">(</span></span>
+<span>    source <span class="op">=</span> <span class="st">"BDC"</span>,</span>
+<span>    collection <span class="op">=</span> <span class="st">"MOD13Q1-6.1"</span>,</span>
+<span>    data_dir <span class="op">=</span> <span class="va">data_dir</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co"># inspect the collection definition of the cube</span></span>
+<span><span class="va">collection_conf</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_to_hf.html">sits_to_hf</a></span><span class="op">(</span><span class="va">cube</span><span class="op">)</span></span>
+<span><span class="va">collection_conf</span><span class="op">$</span><span class="va">bands</span><span class="op">$</span><span class="va">NDVI</span></span>
+<span></span>
+<span><span class="co"># write the files describing the dataset</span></span>
+<span><span class="fu"><a href="https://e-sensing.github.io/sits/reference/sits_to_hf.html">sits_to_hf</a></span><span class="op">(</span></span>
+<span>    cube <span class="op">=</span> <span class="va">cube</span>,</span>
+<span>    output_dir <span class="op">=</span> <span class="va">tempdir_r_share</span>,</span>
+<span>    repo <span class="op">=</span> <span class="st">"&lt;user&gt;/sits_mod13q1_sinop"</span></span>
+<span><span class="op">)</span></span>
+<span><span class="co"># copy the images to the same directory, to be uploaded together</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/files.html">file.copy</a></span><span class="op">(</span></span>
+<span>    from <span class="op">=</span> <span class="va">cube</span><span class="op">$</span><span class="va">file_info</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">path</span>,</span>
+<span>    to <span class="op">=</span> <span class="va">tempdir_r_share</span></span>
+<span><span class="op">)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+<div id="tabset-8-2" class="tab-pane" role="tabpanel" aria-labelledby="tabset-8-2-tab">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># create a data cube from local files</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>data_dir <span class="op">=</span> r_package_dir(<span class="st">"extdata/raster/mod13q1"</span>, package <span class="op">=</span> <span class="st">"sits"</span>)</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>cube <span class="op">=</span> sits_cube(</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>    source <span class="op">=</span> <span class="st">"BDC"</span>,</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>    collection <span class="op">=</span> <span class="st">"MOD13Q1-6.1"</span>,</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>    data_dir <span class="op">=</span> data_dir</span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a><span class="co"># inspect the collection definition of the cube</span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>collection_conf <span class="op">=</span> sits_to_hf(cube)</span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a><span class="co"># write the files describing the dataset</span></span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>sits_to_hf(</span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>    cube <span class="op">=</span> cube,</span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>    output_dir <span class="op">=</span> tempdir_py_share,</span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>    repo <span class="op">=</span> <span class="st">"&lt;user&gt;/sits_mod13q1_sinop"</span></span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a><span class="co"># copy the images to the same directory, to be uploaded together</span></span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> shutil</span>
+<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> f <span class="kw">in</span> Path(data_dir).glob(<span class="st">"*.jp2"</span>):</span>
+<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a>    shutil.copy(f, tempdir_py_share)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
+<p>The <code>sits.yml</code> file written for this cube is shown below. It starts with comments that explain how the dataset is to be read, followed by the description of the collection.</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># sits collection definition of a HuggingFace dataset.</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Place this file in the 'sits' directory of the dataset repository,</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="co"># naming the images as sits names them, and open the dataset with:</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a><span class="co">#     sits_from_hf(</span></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a><span class="co">#         repo       = "&lt;user&gt;/&lt;repository&gt;",</span></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a><span class="co">#         output_dir = "&lt;directory&gt;"</span></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a><span class="co">#     )</span></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Declare only the bands shared in the dataset.</span></span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Written by sits from MOD13Q1-6.1.</span></span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a><span class="fu">satellite</span><span class="kw">:</span><span class="at"> TERRA</span></span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a><span class="fu">sensor</span><span class="kw">:</span><span class="at"> MODIS</span></span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a><span class="fu">grid_system</span><span class="kw">:</span><span class="at"> STG</span></span>
+<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a><span class="fu">dates</span><span class="kw">:</span><span class="at"> 2013 to 2014</span></span>
+<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a><span class="fu">bands</span><span class="kw">:</span></span>
+<span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">NDVI</span><span class="kw">:</span></span>
+<span id="cb17-20"><a href="#cb17-20" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">missing_value</span><span class="kw">:</span><span class="at"> </span><span class="dv">-3000</span></span>
+<span id="cb17-21"><a href="#cb17-21" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">minimum_value</span><span class="kw">:</span><span class="at"> </span><span class="dv">-2000</span></span>
+<span id="cb17-22"><a href="#cb17-22" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">maximum_value</span><span class="kw">:</span><span class="at"> </span><span class="dv">10000</span></span>
+<span id="cb17-23"><a href="#cb17-23" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">scale_factor</span><span class="kw">:</span><span class="at"> </span><span class="fl">0.0001</span></span>
+<span id="cb17-24"><a href="#cb17-24" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">offset_value</span><span class="kw">:</span><span class="at"> </span><span class="dv">0</span></span>
+<span id="cb17-25"><a href="#cb17-25" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">resolution</span><span class="kw">:</span><span class="at"> </span><span class="fl">231.6563583</span></span>
+<span id="cb17-26"><a href="#cb17-26" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">band_name</span><span class="kw">:</span><span class="at"> NDVI</span></span>
+<span id="cb17-27"><a href="#cb17-27" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">data_type</span><span class="kw">:</span><span class="at"> INT2S</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The local directory now has the structure expected by <code><a href="https://e-sensing.github.io/sits/reference/sits_from_hf.html">sits_from_hf()</a></code>: the images at the root, and the description in the <code>sits</code> directory.</p>
+<pre><code>sits_mod13q1_sinop/
+├── sits/
+│   ├── sits.yml
+│   └── cache.rds
+├── TERRA_MODIS_012010_NDVI_2013-09-14.jp2
+├── TERRA_MODIS_012010_NDVI_2013-10-16.jp2
+└── ...</code></pre>
+<p>The description written by <code><a href="https://e-sensing.github.io/sits/reference/sits_to_hf.html">sits_to_hf()</a></code> depends on the type of cube:</p>
+<ul>
+<li>
+<em>Image cubes</em> (e.g., regularized Sentinel-2 or Landsat cubes) are described band by band, as in the example above.</li>
+<li>
+<em>Embedding cubes</em> (produced by <code><a href="https://e-sensing.github.io/sits/reference/sits_encode.html">sits_encode()</a></code>) are described only by satellite and sensor; the embedding bands are managed by <code>sits</code>.</li>
+<li>
+<em>Results</em> produced by <code>sits</code> (probability cubes, smoothed probability cubes, classified maps) are described by their resolution and the labels of the classification.</li>
+</ul>
+<p>When the images to be shared come from a collection that <code>sits</code> already knows (for example, Sentinel-2 images copied from Microsoft Planetary Computer using <code><a href="https://e-sensing.github.io/sits/reference/sits_cube_copy.html">sits_cube_copy()</a></code>), the function <code><a href="https://e-sensing.github.io/sits/reference/sits_config_to_hf.html">sits_config_to_hf()</a></code> writes <code>sits/sits.yml</code> directly from the collection definition, using the parameters <code>source</code>, <code>collection</code>, <code>bands</code> and <code>output_dir</code>. For regularized cubes, or cubes with bands computed by users (such as indices produced by <code><a href="https://e-sensing.github.io/sits/reference/sits_apply.html">sits_apply()</a></code>), use <code><a href="https://e-sensing.github.io/sits/reference/sits_to_hf.html">sits_to_hf()</a></code> instead, since the bands and resolutions differ from those of the original collection.</p>
+</section><section id="uploading-files-to-hugging-face" class="level3" data-number="31.3.4"><h3 data-number="31.3.4" class="anchored" data-anchor-id="uploading-files-to-hugging-face">
+<span class="header-section-number">31.3.4</span> Uploading files to Hugging Face</h3>
+<p>After preparing the files, the final step is to upload them to a Hugging Face repository. This requires a Hugging Face account and an access token with <em>write</em> permission. The simplest option is the <code>hf</code> command line tool, which is part of the <code>huggingface_hub</code> Python package (installed with <code>pip install -U huggingface_hub</code>). The commands below log in to Hugging Face, create a dataset repository and upload the contents of a local directory to the root of the repository. The <code>--repo-type</code> option must be <code>dataset</code> for samples and data cubes and <code>model</code> for models. If the repository does not exist, <code>hf upload</code> creates it.</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># log in to Hugging Face (only needed once per machine)</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="ex">hf</span> auth login</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="co"># create a dataset repository (optional; "hf upload" creates it if needed)</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="ex">hf</span> repos create <span class="op">&lt;</span>user<span class="op">&gt;</span>/sits_mod13q1_sinop <span class="at">--repo-type</span> dataset</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a><span class="co"># upload the contents of the local directory to the root of the repository</span></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a><span class="ex">hf</span> upload <span class="op">&lt;</span>user<span class="op">&gt;</span>/sits_mod13q1_sinop ~/sitsbook/tempdir/R/annex_hf/share . <span class="at">--repo-type</span> dataset</span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a><span class="co"># upload a model file to a model repository</span></span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a><span class="ex">hf</span> upload <span class="op">&lt;</span>user<span class="op">&gt;</span>/my_models ~/sitsbook/tempdir/R/annex_hf/share/rfor_model_modis.rds <span class="at">--repo-type</span> model</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Once uploaded, the data cube is read with <code><a href="https://e-sensing.github.io/sits/reference/sits_from_hf.html">sits_from_hf()</a></code>, as shown in the previous section. It is good practice to also add a <code>README.md</code> file to the repository (the “dataset card” or “model card”), describing the contents of the dataset, its origin, the processing steps and the license under which it is shared.</p>
+</section></section><section id="summary" class="level2" data-number="31.4"><h2 data-number="31.4" class="anchored" data-anchor-id="summary">
+<span class="header-section-number">31.4</span> Summary</h2>
+<p>This chapter described how to use Hugging Face to share and retrieve the data used in <code>sits</code> workflows. Function <code><a href="https://e-sensing.github.io/sits/reference/sits_from_hf.html">sits_from_hf()</a></code> reads samples, models and data cubes from Hugging Face repositories; for data cubes, users can select bands, tiles, regions and dates so that only the images needed are downloaded, and interrupted downloads are resumed automatically. To share data, samples are saved with <code><a href="https://e-sensing.github.io/sits/reference/sits_to_parquet.html">sits_to_parquet()</a></code> and models with <code><a href="https://rdrr.io/r/base/readRDS.html">saveRDS()</a></code>, while data cubes are described with <code><a href="https://e-sensing.github.io/sits/reference/sits_to_hf.html">sits_to_hf()</a></code>, which writes the <code>sits/sits.yml</code> and <code>sits/cache.rds</code> files expected by <code><a href="https://e-sensing.github.io/sits/reference/sits_from_hf.html">sits_from_hf()</a></code>. The files are then uploaded with the tools provided by Hugging Face. Sharing data in this way makes studies easier to reproduce, and allows others to reuse samples, encoders and data cubes that are expensive to produce.</p>
+
+
+</section></main><!-- /main --><script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script><nav class="page-navigation"><div class="nav-page nav-page-previous">
+      <a href="./annex_export.html" class="pagination-link">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">30</span>&nbsp; <span class="chapter-title">Exporting data to other packages</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./annex_gee.html" class="pagination-link">
+        <span class="nav-page-text"><span class="chapter-number">32</span>&nbsp; <span class="chapter-title">SITS and GEE: side-by-side comparison</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer"><div class="nav-footer">
+    <div class="nav-footer-left">The SITS book was written by Gilberto Camara, Rolf Simoes, Felipe Souza, Felipe Carlos, Pedro Andrade, Karine Ferreira, Pedro Brito, Alexandre Assunção, Charlotte Pelletier, and Bianca Zadrosny.</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">This book was built with <a href="https://quarto.org/">Quarto</a>.</div>
+  </div>
+</footer>
+
+
+</body></html>

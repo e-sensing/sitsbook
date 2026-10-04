@@ -21,6 +21,8 @@ tempdir_r <- "~/sitsbook/tempdir/R/emb_build"
 dir.create(tempdir_r, showWarnings = FALSE, recursive = TRUE)
 tempdir_r_class <- "~/sitsbook/tempdir/R/emb_build/class"
 dir.create(tempdir_r_class, showWarnings = FALSE, recursive = TRUE)
+tempdir_data <- "~/sitsbook/tempdir/data/Rondonia20LMR"
+dir.create(tempdir_r_class, showWarnings = FALSE, recursive = TRUE)
 ```
 ## Python
 ```{python}
@@ -30,10 +32,14 @@ dir.create(tempdir_r_class, showWarnings = FALSE, recursive = TRUE)
 # load "pysits" library
 from pysits import *
 from pathlib import Path
-# set tempdir if it does not exist
+# Create tempdir to store results
 tempdir_py = Path.home() / "sitsbook/tempdir/Python/emb_build"
+tempdir_py.mkdir(parents=True, exist_ok=True)
+# Create tempdir to store data
+tempdir_data = Path.home() / "sitsbook/data/Rondonia20LMR"
+tempdir_data.mkdir(parents=True, exist_ok=True)
+# Create tempdir to store classified data
 tempdir_py_class = Path.home() / "sitsbook/tempdir/Python/emb_build/class"
-# Create directory
 tempdir_py_class.mkdir(parents=True, exist_ok=True)
 ```
 :::
@@ -251,16 +257,13 @@ chapter. Please refer to that chapter for a description of the data.
 ## R
 ```{r}
 #| eval: false
-# directory where files are located
-data_dir <- system.file("extdata/Rondonia-20LMR", package = "sitsdata")
-
-# builds a cube based on existing files
-cube_20LMR <- sits_cube(
-    source = "AWS",
-    collection = "SENTINEL-2-L2A",
-    data_dir = data_dir
+# Files are available in Hugging Face
+# Read data cube
+cube_20LMR <- sits_from_hf(
+    repo = "e-sensing/book_Rondonia20LMR",
+    type = "dataset",
+    output_dir = tempdir_data
 )
-
 # select only the S2 bands
 cube_20LMR <- sits_select(
     cube_20LMR,
@@ -280,14 +283,12 @@ plot(
 ## Python
 ```{python}
 #| eval: false
-# directory where files are located
-data_dir = r_package_dir("extdata/Rondonia-20LMR", package = "sitsdata")
-
-# builds a cube based on existing files
-cube_20LMR = sits_cube(
-    source = "AWS",
-    collection = "SENTINEL-2-L2A",
-    data_dir = data_dir
+#
+# Read the data
+cube_20LMR <- sits_from_hf(
+    repo = "e-sensing/book_Rondonia20LMR",
+    type = "dataset",
+    output_dir = tempdir_data
 )
 
 # select only the S2 bands

@@ -1,0 +1,429 @@
+---
+title: "Sharing and retrieving data with Hugging Face"
+format: html
+---
+
+### Configurations to run this chapter{-}
+
+:::{.panel-tabset}
+## R
+```{r}
+#| echo: true
+#| eval: true
+#| output: false
+# load package "tibble"
+library(tibble)
+# load packages "sits" and "sitsdata"
+library(sits)
+library(sitsdata)
+# set tempdir if it does not exist 
+tempdir_r <- "~/sitsbook/tempdir/R/annex_hf"
+dir.create(tempdir_r, showWarnings = FALSE, recursive = TRUE)
+tempdir_r_cube <- "~/sitsbook/tempdir/R/annex_hf/cube"
+dir.create(tempdir_r_cube, showWarnings = FALSE, recursive = TRUE)
+tempdir_r_share <- "~/sitsbook/tempdir/R/annex_hf/share"
+dir.create(tempdir_r_share, showWarnings = FALSE, recursive = TRUE)
+```
+## Python
+```{python}
+#| echo: true
+#| eval: false
+#| output: false
+# load "pysits" library
+from pysits import *
+from pathlib import Path
+# set tempdir if it does not exist
+tempdir_py = Path.home() / "sitsbook/tempdir/Python/annex_hf"
+tempdir_py_cube = Path.home() / "sitsbook/tempdir/Python/annex_hf/cube"
+tempdir_py_share = Path.home() / "sitsbook/tempdir/Python/annex_hf/share"
+# Create directories
+tempdir_py_cube.mkdir(parents=True, exist_ok=True)
+tempdir_py_share.mkdir(parents=True, exist_ok=True)
+```
+:::
+
+## Introduction
+
+[Hugging Face](https://huggingface.co) is an open platform for sharing machine learning resources. Its Hub hosts git-based repositories of three kinds: *models*, *datasets* and *spaces* (applications). Each repository is identified by a name in the form `"<user>/<repository>"`, where `<user>` is either a personal account or an organisation. Public repositories can be read by anyone without an account; private repositories require an access token. Large files, such as satellite images, are stored efficiently, and each repository has a version history. 
+
+These features make Hugging Face a convenient place to share the data used in Earth observation studies. Training samples, trained models and data cubes are often too big for code repositories such as GitHub, and too specialised for general-purpose data archives. By publishing them on Hugging Face, authors allow others to reproduce their results without repeating expensive steps, such as extracting time series from large image collections, regularising data cubes or training deep learning models. 
+
+This book uses Hugging Face extensively. Most chapters retrieve their training samples from the `e-sensing/samples_book` dataset, and the chapters on embeddings retrieve data cubes, encoders and embedding cubes from Hugging Face, since producing them requires many hours of processing. The main repositories used in the book are listed below.
+
+| Repository | Contents | 
+|:---|:---|
+| `e-sensing/samples_book` | Training samples used in this book (in Parquet)  |
+| `e-sensing/samples_cerrado` | Data used in "Embeddings" chapters |
+| `e-sensing/rondonia20LMR` | Regular Sentinel-2 data cube for tile 20LMR (2022), used in ["How to use SITS with real examples"](https://e-sensing.github.io/sitsbook/intro_examples.html) |
+| `e-sensing/cerrado_cube_reg_2018` | Regular Landsat-8 data cube for the Cerrado (2018) used in ["Building regional embeddings: a full example"](https://e-sensing.github.io/sitsbook/emb_example.html) |
+| `e-sensing/cerrado_emb_ssl_lejepa_tcnn_2018` | Embedding cube produced by a LeJEPA encoder (2018) used in ["Building regional embeddings: a full example"](https://e-sensing.github.io/sitsbook/emb_example.html) |
+| `e-sensing/encoders_cerrado` | Encoders trained with different representation learning methods (`.rds` files). Used in embeddings chapters |
+
+: Hugging Face repositories used in this book {#tbl-hf-repos}
+
+The `sits` package provides two functions to work with Hugging Face. Function `sits_from_hf()` reads samples, models and data cubes from a repository. Function `sits_to_hf()` writes the files that describe a data cube, so that it can be uploaded to a dataset repository and later read by `sits_from_hf()`. Samples and models do not need a description: they are shared as single files, saved with `sits_to_parquet()` or `saveRDS()`. The rest of this chapter describes how to retrieve and share each type of data.
+
+## Retrieving data with `sits_from_hf()`
+
+Function `sits_from_hf()` reads data from a Hugging Face repository. What it returns depends on the contents of the repository and on the `file` parameter:
+
+- *Samples*: when `file` points to a `.parquet` file (written by `sits_to_parquet()`) or to an `.rds` file containing time series, the function returns a `sits` tibble.
+- *Models*: when `file` points to an `.rds` file with a model trained by `sits_train()` or an encoder produced by `sits_pre_train()`, the function returns the model.
+- *Data cubes*: when `file` is not informed and the repository has a `sits/sits.yml` file (written by `sits_to_hf()`), the function downloads the images to `output_dir` and returns a local data cube.
+
+The main parameters of `sits_from_hf()` are:
+
+| Parameter | Meaning |
+|:---|:---|
+| `repo` | Hugging Face repository, in the form `"<user>/<repository>"`. |
+| `file` | File to be read (optional). Required when the repository has more than one `.rds` or `.parquet` file. |
+| `type` | Type of the repository: `"dataset"` (default) or `"model"`. Data cubes are always shared as datasets. |
+| `output_dir` | Directory where the images of a data cube are saved. Required for data cubes; the directory must exist. |
+| `bands`, `tiles`, `roi`, `crs`, `start_date`, `end_date` | Optional selection of the part of the data cube to be downloaded. |
+| `labels`, `version` | Optional selection of results produced by `sits` (e.g., probability cubes or classified maps). |
+| `n_tries` | Number of attempts to download each image (default = 3). |
+| `multicores` | Number of cores for parallel download (default = 2). |
+| `progress` | Show a progress bar? (default = `TRUE`). |
+
+: Main parameters of `sits_from_hf()` {#tbl-hf-from-par}
+
+### Retrieving samples
+
+Training samples are the most common type of data retrieved from Hugging Face in this book. In the example below, we retrieve the samples of deforestation in Rondonia used in the chapters ["Classification of raster data cubes"](https://e-sensing.github.io/sitsbook/cl_rasterclassification.html) and ["Building regional embeddings: a simple example"](https://e-sensing.github.io/sitsbook/emb_build.html). Since the `e-sensing/samples_book` repository contains many files, we use `file` to choose one of them. The result is a `sits` tibble with 6,007 time series, each containing the Sentinel-2 bands `B02`, `B03`, `B04`, `B05`, `B06`, `B07`, `B08`, `B8A`, `B11` and `B12`. The function downloads the file to a temporary location and reads it; no `output_dir` is needed.
+
+:::{.panel-tabset}
+## R
+```{r}
+#| eval: false
+# Get the samples from Hugging Face
+samples_deforestation_rondonia <- sits_from_hf(
+    repo = "e-sensing/samples_book",
+    file = "samples_deforestation_rondonia.parquet",
+    type = "dataset"
+)
+# show the bands and the number of samples per class
+sits_bands(samples_deforestation_rondonia)
+summary(samples_deforestation_rondonia)
+```
+## Python
+```{python}
+#| eval: false
+# Get the samples from Hugging Face
+samples_deforestation_rondonia = sits_from_hf(
+    repo = "e-sensing/samples_book",
+    file = "samples_deforestation_rondonia.parquet",
+    type = "dataset"
+)
+# show the bands and the number of samples per class
+sits_bands(samples_deforestation_rondonia)
+summary(samples_deforestation_rondonia)
+```
+:::
+
+The samples can then be used as any other `sits` tibble, for example to visualise temporal patterns with `sits_patterns()` or to train a model with `sits_train()`, as shown in the chapter ["Basic operations on image time series"](https://e-sensing.github.io/sitsbook/ts_basics.html).
+
+### Retrieving models and encoders
+
+Trained models and encoders are shared as `.rds` files in *model* repositories. To read them, set `type = "model"`. The example below retrieves the LeJEPA encoder used in the chapter ["Building regional embeddings: a full example"](https://e-sensing.github.io/sitsbook/emb_example.html). The `e-sensing/encoders_cerrado` repository has several encoders, each trained with a different representation learning method (see ["Embedding Methods in SITS"](https://e-sensing.github.io/sitsbook/emb_methods.html)); we choose one with `file`. The result is a `sits_encoder` object, which can be used directly in `sits_encode()`. Models trained with `sits_train()` are retrieved in the same way and can be used directly in `sits_classify()`.
+
+:::{.panel-tabset}
+## R
+```{r}
+#| eval: false
+# Retrieve a LeJEPA encoder from a model repository
+lejepa_encoder <- sits_from_hf(
+    repo = "e-sensing/encoders_cerrado",
+    file = "ssl_lejepa_tcnn_model_2017_2024.rds",
+    type = "model"
+)
+```
+## Python
+```{python}
+#| eval: false
+# Retrieve a LeJEPA encoder from a model repository
+lejepa_encoder = sits_from_hf(
+    repo = "e-sensing/encoders_cerrado",
+    file = "ssl_lejepa_tcnn_model_2017_2024.rds",
+    type = "model"
+)
+```
+:::
+
+### Retrieving data cubes
+
+A data cube shared on Hugging Face is a dataset repository that contains the image files and a `sits` directory with a description of the cube (see the next section). When `file` is not informed, `sits_from_hf()` reads this description, downloads the images to `output_dir` and returns a local data cube. After the download, the cube is the same as one created by `sits_cube()` from local files (see ["Data cubes from local files"](https://e-sensing.github.io/sitsbook/dc_localcubes.html)), and can be used in all `sits` functions.
+
+
+Data cubes for large areas can have tens or hundreds of gigabytes. To avoid downloading the whole dataset, users can choose part of the cube using `bands`, `tiles`, `roi`, `start_date` and `end_date`. Only the images that match the selection are downloaded. In the example below, we select three bands and the dry season of 2022 from the `rondonia20LMR` cube used in the chapter ["How to use SITS with real examples"](https://e-sensing.github.io/sitsbook/intro_examples.html), which reduces the download from about 26 GB to a small fraction of that size. The result is a data cube with bands `B02`, `B8A` and `B11` for the dates between June and September 2022.
+
+:::{.panel-tabset}
+## R
+```{r}
+#| eval: false
+# Download part of the rondonia20LMR cube
+cube_20LMR_part <- sits_from_hf(
+    repo = "e-sensing/rondonia20LMR",
+    type = "dataset",
+    bands = c("B02", "B8A", "B11"),
+    start_date = "2022-06-01",
+    end_date = "2022-09-30",
+    output_dir = tempdir_r_cube,
+    multicores = 4
+)
+plot(cube_20LMR_part, date = "2022-07-16", blue = "B02", green = "B8A", red = "B11")
+```
+## Python
+```{python}
+#| eval: false
+# Download part of the rondonia20LMR cube
+cube_20LMR_part = sits_from_hf(
+    repo = "e-sensing/rondonia20LMR",
+    type = "dataset",
+    bands = ("B02", "B8A", "B11"),
+    start_date = "2022-06-01",
+    end_date = "2022-09-30",
+    output_dir = tempdir_py_cube,
+    multicores = 4
+)
+plot(cube_20LMR_part, date = "2022-07-16", blue = "B02", green = "B8A", red = "B11")
+```
+:::
+
+The same function retrieves embedding cubes and results produced by `sits`. For example, the embedding cube used in ["Building regional embeddings: a full example"](https://e-sensing.github.io/sitsbook/emb_example.html) is read with `sits_from_hf(repo = "e-sensing/cerrado_emb_ssl_lejepa_tcnn_2018", output_dir = ...)`, and the result is an embedding cube ready to be classified. When a dataset holds results from a classification, such as probability cubes and classified maps, the parameters `labels` and `version` select which result is read.
+
+::: {.callout-note}
+## Download limits and interrupted downloads
+
+Hugging Face limits the number of files a user can request in each five-minute window. To use these limits well, `sits_from_hf()` downloads each image only once, in batches that fit the requests available; when no request is available, it waits for the next window. Images already in `output_dir` are not requested again. Therefore, if a download is interrupted, calling `sits_from_hf()` again with the same parameters resumes it. 
+:::
+
+### Accessing private repositories
+
+To read private repositories, users need a Hugging Face access token, which can be created in the [account settings](https://huggingface.co/settings/tokens). The token must be stored in the `HF_TOKEN` environment variable. In R, this is best done by adding a line `HF_TOKEN=<your token>` to the `.Renviron` file (for example, using `usethis::edit_r_environ()`), so that the token is not written in scripts. For a single session, one can use `Sys.setenv()`.
+
+:::{.panel-tabset}
+## R
+```{r}
+#| eval: false
+# set the access token for the current session
+Sys.setenv(HF_TOKEN = "<your token>")
+```
+## Python
+```{python}
+#| eval: false
+import os
+# set the access token for the current session
+os.environ["HF_TOKEN"] = "<your token>"
+```
+:::
+
+## Sharing data on Hugging Face
+
+Sharing data on Hugging Face has two steps. First, the data is saved locally in a format that `sits_from_hf()` can read. Then, the files are uploaded to a repository. The `sits` package handles the first step; the upload is done with the tools provided by Hugging Face, described at the end of this section.
+
+### Sharing samples
+
+Samples are shared as single files. The recommended format is Parquet, which is compact, fast to read and readable by other tools. Function `sits_to_parquet()` writes a `sits` tibble to a Parquet file, which follows the GeoParquet standard so that GIS software such as QGIS can read the samples as points. In the example below, we save the `samples_modis_ndvi` data set, provided by `sits`, to a Parquet file in the local directory to be uploaded. 
+
+:::{.panel-tabset}
+## R
+```{r}
+#| eval: false
+# save samples to a Parquet file to be uploaded
+sits_to_parquet(
+    data = samples_modis_ndvi,
+    file = file.path(tempdir_r_share, "samples_modis_ndvi.parquet")
+)
+```
+## Python
+```{python}
+#| eval: false
+# save samples to a Parquet file to be uploaded
+sits_to_parquet(
+    data = samples_modis_ndvi,
+    file = str(tempdir_py_share / "samples_modis_ndvi.parquet")
+)
+```
+:::
+
+After the file is uploaded to a dataset repository (for example, `"<user>/my_samples"`), it is read with `sits_from_hf(repo = "<user>/my_samples", file = "samples_modis_ndvi.parquet")`.
+
+### Sharing models
+
+Models trained by `sits_train()` and encoders produced by `sits_pre_train()` are R objects, which are saved as `.rds` files using `saveRDS()`. In the example below, we train a random forest model with the `samples_modis_ndvi` data set and save it. The file should be uploaded to a *model* repository, and it is then read with `sits_from_hf(repo = "<user>/my_models", file = "rfor_model_modis.rds", type = "model")`.
+
+:::{.panel-tabset}
+## R
+```{r}
+#| eval: false
+# train a random forest model
+rfor_model <- sits_train(
+    samples = samples_modis_ndvi,
+    ml_method = sits_rfor()
+)
+# save the model to be uploaded
+saveRDS(rfor_model, file.path(tempdir_r_share, "rfor_model_modis.rds"))
+```
+## Python
+```{python}
+#| eval: false
+# train a random forest model
+rfor_model = sits_train(
+    samples = samples_modis_ndvi,
+    ml_method = sits_rfor()
+)
+# save the model to be uploaded
+saveRDS(rfor_model, str(tempdir_py_share / "rfor_model_modis.rds"))
+```
+:::
+
+### Sharing data cubes with `sits_to_hf()`
+
+A data cube shared on Hugging Face consists of the image files plus two files that describe the cube, kept in a `sits` directory of the repository so that they are not mixed with the images:
+
+- `sits/sits.yml`: the collection definition of the dataset. It describes the satellite, sensor, grid system and, for each band, the missing value, the valid range, the scale factor, the offset, the spatial resolution and the data type. For results produced by `sits`, such as probability cubes and classified maps, it also includes the labels of the classes.
+- `sits/cache.rds`: the data cube itself. When this file is available, `sits_from_hf()` loads it instead of reading each image of the dataset to build the cube, which is much faster for large datasets.
+
+Function `sits_to_hf()` writes these files from a data cube. Its parameters are:
+
+| Parameter | Meaning |
+|:---|:---|
+| `cube` | Data cube, or list of cubes, to be shared as a dataset. |
+| `output_dir` | Directory where the files are written (optional). When not informed, the function only returns the collection definition. |
+| `repo` | Hugging Face repository where the images will be uploaded (`"<user>/<dataset>"`). Required to write `cache.rds`, unless the cube was read from Hugging Face. |
+
+: Parameters of `sits_to_hf()` {#tbl-hf-to-par}
+
+There is one important requirement: the images must be named in the way `sits` names them. Images produced by `sits` functions such as `sits_cube_copy()`, `sits_regularize()`, `sits_classify()`, `sits_smooth()` and `sits_label_classification()` already follow this convention. File names combine the satellite, sensor, tile, band and date, for example `TERRA_MODIS_012010_NDVI_2013-09-14.tif`. Also, only the bands present in the dataset should be described; if a cube has bands that will not be shared, use `sits_select()` before calling `sits_to_hf()`. For more information on how `sits` names files and on regularization, see the chapters ["Data cubes from local files"](https://e-sensing.github.io/sitsbook/dc_localcubes.html) and ["Building regular data cubes"](https://e-sensing.github.io/sitsbook/dc_regularize.html).
+
+In the example below, we use the MODIS cube for Sinop provided by the `sits` package. First, we call `sits_to_hf()` with only the cube. This returns the collection definition as an R list, which is useful to check the description before writing any file. Then, we call it again with `output_dir` and `repo` to write `sits/sits.yml` and `sits/cache.rds` in the local directory to be uploaded.
+
+:::{.panel-tabset}
+## R
+```{r}
+#| eval: false
+# create a data cube from local files
+data_dir <- system.file("extdata/raster/mod13q1", package = "sits")
+cube <- sits_cube(
+    source = "BDC",
+    collection = "MOD13Q1-6.1",
+    data_dir = data_dir
+)
+# inspect the collection definition of the cube
+collection_conf <- sits_to_hf(cube)
+collection_conf$bands$NDVI
+
+# write the files describing the dataset
+sits_to_hf(
+    cube = cube,
+    output_dir = tempdir_r_share,
+    repo = "<user>/sits_mod13q1_sinop"
+)
+# copy the images to the same directory, to be uploaded together
+file.copy(
+    from = cube$file_info[[1]]$path,
+    to = tempdir_r_share
+)
+```
+## Python
+```{python}
+#| eval: false
+# create a data cube from local files
+data_dir = r_package_dir("extdata/raster/mod13q1", package = "sits")
+cube = sits_cube(
+    source = "BDC",
+    collection = "MOD13Q1-6.1",
+    data_dir = data_dir
+)
+# inspect the collection definition of the cube
+collection_conf = sits_to_hf(cube)
+
+# write the files describing the dataset
+sits_to_hf(
+    cube = cube,
+    output_dir = tempdir_py_share,
+    repo = "<user>/sits_mod13q1_sinop"
+)
+# copy the images to the same directory, to be uploaded together
+import shutil
+for f in Path(data_dir).glob("*.jp2"):
+    shutil.copy(f, tempdir_py_share)
+```
+:::
+
+The `sits.yml` file written for this cube is shown below. It starts with comments that explain how the dataset is to be read, followed by the description of the collection.
+
+```yaml
+# sits collection definition of a HuggingFace dataset.
+#
+# Place this file in the 'sits' directory of the dataset repository,
+# naming the images as sits names them, and open the dataset with:
+#
+#     sits_from_hf(
+#         repo       = "<user>/<repository>",
+#         output_dir = "<directory>"
+#     )
+#
+# Declare only the bands shared in the dataset.
+# Written by sits from MOD13Q1-6.1.
+
+satellite: TERRA
+sensor: MODIS
+grid_system: STG
+dates: 2013 to 2014
+bands:
+    NDVI:
+        missing_value: -3000
+        minimum_value: -2000
+        maximum_value: 10000
+        scale_factor: 0.0001
+        offset_value: 0
+        resolution: 231.6563583
+        band_name: NDVI
+        data_type: INT2S
+```
+
+The local directory now has the structure expected by `sits_from_hf()`: the images at the root, and the description in the `sits` directory.
+
+```
+sits_mod13q1_sinop/
+├── sits/
+│   ├── sits.yml
+│   └── cache.rds
+├── TERRA_MODIS_012010_NDVI_2013-09-14.jp2
+├── TERRA_MODIS_012010_NDVI_2013-10-16.jp2
+└── ...
+```
+
+The description written by `sits_to_hf()` depends on the type of cube:
+
+- *Image cubes* (e.g., regularized Sentinel-2 or Landsat cubes) are described band by band, as in the example above.
+- *Embedding cubes* (produced by `sits_encode()`) are described only by satellite and sensor; the embedding bands are managed by `sits`.
+- *Results* produced by `sits` (probability cubes, smoothed probability cubes, classified maps) are described by their resolution and the labels of the classification.
+
+
+When the images to be shared come from a collection that `sits` already knows (for example, Sentinel-2 images copied from Microsoft Planetary Computer using `sits_cube_copy()`), the function `sits_config_to_hf()` writes `sits/sits.yml` directly from the collection definition, using the parameters `source`, `collection`, `bands` and `output_dir`. For regularized cubes, or cubes with bands computed by users (such as indices produced by `sits_apply()`), use `sits_to_hf()` instead, since the bands and resolutions differ from those of the original collection.
+
+### Uploading files to Hugging Face
+
+After preparing the files, the final step is to upload them to a Hugging Face repository. This requires a Hugging Face account and an access token with *write* permission. The simplest option is the `hf` command line tool, which is part of the `huggingface_hub` Python package (installed with `pip install -U huggingface_hub`). The commands below log in to Hugging Face, create a dataset repository and upload the contents of a local directory to the root of the repository. The `--repo-type` option must be `dataset` for samples and data cubes and `model` for models. If the repository does not exist, `hf upload` creates it.
+
+```bash
+# log in to Hugging Face (only needed once per machine)
+hf auth login
+
+# create a dataset repository (optional; "hf upload" creates it if needed)
+hf repos create <user>/sits_mod13q1_sinop --repo-type dataset
+
+# upload the contents of the local directory to the root of the repository
+hf upload <user>/sits_mod13q1_sinop ~/sitsbook/tempdir/R/annex_hf/share . --repo-type dataset
+
+# upload a model file to a model repository
+hf upload <user>/my_models ~/sitsbook/tempdir/R/annex_hf/share/rfor_model_modis.rds --repo-type model
+```
+
+Once uploaded, the data cube is read with `sits_from_hf()`, as shown in the previous section. It is good practice to also add a `README.md` file to the repository (the "dataset card" or "model card"), describing the contents of the dataset, its origin, the processing steps and the license under which it is shared.
+
+## Summary
+
+This chapter described how to use Hugging Face to share and retrieve the data used in `sits` workflows. Function `sits_from_hf()` reads samples, models and data cubes from Hugging Face repositories; for data cubes, users can select bands, tiles, regions and dates so that only the images needed are downloaded, and interrupted downloads are resumed automatically. To share data, samples are saved with `sits_to_parquet()` and models with `saveRDS()`, while data cubes are described with `sits_to_hf()`, which writes the `sits/sits.yml` and `sits/cache.rds` files expected by `sits_from_hf()`. The files are then uploaded with the tools provided by Hugging Face. Sharing data in this way makes studies easier to reproduce, and allows others to reuse samples, encoders and data cubes that are expensive to produce.
